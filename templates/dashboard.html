@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+<meta charset="UTF-8">
+<title>Painel de Inteligência da Frota</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+<style>
+
+/* ===== FUNDO ===== */
+body{
+  background: url("/static/img/caminhao.png") no-repeat center center fixed;
+  background-size: cover;
+  font-family:'Segoe UI',sans-serif;
+  color:#fff;
+}
+
+/* ===== CONTAINER ===== */
+.container{
+  background: linear-gradient(
+    180deg,
+    rgba(0,0,0,0.5),
+    rgba(0,0,0,0.25)
+  );
+  backdrop-filter: blur(4px);
+  border-radius:20px;
+  padding:25px;
+}
+
+
+/* ===== CARDS ===== */
+.card{
+  border-radius:18px;
+  background: rgba(255,255,255,0.95);
+  color:#111;
+  transition:.3s;
+  min-height:160px;
+}
+
+.card:hover{
+  transform:translateY(-6px);
+  box-shadow:0 20px 40px rgba(0,0,0,.4);
+}
+
+.hero{
+  background:linear-gradient(135deg,#ff4d4f,#b30000);
+  color:white;
+}
+
+.table{
+  border-radius:10px;
+  overflow:hidden;
+}
+
+.rank{
+  font-weight:bold;
+  color:#999;
+}
+
+small{
+  opacity:.75;
+}
+
+.p-4{
+}
+
+h2{
+  font-size:70px;
+  text-align:center;
+}
+
+.shadow-lg{
+
+}
+
+
+</style>
+</head>
+
+<body>
+
+<div class="container py-4">
+
+<h1 class="mb-4-1">Painel Inteligente de Mutenção de frotas Easy</h1>
+
+<!-- HERO -->
+<div class="card p-4 mb-4 hero">
+<h3>⚠ Alto índice de manutenção corretiva ({{ perc_corretiva }}%)</h3>
+<p>Impacto direto na operação — necessidade de reforço na preventiva</p>
+</div>
+
+<!-- RESUMO -->
+<div class="card p-4 mb-4 shadow">
+<h5>Resumo Executivo</h5>
+
+<p>
+{% if perc_corretiva > 60 %}
+Alto risco operacional devido à predominância de manutenção corretiva.
+{% else %}
+Operação equilibrada com potencial de melhoria.
+{% endif %}
+</p>
+
+<p>
+Frota <strong>{{ top_frota[0] }}</strong> lidera ocorrências ({{ top_frota[1] }} registros).
+</p>
+
+</div>
+
+<!-- PRIMEIRA LINHA -->
+<div class="row g-3 mb-4">
+
+<div class="col-md-3">
+<div class="card p-3 shadow h-100">
+<small>Volume total de manutenções</small>
+<h2>{{ total }}</h2>
+<small>Carga operacional do período</small>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="card p-3 shadow h-100 border-start border-danger border-4">
+<small>Dependência corretiva</small>
+<h2 style="color:#ff4d4f">{{ perc_corretiva }}%</h2>
+
+<small>
+{% if perc_corretiva > 60 %}
+🔴 Alto risco operacional
+{% elif perc_corretiva > 40 %}
+🟡 Atenção necessária
+{% else %}
+🟢 Nível saudável
+{% endif %}
+</small>
+
+<div class="mt-2" style="background:#eee;height:6px;border-radius:10px;">
+<div style="width:{{ perc_corretiva }}%;height:6px;background:#ff4d4f;border-radius:10px;"></div>
+</div>
+
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="card p-3 shadow h-100 border-start border-success border-4">
+<small>Eficiência preventiva</small>
+<h2 style="color:#52c41a">{{ perc_preventiva }}%</h2>
+<small>Maior valor indica melhor controle da frota</small>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="card p-3 shadow h-100 border-start border-warning border-4">
+<small>Serviços em execução</small>
+<h2 style="color:#faad14">{{ andamento }}</h2>
+<small>Impacta na disponibilidade da frota</small>
+</div>
+</div>
+
+</div>
+
+<!-- SEGUNDA LINHA CORRETA -->
+<div class="row g-3 mb-4">
+
+<!-- CONFIABILIDADE -->
+<div class="col-md-4">
+<div class="card p-3 shadow h-100">
+<small>Confiabilidade da frota</small>
+<h2>{{ confiabilidade }}%</h2>
+
+<small>
+{% if confiabilidade < 50 %}
+🔴 Frota instável
+{% elif confiabilidade < 70 %}
+🟡 Operação sob atenção
+{% else %}
+🟢 Frota confiável
+{% endif %}
+</small>
+</div>
+</div>
+
+<!-- TENDÊNCIA -->
+<div class="col-md-4">
+<div class="card p-3 shadow h-100">
+<small>Tendência mensal</small>
+
+<h2>
+{% if tendencia > 0 %}
+<span style="color:#ff4d4f;">▲ {{ tendencia }}%</span>
+{% else %}
+<span style="color:#52c41a;">▼ {{ tendencia }}%</span>
+{% endif %}
+</h2>
+
+<small>
+{% if tendencia > 0 %}
+Aumento de falhas
+{% else %}
+Redução de ocorrências
+{% endif %}
+</small>
+</div>
+</div>
+
+<!-- COMPORTAMENTO -->
+<div class="col-md-4">
+<div class="card p-3 shadow h-100">
+
+<small>Comportamento da operação</small>
+
+<div class="d-flex justify-content-between mt-2">
+
+<div>
+<small>📈 Pico</small>
+<h6 style="color:#ff4d4f;">{{ pico_mes[0] }}</h6>
+<small>{{ pico_mes[1] }}</small>
+</div>
+
+<div class="text-end">
+<small>📉 Menor</small>
+<h6 style="color:#52c41a;">{{ pior_mes[0] }}</h6>
+<small>{{ pior_mes[1] }}</small>
+</div>
+
+</div>
+
+<hr>
+
+<small>Oscilação operacional ao longo do período</small>
+
+</div>
+</div>
+
+</div>
+
+<!-- GRÁFICOS -->
+<div class="row g-3 mb-4">
+
+<div class="col-md-6">
+<div class="card p-4 shadow">
+<h5>Distribuição de Manutenções</h5>
+<canvas id="graficoTipos"></canvas>
+</div>
+</div>
+
+<div class="col-md-6">
+<div class="card p-4 shadow">
+<h5>Evolução Mensal</h5>
+<canvas id="graficoMes"></canvas>
+</div>
+</div>
+
+</div>
+
+<!-- TOPS -->
+<div class="row g-3 mb-4">
+
+<div class="col-md-6">
+<div class="card p-4 shadow h-100">
+<h5>Top 8 Frotas</h5>
+
+<table class="table table-hover">
+<tr><th>#</th><th>Frota</th><th>Qtd</th></tr>
+
+{% for f in top8_frotas %}
+<tr>
+<td class="rank">#{{ loop.index }}</td>
+<td>{{ f[0] }}</td>
+<td><strong>{{ f[1] }}</strong></td>
+</tr>
+{% endfor %}
+
+</table>
+</div>
+</div>
+
+<div class="col-md-6">
+<div class="card p-4 shadow h-100">
+<h5>Top 8 Tipos</h5>
+
+<table class="table table-hover">
+<tr><th>#</th><th>Tipo</th><th>Qtd</th></tr>
+
+{% for t in top8_tipos %}
+<tr>
+<td class="rank">#{{ loop.index }}</td>
+<td>{{ t[0] if t[0] else "Sem tipo" }}</td>
+<td><strong>{{ t[1] }}</strong></td>
+</tr>
+{% endfor %}
+
+</table>
+</div>
+
+
+
+</div>
+
+</div>
+
+<!-- DIAGNÓSTICO FINAL -->
+<div class="card p-4 shadow mb-4">
+<h5>Diagnóstico da operação</h5>
+
+<p>
+{% if perc_corretiva > 60 %}
+🔴 Alta dependência de corretivas — necessário reforçar manutenção preventiva.
+{% else %}
+🟢 Operação equilibrada.
+{% endif %}
+</p>
+
+<p>
+📌 Frota {{ top_frota[0] }} é o principal ponto de atenção.
+</p>
+
+</div>
+
+</div>
+
+<script>
+
+// TIPOS
+const tipos = {{ tipos|tojson|safe }};
+new Chart(document.getElementById("graficoTipos"), {
+type:"bar",
+data:{
+labels:tipos.map(t=>t[0]||"Sem tipo"),
+datasets:[{
+data:tipos.map(t=>t[1]),
+backgroundColor:["#ff4d4f","#52c41a","#faad14","#1677ff"],
+borderRadius:10
+}]
+},
+plugins:[ChartDataLabels]
+});
+
+// EVOLUÇÃO
+const evolucao = {{ evolucao|tojson|safe }};
+const valores = evolucao.map(e => e[1]);
+
+const maxValue = Math.max(...valores);
+const minValue = Math.min(...valores);
+
+const ctx = document.getElementById("graficoMes").getContext("2d");
+
+const gradient = ctx.createLinearGradient(0,0,0,400);
+gradient.addColorStop(0,"rgba(22,119,255,0.8)");
+gradient.addColorStop(1,"rgba(22,119,255,0)");
+
+new Chart(ctx,{
+type:"line",
+data:{
+labels:evolucao.map(e=>e[0]),
+datasets:[{
+data:valores,
+borderColor:"#1677ff",
+backgroundColor:gradient,
+fill:true,
+tension:.4,
+pointRadius:(ctx)=> ctx.raw === maxValue || ctx.raw === minValue ? 8 : 4,
+pointBackgroundColor:(ctx)=>{
+if(ctx.raw === maxValue) return "#ff4d4f";
+if(ctx.raw === minValue) return "#52c41a";
+return "#1677ff";
+}
+}]
+}
+});
+
+</script>
+
+</body>
+</html>
