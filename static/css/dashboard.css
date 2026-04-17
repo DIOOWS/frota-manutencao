@@ -1,0 +1,118 @@
+/* ===== SEÇÕES ===== */
+.x-section{
+  margin-bottom:20px;
+}
+
+/* ===== GRÁFICOS ===== */
+.x-chart{
+  height:100%;
+  background: rgba(255,255,255,0.97);
+  border-radius:18px;
+  padding:20px;
+  box-shadow:0 10px 25px rgba(0,0,0,.25);
+}
+
+.x-chart h5{
+  font-weight:600;
+  margin-bottom:15px;
+}
+
+.x-chart canvas{
+  margin-top:10px;
+}
+
+/* ===== TABELAS ===== */
+.x-table{
+  height:100%;
+}
+
+.table{
+  border-radius:10px;
+  overflow:hidden;
+}
+
+/* ===== RANK ===== */
+.rank{
+  font-weight:bold;
+  color:#999;
+}
+
+/* ===== BARRA DE PROGRESSO ===== */
+.x-progress{
+  height:6px;
+  border-radius:10px;
+  background:#eee;
+  overflow:hidden;
+}
+
+.x-progress-bar{
+  height:6px;
+  border-radius:10px;
+}
+
+/* ===== AJUSTES FINOS ===== */
+.mb-4{
+  margin-bottom:20px !important;
+}
+
+/* =========================
+   🔥 MODAL (CORRIGIDO)
+========================= */
+
+.modal-custom{
+  display:none;
+}
+
+.modal-custom.ativo{
+  position:fixed;
+  inset:0;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  background:rgba(0,0,0,0.6);
+  z-index:999999;
+}
+
+.modal-content-custom{
+  background:#fff;
+  color:#111;
+
+  padding:25px;
+  width:420px;
+
+  border-radius:16px;
+  box-shadow:0 10px 40px rgba(0,0,0,0.3);
+
+  text-align:left;
+
+  animation:fadeIn .25s ease;
+}
+
+.close-modal{
+  float:right;
+  cursor:pointer;
+  font-size:22px;
+  font-weight:bold;
+  color:#999;
+}
+
+.close-modal:hover{
+  color:#000;
+}
+
+@keyframes fadeIn{
+  from{
+    transform:translateY(-20px);
+    opacity:0;
+  }
+  to{
+    transform:translateY(0);
+    opacity:1;
+  }
+}
+
+canvas {
+  max-height: 250px;
+}

@@ -1,25 +1,44 @@
 from flask import Flask, render_template, request
 from db import get_connection
+import calendar
+from datetime import datetime
 
 app = Flask(__name__)
 
 @app.route("/", methods=["GET"])
 def dashboard():
+
     conn = get_connection()
     cur = conn.cursor()
 
+    # ======================
+    # FILTROS
+    # ======================
     data_inicio = request.args.get("data_inicio")
     data_fim = request.args.get("data_fim")
+    cliente = request.args.get("cliente")
+    frota = request.args.get("frota")
 
     where_clause = ""
     params = []
 
-    if data_inicio and data_fim:
-        where_clause = "WHERE data BETWEEN %s AND %s"
-        params = [data_inicio, data_fim]
-
     def add_condition(base, condition):
         return f"{base} AND {condition}" if base else f"WHERE {condition}"
+
+    # DATA
+    if data_inicio and data_fim:
+        where_clause = add_condition(where_clause, "data BETWEEN %s AND %s")
+        params.extend([data_inicio, data_fim])
+
+    # CLIENTE
+    if cliente:
+        where_clause = add_condition(where_clause, "cliente = %s")
+        params.append(cliente)
+
+    # FROTA
+    if frota:
+        where_clause = add_condition(where_clause, "numero_frota = %s")
+        params.append(frota)
 
     # ======================
     # TOTAL
@@ -97,7 +116,7 @@ def dashboard():
     top8_tipos = cur.fetchall()
 
     # ======================
-    # EVOLUÇÃO CORRIGIDA
+    # EVOLUÇÃO
     # ======================
     cur.execute(f"""
         SELECT 
@@ -112,6 +131,45 @@ def dashboard():
 
     evolucao_raw = cur.fetchall()
     evolucao = [(row[1], row[2]) for row in evolucao_raw]
+
+    # ======================
+    # DADOS DO MODAL (TOP 5)
+    # ======================
+    detalhe_frotas = []
+    detalhe_tipos = []
+
+    # 🔥 CORREÇÃO AQUI
+    if evolucao:
+        ultimo_mes = evolucao[-1][0]
+        mes, ano = ultimo_mes.split("/")
+    else:
+        hoje = datetime.now()
+        mes = f"{hoje.month:02d}"
+        ano = str(hoje.year)
+
+    data_inicio_modal = f"{ano}-{mes}-01"
+    ultimo_dia = calendar.monthrange(int(ano), int(mes))[1]
+    data_fim_modal = f"{ano}-{mes}-{ultimo_dia}"
+
+    cur.execute("""
+        SELECT numero_frota, COUNT(*)
+        FROM manutencoes
+        WHERE data BETWEEN %s AND %s
+        GROUP BY numero_frota
+        ORDER BY COUNT(*) DESC
+        LIMIT 5
+    """, (data_inicio_modal, data_fim_modal))
+    detalhe_frotas = cur.fetchall() or []
+
+    cur.execute("""
+        SELECT COALESCE(tipo_manutencao,'SEM TIPO'), COUNT(*)
+        FROM manutencoes
+        WHERE data BETWEEN %s AND %s
+        GROUP BY tipo_manutencao
+        ORDER BY COUNT(*) DESC
+        LIMIT 5
+    """, (data_inicio_modal, data_fim_modal))
+    detalhe_tipos = cur.fetchall() or []
 
     # ======================
     # PICO E PIOR
@@ -130,6 +188,15 @@ def dashboard():
         if anterior > 0:
             tendencia = round(((atual - anterior) / anterior) * 100, 1)
 
+    # ======================
+    # LISTAS PARA FILTRO
+    # ======================
+    cur.execute("SELECT DISTINCT cliente FROM manutencoes ORDER BY cliente")
+    clientes = [c[0] for c in cur.fetchall() if c[0]]
+
+    cur.execute("SELECT DISTINCT numero_frota FROM manutencoes ORDER BY numero_frota")
+    frotas = [f[0] for f in cur.fetchall() if f[0]]
+
     conn.close()
 
     return render_template(
@@ -147,8 +214,16 @@ def dashboard():
         top8_tipos=top8_tipos,
         evolucao=evolucao,
         tendencia=tendencia,
-        pico_mes=pico_mes,      # 🔥 corrigido
-        pior_mes=pior_mes       # 🔥 corrigido
+        pico_mes=pico_mes,
+        pior_mes=pior_mes,
+
+        clientes=clientes,
+        frotas=frotas,
+        cliente_selecionado=cliente,
+        frota_selecionada=frota,
+
+        detalhe_frotas=detalhe_frotas,
+        detalhe_tipos=detalhe_tipos
     )
 
 if __name__ == "__main__":

@@ -1,50 +1,56 @@
 import pandas as pd
 from db import get_connection
+from psycopg2.extras import execute_batch
 
 df = pd.read_excel("dados.xlsx")
+
+df.columns = df.columns.str.strip()
+df["DATA"] = pd.to_datetime(df["DATA"], errors="coerce")
+df = df.where(pd.notnull(df), None)
+df = df.dropna(how='all')
 
 conn = get_connection()
 cur = conn.cursor()
 
-# LIMPA TABELA
 cur.execute("DELETE FROM manutencoes")
 
-contador = 0
+dados = []
 
 for _, row in df.iterrows():
 
-    data = pd.to_datetime(row["DATA"], dayfirst=True, errors="coerce")
-
-    if pd.isna(data):
+    if pd.isna(row["DATA"]) or pd.isna(row["Nº FROTA"]):
         continue
 
-    tipo_servico = str(row["TIPO SERVIÇO"]).strip()
+    data = row["DATA"]
 
-    if tipo_servico == "" or tipo_servico.lower() == "nan":
-        tipo_servico = "SEM TIPO"
+    cliente = row["CLIENTE"]
+    if cliente:
+        cliente = str(cliente).strip()
 
-    cur.execute("""
-        INSERT INTO manutencoes (
-            data, numero_frota, bau, tipo_veiculo,
-            tipo_servico, tipo_atendimento,
-            tipo_manutencao, status, observacao
-        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
-    """, (
-        data,  # deixa como datetime (melhor)
-        str(row["Nº FROTA"]).strip(),
-        str(row["BAU"]).strip(),
-        str(row["TIPO VEICULO"]).strip(),
-        tipo_servico,
-        str(row["TIPO ATENDIMENTO"]).strip(),
-        str(row["TIPO MANUTENÇÃO"]).strip(),
-        str(row["STATUS"]).strip(),
-        str(row["OBSERVAÇÃO"]).strip()
+    dados.append((
+        data,
+        row["Nº FROTA"],
+        row["BAU"],
+        row["TIPO VEICULO"],
+        row["TIPO SERVIÇO"],
+        row["TIPO ATENDIMENTO"],
+        row["TIPO MANUTENÇÃO"],
+        row["STATUS"],
+        row["OBSERVAÇÃO"],
+        cliente
     ))
 
-    contador += 1
+execute_batch(cur, """
+    INSERT INTO manutencoes (
+        data, numero_frota, bau, tipo_veiculo,
+        tipo_servico, tipo_atendimento,
+        tipo_manutencao, status, observacao,
+        cliente
+    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+""", dados)
 
 conn.commit()
 cur.close()
 conn.close()
 
-print("TOTAL INSERIDO:", contador)
+print("TOTAL INSERIDO:", len(dados))
