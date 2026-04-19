@@ -1,0 +1,9 @@
+<div class="x-card mt-4">
+  <h5>Top Clientes</h5>
+
+  <ul>
+    {% for cliente, qtd in top_clientes %}
+      <li>{{ cliente }} - {{ qtd }}</li>
+    {% endfor %}
+  </ul>
+</div>

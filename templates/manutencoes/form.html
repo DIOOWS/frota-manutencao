@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h3>{{ "Editar" if m else "Nova" }} Manutenção</h3>
+
+<form method="POST">
+
+  <input type="date" name="data" class="form-control mb-2"
+         value="{{ m.data if m else '' }}">
+
+  <input name="numero_frota" class="form-control mb-2"
+         value="{{ m.numero_frota if m else '' }}" placeholder="Frota">
+
+  <input name="bau" class="form-control mb-2"
+         value="{{ m.bau if m else '' }}" placeholder="Baú">
+
+  <input name="tipo_veiculo" class="form-control mb-2"
+         value="{{ m.tipo_veiculo if m else '' }}" placeholder="Tipo Veículo">
+
+  <select name="tipo_servico" class="form-control mb-2">
+    <option value="CORRETIVA" {% if m and m.tipo_servico == "CORRETIVA" %}selected{% endif %}>Corretiva</option>
+    <option value="PREVENTIVA" {% if m and m.tipo_servico == "PREVENTIVA" %}selected{% endif %}>Preventiva</option>
+  </select>
+
+  <input name="tipo_atendimento" class="form-control mb-2"
+         value="{{ m.tipo_atendimento if m else '' }}" placeholder="Tipo Atendimento">
+
+  <input name="tipo_manutencao" class="form-control mb-2"
+         value="{{ m.tipo_manutencao if m else '' }}" placeholder="Tipo Manutenção">
+
+  <select name="status" class="form-control mb-2">
+    <option value="ANDAMENTO" {% if m and m.status == "ANDAMENTO" %}selected{% endif %}>Em andamento</option>
+    <option value="FINALIZADO" {% if m and m.status == "FINALIZADO" %}selected{% endif %}>Finalizado</option>
+  </select>
+
+  <input name="cliente" class="form-control mb-2"
+         value="{{ m.cliente if m else '' }}" placeholder="Cliente">
+
+  <textarea name="observacao" class="form-control mb-2">{{ m.observacao if m else '' }}</textarea>
+
+  <button class="btn btn-primary">Salvar</button>
+
+</form>
+
+{% endblock %}

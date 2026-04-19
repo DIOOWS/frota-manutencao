@@ -1,0 +1,25 @@
+<table class="table">
+
+  <thead>
+    <tr>
+      <th>Data</th>
+      <th>Frota</th>
+      <th>Cliente</th>
+      <th>Tipo</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for m in manutencoes %}
+    <tr>
+      <td>{{ m.data }}</td>
+      <td>{{ m.numero_frota }}</td>
+      <td>{{ m.cliente }}</td>
+      <td>{{ m.tipo_manutencao }}</td>
+      <td>{{ m.status }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+
+</table>

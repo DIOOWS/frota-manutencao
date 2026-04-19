@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h3>Nova Manutenção</h3>
+
+<form method="POST" class="mt-3">
+
+  <input type="date" name="data" class="form-control mb-2" required>
+
+  <input name="numero_frota" placeholder="Frota" class="form-control mb-2">
+
+  <input name="bau" placeholder="Baú" class="form-control mb-2">
+
+  <input name="tipo_veiculo" placeholder="Tipo Veículo" class="form-control mb-2">
+
+  <select name="tipo_servico" class="form-control mb-2">
+    <option value="CORRETIVA">Corretiva</option>
+    <option value="PREVENTIVA">Preventiva</option>
+  </select>
+
+  <input name="tipo_atendimento" placeholder="Tipo Atendimento" class="form-control mb-2">
+
+  <input name="tipo_manutencao" placeholder="Tipo Manutenção" class="form-control mb-2">
+
+  <select name="status" class="form-control mb-2">
+    <option value="ANDAMENTO">Em andamento</option>
+    <option value="FINALIZADO">Finalizado</option>
+  </select>
+
+  <input name="cliente" placeholder="Cliente" class="form-control mb-2">
+
+  <textarea name="observacao" placeholder="Observação" class="form-control mb-2"></textarea>
+
+  <button class="btn btn-success">Salvar</button>
+
+</form>
+
+
+{% endblock %}

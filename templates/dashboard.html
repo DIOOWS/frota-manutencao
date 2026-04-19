@@ -1,364 +1,146 @@
-<!DOCTYPE html>
-<html lang="pt-br">
+{% extends "base.html" %}
 
+{% block title %}Dashboard{% endblock %}
 
-<head>
-<meta charset="UTF-8">
-<title>Painel de Inteligência da Frota</title>
+{% block content %}
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/cards.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-
-<script>
-window.detalheFrotas = {{ detalhe_frotas | default([]) | tojson }};
-window.detalheTipos = {{ detalhe_tipos | default([]) | tojson }};
-</script>
-
-<script>
-const detalheFrotas = window.detalheFrotas || [];
-const detalheTipos = window.detalheTipos || [];
-
-// 🔍 DEBUG (pode remover depois)
-console.log("FROTAS:", detalheFrotas);
-console.log("TIPOS:", detalheTipos);
-
-// 🔥 TRANSFORMA DADOS (ESSA PARTE QUE FALTAVA)
-const labelsFrotas = detalheFrotas.map(item => item[0]);
-const valoresFrotas = detalheFrotas.map(item => item[1]);
-
-const labelsTipos = detalheTipos.map(item => item[0]);
-const valoresTipos = detalheTipos.map(item => item[1]);
-
-</script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
-
-</head>
-
-<body>
-
-<div class="container py-4">
-
-{% if request.args.get('data_inicio') %}
-<div class="alert alert-info">
-  🔎 Filtrando por período: {{ request.args.get('data_inicio') }} até {{ request.args.get('data_fim') }}
-</div>
-{% endif %}
-
-<h1 class="x-title">Painel Easy de Manutenção de Veículos</h1>
-
-<!-- FILTROS -->
-<form method="GET" class="row g-3 mb-4">
-
-<input type="hidden" name="data_inicio" value="{{ request.args.get('data_inicio','') }}">
-<input type="hidden" name="data_fim" value="{{ request.args.get('data_fim','') }}">
-
-<div class="col-md-4">
-<select name="cliente" class="form-select">
-<option value="">Todos os clientes</option>
-
-{% for c in clientes %}
-<option value="{{ c }}" {% if c == cliente_selecionado %}selected{% endif %}>
-  {{ c }}
-</option>
-{% endfor %}
-</select>
-</div>
-
-<div class="col-md-4">
-<select name="frota" class="form-select">
-<option value="">Todas as frotas</option>
-
-{% for f in frotas %}
-<option value="{{ f }}" {% if f == frota_selecionada %}selected{% endif %}>
-  {{ f }}
-</option>
-{% endfor %}
-</select>
-</div>
-
-<div class="col-md-2">
-<button type="submit" class="btn btn-primary w-100">
-Filtrar
-</button>
-</div>
-
-<div class="col-md-2">
-<a href="/" class="btn btn-secondary w-100">
-Limpar
-</a>
-</div>
-
+<!-- FILTRO -->
+<form method="GET" class="mb-4 d-flex gap-2">
+  <input type="date" name="data_inicio" class="form-control"
+         value="{{ request.args.get('data_inicio', '') }}">
+  <input type="date" name="data_fim" class="form-control"
+         value="{{ request.args.get('data_fim', '') }}">
+  <button class="btn btn-dark">Filtrar</button>
 </form>
 
-<!-- HERO -->
-<div class="x-card x-hero mb-4">
-<h3>⚠ Alto índice de manutenção corretiva ({{ perc_corretiva }}%)</h3>
-<p>Impacto direto na operação — necessidade de reforço na preventiva</p>
-</div>
+<!-- METRICAS -->
+{% include "partials/metricas.html" %}
 
-<!-- RESUMO -->
-<div class="x-card x-section mb-4">
-<h5>Resumo Executivo</h5>
+<!-- 🔥 LINHA 1 -->
+<div class="row g-4">
 
-<p>
-{% if perc_corretiva > 60 %}
-Alto risco operacional devido à predominância de manutenção corretiva.
-{% else %}
-Operação equilibrada com potencial de melhoria.
-{% endif %}
-</p>
+  <!-- INTERNO VS EXTERNO -->
+  <div class="col-md-6">
+    <div class="x-card p-3 h-100">
+      <h5 class="mb-3">Interno vs Externo</h5>
 
-<p>
-Frota <strong>{{ top_frota[0] }}</strong> lidera ocorrências ({{ top_frota[1] }} registros).
-</p>
-
-</div>
-
-<!-- PRIMEIRA LINHA -->
-<div class="row g-3 mb-4">
-
-<div class="col-md-3">
-<div class="x-card x-metric">
-<small>Volume total de manutenções</small>
-<h2>{{ total }}</h2>
-<small>Carga operacional do período</small>
-</div>
-</div>
-
-<div class="col-md-3">
-<div class="x-card x-metric x-border-danger">
-<small>Dependência corretiva</small>
-<h2 style="color:#ff4d4f">{{ perc_corretiva }}%</h2>
-
-<small>
-{% if perc_corretiva > 60 %}
-🔴 Alto risco operacional
-{% elif perc_corretiva > 40 %}
-🟡 Atenção necessária
-{% else %}
-🟢 Nível saudável
-{% endif %}
-</small>
-
-<div class="x-progress mt-2">
-<div class="x-progress-bar" style="width:{{ perc_corretiva }}%;background:#ff4d4f;"></div>
-</div>
-
-</div>
-</div>
-
-<div class="col-md-3">
-<div class="x-card x-metric x-border-success">
-<small>Eficiência preventiva</small>
-<h2 style="color:#52c41a">{{ perc_preventiva }}%</h2>
-<small>Maior valor indica melhor controle da frota</small>
-</div>
-</div>
-
-<div class="col-md-3">
-<div class="x-card x-metric x-border-warning">
-<small>Serviços em execução</small>
-<h2 style="color:#faad14">{{ andamento }}</h2>
-<small>Impacta na disponibilidade da frota</small>
-</div>
-</div>
-
-</div>
-
-<!-- SEGUNDA LINHA -->
-<div class="row g-3 mb-4">
-
-<div class="col-md-4">
-<div class="x-card x-metric">
-<small>Confiabilidade da frota</small>
-<h2>{{ confiabilidade }}%</h2>
-</div>
-</div>
-
-<div class="col-md-4">
-<div class="x-card x-metric">
-<small>Tendência mensal</small>
-
-<h2>
-{% if tendencia > 0 %}
-<span style="color:#ff4d4f;">▲ {{ tendencia }}%</span>
-{% else %}
-<span style="color:#52c41a;">▼ {{ tendencia }}%</span>
-{% endif %}
-</h2>
-
-</div>
-</div>
-
-<div class="col-md-4">
-<div class="x-card x-section">
-
-<small>Comportamento da operação</small>
-
-<div class="d-flex justify-content-between mt-2">
-
-<div>
-<small>📈 Pico</small>
-<h6 style="color:#ff4d4f;">{{ pico_mes[0] }}</h6>
-<small>{{ pico_mes[1] }}</small>
-</div>
-
-<div class="text-end">
-<small>📉 Menor</small>
-<h6 style="color:#52c41a;">{{ pior_mes[0] }}</h6>
-<small>{{ pior_mes[1] }}</small>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-
-<!-- GRÁFICOS -->
-<div class="row g-3 mb-4">
-
-<div class="col-md-6">
-<div class="x-card x-chart">
-    <h3>Distribuição de Manutenções</h3>
-    <canvas id="graficoTipos" height="200"></canvas>
-</div>
-</div>
-
-<div class="col-md-6">
-<div class="x-card x-chart">
-    <h3>Evolução / Top Frotas</h3>
-    <canvas id="graficoFrotas" height="200"></canvas>
-</div>
-</div>
-
-</div>
-
-<!-- TOPS -->
-<div class="row g-3 mb-4">
-
-<div class="col-md-6">
-<div class="x-card x-table">
-<h5>Top 8 Frotas</h5>
-
-<table class="table table-hover">
-<tr><th>#</th><th>Frota</th><th>Qtd</th></tr>
-
-{% for f in top8_frotas %}
-<tr>
-<td class="rank">#{{ loop.index }}</td>
-<td>{{ f[0] }}</td>
-<td><strong>{{ f[1] }}</strong></td>
-</tr>
-{% endfor %}
-
-</table>
-
-</div>
-</div>
-
-<div class="col-md-6">
-<div class="x-card x-table">
-<h5>Top 8 Tipos</h5>
-
-<table class="table table-hover">
-<tr><th>#</th><th>Tipo</th><th>Qtd</th></tr>
-
-{% for t in top8_tipos %}
-<tr>
-<td class="rank">#{{ loop.index }}</td>
-<td>{{ t[0] if t[0] else "Sem tipo" }}</td>
-<td><strong>{{ t[1] }}</strong></td>
-</tr>
-{% endfor %}
-
-</table>
-
-</div>
-</div>
-
-</div>
-
-<!-- DIAGNÓSTICO -->
-<div class="x-card x-section mb-4">
-<h5>Diagnóstico da operação</h5>
-
-<p>
-{% if perc_corretiva > 60 %}
-🔴 Alta dependência de corretivas — necessário reforçar manutenção preventiva.
-{% else %}
-🟢 Operação equilibrada.
-{% endif %}
-</p>
-
-<p>
-📌 Frota {{ top_frota[0] }} é o principal ponto de atenção.
-</p>
-
-</div>
-
-</div>
-
-<!-- DADOS FLASK -->
-<script>
-const tiposData = {{ tipos | default([]) | tojson }};
-const evolucaoData = {{ evolucao | default([]) | tojson }};
-</script>
-
-<!-- JS -->
-<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
-
-<script>
-window.addEventListener("load", function(){
-
-  console.log("TIPOS DATA:", tiposData);
-  console.log("EVOLUCAO DATA:", evolucaoData);
-
-  if (typeof renderTipos === "function" && tiposData.length > 0) {
-    renderTipos(tiposData);
-  }
-
-  if (typeof renderEvolucao === "function" && evolucaoData.length > 0) {
-    renderEvolucao(evolucaoData);
-  }
-
-});
-</script>
-
-<script>
-console.log("TIPOS DATA:", tiposData);
-console.log("EVOLUCAO DATA:", evolucaoData);
-</script>
-
-<div id="modalMes" class="modal-custom">
-  <div class="modal-content-custom">
-
-    <span class="close-modal" onclick="fecharModal()">×</span>
-
-    <h3 id="modalTitulo">Detalhes</h3>
-
-    <p id="modalInfo"></p>
-      <div id="modalDetalhes" style="margin-top:15px;">
-
-  <div class="mb-3">
-    <h6>🚚 Top Frotas</h6>
-    <ul id="listaFrotas" class="list-group"></ul>
+      <div class="grafico-box grafico-pizza">
+        <canvas id="graficoAtendimento"></canvas>
+      </div>
+    </div>
   </div>
 
-  <div>
-    <h6>🔧 Tipos de Manutenção</h6>
-    <ul id="listaTipos" class="list-group"></ul>
+  <!-- POR MÊS -->
+  <div class="col-md-6">
+    <div class="x-card p-3 h-100">
+      <h5 class="mb-3">Manutenções por mês</h5>
+
+      <div class="grafico-box">
+        <canvas id="graficoMes"></canvas>
+      </div>
+    </div>
   </div>
 
 </div>
 
+<!-- 🔥 LINHA 2 -->
+<div class="row g-4 mt-1">
+
+  <!-- TIPOS -->
+  <div class="col-md-6">
+    <div class="x-card p-3 h-100">
+      <h5 class="mb-3">Tipos de Manutenção</h5>
+
+      <div class="grafico-box">
+        <canvas id="graficoTipo"></canvas>
+      </div>
+    </div>
   </div>
+
+  <!-- TOP FROTAS -->
+  <div class="col-md-6">
+    <div class="x-card p-3 h-100">
+      <h5 class="mb-3">Top Frotas (mais manutenção)</h5>
+
+      <div class="grafico-box">
+        <canvas id="graficoFrota"></canvas>
+      </div>
+    </div>
+  </div>
+
 </div>
 
-</body>
-</html>
+<div class="row mt-4">
+
+  <div class="col-12">
+    <div class="x-card p-3 mt-4">
+
+  <h5 class="mb-3 text-danger fw-bold">
+    🚨 Frotas Críticas
+  </h5>
+
+  <div class="frotas-lista">
+
+    {% for frota, qtd in frotas_criticas %}
+
+    <a href="/manutencoes?frota={{ frota }}" class="frota-item">
+
+      <div class="frota-left">
+        <span class="icone">🚚</span>
+        <div>
+          <div class="frota-nome">Frota {{ frota }}</div>
+          <small class="text-muted">Alta incidência de manutenção</small>
+        </div>
+      </div>
+
+      <div class="frota-right">
+        <span class="badge-frota">
+          {{ qtd }}
+        </span>
+      </div>
+
+    </a>
+
+    {% endfor %}
+
+  </div>
+
+</div>
+
+</div>
+
+<!-- 🔥 JSON PARA JS -->
+
+<script id="dados-atendimento" type="application/json">
+{{ {
+  "labels": labels_atendimento,
+  "valores": valores_atendimento
+} | tojson }}
+</script>
+
+<script id="dados-mes" type="application/json">
+{{ {
+  "labels": labels,
+  "valores": valores
+} | tojson }}
+</script>
+
+<script id="dados-tipo" type="application/json">
+{{ {
+  "labels": labels_tipo,
+  "valores": valores_tipo
+} | tojson }}
+</script>
+
+<script id="dados-frota" type="application/json">
+{{ {
+  "labels": labels_frota,
+  "valores": valores_frota
+} | tojson }}
+</script>
+
+<script id="dados-frotas" type="application/json">
+{{ dados_frotas | tojson }}
+</script>
+
+{% endblock %}

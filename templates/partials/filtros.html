@@ -1,0 +1,40 @@
+<h1 class="x-title">Painel Easy de Manutenção de Veículos</h1>
+
+<form method="GET" class="row g-3 mb-4">
+
+<input type="hidden" name="data_inicio" value="{{ request.args.get('data_inicio','') }}">
+<input type="hidden" name="data_fim" value="{{ request.args.get('data_fim','') }}">
+
+<div class="col-md-4">
+<select name="cliente" class="form-select">
+<option value="">Todos os clientes</option>
+
+{% for c in clientes %}
+<option value="{{ c }}" {% if c == cliente_selecionado %}selected{% endif %}>
+  {{ c }}
+</option>
+{% endfor %}
+</select>
+</div>
+
+<div class="col-md-4">
+<select name="frota" class="form-select">
+<option value="">Todas as frotas</option>
+
+{% for f in frotas %}
+<option value="{{ f }}" {% if f == frota_selecionada %}selected{% endif %}>
+  {{ f }}
+</option>
+{% endfor %}
+</select>
+</div>
+
+<div class="col-md-2">
+<button type="submit" class="btn btn-primary w-100">Filtrar</button>
+</div>
+
+<div class="col-md-2">
+<a href="/" class="btn btn-secondary w-100">Limpar</a>
+</div>
+
+</form>
