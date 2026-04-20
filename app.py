@@ -67,6 +67,15 @@ from routes.manutencoes import manutencao_bp
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(manutencao_bp, url_prefix="/manutencoes")
 
+@app.route("/teste-db")
+def teste_db():
+    from sqlalchemy import text
+    try:
+        db.session.execute(text("SELECT 1"))
+        return "Banco conectado!", 200
+    except Exception as e:
+        return str(e), 500
+
 # =====================================================
 # 🔥 HEALTH CHECK (IMPORTANTE PRO RENDER)
 # =====================================================
