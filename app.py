@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, redirect
 from database import db
 from flask_migrate import Migrate
 from dotenv import load_dotenv
@@ -27,7 +27,7 @@ app.config['SECRET_KEY'] = os.getenv(
 # =====================================================
 database_url = os.getenv('DATABASE_URL')
 
-print("🔥 DATABASE_URL:", database_url)  # DEBUG
+print("🔥 DATABASE_URL:", database_url)  # (pode remover depois)
 
 if not database_url:
     raise RuntimeError("🚨 DATABASE_URL não configurada!")
@@ -39,11 +39,9 @@ if database_url.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# SSL obrigatório
+# SSL obrigatório (Supabase)
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    "connect_args": {
-        "sslmode": "require"
-    }
+    "connect_args": {"sslmode": "require"}
 }
 
 # =====================================================
@@ -53,17 +51,35 @@ db.init_app(app)
 migrate = Migrate(app, db)
 
 # =====================================================
-# 🔥 ROTAS DE TESTE
+# 🔥 IMPORTS (DEPOIS DO APP + DB)
 # =====================================================
+from models import *
+from routes.dashboard import dashboard_bp
+from routes.manutencoes import manutencao_bp
 
+# =====================================================
+# 🔥 REGISTRAR ROTAS (BLUEPRINTS)
+# =====================================================
+app.register_blueprint(dashboard_bp)  # geralmente expõe /dashboard
+app.register_blueprint(manutencao_bp, url_prefix="/manutencoes")
+
+# =====================================================
+# 🔥 HOME → DASHBOARD
+# =====================================================
 @app.route("/")
 def home():
-    return "🔥 APP ONLINE"
+    return redirect("/dashboard")
 
+# =====================================================
+# 🔥 HEALTH
+# =====================================================
 @app.route("/health")
 def health():
     return {"status": "ok"}, 200
 
+# =====================================================
+# 🔥 TESTE DB
+# =====================================================
 @app.route("/teste-db")
 def teste_db():
     from sqlalchemy import text
