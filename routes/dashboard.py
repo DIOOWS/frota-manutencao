@@ -4,6 +4,7 @@ from collections import defaultdict, Counter
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
+
 @dashboard_bp.route("/")
 def dashboard():
 
@@ -26,95 +27,114 @@ def dashboard():
         except:
             return "Sem frota"
 
+    total = len(registros)
+
     # 🔥 gráfico por mês
     por_mes = defaultdict(int)
+
+    # 🔥 estruturas auxiliares
+    tipos_counter = Counter()
+    frotas_counter = Counter()
+    atendimento_counter = Counter()
+    dados_frotas = {}
+    dados_tipos_detalhe = {}
+
+    corretivas = 0
+    preventivas = 0
+    andamento = 0
+    concluidas = 0
+
+    # 🔥 LOOP ÚNICO (OTIMIZADO)
     for r in registros:
+
+        # DATA / MÊS
         if r.data:
             mes = r.data.strftime("%Y-%m")
             por_mes[mes] += 1
 
+        # PADRONIZAÇÕES
+        tipo = (r.tipo_manutencao or "Sem tipo").strip().upper()
+        tipo_servico = (r.tipo_servico or "").strip().lower()
+        status = (r.status or "").strip().lower()
+        atendimento = (r.tipo_atendimento or "Sem info").strip().lower()
+        frota = formatar_frota(r.numero_frota)
+
+        # CONTADORES
+        tipos_counter[tipo] += 1
+        frotas_counter[frota] += 1
+        atendimento_counter[atendimento] += 1
+
+        # SERVIÇOS
+        if tipo_servico == "corretiva":
+            corretivas += 1
+        elif tipo_servico == "preventiva":
+            preventivas += 1
+
+        # STATUS
+        if status == "andamento":
+            andamento += 1
+        elif status == "finalizado":
+            concluidas += 1
+
+        # HISTÓRICO POR FROTA
+        if r.numero_frota and r.data:
+            if frota not in dados_frotas:
+                dados_frotas[frota] = defaultdict(int)
+
+            dados_frotas[frota][mes] += 1
+
+        # MODAL DINÂMICO POR TIPO
+        if tipo not in dados_tipos_detalhe:
+            dados_tipos_detalhe[tipo] = []
+
+        dados_tipos_detalhe[tipo].append({
+            "frota": frota,
+            "data": r.data.strftime("%d/%m") if r.data else "Sem data",
+            "data_ordem": r.data
+        })
+
+    # 🔥 GRÁFICO POR MÊS
     labels = sorted(por_mes.keys())
     valores = [por_mes[m] for m in labels]
 
-    total = len(registros)
-
-    # 🔥 tipo de serviço
-    corretivas = sum(
-        1 for r in registros
-        if (r.tipo_servico or "").strip().lower() == "corretiva"
-    )
-
-    preventivas = sum(
-        1 for r in registros
-        if (r.tipo_servico or "").strip().lower() == "preventiva"
-    )
-
-    # 🔥 status
-    andamento = sum(
-        1 for r in registros
-        if (r.status or "").strip().lower() == "andamento"
-    )
-
-    concluidas = sum(
-        1 for r in registros
-        if (r.status or "").strip().lower() == "finalizado"
-    )
-
-    # 🔥 tipos de manutenção
-    tipos = Counter([
-        (r.tipo_manutencao or "Sem tipo")
-        for r in registros
-    ])
-
-    labels_tipo = list(tipos.keys())
-    valores_tipo = list(tipos.values())
+    # 🔥 TIPOS (ORDENADO)
+    tipos_ordenados = tipos_counter.most_common()
+    labels_tipo = [t[0] for t in tipos_ordenados]
+    valores_tipo = [t[1] for t in tipos_ordenados]
 
     # 🔥 TOP FROTAS
-    frotas = Counter([
-        formatar_frota(r.numero_frota)
-        for r in registros
-    ])
-
-    top_frotas = frotas.most_common(5)
-
+    top_frotas = frotas_counter.most_common(5)
     labels_frota = [f[0] for f in top_frotas]
     valores_frota = [f[1] for f in top_frotas]
 
     # 🔥 INTERNO vs EXTERNO
-    atendimento = Counter([
-        (r.tipo_atendimento or "Sem info").strip().lower()
-        for r in registros
-    ])
+    labels_atendimento = list(atendimento_counter.keys())
+    valores_atendimento = list(atendimento_counter.values())
 
-    labels_atendimento = list(atendimento.keys())
-    valores_atendimento = list(atendimento.values())
-
-    # 🔥 HISTÓRICO POR FROTA
-    dados_frotas = {}
-
-    for r in registros:
-        if r.numero_frota and r.data:
-
-            frota = formatar_frota(r.numero_frota)
-
-            if frota not in dados_frotas:
-                dados_frotas[frota] = defaultdict(int)
-
-            mes = r.data.strftime("%Y-%m")
-            dados_frotas[frota][mes] += 1
-
-    # ordenar meses
+    # 🔥 ORGANIZA HISTÓRICO POR FROTA
     dados_frotas = {
         frota: dict(sorted(meses.items()))
         for frota, meses in dados_frotas.items()
     }
+
+    # 🔥 ORDENA MODAL (DATA DESC)
+    for tipo in dados_tipos_detalhe:
+        dados_tipos_detalhe[tipo] = sorted(
+            dados_tipos_detalhe[tipo],
+            key=lambda x: x["data_ordem"] or 0,
+            reverse=True
+        )
+
+        # remove campo auxiliar
+        for item in dados_tipos_detalhe[tipo]:
+            item.pop("data_ordem", None)
 
     # 🔥 FROTAS CRÍTICAS
     limite = 3
 
     frotas_criticas = [
         (frota, qtd)
-        for frota, qtd in frotas.items()
+        for frota, qtd in frotas_counter.items()
         if qtd >= limite
     ]
 
@@ -130,6 +150,7 @@ def dashboard():
         corretivas=corretivas,
         preventivas=preventivas,
         andamento=andamento,
+        concluidas=concluidas,
         labels=labels,
         valores=valores,
         labels_tipo=labels_tipo,
@@ -140,4 +161,5 @@ def dashboard():
         valores_atendimento=valores_atendimento,
         dados_frotas=dados_frotas,
         frotas_criticas=frotas_criticas,
+        dados_tipos_detalhe=dados_tipos_detalhe,
     )

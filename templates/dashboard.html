@@ -70,47 +70,68 @@
 
 </div>
 
+<!-- 🔥 FROTAS CRÍTICAS -->
 <div class="row mt-4">
 
   <div class="col-12">
     <div class="x-card p-3 mt-4">
 
-  <h5 class="mb-3 text-danger fw-bold">
-    🚨 Frotas Críticas
-  </h5>
+      <h5 class="card-title-highlight">
+  🚨     Frotas Críticas
+      </h5>
 
-  <div class="frotas-lista">
+      <div class="frotas-lista">
 
-    {% for frota, qtd in frotas_criticas %}
+        {% for frota, qtd in frotas_criticas %}
 
-    <a href="/manutencoes?frota={{ frota }}" class="frota-item">
+        <a href="/manutencoes?frota={{ frota }}" class="frota-item">
 
-      <div class="frota-left">
-        <span class="icone">🚚</span>
-        <div>
-          <div class="frota-nome">Frota {{ frota }}</div>
-          <small class="text-muted">Alta incidência de manutenção</small>
-        </div>
+          <div class="frota-left">
+            <span class="icone">🚚</span>
+            <div>
+              <div class="frota-nome">Frota {{ frota }}</div>
+              <small class="text-muted">Alta incidência de manutenção</small>
+            </div>
+          </div>
+
+          <div class="frota-right">
+            <span class="badge-frota">
+              {{ qtd }}
+            </span>
+          </div>
+
+        </a>
+
+        {% endfor %}
+
       </div>
 
-      <div class="frota-right">
-        <span class="badge-frota">
-          {{ qtd }}
-        </span>
-      </div>
-
-    </a>
-
-    {% endfor %}
-
+    </div>
   </div>
 
 </div>
 
+<!-- 🔥 MODAL -->
+<div class="modal fade" id="modalTipo" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">
+          Tipo: <span id="tituloModalTipo"></span>
+        </h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <div id="listaTipo" class="d-flex flex-column gap-2"></div>
+      </div>
+
+    </div>
+  </div>
 </div>
 
 <!-- 🔥 JSON PARA JS -->
-
 <script id="dados-atendimento" type="application/json">
 {{ {
   "labels": labels_atendimento,
@@ -141,6 +162,10 @@
 
 <script id="dados-frotas" type="application/json">
 {{ dados_frotas | tojson }}
+</script>
+
+<script id="dados-tipos-detalhe" type="application/json">
+{{ dados_tipos_detalhe | tojson }}
 </script>
 
 {% endblock %}
