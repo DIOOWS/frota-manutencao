@@ -61,11 +61,15 @@ from models import *
 from routes.dashboard import dashboard_bp
 from routes.manutencoes import manutencao_bp
 
+@app.route("/")
+def home():
+    return "ok"
+
 # =====================================================
 # 🔥 REGISTRAR ROTAS
 # =====================================================
-app.register_blueprint(dashboard_bp)
-app.register_blueprint(manutencao_bp, url_prefix="/manutencoes")
+# app.register_blueprint(dashboard_bp)
+# app.register_blueprint(manutencao_bp, url_prefix="/manutencoes")
 
 @app.route("/teste-db")
 def teste_db():
