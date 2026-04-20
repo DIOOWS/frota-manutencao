@@ -4,33 +4,78 @@ from flask_migrate import Migrate
 from dotenv import load_dotenv
 import os
 
-# 🔥 carregar env PRIMEIRO
+# =====================================================
+# 🔥 CARREGAR VARIÁVEIS DE AMBIENTE
+# =====================================================
 load_dotenv()
 
-# 🔥 criar app
+# =====================================================
+# 🔥 CRIAR APP
+# =====================================================
 app = Flask(__name__)
 
-# 🔥 ESSENCIAL PARA LOGIN
-app.secret_key = "a262afcdf72d68e024a25a7e0459fe4bb7fd9013f9092a7c65658d68ea8ee14"
+# =====================================================
+# 🔐 SECRET KEY (SEGURA)
+# =====================================================
+app.config['SECRET_KEY'] = os.getenv(
+    'SECRET_KEY',
+    'dev-insecure-key-change-this'
+)
 
-# 🔥 configurar DEPOIS de criar
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
+# =====================================================
+# 🔥 DATABASE (SUPABASE / POSTGRES)
+# =====================================================
+database_url = os.getenv('DATABASE_URL')
+
+if not database_url:
+    raise RuntimeError("🚨 DATABASE_URL não configurada no ambiente!")
+
+# 🔥 Corrigir prefixo antigo do postgres
+if database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# 🔥 iniciar db
+# 🔥 SSL obrigatório (Supabase / Render)
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "connect_args": {
+        "sslmode": "require"
+    }
+}
+
+# =====================================================
+# 🔥 INICIAR BANCO
+# =====================================================
 db.init_app(app)
 
-# 🔥 migrate
+# =====================================================
+# 🔥 MIGRATIONS
+# =====================================================
 migrate = Migrate(app, db)
 
-# 🔥 IMPORTAR models e routes SÓ DEPOIS
+# =====================================================
+# 🔥 IMPORTS (DEPOIS DO APP)
+# =====================================================
 from models import *
 from routes.dashboard import dashboard_bp
 from routes.manutencoes import manutencao_bp
 
-# 🔥 registrar rotas
+# =====================================================
+# 🔥 REGISTRAR ROTAS
+# =====================================================
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(manutencao_bp, url_prefix="/manutencoes")
 
+# =====================================================
+# 🔥 HEALTH CHECK (IMPORTANTE PRO RENDER)
+# =====================================================
+@app.route("/health")
+def health():
+    return {"status": "ok"}, 200
+
+# =====================================================
+# 🔥 RODAR LOCAL
+# =====================================================
 if __name__ == "__main__":
     app.run(debug=True)
