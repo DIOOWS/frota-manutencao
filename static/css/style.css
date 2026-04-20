@@ -1,11 +1,13 @@
 /* =========================
    🎨 VARIÁVEIS (IDENTIDADE)
 ========================= */
-
-
 :root {
-  --primary: #1e3a8a;   /* azul escuro */
-  --secondary: #3b82f6; /* azul claro */
+  --gradient-start: #020024;
+  --gradient-mid: #090979;
+  --gradient-end: #00d4ff;
+
+  --primary: #1e3a8a;
+  --secondary: #3b82f6;
   --bg: #eef2f7;
   --card: #ffffff;
   --text: #1f2937;
@@ -30,7 +32,12 @@ body {
 .sidebar {
   width: 220px;
   height: 100vh;
-  background: linear-gradient(180deg,rgba(2, 0, 36, 1) 0%, rgba(9, 9, 121, 1) 51%, rgba(0, 212, 255, 1) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--gradient-start) 0%,
+    var(--gradient-mid) 50%,
+    var(--gradient-end) 100%
+  );
   padding: 20px;
   position: fixed;
 }
@@ -45,7 +52,8 @@ body {
 }
 
 .menu-item:hover {
-  background: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.15);
+  transform: translateX(3px);
 }
 
 .content {
@@ -54,13 +62,14 @@ body {
 
 
 /* =========================
-   🧱 CARD PADRÃO (QUADRADO)
+   🧱 CARD PADRÃO
 ========================= */
 .x-card {
   background: var(--card);
-  border-radius: 0; /* 🔥 SEM ARREDONDADO */
+  border-radius: 0;
   border: 1px solid var(--border);
   padding: 16px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
 
 
@@ -74,6 +83,7 @@ body {
   margin: -16px -16px 16px -16px;
   font-size: 18px;
   font-weight: 600;
+  border-bottom: 2px solid rgba(255,255,255,0.2);
 }
 
 
@@ -115,7 +125,7 @@ body {
 .metric-icon {
   width: 50px;
   height: 50px;
-  background: var(--secondary);
+  background: linear-gradient(180deg, var(--primary), var(--secondary));
   color: #fff;
   display: flex;
   align-items: center;
@@ -140,7 +150,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  color: #fff;
 }
 
 .frota-item {
@@ -151,6 +160,7 @@ body {
   background: #fff;
   border: 1px solid var(--border);
   text-decoration: none;
+  color: inherit;
 }
 
 .frota-item:hover {
@@ -187,6 +197,7 @@ body {
   background: #fff;
   text-decoration: none;
   color: inherit;
+  border-left: 4px solid var(--primary);
 }
 
 .linha-tipo:hover {
@@ -247,13 +258,15 @@ td:nth-child(10) {
 }
 
 
+/* =========================
+   🔥 TITULO DESTACADO
+========================= */
 .card-title-highlight {
-  background: #1e3a8a;
+  background: var(--primary);
   color: #fff;
   padding: 12px 16px;
   margin: -16px -16px 16px -16px;
-
-  font-size: 18px;      /* 🔥 maior */
-  font-weight: 700;     /* 🔥 mais forte */
+  font-size: 18px;
+  font-weight: 700;
   letter-spacing: 0.5px;
 }

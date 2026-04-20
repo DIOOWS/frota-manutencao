@@ -57,13 +57,13 @@
     </div>
   </div>
 
-  <!-- TOP FROTAS -->
+  <!-- 🔥 PARETO (NO LUGAR DO TOP FROTAS) -->
   <div class="col-md-6">
     <div class="x-card p-3 h-100">
-      <h5 class="mb-3">Top Frotas (mais manutenção)</h5>
+      <h5 class="mb-3">Pareto de Manutenções (80/20)</h5>
 
       <div class="grafico-box">
-        <canvas id="graficoFrota"></canvas>
+        <canvas id="graficoPareto"></canvas>
       </div>
     </div>
   </div>
@@ -166,6 +166,14 @@
 
 <script id="dados-tipos-detalhe" type="application/json">
 {{ dados_tipos_detalhe | tojson }}
+</script>
+
+<script id="dados-pareto" type="application/json">
+{{ {
+  "labels": labels_frota,
+  "valores": valores_frota,
+  "percentual": pareto_percentual
+} | tojson }}
 </script>
 
 {% endblock %}

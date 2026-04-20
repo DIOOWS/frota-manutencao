@@ -2,7 +2,52 @@ console.log("JS CARREGOU 🚀");
 
 document.addEventListener("DOMContentLoaded", function () {
 
-  // 🔥 GRAFICO PIZZA (INTERNO VS EXTERNO)
+  const styles = getComputedStyle(document.documentElement);
+
+  const c1 = styles.getPropertyValue('--gradient-start').trim();
+  const c2 = styles.getPropertyValue('--gradient-mid').trim();
+  const c3 = styles.getPropertyValue('--gradient-end').trim();
+
+  function criarGradient(ctx) {
+    const gradient = ctx.createLinearGradient(0, 0, 400, 0);
+    gradient.addColorStop(0, c1);
+    gradient.addColorStop(0.05, c2);
+    gradient.addColorStop(1, c3);
+    return gradient;
+  }
+
+  function configPadrao() {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+
+      animation: {
+        duration: 1000,
+        easing: 'easeOutQuart'
+      },
+
+      plugins: {
+        tooltip: {
+          backgroundColor: "#020024",
+          titleColor: "#00d4ff",
+          bodyColor: "#ffffff",
+          borderColor: "#00d4ff",
+          borderWidth: 1,
+          padding: 10
+        }
+      },
+
+      scales: {
+        x: { grid: { display: false } },
+        y: {
+          beginAtZero: true,
+          grid: { color: "#e5e7eb" }
+        }
+      }
+    };
+  }
+
+  // 🔥 PIZZA (sem alteração)
   const elAtendimento = document.getElementById("dados-atendimento");
 
   if (elAtendimento) {
@@ -16,27 +61,31 @@ document.addEventListener("DOMContentLoaded", function () {
           labels: dados.labels,
           datasets: [{
             data: dados.valores,
-            backgroundColor: [
-              "#020024",
-              "#090979",
-              "#00d4ff"
-            ]
+            backgroundColor: ["#01C0F2", "#090979"]
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: {
-              position: 'bottom'
+            legend: { position: 'bottom' },
+            datalabels: {
+              color: '#000',
+              font: { weight: 'bold', size: 14 },
+              formatter: (value, context) => {
+                const total = context.chart.data.datasets[0].data
+                  .reduce((a, b) => a + b, 0);
+                return ((value / total) * 100).toFixed(0) + '%';
+              }
             }
           }
-        }
+        },
+        plugins: [ChartDataLabels]
       });
     }
   }
 
-  // 🔥 GRAFICO POR MÊS
+  // 🔥 GRÁFICO POR MÊS
   const elMes = document.getElementById("dados-mes");
 
   if (elMes) {
@@ -44,11 +93,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const ctxMes = document.getElementById("graficoMes");
 
     if (ctxMes) {
-
-      const gradientMes = ctxMes.getContext("2d").createLinearGradient(0, 0, 0, 300);
-      gradientMes.addColorStop(0, "#020024");
-      gradientMes.addColorStop(0.5, "#090979");
-      gradientMes.addColorStop(1, "#00d4ff");
+      const ctx = ctxMes.getContext("2d");
 
       new Chart(ctxMes, {
         type: 'bar',
@@ -57,20 +102,30 @@ document.addEventListener("DOMContentLoaded", function () {
           datasets: [{
             label: 'Manutenções',
             data: dadosMes.valores,
-            backgroundColor: gradientMes,
-            borderColor: "#020024",
-            borderWidth: 1
+            backgroundColor: criarGradient(ctx),
+            barThickness: 40,
+            maxBarThickness: 55
           }]
         },
         options: {
-          responsive: true,
-          maintainAspectRatio: false
-        }
+          ...configPadrao(),
+          plugins: {
+            ...configPadrao().plugins,
+            datalabels: {
+              anchor: 'end',
+              align: 'top',
+              color: '#000',
+              font: { weight: 'bold', size: 12 },
+              formatter: (v) => v
+            }
+          }
+        },
+        plugins: [ChartDataLabels]
       });
     }
   }
 
-  // 🔥 GRAFICO POR TIPO
+  // 🔥 GRÁFICO POR TIPO
   const elTipo = document.getElementById("dados-tipo");
 
   if (elTipo) {
@@ -78,11 +133,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const ctxTipo = document.getElementById("graficoTipo");
 
     if (ctxTipo) {
-
-      const gradientTipo = ctxTipo.getContext("2d").createLinearGradient(0, 0, 0, 300);
-      gradientTipo.addColorStop(0, "#020024");
-      gradientTipo.addColorStop(0.5, "#090979");
-      gradientTipo.addColorStop(1, "#00d4ff");
+      const ctx = ctxTipo.getContext("2d");
 
       new Chart(ctxTipo, {
         type: 'bar',
@@ -91,152 +142,101 @@ document.addEventListener("DOMContentLoaded", function () {
           datasets: [{
             label: 'Tipos de Manutenção',
             data: dadosTipo.valores,
-            backgroundColor: gradientTipo,
-            borderColor: "#020024",
-            borderWidth: 1
+            backgroundColor: criarGradient(ctx),
+            barThickness: 40,
+            maxBarThickness: 55
           }]
         },
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
-
+          ...configPadrao(),
+          plugins: {
+            ...configPadrao().plugins,
+            datalabels: {
+              anchor: 'end',
+              align: 'top',
+              color: '#000',
+              font: { weight: 'bold', size: 12 },
+              formatter: (v) => v
+            }
+          },
           onClick: (evt, elements, chart) => {
             if (elements.length > 0) {
-              const index = elements[0].index;
-              const tipo = chart.data.labels[index];
-
-              abrirModalTipo(tipo);
+              abrirModalTipo(chart.data.labels[elements[0].index]);
             }
           }
-        }
+        },
+        plugins: [ChartDataLabels]
       });
     }
   }
 
-  // 🔥 TOP FROTAS
-  const elFrota = document.getElementById("dados-frota");
+  // 🔥 PARETO (NOVO)
+  const elPareto = document.getElementById("dados-pareto");
 
-  if (elFrota) {
-    const dadosFrota = JSON.parse(elFrota.textContent);
-    const ctxFrota = document.getElementById("graficoFrota");
+  if (elPareto) {
+    const dados = JSON.parse(elPareto.textContent);
+    const ctxPareto = document.getElementById("graficoPareto");
 
-    if (ctxFrota) {
+    if (ctxPareto) {
+      const ctx = ctxPareto.getContext("2d");
 
-      const gradientFrota = ctxFrota.getContext("2d").createLinearGradient(0, 0, 0, 300);
-      gradientFrota.addColorStop(0, "#020024");
-      gradientFrota.addColorStop(0.5, "#090979");
-      gradientFrota.addColorStop(1, "#00d4ff");
-
-      new Chart(ctxFrota, {
-        type: 'bar',
+      new Chart(ctxPareto, {
         data: {
-          labels: dadosFrota.labels,
-          datasets: [{
-            label: 'Quantidade',
-            data: dadosFrota.valores,
-            backgroundColor: gradientFrota,
-            borderColor: "#020024",
-            borderWidth: 1
-          }]
+          labels: dados.labels,
+          datasets: [
+            {
+              type: 'bar',
+              label: 'Manutenções',
+              data: dados.valores,
+              backgroundColor: criarGradient(ctx),
+              barThickness: 40,
+              maxBarThickness: 55
+            },
+            {
+              type: 'line',
+              label: '% Acumulado',
+              data: dados.percentual,
+              borderColor: '#ff0000',
+              borderWidth: 2,
+              yAxisID: 'y1',
+              tension: 0.3
+            }
+          ]
         },
+
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
+          ...configPadrao(),
 
-          onClick: (evt, elements, chart) => {
-            if (elements.length > 0) {
-              const index = elements[0].index;
-              const frota = chart.data.labels[index];
+          scales: {
+            y: { beginAtZero: true },
+            y1: {
+              beginAtZero: true,
+              position: 'right',
+              max: 100,
+              ticks: {
+                callback: v => v + "%"
+              }
+            }
+          },
 
-              abrirGraficoFrota(frota);
+          plugins: {
+            ...configPadrao().plugins,
+            datalabels: {
+              anchor: 'end',
+              align: 'top',
+              color: '#000',
+              font: { weight: 'bold', size: 12 },
+              formatter: (value, ctx) => {
+                if (ctx.dataset.type === 'bar') return value;
+                return null;
+              }
             }
           }
-        }
+        },
+
+        plugins: [ChartDataLabels]
       });
     }
   }
 
 });
-
-
-// 🔥 MODAL POR TIPO
-function abrirModalTipo(tipo) {
-
-  const el = document.getElementById("dados-tipos-detalhe");
-  if (!el) return;
-
-  const dados = JSON.parse(el.textContent);
-
-  const lista =
-    dados[tipo] ||
-    dados[tipo.toUpperCase()] ||
-    dados[tipo.toLowerCase()];
-
-  if (!lista || lista.length === 0) return;
-
-  const container = document.getElementById("listaTipo");
-  container.innerHTML = "";
-
-  lista.forEach(item => {
-    container.innerHTML += `
-      <a href="/manutencoes?frota=${item.frota}" class="linha-tipo text-decoration-none">
-        <div>
-          🚚 <strong>Frota ${item.frota}</strong><br>
-          <small class="text-muted">${item.data}</small>
-        </div>
-        <span class="badge-tipo">${tipo}</span>
-      </a>
-    `;
-  });
-
-  document.getElementById("tituloModalTipo").innerText = tipo;
-
-  new bootstrap.Modal(
-    document.getElementById("modalTipo")
-  ).show();
-}
-
-
-// 🔥 GRÁFICO DETALHE FROTA
-let chartFrota = null;
-
-function abrirGraficoFrota(frota) {
-
-  const el = document.getElementById("dados-frotas");
-  if (!el) return;
-
-  const dados = JSON.parse(el.textContent);
-  const dadosFrota = dados[frota];
-
-  if (!dadosFrota) return;
-
-  const labels = Object.keys(dadosFrota);
-  const valores = Object.values(dadosFrota);
-
-  if (chartFrota) chartFrota.destroy();
-
-  const ctx = document.getElementById("graficoFrotaDetalhe").getContext("2d");
-
-  const gradientLine = ctx.createLinearGradient(0, 0, 0, 300);
-  gradientLine.addColorStop(0, "rgba(0,212,255,0.4)");
-  gradientLine.addColorStop(1, "rgba(2,0,36,0)");
-
-  chartFrota = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: `Frota ${frota}`,
-        data: valores,
-        borderColor: "#020024",
-        backgroundColor: gradientLine,
-        fill: true,
-        tension: 0.3
-      }]
-    }
-  });
-
-  new bootstrap.Modal(
-    document.getElementById("modalFrota")
-  ).show();
-}
