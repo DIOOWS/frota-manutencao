@@ -11,10 +11,10 @@ load_dotenv()
 app = Flask(__name__)
 
 # 🔥 ESSENCIAL PARA LOGIN
-app.secret_key = "minha_chave_super_secreta_123"
+app.secret_key = "a262afcdf72d68e024a25a7e0459fe4bb7fd9013f9092a7c65658d68ea8ee14"
 
 # 🔥 configurar DEPOIS de criar
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:94BmzfxfN9hxxoTP@db.vhrkitmevkgtoudilbmo.supabase.co:5432/postgres"
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # 🔥 iniciar db
