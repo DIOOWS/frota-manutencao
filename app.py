@@ -38,21 +38,15 @@ ENV = os.getenv("FLASK_ENV", "development")
 if ENV == "production":
     print("🔥 USANDO BANCO DE PRODUÇÃO (SUPABASE)")
 
-    database_url = os.getenv("DATABASE_URL_PROD")
+    database_url = os.getenv("DATABASE_URL")
 
     if not database_url:
-        raise RuntimeError("🚨 DATABASE_URL_PROD não configurada!")
+        raise RuntimeError("🚨 DATABASE_URL não configurada!")
 
     if database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql://", 1)
 
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-
-    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-        "connect_args": {
-            "sslmode": "require"
-        }
-    }
 
 else:
     print("🔥 USANDO BANCO LOCAL (SQLITE)")
