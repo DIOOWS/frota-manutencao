@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h3>Cadastro de Usuário</h3>
+
+<a href="/" class="btn btn-secondary mb-3">
+    ← Voltar
+</a>
+
+<div class="card p-4" style="max-width: 500px;">
+
+<form method="POST">
+
+    <div class="mb-2">
+        <input name="nome" placeholder="Nome" class="form-control">
+    </div>
+
+    <div class="mb-2">
+        <input name="email" placeholder="Email" class="form-control">
+    </div>
+
+    <div class="mb-2">
+        <input type="password" name="senha" placeholder="Senha" class="form-control">
+    </div>
+
+    <button class="btn btn-primary w-100">
+        Cadastrar
+    </button>
+
+</form>
+
+</div>
+
+{% endblock %}

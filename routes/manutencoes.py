@@ -1,29 +1,35 @@
 from flask import Blueprint, render_template, request, redirect
 from models.manutencao import Manutencao
 from database import db
+from datetime import datetime
 
 manutencao_bp = Blueprint("manutencao", __name__, url_prefix="/manutencoes")
 
 
-# 📋 LISTAR (COM FILTRO)
+# 📋 LISTAR (COM BUSCA INTELIGENTE)
 @manutencao_bp.route("/")
 def lista():
 
-    frota = request.args.get("frota")
+    busca = request.args.get("busca")
 
     query = Manutencao.query
 
-    if frota:
-        query = query.filter(  # 🔥 CORREÇÃO AQUI
-            Manutencao.numero_frota.ilike(f"%{frota}%")
+    if busca:
+        query = query.filter(
+            db.or_(
+                Manutencao.numero_frota.ilike(f"%{busca}%"),
+                Manutencao.os.ilike(f"%{busca}%"),
+                Manutencao.cliente.ilike(f"%{busca}%")
+            )
         )
 
-    registros = query.all()  # agora usa o filtro corretamente
+    registros = query.order_by(Manutencao.id.desc()).all()
 
     return render_template(
         "manutencoes/lista.html",
         registros=registros
     )
+
 
 # ➕ NOVO
 @manutencao_bp.route("/nova", methods=["GET", "POST"])
@@ -31,23 +37,31 @@ def nova():
 
     if request.method == "POST":
 
+        data = request.form.get("data")
+
+        try:
+            data_convertida = datetime.strptime(data, "%Y-%m-%d") if data else None
+        except:
+            data_convertida = None
+
         m = Manutencao(
-            data=request.form["data"],
-            numero_frota=request.form["numero_frota"],
-            bau=request.form["bau"],
-            tipo_veiculo=request.form["tipo_veiculo"],
-            tipo_servico=request.form["tipo_servico"],
-            tipo_atendimento=request.form["tipo_atendimento"],
-            tipo_manutencao=request.form["tipo_manutencao"],
-            status=request.form["status"],
-            observacao=request.form["observacao"],
-            cliente=request.form["cliente"],
+            data=data_convertida,
+            numero_frota=request.form.get("numero_frota"),
+            bau=request.form.get("bau"),
+            tipo_veiculo=request.form.get("tipo_veiculo"),
+            tipo_servico=request.form.get("tipo_servico"),
+            tipo_atendimento=request.form.get("tipo_atendimento"),
+            tipo_manutencao=request.form.get("tipo_manutencao"),
+            status=request.form.get("status"),
+            observacao=request.form.get("observacao"),
+            cliente=request.form.get("cliente"),
+            os=request.form.get("os"),
         )
 
         db.session.add(m)
         db.session.commit()
 
-        return redirect("/manutencoes")
+        return redirect("/manutencoes/")
 
     return render_template("manutencoes/form.html", m=None)
 
@@ -60,20 +74,27 @@ def editar(id):
 
     if request.method == "POST":
 
-        m.data = request.form["data"]
-        m.numero_frota = request.form["numero_frota"]
-        m.bau = request.form["bau"]
-        m.tipo_veiculo = request.form["tipo_veiculo"]
-        m.tipo_servico = request.form["tipo_servico"]
-        m.tipo_atendimento = request.form["tipo_atendimento"]
-        m.tipo_manutencao = request.form["tipo_manutencao"]
-        m.status = request.form["status"]
-        m.observacao = request.form["observacao"]
-        m.cliente = request.form["cliente"]
+        data = request.form.get("data")
+
+        try:
+            m.data = datetime.strptime(data, "%Y-%m-%d") if data else None
+        except:
+            m.data = None
+
+        m.numero_frota = request.form.get("numero_frota")
+        m.bau = request.form.get("bau")
+        m.tipo_veiculo = request.form.get("tipo_veiculo")
+        m.tipo_servico = request.form.get("tipo_servico")
+        m.tipo_atendimento = request.form.get("tipo_atendimento")
+        m.tipo_manutencao = request.form.get("tipo_manutencao")
+        m.status = request.form.get("status")
+        m.observacao = request.form.get("observacao")
+        m.cliente = request.form.get("cliente")
+        m.os = request.form.get("os")
 
         db.session.commit()
 
-        return redirect("/manutencoes")
+        return redirect("/manutencoes/")
 
     return render_template("manutencoes/form.html", m=m)
 
@@ -87,4 +108,4 @@ def excluir(id):
     db.session.delete(m)
     db.session.commit()
 
-    return redirect("/manutencoes")
+    return redirect("/manutencoes/")

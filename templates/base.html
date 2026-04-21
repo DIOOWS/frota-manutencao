@@ -22,18 +22,28 @@
   <!-- SIDEBAR -->
   <div class="sidebar">
 
-    <h4 class="text-white mb-4">🚗 Frota</h4>
+    <div class="logo-container">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" class="logo-img">
+    </div>
 
     <a href="/" class="menu-item">
-      <i class="bi bi-speedometer2"></i> Dashboard
+        📊 Dashboard
     </a>
 
-    <a href="/manutencoes" class="menu-item">
-      <i class="bi bi-tools"></i> Manutenções
+    <a href="/manutencoes/" class="menu-item">
+        🛠️ Manutenções
     </a>
 
-    <a href="/manutencoes/nova" class="menu-item">
-      <i class="bi bi-plus-circle"></i> Nova
+    <a href="/clientes/" class="menu-item">
+        👥 Clientes
+    </a>
+
+    <a href="/cadastro" class="menu-item">
+        ➕ Novo Usuário
+    </a>
+
+    <a href="/logout" class="menu-item logout">
+        🚪 Sair
     </a>
 
   </div>

@@ -12,6 +12,11 @@
   <input name="numero_frota" class="form-control mb-2"
          value="{{ m.numero_frota if m else '' }}" placeholder="Frota">
 
+ <div class="mb-2">
+  <input type="text" name="os" placeholder="Os" class="form-control"
+         value="{{ m.os if m else '' }}">
+</div>
+
   <input name="bau" class="form-control mb-2"
          value="{{ m.bau if m else '' }}" placeholder="Baú">
 

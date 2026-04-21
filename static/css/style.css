@@ -270,3 +270,65 @@ td:nth-child(10) {
   font-weight: 700;
   letter-spacing: 0.5px;
 }
+
+.chart-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.chart-container canvas {
+  min-width: 1200px;
+}
+
+
+
+.logo-container {
+    text-align: center;
+    padding: 20px 10px;
+}
+
+.logo-img {
+    width: 140px;
+    max-width: 100%;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    transition: 0.3s;
+}
+
+.logo-img:hover {
+    transform: scale(1.05);
+}
+
+
+.menu {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px;
+}
+
+.menu-item {
+    text-decoration: none;
+    color: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.05);
+    transition: 0.3s;
+}
+
+.menu-item:hover {
+    background: rgba(0,212,255,0.2);
+}
+
+.logout {
+    margin-top: 20px;
+    background: rgba(255,0,0,0.2);
+}
+
+.logout:hover {
+    background: rgba(255,0,0,0.4);
+}
+
+.menu-item.active {
+    background: rgba(0, 212, 255, 0.3);
+    font-weight: bold;
+}

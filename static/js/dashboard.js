@@ -33,7 +33,15 @@ document.addEventListener("DOMContentLoaded", function () {
           bodyColor: "#ffffff",
           borderColor: "#00d4ff",
           borderWidth: 1,
-          padding: 10
+          padding: 10,
+          callbacks: {
+            label: function(context) {
+              if (context.dataset.type === 'line') {
+                return context.raw + "%";
+              }
+              return context.raw + " manutenções";
+            }
+          }
         }
       },
 
@@ -47,7 +55,7 @@ document.addEventListener("DOMContentLoaded", function () {
     };
   }
 
-  // 🔥 PIZZA (sem alteração)
+  // 🔥 PIZZA
   const elAtendimento = document.getElementById("dados-atendimento");
 
   if (elAtendimento) {
@@ -68,14 +76,15 @@ document.addEventListener("DOMContentLoaded", function () {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: { position: 'bottom' },
             datalabels: {
               color: '#000',
-              font: { weight: 'bold', size: 14 },
-              formatter: (value, context) => {
-                const total = context.chart.data.datasets[0].data
-                  .reduce((a, b) => a + b, 0);
-                return ((value / total) * 100).toFixed(0) + '%';
+              anchor: 'end',
+              align: 'end',
+              offset: 10,
+              formatter: (value) => value + '%',
+              font: {
+                weight: 'bold',
+                size: 14
               }
             }
           }
@@ -103,8 +112,7 @@ document.addEventListener("DOMContentLoaded", function () {
             label: 'Manutenções',
             data: dadosMes.valores,
             backgroundColor: criarGradient(ctx),
-            barThickness: 40,
-            maxBarThickness: 55
+            barThickness: 60
           }]
         },
         options: {
@@ -143,8 +151,7 @@ document.addEventListener("DOMContentLoaded", function () {
             label: 'Tipos de Manutenção',
             data: dadosTipo.valores,
             backgroundColor: criarGradient(ctx),
-            barThickness: 40,
-            maxBarThickness: 55
+            barThickness: 60
           }]
         },
         options: {
@@ -158,11 +165,6 @@ document.addEventListener("DOMContentLoaded", function () {
               font: { weight: 'bold', size: 12 },
               formatter: (v) => v
             }
-          },
-          onClick: (evt, elements, chart) => {
-            if (elements.length > 0) {
-              abrirModalTipo(chart.data.labels[elements[0].index]);
-            }
           }
         },
         plugins: [ChartDataLabels]
@@ -170,7 +172,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // 🔥 PARETO (NOVO)
+  // 🔥 PARETO (VERSÃO PROFISSIONAL)
   const elPareto = document.getElementById("dados-pareto");
 
   if (elPareto) {
@@ -188,9 +190,10 @@ document.addEventListener("DOMContentLoaded", function () {
               type: 'bar',
               label: 'Manutenções',
               data: dados.valores,
-              backgroundColor: criarGradient(ctx),
-              barThickness: 40,
-              maxBarThickness: 55
+              backgroundColor: dados.labels.map(label =>
+                label === "Outros" ? "#999999" : criarGradient(ctx)
+              ),
+              barThickness: 60
             },
             {
               type: 'line',
@@ -199,7 +202,19 @@ document.addEventListener("DOMContentLoaded", function () {
               borderColor: '#ff0000',
               borderWidth: 2,
               yAxisID: 'y1',
-              tension: 0.3
+              tension: 0.4,
+              pointRadius: 4,
+              pointBackgroundColor: '#ff0000'
+            },
+            {
+              type: 'line',
+              label: '80%',
+              data: dados.labels.map(() => 80),
+              borderColor: '#00ff00',
+              borderWidth: 2,
+              borderDash: [5, 5],
+              pointRadius: 0,
+              yAxisID: 'y1'
             }
           ]
         },

@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, session
 from models.manutencao import Manutencao
 from collections import defaultdict, Counter
+from datetime import datetime
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
@@ -13,7 +14,6 @@ def login():
         user = request.form.get("usuario")
         senha = request.form.get("senha")
 
-        # 🔥 LOGIN SIMPLES PRA DEMO
         if user == "admin" and senha == "123":
             session["logado"] = True
             return redirect("/")
@@ -32,7 +32,7 @@ def logout():
 @dashboard_bp.route("/")
 def dashboard():
 
-    # 🔥 PROTEÇÃO
+    # 🔐 PROTEÇÃO
     if not session.get("logado"):
         return redirect("/login")
 
@@ -41,12 +41,20 @@ def dashboard():
 
     query = Manutencao.query
 
+    # 🔥 FILTRO DE DATA (CORRIGIDO)
     if data_inicio and data_fim:
-        query = query.filter(
-            Manutencao.data.between(data_inicio, data_fim)
-        )
+        try:
+            inicio = datetime.strptime(data_inicio, "%Y-%m-%d")
+            fim = datetime.strptime(data_fim, "%Y-%m-%d")
 
-    registros = query.all()
+            query = query.filter(
+                Manutencao.data.between(inicio, fim)
+            )
+        except:
+            pass
+
+    # 🔥 ORDENAÇÃO
+    registros = query.order_by(Manutencao.id.desc()).all()
 
     def formatar_frota(valor):
         try:
@@ -108,34 +116,73 @@ def dashboard():
             "data": r.data.strftime("%d/%m") if r.data else "Sem data"
         })
 
+    # =========================
+    # 🔥 GRÁFICO POR MÊS
+    # =========================
     labels = sorted(por_mes.keys())
     valores = [por_mes[m] for m in labels]
 
+    # =========================
+    # 🔥 TIPOS
+    # =========================
     tipos_ordenados = tipos_counter.most_common()
     labels_tipo = [t[0] for t in tipos_ordenados]
     valores_tipo = [t[1] for t in tipos_ordenados]
 
-    # 🔥 PARETO (TODAS AS FROTAS)
+    # =========================
+    # 🔥 PARETO (CORRETO)
+    # =========================
+
+    # 🔥 TOTAL REAL (ANTES DO CORTE)
+    total_manutencoes = sum(frotas_counter.values()) or 1
+
+    # 🔥 ORDENA
     frotas_ordenadas = sorted(
         frotas_counter.items(),
         key=lambda x: x[1],
         reverse=True
     )
 
-    labels_frota = [f[0] for f in frotas_ordenadas]
-    valores_frota = [f[1] for f in frotas_ordenadas]
+    # 🔥 TOP + OUTROS
+    top_n = 10
+    top = frotas_ordenadas[:top_n]
+    outros = frotas_ordenadas[top_n:]
 
-    total_manutencoes = sum(valores_frota) or 1
+    soma_outros = sum(v for _, v in outros)
 
+    if soma_outros > 0:
+        top.append(("Outros", soma_outros))
+
+    labels_frota = [f[0] for f in top]
+    valores_frota = [f[1] for f in top]
+
+    # 🔥 PERCENTUAL ACUMULADO
     pareto_percentual = []
     acumulado = 0
 
-    for valor in valores_frota:
+    for i, valor in enumerate(valores_frota):
+
+        if labels_frota[i] == "Outros":
+            pareto_percentual.append(
+                pareto_percentual[-1] if pareto_percentual else 0
+            )
+            continue
+
         perc = (valor / total_manutencoes) * 100
         acumulado += perc
         pareto_percentual.append(round(acumulado, 2))
 
+    # 🔥 CORTE 80%
+    pareto_corte_80 = 0
+
+    for i, v in enumerate(pareto_percentual):
+        if v >= 80:
+            pareto_corte_80 = i
+            break
+
+    # =========================
     # 🔥 FROTAS CRÍTICAS
+    # =========================
     limite = 3
 
     frotas_criticas = [
@@ -150,9 +197,15 @@ def dashboard():
         reverse=True
     )[:5]
 
+    # =========================
+    # 🔥 ATENDIMENTO
+    # =========================
     labels_atendimento = list(atendimento_counter.keys())
     valores_atendimento = list(atendimento_counter.values())
 
+    # =========================
+    # 🔥 RENDER
+    # =========================
     return render_template(
         "dashboard.html",
         total=total,
@@ -167,6 +220,7 @@ def dashboard():
         labels_frota=labels_frota,
         valores_frota=valores_frota,
         pareto_percentual=pareto_percentual,
+        pareto_corte_80=pareto_corte_80,
         labels_atendimento=labels_atendimento,
         valores_atendimento=valores_atendimento,
         dados_frotas=dados_frotas,

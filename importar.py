@@ -1,6 +1,6 @@
 import pandas as pd
-from db import get_connection
-from psycopg2.extras import execute_batch
+from app import app, db
+from models import Manutencao
 
 df = pd.read_excel("dados.xlsx")
 
@@ -9,48 +9,38 @@ df["DATA"] = pd.to_datetime(df["DATA"], errors="coerce")
 df = df.where(pd.notnull(df), None)
 df = df.dropna(how='all')
 
-conn = get_connection()
-cur = conn.cursor()
+with app.app_context():
 
-cur.execute("DELETE FROM manutencoes")
+    # 🔥 limpa tabela
+    db.session.query(Manutencao).delete()
+    db.session.commit()
 
-dados = []
+    total = 0
 
-for _, row in df.iterrows():
+    for _, row in df.iterrows():
 
-    if pd.isna(row["DATA"]) or pd.isna(row["Nº FROTA"]):
-        continue
+        # 🚨 IGNORA LINHAS SUJAS
+        if pd.isna(row["DATA"]) or pd.isna(row["Nº FROTA"]):
+            continue
 
-    data = row["DATA"]
+        nova = Manutencao(
+            data=row["DATA"],
+            numero_frota=str(int(row["Nº FROTA"])),  # 🔥 remove .0
+            bau=row["BAU"],
+            tipo_veiculo=row["TIPO VEICULO"],
+            tipo_servico=row["TIPO SERVIÇO"],
+            tipo_atendimento=row["TIPO ATENDIMENTO"],
+            tipo_manutencao=row["TIPO MANUTENÇÃO"],
+            status=row["STATUS"],
+            observacao=row["OBSERVAÇÃO"],
+            cliente=str(row["CLIENTE"]).strip() if row["CLIENTE"] else None
+        )
 
-    cliente = row["CLIENTE"]
-    if cliente:
-        cliente = str(cliente).strip()
+        db.session.add(nova)
 
-    dados.append((
-        data,
-        row["Nº FROTA"],
-        row["BAU"],
-        row["TIPO VEICULO"],
-        row["TIPO SERVIÇO"],
-        row["TIPO ATENDIMENTO"],
-        row["TIPO MANUTENÇÃO"],
-        row["STATUS"],
-        row["OBSERVAÇÃO"],
-        cliente
-    ))
+        db.session.add(nova)
+        total += 1
 
-execute_batch(cur, """
-    INSERT INTO manutencoes (
-        data, numero_frota, bau, tipo_veiculo,
-        tipo_servico, tipo_atendimento,
-        tipo_manutencao, status, observacao,
-        cliente
-    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-""", dados)
+    db.session.commit()
 
-conn.commit()
-cur.close()
-conn.close()
-
-print("TOTAL INSERIDO:", len(dados))
+print("🔥 TOTAL INSERIDO:", total)
