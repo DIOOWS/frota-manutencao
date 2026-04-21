@@ -64,6 +64,16 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 migrate = Migrate(app, db)
 
+# ==========================================
+# 🔥 IMPORTAR MODELS (ESSENCIAL)
+# ==========================================
+from models.usuario import Usuario
+from models.cliente import Cliente
+from models.manutencao import Manutencao
+
+# ==========================================
+# 🔥 CRIAR TABELAS AUTOMATICAMENTE
+# ==========================================
 with app.app_context():
     try:
         db.create_all()
@@ -72,11 +82,17 @@ with app.app_context():
         print("❌ Erro ao criar tabelas:", e)
 
 # ==========================================
-# 🔥 IMPORTAR MODELS (IMPORTANTE)
+# 🔥 GARANTIR COLUNA 'os' (PRODUÇÃO)
 # ==========================================
-from models.usuario import Usuario
-from models.cliente import Cliente
-from models.manutencao import Manutencao
+from sqlalchemy import text
+
+with app.app_context():
+    try:
+        db.session.execute(text("ALTER TABLE manutencoes ADD COLUMN os VARCHAR(50);"))
+        db.session.commit()
+        print("🔥 Coluna 'os' criada!")
+    except Exception as e:
+        print("ℹ️ Coluna 'os' já existe ou erro ignorado:", e)
 
 # ==========================================
 # 🔥 IMPORTAR ROTAS
@@ -92,26 +108,8 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(cliente_bp)
 
 # ==========================================
-# 🔥 CORREÇÃO AUTOMÁTICA DO CAMPO "os"
-# (resolve problema no Render sem shell)
-# ==========================================
-from sqlalchemy import text
-
-with app.app_context():
-    try:
-        db.session.execute(text("ALTER TABLE manutencoes ADD COLUMN os VARCHAR(50);"))
-        db.session.commit()
-        print("🔥 Coluna 'os' criada no banco!")
-    except Exception as e:
-        print("ℹ️ Coluna 'os' já existe ou erro ignorado:", e)
-
-# ==========================================
 # 🔥 ROTAS DE TESTE
 # ==========================================
-@app.route("/")
-def home():
-    return "🔥 APP ONLINE"
-
 @app.route("/teste-db")
 def teste_db():
     from sqlalchemy import text
