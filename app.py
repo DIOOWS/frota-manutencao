@@ -64,6 +64,13 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 migrate = Migrate(app, db)
 
+with app.app_context():
+    try:
+        db.create_all()
+        print("🔥 Tabelas criadas com sucesso!")
+    except Exception as e:
+        print("❌ Erro ao criar tabelas:", e)
+
 # ==========================================
 # 🔥 IMPORTAR MODELS (IMPORTANTE)
 # ==========================================
