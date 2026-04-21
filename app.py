@@ -1,13 +1,8 @@
-import app
 from flask import Flask
 from database import db
 from flask_migrate import Migrate
 from dotenv import load_dotenv
 import os
-from routes.auth import auth_bp
-from routes.clientes import cliente_bp
-
-
 
 # ==========================================
 # 🔥 CARREGAR VARIÁVEIS DE AMBIENTE
@@ -33,7 +28,7 @@ app.config['SECRET_KEY'] = os.getenv(
 ENV = os.getenv("FLASK_ENV", "development")
 
 # ==========================================
-# 🔥 CONFIGURAÇÃO DO BANCO (ÚNICA E CORRETA)
+# 🔥 CONFIGURAÇÃO DO BANCO
 # ==========================================
 if ENV == "production":
     print("🔥 USANDO BANCO DE PRODUÇÃO (SUPABASE)")
@@ -48,9 +43,14 @@ if ENV == "production":
 
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        "connect_args": {
+            "sslmode": "require"
+        }
+    }
+
 else:
     print("🔥 USANDO BANCO LOCAL (SQLITE)")
-
     app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///dev.db"
 
 # ==========================================
@@ -65,16 +65,38 @@ db.init_app(app)
 migrate = Migrate(app, db)
 
 # ==========================================
+# 🔥 IMPORTAR MODELS (IMPORTANTE)
+# ==========================================
+from models.usuario import Usuario
+from models.cliente import Cliente
+from models.manutencao import Manutencao
+
+# ==========================================
 # 🔥 IMPORTAR ROTAS
 # ==========================================
 from routes.dashboard import dashboard_bp
 from routes.manutencoes import manutencao_bp
 from routes.auth import auth_bp
+from routes.clientes import cliente_bp
 
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(manutencao_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(cliente_bp)
+
+# ==========================================
+# 🔥 CORREÇÃO AUTOMÁTICA DO CAMPO "os"
+# (resolve problema no Render sem shell)
+# ==========================================
+from sqlalchemy import text
+
+with app.app_context():
+    try:
+        db.session.execute(text("ALTER TABLE manutencoes ADD COLUMN os VARCHAR(50);"))
+        db.session.commit()
+        print("🔥 Coluna 'os' criada no banco!")
+    except Exception as e:
+        print("ℹ️ Coluna 'os' já existe ou erro ignorado:", e)
 
 # ==========================================
 # 🔥 ROTAS DE TESTE
