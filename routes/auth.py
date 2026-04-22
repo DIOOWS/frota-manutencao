@@ -5,11 +5,7 @@ from database import db
 auth_bp = Blueprint("auth", __name__)
 
 
-
-
 # 🔐 LOGIN
-from flask import session
-
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
 
@@ -23,22 +19,14 @@ def login():
 
         if user and user.check_senha(senha):
             session["user_id"] = user.id
-            return redirect("/")
+            return redirect("/")  # 🔥 aqui tem que redirecionar
 
         return "Login inválido"
 
     return render_template("auth/login.html")
 
 
-
-
 # 👤 CADASTRO
-from flask import Blueprint, render_template, request, redirect
-from models.usuario import Usuario
-from database import db
-
-auth_bp = Blueprint("auth", __name__)
-
 @auth_bp.route("/cadastro", methods=["GET", "POST"])
 def cadastro():
 
@@ -47,28 +35,21 @@ def cadastro():
         email = request.form.get("email")
         senha = request.form.get("senha")
 
-        # 🔥 verifica se já existe
+        # 🔥 evita duplicado
         if Usuario.query.filter_by(email=email).first():
             return "Email já cadastrado"
 
-        user = Usuario(
-            nome=nome,
-            email=email
-        )
-
+        user = Usuario(nome=nome, email=email)
         user.set_senha(senha)
 
         db.session.add(user)
-        db.session.commit()  # 🔥 ESSA LINHA É O QUE TÁ FALTANDO
+        db.session.commit()
 
-        print("🔥 USUÁRIO SALVO NO BANCO:", user.email)
+        print("🔥 USUÁRIO SALVO:", user.email)
 
         return redirect("/login")
 
     return render_template("auth/cadastro.html")
-
-
-
 
 
 # 🔓 LOGOUT
@@ -76,4 +57,3 @@ def cadastro():
 def logout():
     session.clear()
     return redirect("/login")
-
