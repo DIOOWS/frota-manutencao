@@ -374,3 +374,12 @@ td:nth-child(10) {
 .dropdown-item {
   font-weight: 500;
 }
+
+
+
+.avatar-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+}

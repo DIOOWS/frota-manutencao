@@ -78,9 +78,11 @@ def novo_usuario():
 @admin_bp.route("/usuarios/editar/<int:id>", methods=["GET", "POST"])
 @admin_required
 def editar_usuario(id):
+
     user = Usuario.query.get_or_404(id)
 
     if request.method == "POST":
+
         user.nome = request.form.get("nome")
         user.email = request.form.get("email")
         user.role = request.form.get("role")
@@ -90,17 +92,21 @@ def editar_usuario(id):
             user.set_senha(senha)
 
         # 🔥 FOTO
+        import cloudinary.uploader
+
         foto = request.files.get("foto")
 
         if foto and foto.filename:
-            filename = secure_filename(foto.filename)
+            resultado = cloudinary.uploader.upload(foto)
+            user.foto = resultado["secure_url"]
 
-            caminho = os.path.join("static/uploads", filename)
-            foto.save(os.path.join(current_app.config["UPLOAD_FOLDER"], filename))
-
-            user.foto = caminho
-
+        # 🔥 SALVA NO BANCO
         db.session.commit()
+
+        # 🔥 AQUI É ONDE VOCÊ COLOCA 👇
+        if user.id == session.get("user_id"):
+            session["user_foto"] = user.foto
+
         return redirect("/admin/usuarios")
 
     return render_template("admin/usuario_form.html", user=user)

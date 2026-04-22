@@ -28,13 +28,13 @@
 
     <!-- 🔥 USUÁRIO -->
     <div class="user-box text-center mb-3">
-      <div class="user-avatar">
-          {% if session.get("user_foto") %}
-            <img src="/{{ session.get('user_foto') }}" class="avatar-img">
-          {% else %}
-            👤
-          {% endif %}
-      </div>
+     <div class="user-avatar">
+      {% if session.get("user_foto") %}
+        <img src="{{ session.get('user_foto') }}" class="avatar-img">
+      {% else %}
+        👤
+      {% endif %}
+    </div>
     </div>
 
   {% if session.get("user_role") == "admin" %}
