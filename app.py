@@ -81,6 +81,29 @@ with app.app_context():
     except Exception as e:
         print("❌ Erro ao criar tabelas:", e)
 
+        from models.usuario import Usuario
+
+        with app.app_context():
+            try:
+                if not Usuario.query.filter_by(nome="admin").first():
+
+                    admin = Usuario(
+                        nome="admin",
+                        email="admin@admin.com"
+                    )
+                    admin.set_senha("123")
+
+                    db.session.add(admin)
+                    db.session.commit()
+
+                    print("🔥 ADMIN CRIADO: admin / 123")
+
+                else:
+                    print("ℹ️ ADMIN já existe")
+
+            except Exception as e:
+                print("❌ Erro ao criar admin:", e)
+
 # ==========================================
 # 🔥 GARANTIR COLUNA 'os' (PRODUÇÃO)
 # ==========================================
