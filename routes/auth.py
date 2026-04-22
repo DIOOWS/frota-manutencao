@@ -8,6 +8,8 @@ auth_bp = Blueprint("auth", __name__)
 
 
 # 🔐 LOGIN
+from flask import session
+
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
 
@@ -16,6 +18,8 @@ def login():
         senha = request.form.get("senha")
 
         user = Usuario.query.filter_by(email=email).first()
+
+        print("USER ENCONTRADO:", user)
 
         if user and user.check_senha(senha):
             session["user_id"] = user.id
@@ -29,6 +33,12 @@ def login():
 
 
 # 👤 CADASTRO
+from flask import Blueprint, render_template, request, redirect
+from models.usuario import Usuario
+from database import db
+
+auth_bp = Blueprint("auth", __name__)
+
 @auth_bp.route("/cadastro", methods=["GET", "POST"])
 def cadastro():
 
@@ -37,18 +47,25 @@ def cadastro():
         email = request.form.get("email")
         senha = request.form.get("senha")
 
-        user = Usuario(nome=nome, email=email)
+        # 🔥 verifica se já existe
+        if Usuario.query.filter_by(email=email).first():
+            return "Email já cadastrado"
+
+        user = Usuario(
+            nome=nome,
+            email=email
+        )
+
         user.set_senha(senha)
 
         db.session.add(user)
-        db.session.commit()  # 🔥 ESSENCIAL
+        db.session.commit()  # 🔥 ESSA LINHA É O QUE TÁ FALTANDO
+
+        print("🔥 USUÁRIO SALVO NO BANCO:", user.email)
 
         return redirect("/login")
 
     return render_template("auth/cadastro.html")
-
-    if Usuario.query.filter_by(email=email).first():
-        return "Email já cadastrado"
 
 
 
