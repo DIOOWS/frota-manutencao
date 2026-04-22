@@ -10,16 +10,16 @@ auth_bp = Blueprint("auth", __name__)
 def login():
 
     if request.method == "POST":
-        email = request.form.get("email")
+        nome = request.form.get("nome")
         senha = request.form.get("senha")
 
-        user = Usuario.query.filter_by(email=email).first()
+        user = Usuario.query.filter_by(nome=nome).first()
 
         print("USER ENCONTRADO:", user)
 
         if user and user.check_senha(senha):
             session["user_id"] = user.id
-            return redirect("/")  # 🔥 aqui tem que redirecionar
+            return redirect("/")
 
         return "Login inválido"
 
