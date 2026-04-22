@@ -6,34 +6,12 @@ from datetime import datetime
 dashboard_bp = Blueprint("dashboard", __name__)
 
 
-# 🔥 LOGIN
-@dashboard_bp.route("/login", methods=["GET", "POST"])
-def login():
-
-    if request.method == "POST":
-        user = request.form.get("usuario")
-        senha = request.form.get("senha")
-
-        if user == "admin" and senha == "123":
-            session["logado"] = True
-            return redirect("/")
-
-    return render_template("login.html")
-
-
-# 🔥 LOGOUT
-@dashboard_bp.route("/logout")
-def logout():
-    session.clear()
-    return redirect("/login")
-
-
 # 🔥 DASHBOARD
 @dashboard_bp.route("/")
 def dashboard():
 
-    # 🔐 PROTEÇÃO
-    if not session.get("logado"):
+    # 🔐 PROTEÇÃO CORRETA
+    if not session.get("user_id"):
         return redirect("/login")
 
     data_inicio = request.args.get("data_inicio")
@@ -41,7 +19,7 @@ def dashboard():
 
     query = Manutencao.query
 
-    # 🔥 FILTRO DE DATA (CORRIGIDO)
+    # 🔥 FILTRO DE DATA
     if data_inicio and data_fim:
         try:
             inicio = datetime.strptime(data_inicio, "%Y-%m-%d")
@@ -130,20 +108,16 @@ def dashboard():
     valores_tipo = [t[1] for t in tipos_ordenados]
 
     # =========================
-    # 🔥 PARETO (CORRETO)
+    # 🔥 PARETO
     # =========================
-
-    # 🔥 TOTAL REAL (ANTES DO CORTE)
     total_manutencoes = sum(frotas_counter.values()) or 1
 
-    # 🔥 ORDENA
     frotas_ordenadas = sorted(
         frotas_counter.items(),
         key=lambda x: x[1],
         reverse=True
     )
 
-    # 🔥 TOP + OUTROS
     top_n = 10
     top = frotas_ordenadas[:top_n]
     outros = frotas_ordenadas[top_n:]
@@ -156,7 +130,6 @@ def dashboard():
     labels_frota = [f[0] for f in top]
     valores_frota = [f[1] for f in top]
 
-    # 🔥 PERCENTUAL ACUMULADO
     pareto_percentual = []
     acumulado = 0
 
@@ -172,7 +145,6 @@ def dashboard():
         acumulado += perc
         pareto_percentual.append(round(acumulado, 2))
 
-    # 🔥 CORTE 80%
     pareto_corte_80 = 0
 
     for i, v in enumerate(pareto_percentual):
