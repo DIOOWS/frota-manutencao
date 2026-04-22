@@ -349,3 +349,28 @@ td:nth-child(10) {
   font-weight: bold;
   font-size: 14px;
 }
+
+
+
+.btn-user {
+  background: rgba(255,255,255,0.1);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.btn-user:hover {
+  background: rgba(255,255,255,0.2);
+  color: white;
+}
+
+.dropdown-menu {
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.dropdown-item {
+  font-weight: 500;
+}

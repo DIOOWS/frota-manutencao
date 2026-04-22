@@ -34,10 +34,15 @@
       </div>
     </div>
 
+  {% if session.get("user_role") == "admin" %}
+      <a href="/admin" class="menu-item">
+        👑 Admin
+      </a>
+  {% endif %}
+
     <a href="/" class="menu-item">📊 Dashboard</a>
     <a href="/manutencoes/" class="menu-item">🛠️ Manutenções</a>
     <a href="/clientes/" class="menu-item">👥 Clientes</a>
-    <a href="/cadastro" class="menu-item">➕ Novo Usuário</a>
     <a href="/logout" class="menu-item logout">🚪 Sair</a>
 
   </div>

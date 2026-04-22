@@ -12,7 +12,7 @@ load_dotenv()
 # ==========================================
 # 🔥 CRIAR APP
 # ==========================================
-app = Flask(__name__)
+app = Flask(__name__, template_folder="templates")
 
 # ==========================================
 # 🔐 SECRET KEY
@@ -124,11 +124,13 @@ from routes.dashboard import dashboard_bp
 from routes.manutencoes import manutencao_bp
 from routes.auth import auth_bp
 from routes.clientes import cliente_bp
+from routes.admin import admin_bp
 
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(manutencao_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(cliente_bp)
+app.register_blueprint(admin_bp)
 
 # ==========================================
 # 🔥 ROTAS DE TESTE

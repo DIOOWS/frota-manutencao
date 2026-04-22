@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h3>👥 Usuários</h3>
+
+<a href="/admin/usuarios/novo" class="btn btn-success mb-3">
+  ➕ Novo Usuário
+</a>
+
+<table class="table table-striped">
+
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Nome</th>
+      <th>Email</th>
+      <th>Role</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for u in usuarios %}
+    <tr>
+      <td>{{ u.id }}</td>
+      <td>{{ u.nome }}</td>
+      <td>{{ u.email }}</td>
+      <td>
+        {% if u.role == "admin" %}
+          <span class="badge bg-danger">Admin</span>
+        {% else %}
+          <span class="badge bg-secondary">Usuário</span>
+        {% endif %}
+      </td>
+
+      <td class="d-flex gap-2">
+        <a href="/admin/usuarios/editar/{{ u.id }}"
+           class="btn btn-sm btn-warning">
+          ✏️
+        </a>
+
+        <a href="/admin/usuarios/excluir/{{ u.id }}"
+           class="btn btn-sm btn-danger"
+           onclick="return confirm('Tem certeza que deseja excluir?')">
+          🗑️
+        </a>
+      </td>
+
+    </tr>
+    {% endfor %}
+  </tbody>
+
+</table>
+
+{% endblock %}
