@@ -12,14 +12,14 @@
 
 <div class="card p-4" style="max-width: 500px;">
 
-
 {% if erro %}
   <div class="alert alert-danger">
     {{ erro }}
   </div>
 {% endif %}
 
-<form method="POST">
+<!-- 🔥 IMPORTANTE -->
+<form method="POST" enctype="multipart/form-data">
 
   <input name="nome"
          value="{{ user.nome if user else '' }}"
@@ -36,6 +36,14 @@
          name="senha"
          placeholder="Senha (deixe vazio para não alterar)"
          class="form-control mb-2">
+
+  <!-- 📷 INPUT FOTO (FALTAVA ISSO) -->
+  <input type="file" name="foto" class="form-control mb-2">
+
+  <!-- 🔥 PREVIEW -->
+  <img id="previewFoto"
+       src="{{ '/' + user.foto if user and user.foto else '' }}"
+       style="width:100px; height:100px; border-radius:50%; object-fit:cover; margin-top:10px;">
 
   <select name="role" class="form-control mb-3">
     <option value="usuario"
@@ -56,5 +64,16 @@
 </form>
 
 </div>
+
+<script>
+document.querySelector('input[name="foto"]').addEventListener('change', function(event) {
+  const file = event.target.files[0];
+  const preview = document.getElementById('previewFoto');
+
+  if (file) {
+    preview.src = URL.createObjectURL(file);
+  }
+});
+</script>
 
 {% endblock %}

@@ -22,6 +22,7 @@ def login():
             session["user_id"] = user.id
             session["user_nome"] = user.nome
             session["user_role"] = user.role  # 🔥 AQUI ESTÁ O SEGREDO
+            session["user_foto"] = user.foto
 
             return redirect("/")
 

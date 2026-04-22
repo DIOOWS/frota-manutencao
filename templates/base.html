@@ -28,9 +28,12 @@
 
     <!-- 🔥 USUÁRIO -->
     <div class="user-box text-center mb-3">
-      <div class="user-avatar">👤</div>
-      <div class="user-name">
-        {{ session.get("user_nome", "Usuário") }}
+      <div class="user-avatar">
+          {% if session.get("user_foto") %}
+            <img src="/{{ session.get('user_foto') }}" class="avatar-img">
+          {% else %}
+            👤
+          {% endif %}
       </div>
     </div>
 

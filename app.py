@@ -4,6 +4,14 @@ from flask_migrate import Migrate
 from dotenv import load_dotenv
 import os
 
+import cloudinary
+
+cloudinary.config(
+    cloud_name=os.getenv("CLOUD_NAME"),
+    api_key=os.getenv("API_KEY"),
+    api_secret=os.getenv("API_SECRET")
+)
+
 # ==========================================
 # 🔥 CARREGAR VARIÁVEIS DE AMBIENTE
 # ==========================================
@@ -144,8 +152,16 @@ def teste_db():
     except Exception as e:
         return f"❌ Erro: {str(e)}"
 
+
 # ==========================================
-# 🔥 RODAR LOCAL
+# 🔥 FOTO USUARIO
 # ==========================================
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
 if __name__ == "__main__":
     app.run(debug=True)

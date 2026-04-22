@@ -1,7 +1,9 @@
-from flask import Blueprint, render_template, request, redirect, session
+from flask import Blueprint, render_template, request, redirect, session, current_app
 from models.usuario import Usuario
 from database import db
 from utils.auth import admin_required
+from werkzeug.utils import secure_filename
+import os
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -48,12 +50,27 @@ def novo_usuario():
 
         user.set_senha(senha)
 
+        # 🔥 FOTO
+        foto = request.files.get("foto")
+
+        if foto and foto.filename:
+            filename = secure_filename(foto.filename)
+
+            caminho = os.path.join("static/uploads", filename)
+            import cloudinary.uploader
+
+            foto = request.files.get("foto")
+
+            if foto and foto.filename:
+                resultado = cloudinary.uploader.upload(foto)
+
+                user.foto = resultado["secure_url"]
+
         db.session.add(user)
         db.session.commit()
 
         return redirect("/admin/usuarios")
 
-    # 🔥 FALTAVA ISSO
     return render_template("admin/usuario_form.html", user=None)
 
 
@@ -71,6 +88,17 @@ def editar_usuario(id):
         senha = request.form.get("senha")
         if senha:
             user.set_senha(senha)
+
+        # 🔥 FOTO
+        foto = request.files.get("foto")
+
+        if foto and foto.filename:
+            filename = secure_filename(foto.filename)
+
+            caminho = os.path.join("static/uploads", filename)
+            foto.save(os.path.join(current_app.config["UPLOAD_FOLDER"], filename))
+
+            user.foto = caminho
 
         db.session.commit()
         return redirect("/admin/usuarios")

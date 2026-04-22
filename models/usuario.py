@@ -1,3 +1,4 @@
+
 from database import db
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -12,8 +13,11 @@ class Usuario(db.Model):
 
     senha_hash = db.Column(db.String(200), nullable=False)
 
-    # 🔥 NOVO CAMPO
+    # 🔐 nível de acesso
     role = db.Column(db.String(20), default="usuario")
+
+    # 📷 foto do usuário
+    foto = db.Column(db.String(255))
 
     def set_senha(self, senha):
         self.senha_hash = generate_password_hash(senha)
