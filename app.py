@@ -3,14 +3,7 @@ from database import db
 from flask_migrate import Migrate
 from dotenv import load_dotenv
 import os
-
 import cloudinary
-
-cloudinary.config(
-    cloud_name=os.getenv("CLOUD_NAME"),
-    api_key=os.getenv("API_KEY"),
-    api_secret=os.getenv("API_SECRET")
-)
 
 # ==========================================
 # 🔥 CARREGAR VARIÁVEIS DE AMBIENTE
@@ -31,15 +24,24 @@ app.config['SECRET_KEY'] = os.getenv(
 )
 
 # ==========================================
+# ☁️ CLOUDINARY
+# ==========================================
+cloudinary.config(
+    cloud_name=os.getenv("CLOUD_NAME"),
+    api_key=os.getenv("API_KEY"),
+    api_secret=os.getenv("API_SECRET")
+)
+
+# ==========================================
 # 🔥 DETECTAR AMBIENTE
 # ==========================================
 ENV = os.getenv("FLASK_ENV", "development")
 
 # ==========================================
-# 🔥 CONFIGURAÇÃO DO BANCO
+# 🔥 BANCO DE DADOS
 # ==========================================
 if ENV == "production":
-    print("🔥 USANDO BANCO DE PRODUÇÃO (SUPABASE)")
+    print("🔥 USANDO BANCO DE PRODUÇÃO")
 
     database_url = os.getenv("DATABASE_URL")
 
@@ -58,7 +60,7 @@ if ENV == "production":
     }
 
 else:
-    print("🔥 USANDO BANCO LOCAL (SQLITE)")
+    print("🔥 USANDO SQLITE LOCAL")
     app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///dev.db"
 
 # ==========================================
@@ -67,63 +69,48 @@ else:
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # ==========================================
+# 📷 UPLOAD LOCAL (fallback)
+# ==========================================
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+# ==========================================
 # 🔥 INICIAR DB
 # ==========================================
 db.init_app(app)
 migrate = Migrate(app, db)
 
 # ==========================================
-# 🔥 IMPORTAR MODELS (ESSENCIAL)
+# 🔥 IMPORTAR MODELS
 # ==========================================
 from models.usuario import Usuario
 from models.cliente import Cliente
 from models.manutencao import Manutencao
 
 # ==========================================
-# 🔥 CRIAR TABELAS AUTOMATICAMENTE
+# 🔥 CRIAR ADMIN AUTOMÁTICO (DEV)
 # ==========================================
 with app.app_context():
     try:
         db.create_all()
-        print("🔥 Tabelas criadas com sucesso!")
+
+        if not Usuario.query.filter_by(nome="admin").first():
+            admin = Usuario(
+                nome="admin",
+                email="admin@admin.com",
+                role="admin"
+            )
+            admin.set_senha("123")
+
+            db.session.add(admin)
+            db.session.commit()
+
+            print("🔥 ADMIN CRIADO: admin / 123")
+
     except Exception as e:
-        print("❌ Erro ao criar tabelas:", e)
-
-        from models.usuario import Usuario
-
-        with app.app_context():
-            try:
-                if not Usuario.query.filter_by(nome="admin").first():
-
-                    admin = Usuario(
-                        nome="admin",
-                        email="admin@admin.com"
-                    )
-                    admin.set_senha("123")
-
-                    db.session.add(admin)
-                    db.session.commit()
-
-                    print("🔥 ADMIN CRIADO: admin / 123")
-
-                else:
-                    print("ℹ️ ADMIN já existe")
-
-            except Exception as e:
-                print("❌ Erro ao criar admin:", e)
-
-# ==========================================
-# 🔥 GARANTIR COLUNA 'os' (PRODUÇÃO)
-# ==========================================
-from sqlalchemy import text
-
-with app.app_context():
-    try:
-        db.session.execute(text("ALTER TABLE manutencoes ADD COLUMN os VARCHAR(50);"))
-        db.session.commit()
-        print("🔥 Coluna 'os' criada!")
-    except Exception as e:
-        print("ℹ️ Coluna 'os' já existe ou erro ignorado:", e)
+        print("❌ ERRO AO INICIAR DB:", e)
 
 # ==========================================
 # 🔥 IMPORTAR ROTAS
@@ -141,7 +128,7 @@ app.register_blueprint(cliente_bp)
 app.register_blueprint(admin_bp)
 
 # ==========================================
-# 🔥 ROTAS DE TESTE
+# 🔥 TESTE DB
 # ==========================================
 @app.route("/teste-db")
 def teste_db():
@@ -152,16 +139,8 @@ def teste_db():
     except Exception as e:
         return f"❌ Erro: {str(e)}"
 
-
 # ==========================================
-# 🔥 FOTO USUARIO
+# 🚀 START
 # ==========================================
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-
 if __name__ == "__main__":
     app.run(debug=True)
