@@ -37,26 +37,18 @@ def cadastro():
         email = request.form.get("email")
         senha = request.form.get("senha")
 
-        if Usuario.query.filter_by(email=email).first():
-            return "Email já cadastrado"
-
-
         user = Usuario(nome=nome, email=email)
         user.set_senha(senha)
 
-        print("EMAIL:", email)
-        print("SENHA:", senha)
-        print("USER:", user)
-
-        if user:
-            print("SENHA OK:", user.check_senha(senha))
-
         db.session.add(user)
-        db.session.commit()
+        db.session.commit()  # 🔥 ESSENCIAL
 
         return redirect("/login")
 
     return render_template("auth/cadastro.html")
+
+    if Usuario.query.filter_by(email=email).first():
+        return "Email já cadastrado"
 
 
 
