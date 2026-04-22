@@ -4,9 +4,10 @@ from flask_migrate import Migrate
 from dotenv import load_dotenv
 import os
 import cloudinary
+from sqlalchemy import text
 
 # ==========================================
-# 🔥 CARREGAR VARIÁVEIS DE AMBIENTE
+# 🔥 CARREGAR VARIÁVEIS
 # ==========================================
 load_dotenv()
 
@@ -33,12 +34,12 @@ cloudinary.config(
 )
 
 # ==========================================
-# 🔥 DETECTAR AMBIENTE
+# 🔥 AMBIENTE
 # ==========================================
 ENV = os.getenv("FLASK_ENV", "development")
 
 # ==========================================
-# 🔥 BANCO DE DADOS
+# 🔥 BANCO
 # ==========================================
 if ENV == "production":
     print("🔥 USANDO BANCO DE PRODUÇÃO")
@@ -54,9 +55,7 @@ if ENV == "production":
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-        "connect_args": {
-            "sslmode": "require"
-        }
+        "connect_args": {"sslmode": "require"}
     }
 
 else:
@@ -64,7 +63,7 @@ else:
     app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///dev.db"
 
 # ==========================================
-# 🔥 CONFIG GERAL
+# 🔧 CONFIG
 # ==========================================
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -90,7 +89,25 @@ from models.cliente import Cliente
 from models.manutencao import Manutencao
 
 # ==========================================
-# 🔥 CRIAR ADMIN AUTOMÁTICO (DEV)
+# 🚨 GARANTIR COLUNAS (ANTES DE QUALQUER QUERY)
+# ==========================================
+with app.app_context():
+    try:
+        db.session.execute(text("ALTER TABLE usuarios ADD COLUMN role VARCHAR(20);"))
+        db.session.commit()
+        print("🔥 role criada")
+    except Exception as e:
+        print("role:", e)
+
+    try:
+        db.session.execute(text("ALTER TABLE usuarios ADD COLUMN foto VARCHAR(255);"))
+        db.session.commit()
+        print("🔥 foto criada")
+    except Exception as e:
+        print("foto:", e)
+
+# ==========================================
+# 🔥 CRIAR ADMIN (DEPOIS DAS COLUNAS)
 # ==========================================
 with app.app_context():
     try:
@@ -113,7 +130,7 @@ with app.app_context():
         print("❌ ERRO AO INICIAR DB:", e)
 
 # ==========================================
-# 🔥 IMPORTAR ROTAS
+# 🔥 ROTAS
 # ==========================================
 from routes.dashboard import dashboard_bp
 from routes.manutencoes import manutencao_bp
@@ -128,11 +145,10 @@ app.register_blueprint(cliente_bp)
 app.register_blueprint(admin_bp)
 
 # ==========================================
-# 🔥 TESTE DB
+# 🔥 TESTE
 # ==========================================
 @app.route("/teste-db")
 def teste_db():
-    from sqlalchemy import text
     try:
         db.session.execute(text("SELECT 1"))
         return "✅ Banco conectado!"
