@@ -10,17 +10,13 @@ manutencao_bp = Blueprint("manutencao", __name__, url_prefix="/manutencoes")
 @manutencao_bp.route("/")
 def lista():
 
-    busca = request.args.get("busca")
+    frota = request.args.get("frota")
 
     query = Manutencao.query
 
-    if busca:
+    if frota:
         query = query.filter(
-            db.or_(
-                Manutencao.numero_frota.ilike(f"%{busca}%"),
-                Manutencao.os.ilike(f"%{busca}%"),
-                Manutencao.cliente.ilike(f"%{busca}%")
-            )
+            Manutencao.numero_frota.ilike(f"%{frota}%")
         )
 
     registros = query.order_by(Manutencao.id.desc()).all()

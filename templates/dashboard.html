@@ -13,7 +13,7 @@
   <button class="btn btn-dark">Filtrar</button>
 </form>
 
-<!-- METRICAS -->
+<!-- MÉTRICAS -->
 {% include "partials/metricas.html" %}
 
 <!-- 🔥 LINHA 1 -->
@@ -57,7 +57,7 @@
     </div>
   </div>
 
-  <!-- 🔥 PARETO (NO LUGAR DO TOP FROTAS) -->
+  <!-- PARETO -->
   <div class="col-md-6">
     <div class="x-card p-3 h-100">
       <h5 class="mb-3">Pareto de Manutenções (80/20)</h5>
@@ -77,14 +77,17 @@
     <div class="x-card p-3 mt-4">
 
       <h5 class="card-title-highlight">
-  🚨    Frotas Críticas
+        🚨 Frotas Críticas
       </h5>
 
       <div class="frotas-lista">
 
         {% for frota, qtd in frotas_criticas %}
 
-        <a href="/manutencoes?frota={{ frota }}" class="frota-item">
+        <!-- 🔥 LINK CORRETO -->
+        <a href="/manutencoes?frota={{ frota }}"
+           class="frota-item"
+           style="text-decoration:none;">
 
           <div class="frota-left">
             <span class="icone">🚚</span>
@@ -111,7 +114,7 @@
 
 </div>
 
-<!-- 🔥 MODAL -->
+<!-- 🔥 MODAL (mantido se você usa pra tipos) -->
 <div class="modal fade" id="modalTipo" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -131,7 +134,8 @@
   </div>
 </div>
 
-<!-- 🔥 JSON PARA JS -->
+<!-- 🔥 JSONS PARA OS GRÁFICOS -->
+
 <script id="dados-atendimento" type="application/json">
 {{ {
   "labels": labels_atendimento,
@@ -151,21 +155,6 @@
   "labels": labels_tipo,
   "valores": valores_tipo
 } | tojson }}
-</script>
-
-<script id="dados-frota" type="application/json">
-{{ {
-  "labels": labels_frota,
-  "valores": valores_frota
-} | tojson }}
-</script>
-
-<script id="dados-frotas" type="application/json">
-{{ dados_frotas | tojson }}
-</script>
-
-<script id="dados-tipos-detalhe" type="application/json">
-{{ dados_tipos_detalhe | tojson }}
 </script>
 
 <script id="dados-pareto" type="application/json">

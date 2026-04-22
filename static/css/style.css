@@ -332,3 +332,20 @@ td:nth-child(10) {
     background: rgba(0, 212, 255, 0.3);
     font-weight: bold;
 }
+
+
+.user-box {
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.1);
+  color: white;
+}
+
+.user-avatar {
+  font-size: 28px;
+}
+
+.user-name {
+  font-weight: bold;
+  font-size: 14px;
+}

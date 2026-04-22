@@ -26,25 +26,19 @@
         <img src="{{ url_for('static', filename='img/logo.png') }}" class="logo-img">
     </div>
 
-    <a href="/" class="menu-item">
-        📊 Dashboard
-    </a>
+    <!-- 🔥 USUÁRIO -->
+    <div class="user-box text-center mb-3">
+      <div class="user-avatar">👤</div>
+      <div class="user-name">
+        {{ session.get("user_nome", "Usuário") }}
+      </div>
+    </div>
 
-    <a href="/manutencoes/" class="menu-item">
-        🛠️ Manutenções
-    </a>
-
-    <a href="/clientes/" class="menu-item">
-        👥 Clientes
-    </a>
-
-    <a href="/cadastro" class="menu-item">
-        ➕ Novo Usuário
-    </a>
-
-    <a href="/logout" class="menu-item logout">
-        🚪 Sair
-    </a>
+    <a href="/" class="menu-item">📊 Dashboard</a>
+    <a href="/manutencoes/" class="menu-item">🛠️ Manutenções</a>
+    <a href="/clientes/" class="menu-item">👥 Clientes</a>
+    <a href="/cadastro" class="menu-item">➕ Novo Usuário</a>
+    <a href="/logout" class="menu-item logout">🚪 Sair</a>
 
   </div>
 
@@ -56,10 +50,10 @@
 </div>
 
 <!-- SCRIPTS -->
-<!-- SCRIPTS -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
 </body>
 </html>

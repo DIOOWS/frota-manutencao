@@ -1,9 +1,125 @@
-<h2>Login</h2>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - EASY CONTROL</title>
 
-<form method="POST">
-  <input name="nome" placeholder="Usuário" class="form-control mb-2" required>
-  <input type="password" name="senha" placeholder="Senha" class="form-control mb-2" required>
-  <button class="btn btn-primary">Entrar</button>
-</form>
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<a href="/cadastro">Criar conta</a>
+  <!-- Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #020024, #090979, #00d4ff);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, sans-serif;
+    }
+
+    .login-box {
+      background: #fff;
+      padding: 35px;
+      width: 360px;
+      border-radius: 15px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+      animation: fadeIn 0.6s ease-in-out;
+    }
+
+    .login-box h4 {
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .form-control {
+      border-radius: 10px;
+    }
+
+    .input-group-text {
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, #090979, #00d4ff);
+      border: none;
+      border-radius: 10px;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+
+    .spinner-border {
+      width: 1rem;
+      height: 1rem;
+      display: none;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="login-box">
+
+  <h4 class="text-center">EASY CONTROL</h4>
+
+  {% if erro %}
+    <div class="alert alert-danger text-center">
+      {{ erro }}
+    </div>
+  {% endif %}
+
+  <form method="POST" onsubmit="mostrarLoading()">
+
+    <input type="text" name="nome" placeholder="Usuário"
+           class="form-control mb-3" required autofocus>
+
+    <div class="input-group mb-3">
+      <input type="password" id="senha" name="senha"
+             placeholder="Senha" class="form-control" required>
+
+      <span class="input-group-text" onclick="toggleSenha()">
+        <i class="bi bi-eye" id="iconeSenha"></i>
+      </span>
+    </div>
+
+    <button class="btn btn-primary w-100" id="btnLogin">
+      <span id="textoBtn">Entrar</span>
+      <span class="spinner-border spinner-border-sm" id="spinner"></span>
+    </button>
+
+  </form>
+
+</div>
+
+<script>
+function toggleSenha() {
+  const senha = document.getElementById("senha");
+  const icone = document.getElementById("iconeSenha");
+
+  if (senha.type === "password") {
+    senha.type = "text";
+    icone.classList.replace("bi-eye", "bi-eye-slash");
+  } else {
+    senha.type = "password";
+    icone.classList.replace("bi-eye-slash", "bi-eye");
+  }
+}
+
+function mostrarLoading() {
+  document.getElementById("textoBtn").innerText = "Entrando...";
+  document.getElementById("spinner").style.display = "inline-block";
+  document.getElementById("btnLogin").disabled = true;
+}
+</script>
+
+</body>
+</html>

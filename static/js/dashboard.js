@@ -2,6 +2,9 @@ console.log("JS CARREGOU 🚀");
 
 document.addEventListener("DOMContentLoaded", function () {
 
+  // =========================
+  // 🎨 CORES
+  // =========================
   const styles = getComputedStyle(document.documentElement);
 
   const c1 = styles.getPropertyValue('--gradient-start').trim();
@@ -20,12 +23,10 @@ document.addEventListener("DOMContentLoaded", function () {
     return {
       responsive: true,
       maintainAspectRatio: false,
-
       animation: {
         duration: 1000,
         easing: 'easeOutQuart'
       },
-
       plugins: {
         tooltip: {
           backgroundColor: "#020024",
@@ -44,7 +45,6 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         }
       },
-
       scales: {
         x: { grid: { display: false } },
         y: {
@@ -55,7 +55,39 @@ document.addEventListener("DOMContentLoaded", function () {
     };
   }
 
-  // 🔥 PIZZA
+  // =========================
+  // 🔥 DADOS FROTA (CORRIGIDO)
+  // =========================
+  const elFrota = document.getElementById("dados-frota");
+
+  let dadosFrota = {};
+
+  if (elFrota) {
+    dadosFrota = JSON.parse(elFrota.textContent);
+  }
+
+  // =========================
+  // 🔥 FUNÇÃO CLICK FROTA
+  // =========================
+  window.verFrota = function(frota) {
+    const dados = dadosFrota[frota] || [];
+
+    let html = "";
+
+    if (dados.length === 0) {
+      html = "<li>Nenhum registro encontrado</li>";
+    } else {
+      dados.forEach(item => {
+        html += `<li>${item.data} - ${item.tipo}</li>`;
+      });
+    }
+
+    document.getElementById("detalheFrota").innerHTML = html;
+  };
+
+  // =========================
+  // 🔥 PIZZA ATENDIMENTO
+  // =========================
   const elAtendimento = document.getElementById("dados-atendimento");
 
   if (elAtendimento) {
@@ -94,7 +126,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  // =========================
   // 🔥 GRÁFICO POR MÊS
+  // =========================
   const elMes = document.getElementById("dados-mes");
 
   if (elMes) {
@@ -133,7 +167,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  // =========================
   // 🔥 GRÁFICO POR TIPO
+  // =========================
   const elTipo = document.getElementById("dados-tipo");
 
   if (elTipo) {
@@ -172,7 +208,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // 🔥 PARETO (VERSÃO PROFISSIONAL)
+  // =========================
+  // 🔥 PARETO
+  // =========================
   const elPareto = document.getElementById("dados-pareto");
 
   if (elPareto) {
@@ -218,10 +256,8 @@ document.addEventListener("DOMContentLoaded", function () {
             }
           ]
         },
-
         options: {
           ...configPadrao(),
-
           scales: {
             y: { beginAtZero: true },
             y1: {
@@ -233,7 +269,6 @@ document.addEventListener("DOMContentLoaded", function () {
               }
             }
           },
-
           plugins: {
             ...configPadrao().plugins,
             datalabels: {
@@ -248,7 +283,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }
           }
         },
-
         plugins: [ChartDataLabels]
       });
     }

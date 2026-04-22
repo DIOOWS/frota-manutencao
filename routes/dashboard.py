@@ -10,7 +10,7 @@ dashboard_bp = Blueprint("dashboard", __name__)
 @dashboard_bp.route("/")
 def dashboard():
 
-    # 🔐 PROTEÇÃO CORRETA
+    # 🔐 PROTEÇÃO
     if not session.get("user_id"):
         return redirect("/login")
 
@@ -19,7 +19,7 @@ def dashboard():
 
     query = Manutencao.query
 
-    # 🔥 FILTRO DE DATA
+    # 🔥 FILTRO DE DATA (COM LOG DE ERRO)
     if data_inicio and data_fim:
         try:
             inicio = datetime.strptime(data_inicio, "%Y-%m-%d")
@@ -28,8 +28,8 @@ def dashboard():
             query = query.filter(
                 Manutencao.data.between(inicio, fim)
             )
-        except:
-            pass
+        except Exception as e:
+            print("Erro filtro data:", e)
 
     # 🔥 ORDENAÇÃO
     registros = query.order_by(Manutencao.id.desc()).all()
@@ -54,7 +54,12 @@ def dashboard():
     andamento = 0
     concluidas = 0
 
+    # ==========================================
+    # 🔥 LOOP PRINCIPAL (CORRIGIDO)
+    # ==========================================
     for r in registros:
+
+        mes = None
 
         if r.data:
             mes = r.data.strftime("%Y-%m")
@@ -75,12 +80,12 @@ def dashboard():
         elif tipo_servico == "preventiva":
             preventivas += 1
 
-        if status == "andamento":
+        if "andamento" in status:
             andamento += 1
-        elif status == "finalizado":
+        elif "finalizado" in status:
             concluidas += 1
 
-        if r.numero_frota and r.data:
+        if r.numero_frota and mes:
             if frota not in dados_frotas:
                 dados_frotas[frota] = defaultdict(int)
 
@@ -94,22 +99,22 @@ def dashboard():
             "data": r.data.strftime("%d/%m") if r.data else "Sem data"
         })
 
-    # =========================
+    # ==========================================
     # 🔥 GRÁFICO POR MÊS
-    # =========================
+    # ==========================================
     labels = sorted(por_mes.keys())
     valores = [por_mes[m] for m in labels]
 
-    # =========================
+    # ==========================================
     # 🔥 TIPOS
-    # =========================
+    # ==========================================
     tipos_ordenados = tipos_counter.most_common()
     labels_tipo = [t[0] for t in tipos_ordenados]
     valores_tipo = [t[1] for t in tipos_ordenados]
 
-    # =========================
+    # ==========================================
     # 🔥 PARETO
-    # =========================
+    # ==========================================
     total_manutencoes = sum(frotas_counter.values()) or 1
 
     frotas_ordenadas = sorted(
@@ -152,9 +157,9 @@ def dashboard():
             pareto_corte_80 = i
             break
 
-    # =========================
+    # ==========================================
     # 🔥 FROTAS CRÍTICAS
-    # =========================
+    # ==========================================
     limite = 3
 
     frotas_criticas = [
@@ -169,15 +174,28 @@ def dashboard():
         reverse=True
     )[:5]
 
-    # =========================
+    dados_frota_detalhe = {}
+
+    for r in registros:
+        frota = formatar_frota(r.numero_frota)
+
+        if frota not in dados_frota_detalhe:
+            dados_frota_detalhe[frota] = []
+
+        dados_frota_detalhe[frota].append({
+            "tipo": r.tipo_manutencao,
+            "data": r.data.strftime("%d/%m") if r.data else "-"
+        })
+
+    # ==========================================
     # 🔥 ATENDIMENTO
-    # =========================
+    # ==========================================
     labels_atendimento = list(atendimento_counter.keys())
     valores_atendimento = list(atendimento_counter.values())
 
-    # =========================
+    # ==========================================
     # 🔥 RENDER
-    # =========================
+    # ==========================================
     return render_template(
         "dashboard.html",
         total=total,
@@ -198,4 +216,5 @@ def dashboard():
         dados_frotas=dados_frotas,
         frotas_criticas=frotas_criticas,
         dados_tipos_detalhe=dados_tipos_detalhe,
+        dados_frota_detalhe=dados_frota_detalhe,
     )
