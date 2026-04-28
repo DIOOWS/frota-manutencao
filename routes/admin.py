@@ -1,9 +1,10 @@
-from flask import Blueprint, render_template, request, redirect, session, current_app
+from flask import Blueprint, render_template, request, redirect, session
 from models.usuario import Usuario
 from database import db
 from utils.auth import admin_required
 from werkzeug.utils import secure_filename
 import os
+import cloudinary.uploader
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -15,7 +16,11 @@ def dashboard_admin():
     return render_template("admin/dashboard.html")
 
 
-# 👥 LISTAR USUÁRIOS
+# =========================================================
+# 👥 USUÁRIOS
+# =========================================================
+
+# LISTAR
 @admin_bp.route("/usuarios")
 @admin_required
 def listar_usuarios():
@@ -23,7 +28,7 @@ def listar_usuarios():
     return render_template("admin/usuarios.html", usuarios=usuarios)
 
 
-# ➕ NOVO USUÁRIO
+# NOVO
 @admin_bp.route("/usuarios/novo", methods=["GET", "POST"])
 @admin_required
 def novo_usuario():
@@ -34,7 +39,6 @@ def novo_usuario():
         senha = request.form.get("senha")
         role = request.form.get("role")
 
-        # 🔒 valida duplicado
         if Usuario.query.filter_by(nome=nome).first():
             return render_template(
                 "admin/usuario_form.html",
@@ -42,29 +46,14 @@ def novo_usuario():
                 erro="Usuário já existe"
             )
 
-        user = Usuario(
-            nome=nome,
-            email=email,
-            role=role
-        )
-
+        user = Usuario(nome=nome, email=email, role=role)
         user.set_senha(senha)
 
-        # 🔥 FOTO
+        # FOTO
         foto = request.files.get("foto")
-
         if foto and foto.filename:
-            filename = secure_filename(foto.filename)
-
-            caminho = os.path.join("static/uploads", filename)
-            import cloudinary.uploader
-
-            foto = request.files.get("foto")
-
-            if foto and foto.filename:
-                resultado = cloudinary.uploader.upload(foto)
-
-                user.foto = resultado["secure_url"]
+            resultado = cloudinary.uploader.upload(foto)
+            user.foto = resultado["secure_url"]
 
         db.session.add(user)
         db.session.commit()
@@ -74,7 +63,7 @@ def novo_usuario():
     return render_template("admin/usuario_form.html", user=None)
 
 
-# ✏️ EDITAR
+# EDITAR
 @admin_bp.route("/usuarios/editar/<int:id>", methods=["GET", "POST"])
 @admin_required
 def editar_usuario(id):
@@ -82,7 +71,6 @@ def editar_usuario(id):
     user = Usuario.query.get_or_404(id)
 
     if request.method == "POST":
-
         user.nome = request.form.get("nome")
         user.email = request.form.get("email")
         user.role = request.form.get("role")
@@ -91,19 +79,14 @@ def editar_usuario(id):
         if senha:
             user.set_senha(senha)
 
-        # 🔥 FOTO
-        import cloudinary.uploader
-
         foto = request.files.get("foto")
-
         if foto and foto.filename:
             resultado = cloudinary.uploader.upload(foto)
             user.foto = resultado["secure_url"]
 
-        # 🔥 SALVA NO BANCO
         db.session.commit()
 
-        # 🔥 AQUI É ONDE VOCÊ COLOCA 👇
+        # 🔥 ATUALIZA FOTO NA SESSÃO
         if user.id == session.get("user_id"):
             session["user_foto"] = user.foto
 
@@ -112,7 +95,7 @@ def editar_usuario(id):
     return render_template("admin/usuario_form.html", user=user)
 
 
-# 🗑️ EXCLUIR
+# EXCLUIR
 @admin_bp.route("/usuarios/excluir/<int:id>")
 @admin_required
 def excluir_usuario(id):
@@ -130,3 +113,75 @@ def excluir_usuario(id):
     db.session.commit()
 
     return redirect("/admin/usuarios")
+
+
+# =========================================================
+# 🧾 CLIENTES
+# =========================================================
+
+# LISTAR
+@admin_bp.route("/clientes")
+@admin_required
+def listar_clientes():
+    from models.cliente import Cliente
+
+    clientes = Cliente.query.order_by(Cliente.id.desc()).all()
+    return render_template("admin/clientes.html", clientes=clientes)
+
+
+# NOVO
+@admin_bp.route("/clientes/novo", methods=["GET", "POST"])
+@admin_required
+def novo_cliente():
+    from models.cliente import Cliente
+
+    if request.method == "POST":
+        nome = request.form.get("nome")
+        email = request.form.get("email")
+        telefone = request.form.get("telefone")
+
+        cliente = Cliente(
+            nome=nome,
+            email=email,
+            telefone=telefone
+        )
+
+        db.session.add(cliente)
+        db.session.commit()
+
+        return redirect("/admin/clientes")
+
+    return render_template("admin/cliente_form.html", cliente=None)
+
+
+# EDITAR
+@admin_bp.route("/clientes/editar/<int:id>", methods=["GET", "POST"])
+@admin_required
+def editar_cliente(id):
+    from models.cliente import Cliente
+
+    cliente = Cliente.query.get_or_404(id)
+
+    if request.method == "POST":
+        cliente.nome = request.form.get("nome")
+        cliente.email = request.form.get("email")
+        cliente.telefone = request.form.get("telefone")
+
+        db.session.commit()
+        return redirect("/admin/clientes")
+
+    return render_template("admin/cliente_form.html", cliente=cliente)
+
+
+# EXCLUIR
+@admin_bp.route("/clientes/excluir/<int:id>")
+@admin_required
+def excluir_cliente(id):
+    from models.cliente import Cliente
+
+    cliente = Cliente.query.get_or_404(id)
+
+    db.session.delete(cliente)
+    db.session.commit()
+
+    return redirect("/admin/clientes")

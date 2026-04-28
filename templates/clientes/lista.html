@@ -2,42 +2,53 @@
 
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3>Clientes</h3>
+<h3>Clientes</h3>
 
-    <a href="/clientes/novo" class="btn btn-success">
-        ➕ Novo Cliente
-    </a>
-</div>
-
-<a href="/" class="btn btn-secondary mb-3">
+<a href="javascript:history.back()" class="btn btn-secondary mb-3">
     ← Voltar
+</a>
+
+<a href="/clientes/novo" class="btn btn-success mb-3 float-end">
+    + Novo Cliente
 </a>
 
 <div class="card p-3">
 
-    {% if clientes %}
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Telefone</th>
-                    <th>Email</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for c in clientes %}
-                <tr>
-                    <td>{{ c.nome }}</td>
-                    <td>{{ c.telefone }}</td>
-                    <td>{{ c.email }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>Nenhum cliente cadastrado.</p>
-    {% endif %}
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Telefone</th>
+            <th>Email</th>
+            <th>Ações</th> <!-- 🔥 NOVO -->
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for c in clientes %}
+        <tr>
+            <td>{{ c.nome }}</td>
+            <td>{{ c.telefone }}</td>
+            <td>{{ c.email }}</td>
+
+            <td>
+                <!-- ✏️ EDITAR -->
+                <a href="/clientes/editar/{{ c.id }}" class="btn btn-sm btn-warning">
+                    Editar
+                </a>
+
+                <!-- 🗑️ EXCLUIR -->
+                <a href="/clientes/excluir/{{ c.id }}"
+                   class="btn btn-sm btn-danger"
+                   onclick="return confirm('Deseja excluir este cliente?')">
+                    Excluir
+                </a>
+            </td>
+
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
 </div>
 

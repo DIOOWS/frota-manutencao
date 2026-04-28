@@ -12,10 +12,10 @@
   <input name="numero_frota" class="form-control mb-2"
          value="{{ m.numero_frota if m else '' }}" placeholder="Frota">
 
- <div class="mb-2">
-  <input type="text" name="os" placeholder="Os" class="form-control"
-         value="{{ m.os if m else '' }}">
-</div>
+  <div class="mb-2">
+    <input type="text" name="os" placeholder="Os" class="form-control"
+           value="{{ m.os if m else '' }}">
+  </div>
 
   <input name="bau" class="form-control mb-2"
          value="{{ m.bau if m else '' }}" placeholder="Baú">
@@ -28,19 +28,47 @@
     <option value="PREVENTIVA" {% if m and m.tipo_servico == "PREVENTIVA" %}selected{% endif %}>Preventiva</option>
   </select>
 
-  <input name="tipo_atendimento" class="form-control mb-2"
-         value="{{ m.tipo_atendimento if m else '' }}" placeholder="Tipo Atendimento">
+  <!-- 🔥 AGORA SIM: Tipo Atendimento -->
+  <select name="tipo_atendimento" class="form-control mb-2" required>
+    <option value="">Tipo Atendimento</option>
+    <option value="INTERNO"
+      {% if m and m.tipo_atendimento == "INTERNO" %}selected{% endif %}>
+      Interno
+    </option>
+    <option value="EXTERNO"
+      {% if m and m.tipo_atendimento == "EXTERNO" %}selected{% endif %}>
+      Externo
+    </option>
+  </select>
 
-  <input name="tipo_manutencao" class="form-control mb-2"
-         value="{{ m.tipo_manutencao if m else '' }}" placeholder="Tipo Manutenção">
+  <!-- 🔥 Tipo Manutenção -->
+  <select name="tipo_manutencao" class="form-control mb-2" required>
+    <option value="">Tipo Manutenção</option>
+    <option value="Estrutura"
+      {% if m and m.tipo_manutencao == "Estrutura" %}selected{% endif %}>
+      Estrutura
+    </option>
+    <option value="Refrigeração"
+      {% if m and m.tipo_manutencao == "Refrigeração" %}selected{% endif %}>
+      Refrigeração
+    </option>
+  </select>
 
   <select name="status" class="form-control mb-2">
     <option value="ANDAMENTO" {% if m and m.status == "ANDAMENTO" %}selected{% endif %}>Em andamento</option>
     <option value="FINALIZADO" {% if m and m.status == "FINALIZADO" %}selected{% endif %}>Finalizado</option>
   </select>
 
-  <input name="cliente" class="form-control mb-2"
-         value="{{ m.cliente if m else '' }}" placeholder="Cliente">
+  <!-- 🔥 AGORA SIM: Cliente com seta -->
+  <select name="cliente" class="form-control mb-2" required>
+    <option value="">Selecione o Cliente</option>
+    {% for c in clientes %}
+      <option value="{{ c.nome }}"
+        {% if m and m.cliente == c.nome %}selected{% endif %}>
+        {{ c.nome }}
+      </option>
+    {% endfor %}
+  </select>
 
   <textarea name="observacao" class="form-control mb-2">{{ m.observacao if m else '' }}</textarea>
 

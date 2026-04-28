@@ -2,13 +2,22 @@
 
 {% block content %}
 
-<h3>👑 Painel Administrativo</h3>
+<h3 class="mb-4">👑 Painel Administrativo</h3>
 
-<div class="card p-4">
+<div class="card p-4" style="max-width: 500px;">
 
-  <a href="/admin/usuarios" class="btn btn-primary">
-    👤 Gerenciar Usuários
-  </a>
+  <div class="d-grid gap-3">
+
+    <a href="/admin/usuarios" class="btn btn-primary">
+      👤 Gerenciar Usuários
+    </a>
+
+    <!-- 🔥 CORREÇÃO AQUI -->
+    <a href="/clientes/" class="btn btn-success">
+      🧾 Gerenciar Clientes
+    </a>
+
+  </div>
 
 </div>
 

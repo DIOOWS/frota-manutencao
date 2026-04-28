@@ -28,4 +28,40 @@ def novo():
 
         return redirect("/clientes/")
 
-    return render_template("clientes/form.html")
+    return render_template(
+        "clientes/form.html",
+        cliente=None  # 🔥 CORRETO
+    )
+
+
+# ✏️ EDITAR
+@cliente_bp.route("/editar/<int:id>", methods=["GET", "POST"])
+def editar(id):
+
+    cliente = Cliente.query.get_or_404(id)
+
+    if request.method == "POST":
+        cliente.nome = request.form.get("nome")
+        cliente.telefone = request.form.get("telefone")
+        cliente.email = request.form.get("email")
+
+        db.session.commit()
+
+        return redirect("/clientes/")
+
+    return render_template(
+        "clientes/form.html",
+        cliente=cliente  # 🔥 AQUI FUNCIONA
+    )
+
+
+# 🗑️ EXCLUIR
+@cliente_bp.route("/excluir/<int:id>")
+def excluir(id):
+
+    cliente = Cliente.query.get_or_404(id)
+
+    db.session.delete(cliente)
+    db.session.commit()
+
+    return redirect("/clientes/")

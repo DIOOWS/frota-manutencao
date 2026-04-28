@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect
 from models.manutencao import Manutencao
+from models.cliente import Cliente
 from database import db
 from datetime import datetime
 
@@ -59,7 +60,14 @@ def nova():
 
         return redirect("/manutencoes/")
 
-    return render_template("manutencoes/form.html", m=None)
+    # 🔥 BUSCAR CLIENTES
+    clientes = Cliente.query.order_by(Cliente.nome).all()
+
+    return render_template(
+        "manutencoes/form.html",
+        m=None,
+        clientes=clientes
+    )
 
 
 # ✏️ EDITAR
@@ -92,7 +100,14 @@ def editar(id):
 
         return redirect("/manutencoes/")
 
-    return render_template("manutencoes/form.html", m=m)
+    # 🔥 BUSCAR CLIENTES
+    clientes = Cliente.query.order_by(Cliente.nome).all()
+
+    return render_template(
+        "manutencoes/form.html",
+        m=m,
+        clientes=clientes
+    )
 
 
 # 🗑️ EXCLUIR

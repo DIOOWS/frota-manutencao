@@ -2,30 +2,33 @@
 
 {% block content %}
 
-<h3>Novo Cliente</h3>
+<h3>{{ "Editar" if cliente else "Novo" }} Cliente</h3>
 
-<a href="/clientes/" class="btn btn-secondary mb-3">
-    ← Voltar
-</a>
+<!--<a href="/clientes/partials/" class="btn btn-secondary mb-3">-->
+<!--    ← Voltar-->
+<!--</a>-->
 
 <div class="card p-4" style="max-width: 500px;">
 
 <form method="POST">
 
     <div class="mb-2">
-        <input name="nome" placeholder="Nome" class="form-control">
+        <input name="nome" placeholder="Nome" class="form-control"
+               value="{{ cliente.nome if cliente else '' }}">
     </div>
 
     <div class="mb-2">
-        <input name="telefone" placeholder="Telefone" class="form-control">
+        <input name="telefone" placeholder="Telefone" class="form-control"
+               value="{{ cliente.telefone if cliente else '' }}">
     </div>
 
     <div class="mb-2">
-        <input name="email" placeholder="Email" class="form-control">
+        <input name="email" placeholder="Email" class="form-control"
+               value="{{ cliente.email if cliente else '' }}">
     </div>
 
     <button class="btn btn-success w-100">
-        Salvar Cliente
+        {{ "Atualizar Cliente" if cliente else "Salvar Cliente" }}
     </button>
 
 </form>
