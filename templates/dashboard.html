@@ -33,7 +33,7 @@
   <!-- POR MÊS -->
   <div class="col-md-6">
     <div class="x-card p-3 h-100">
-      <h5 class="mb-3">Manutenções por mês</h5>
+      <h5 class="mb-3">Atendimento Mensal</h5>
 
       <div class="grafico-box">
         <canvas id="graficoMes"></canvas>
@@ -70,51 +70,44 @@
 
 </div>
 
-<!-- 🔥 FROTAS CRÍTICAS -->
-<div class="row mt-4">
+<!-- 🔥 FROTAS INTELIGENTES -->
+<div class="card p-3 mt-3">
+  <h5>🚨 Frotas Críticas</h5>
 
-  <div class="col-12">
-    <div class="x-card p-3 mt-4">
+  {% for f in frotas_inteligente %}
+    <div class="d-flex justify-content-between align-items-center border p-2 mb-2 rounded">
 
-      <h5 class="card-title-highlight">
-        🚨 Frotas Críticas
-      </h5>
+      <div>
+        <strong>Frota {{ f.frota }}</strong><br>
 
-      <div class="frotas-lista">
+        <small>
+          {{ f.total }} manutenções |
+          {{ f.tipo }} |
+          {{ f.crescimento }}%
+        </small>
+      </div>
 
-        {% for frota, qtd in frotas_criticas %}
-
-        <!-- 🔥 LINK CORRETO -->
-        <a href="/manutencoes?frota={{ frota }}"
-           class="frota-item"
-           style="text-decoration:none;">
-
-          <div class="frota-left">
-            <span class="icone">🚚</span>
-            <div>
-              <div class="frota-nome">Frota {{ frota }}</div>
-              <small class="text-muted">Alta incidência de manutenção</small>
-            </div>
-          </div>
-
-          <div class="frota-right">
-            <span class="badge-frota">
-              {{ qtd }}
-            </span>
-          </div>
-
-        </a>
-
-        {% endfor %}
-
+      <div>
+        {% if f.nivel == "critica" %}
+          <span class="badge bg-danger">CRÍTICA</span>
+        {% elif f.nivel == "atencao" %}
+          <span class="badge bg-warning text-dark">ATENÇÃO</span>
+        {% else %}
+          <span class="badge bg-success">NORMAL</span>
+        {% endif %}
       </div>
 
     </div>
-  </div>
-
+  {% endfor %}
 </div>
 
-<!-- 🔥 MODAL (mantido se você usa pra tipos) -->
+<!-- 🔥 RANKING DINÂMICO -->
+<div class="card p-3 mt-4">
+  <h5>📊 Ranking por Mês (clique no gráfico acima)</h5>
+  <canvas id="graficoRank"></canvas>
+</div>
+
+<!-- 🔥 MODAL TIPOS -->
 <div class="modal fade" id="modalTipo" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -134,27 +127,28 @@
   </div>
 </div>
 
-<!-- 🔥 JSONS PARA OS GRÁFICOS -->
+<!-- 🔥 JSONS CORRETOS -->
 
 <script id="dados-atendimento" type="application/json">
 {{ {
   "labels": labels_atendimento,
   "valores": valores_atendimento
-} | tojson }}
+} | tojson | safe }}
 </script>
 
 <script id="dados-mes" type="application/json">
 {{ {
   "labels": labels,
-  "valores": valores
-} | tojson }}
+  "valores": valores,
+  "crescimento": crescimento
+} | tojson | safe }}
 </script>
 
 <script id="dados-tipo" type="application/json">
 {{ {
   "labels": labels_tipo,
   "valores": valores_tipo
-} | tojson }}
+} | tojson | safe }}
 </script>
 
 <script id="dados-pareto" type="application/json">
@@ -162,7 +156,11 @@
   "labels": labels_frota,
   "valores": valores_frota,
   "percentual": pareto_percentual
-} | tojson }}
+} | tojson | safe }}
+</script>
+
+<script id="dados-frota-mes" type="application/json">
+{{ dados_frota_mes | tojson | safe }}
 </script>
 
 {% endblock %}

@@ -2,11 +2,7 @@ console.log("JS CARREGOU 🚀");
 
 document.addEventListener("DOMContentLoaded", function () {
 
-  // =========================
-  // 🎨 CORES
-  // =========================
   const styles = getComputedStyle(document.documentElement);
-
   const c1 = styles.getPropertyValue('--gradient-start').trim();
   const c2 = styles.getPropertyValue('--gradient-mid').trim();
   const c3 = styles.getPropertyValue('--gradient-end').trim();
@@ -22,71 +18,54 @@ document.addEventListener("DOMContentLoaded", function () {
   function configPadrao() {
     return {
       responsive: true,
-      maintainAspectRatio: false,
-      animation: {
-        duration: 1000,
-        easing: 'easeOutQuart'
+      maintainAspectRatio: false
+    };
+  }
+
+  function estiloBarra(ctx) {
+    return {
+      backgroundColor: criarGradient(ctx),
+      borderRadius: 6,
+      barThickness: 45,
+      categoryPercentage: 0.6,
+      barPercentage: 0.8
+    };
+  }
+
+  // 🔥 DATALABEL PADRÃO
+  function datalabelPadrao() {
+    return {
+      display: true,
+
+      formatter: function(value, context) {
+        if (context.dataset.type === 'bar') return value;
+        if (context.dataset.type === 'line') return value + "%";
+        return value;
       },
-      plugins: {
-        tooltip: {
-          backgroundColor: "#020024",
-          titleColor: "#00d4ff",
-          bodyColor: "#ffffff",
-          borderColor: "#00d4ff",
-          borderWidth: 1,
-          padding: 10,
-          callbacks: {
-            label: function(context) {
-              if (context.dataset.type === 'line') {
-                return context.raw + "%";
-              }
-              return context.raw + " manutenções";
-            }
-          }
-        }
+
+      color: function(context) {
+        return context.dataset.type === 'line'
+          ? '#ff0000'
+          : '#111';
       },
-      scales: {
-        x: { grid: { display: false } },
-        y: {
-          beginAtZero: true,
-          grid: { color: "#e5e7eb" }
-        }
+
+      font: {
+        weight: 'bold',
+        size: 10
+      },
+
+      anchor: 'end',
+
+      align: function(context) {
+        return context.dataset.type === 'line'
+          ? 'top'
+          : 'end';
       }
     };
   }
 
   // =========================
-  // 🔥 DADOS FROTA (CORRIGIDO)
-  // =========================
-  const elFrota = document.getElementById("dados-frota");
-
-  let dadosFrota = {};
-
-  if (elFrota) {
-    dadosFrota = JSON.parse(elFrota.textContent);
-  }
-
-  // =========================
-  // 🔥 FUNÇÃO CLICK FROTA
-  // =========================
-  window.verFrota = function(frota) {
-    const dados = dadosFrota[frota] || [];
-
-    let html = "";
-
-    if (dados.length === 0) {
-      html = "<li>Nenhum registro encontrado</li>";
-    } else {
-      dados.forEach(item => {
-        html += `<li>${item.data} - ${item.tipo}</li>`;
-      });
-    }
-
-    document.getElementById("detalheFrota").innerHTML = html;
-  };
-
-  // =========================
-  // 🔥 PIZZA ATENDIMENTO
+  // 🔥 PIZZA (INTERNO VS EXTERNO)
   // =========================
   const elAtendimento = document.getElementById("dados-atendimento");
 
@@ -105,18 +84,15 @@ document.addEventListener("DOMContentLoaded", function () {
           }]
         },
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
+          ...configPadrao(),
           plugins: {
             datalabels: {
-              color: '#000',
-              anchor: 'end',
-              align: 'end',
-              offset: 10,
-              formatter: (value) => value + '%',
-              font: {
-                weight: 'bold',
-                size: 14
+              display: true,
+              color: "#fff",
+              font: { weight: 'bold', size: 12 },
+              formatter: function(value, context) {
+                const total = context.chart._metasets[0].total;
+                return ((value / total) * 100).toFixed(1) + "%";
               }
             }
           }
@@ -127,9 +103,16 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // =========================
-  // 🔥 GRÁFICO POR MÊS
+  // 🔥 GRÁFICO MENSAL
   // =========================
   const elMes = document.getElementById("dados-mes");
+  const elFrotaMes = document.getElementById("dados-frota-mes");
+
+  let dadosFrotaMes = {};
+
+  if (elFrotaMes) {
+    dadosFrotaMes = JSON.parse(elFrotaMes.textContent);
+  }
 
   if (elMes) {
     const dadosMes = JSON.parse(elMes.textContent);
@@ -139,26 +122,45 @@ document.addEventListener("DOMContentLoaded", function () {
       const ctx = ctxMes.getContext("2d");
 
       new Chart(ctxMes, {
-        type: 'bar',
         data: {
           labels: dadosMes.labels,
-          datasets: [{
-            label: 'Manutenções',
-            data: dadosMes.valores,
-            backgroundColor: criarGradient(ctx),
-            barThickness: 60
-          }]
+          datasets: [
+            {
+              type: 'bar',
+              label: 'Manutenções',
+              data: dadosMes.valores,
+              ...estiloBarra(ctx)
+            },
+            {
+              type: 'line',
+              label: 'Crescimento %',
+              data: dadosMes.crescimento || [],
+              borderColor: '#ff0000',
+              tension: 0.3,
+              yAxisID: 'y1'
+            }
+          ]
         },
         options: {
           ...configPadrao(),
+          scales: {
+            y: { beginAtZero: true },
+            y1: {
+              beginAtZero: true,
+              position: 'right'
+            }
+          },
           plugins: {
-            ...configPadrao().plugins,
-            datalabels: {
-              anchor: 'end',
-              align: 'top',
-              color: '#000',
-              font: { weight: 'bold', size: 12 },
-              formatter: (v) => v
+            datalabels: datalabelPadrao()
+          },
+          onClick: function(evt, elements) {
+            if (elements.length > 0) {
+              const index = elements[0].index;
+              const mes = dadosMes.labels_original
+                ? dadosMes.labels_original[index]
+                : dadosMes.labels[index];
+
+              atualizarRanking(mes);
             }
           }
         },
@@ -168,39 +170,30 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // =========================
-  // 🔥 GRÁFICO POR TIPO
+  // 🔥 TIPOS
   // =========================
   const elTipo = document.getElementById("dados-tipo");
 
   if (elTipo) {
-    const dadosTipo = JSON.parse(elTipo.textContent);
-    const ctxTipo = document.getElementById("graficoTipo");
+    const dados = JSON.parse(elTipo.textContent);
+    const ctx = document.getElementById("graficoTipo");
 
-    if (ctxTipo) {
-      const ctx = ctxTipo.getContext("2d");
+    if (ctx) {
+      const c = ctx.getContext("2d");
 
-      new Chart(ctxTipo, {
+      new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: dadosTipo.labels,
+          labels: dados.labels,
           datasets: [{
-            label: 'Tipos de Manutenção',
-            data: dadosTipo.valores,
-            backgroundColor: criarGradient(ctx),
-            barThickness: 60
+            data: dados.valores,
+            ...estiloBarra(c)
           }]
         },
         options: {
           ...configPadrao(),
           plugins: {
-            ...configPadrao().plugins,
-            datalabels: {
-              anchor: 'end',
-              align: 'top',
-              color: '#000',
-              font: { weight: 'bold', size: 12 },
-              formatter: (v) => v
-            }
+            datalabels: datalabelPadrao()
           }
         },
         plugins: [ChartDataLabels]
@@ -215,77 +208,97 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (elPareto) {
     const dados = JSON.parse(elPareto.textContent);
-    const ctxPareto = document.getElementById("graficoPareto");
+    const ctx = document.getElementById("graficoPareto");
 
-    if (ctxPareto) {
-      const ctx = ctxPareto.getContext("2d");
+    if (ctx) {
+      const c = ctx.getContext("2d");
 
-      new Chart(ctxPareto, {
+      new Chart(ctx, {
         data: {
           labels: dados.labels,
           datasets: [
             {
-              type: 'bar',
-              label: 'Manutenções',
-              data: dados.valores,
-              backgroundColor: dados.labels.map(label =>
-                label === "Outros" ? "#999999" : criarGradient(ctx)
-              ),
-              barThickness: 60
-            },
-            {
-              type: 'line',
-              label: '% Acumulado',
-              data: dados.percentual,
-              borderColor: '#ff0000',
-              borderWidth: 2,
-              yAxisID: 'y1',
-              tension: 0.4,
-              pointRadius: 4,
-              pointBackgroundColor: '#ff0000'
-            },
-            {
-              type: 'line',
-              label: '80%',
-              data: dados.labels.map(() => 80),
-              borderColor: '#00ff00',
-              borderWidth: 2,
-              borderDash: [5, 5],
-              pointRadius: 0,
-              yAxisID: 'y1'
-            }
+            type: 'bar',
+            label: 'Manutenções',
+            data: dados.valores,
+            backgroundColor: criarGradient(c),
+            borderRadius: 6,
+            barThickness: 35,
+            maxBarThickness: 40,
+            categoryPercentage: 0.6,
+            barPercentage: 0.8
+          },
+          {
+            type: 'line',
+            label: '% Acumulado',
+            data: dados.percentual,
+            borderColor: '#ff0000',
+            backgroundColor: '#ff0000',
+            tension: 0.4,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            yAxisID: 'y1'
+          }
           ]
         },
         options: {
-          ...configPadrao(),
           scales: {
             y: { beginAtZero: true },
             y1: {
               beginAtZero: true,
-              position: 'right',
-              max: 100,
-              ticks: {
-                callback: v => v + "%"
-              }
+              position: 'right'
             }
           },
           plugins: {
-            ...configPadrao().plugins,
-            datalabels: {
-              anchor: 'end',
-              align: 'top',
-              color: '#000',
-              font: { weight: 'bold', size: 12 },
-              formatter: (value, ctx) => {
-                if (ctx.dataset.type === 'bar') return value;
-                return null;
-              }
-            }
+            legend: { position: 'top' },
+            datalabels: datalabelPadrao()
           }
         },
         plugins: [ChartDataLabels]
       });
     }
+  }
+
+  // =========================
+  // 🔥 RANKING
+  // =========================
+  const ctxRank = document.getElementById("graficoRank");
+
+  let graficoRank;
+
+  function atualizarRanking(mes) {
+
+    console.log("CLICOU:", mes);
+
+    const dados = dadosFrotaMes[mes] || {};
+    const labels = Object.keys(dados);
+    const valores = Object.values(dados);
+
+    if (!ctxRank) return;
+
+    if (graficoRank) {
+      graficoRank.destroy();
+    }
+
+    const ctx = ctxRank.getContext("2d");
+
+    graficoRank = new Chart(ctxRank, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: valores,
+          ...estiloBarra(ctx)
+        }]
+      },
+      options: {
+        ...configPadrao(),
+        plugins: {
+          datalabels: datalabelPadrao()
+        }
+      },
+      plugins: [ChartDataLabels]
+    });
   }
 
 });

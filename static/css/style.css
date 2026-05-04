@@ -385,3 +385,12 @@ td:nth-child(10) {
 }
 
 
+.grafico-box {
+  height: 280px;   /* 🔥 controla altura real */
+  position: relative;
+}
+
+.grafico-box canvas {
+  height: 100% !important;
+  width: 100% !important;
+}
