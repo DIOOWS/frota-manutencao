@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2 class="mb-2">🚚 Frota {{ frota }}</h2>
+
+<p class="text-muted mb-3">
+  Total de manutenções: {{ registros|length }}
+</p>
+
+<div class="mb-3">
+  <a href="/frotas" class="btn-voltar">
+    ← Voltar para frotas
+  </a>
+</div>
+
+<!-- 📋 TABELA -->
+<table class="table table-striped table-hover" id="tabelaManutencoes">
+
+  <thead>
+    <tr>
+      <th>Data</th>
+      <th>Cliente</th>
+      <th>Frota</th>
+      <th>Baú</th>
+      <th>Veículo</th>
+      <th>Serviço</th>
+      <th>Atendimento</th>
+      <th>Manutenção</th>
+      <th>Status</th>
+      <th>Observação</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for m in registros %}
+    <tr>
+
+      <!-- 🇧🇷 DATA FORMATADA -->
+      <td>
+        {{ m.data.strftime('%d/%m/%Y') if m.data else '' }}
+      </td>
+
+      <td>{{ m.cliente }}</td>
+      <td>{{ m.numero_frota }}</td>
+      <td>{{ m.bau }}</td>
+      <td>{{ m.tipo_veiculo }}</td>
+      <td>{{ m.tipo_servico }}</td>
+      <td>{{ m.tipo_atendimento }}</td>
+      <td>{{ m.tipo_manutencao }}</td>
+
+      <!-- 🔥 STATUS COLORIDO -->
+      <td>
+        {% if "finalizado" in (m.status or "").lower() %}
+          <span class="badge bg-success">Finalizado</span>
+        {% elif "andamento" in (m.status or "").lower() %}
+          <span class="badge bg-warning text-dark">Em andamento</span>
+        {% else %}
+          <span class="badge bg-secondary">{{ m.status }}</span>
+        {% endif %}
+      </td>
+
+      <!-- 📝 OBSERVAÇÃO SEGURA -->
+      <td class="obs-col">
+        {{ m.observacao }}
+      </td>
+
+      <td>
+
+        <!-- 👁 VER DETALHE -->
+        <button
+          class="btn btn-info btn-sm"
+          onclick="abrirModal(
+            '{{ m.cliente }}',
+            '{{ m.numero_frota }}',
+            '{{ m.tipo_servico }}',
+            '{{ m.status }}',
+            `{{ m.observacao | escape }}`
+          )">
+          👁
+        </button>
+
+        <!-- ✏️ EDITAR -->
+        <a href="/manutencoes/editar/{{ m.id }}" class="btn btn-warning btn-sm">
+          ✏️
+        </a>
+
+        <!-- 🗑️ EXCLUIR -->
+        <a href="/manutencoes/excluir/{{ m.id }}"
+           class="btn btn-danger btn-sm"
+           onclick="return confirm('Deseja excluir essa manutenção?')">
+          🗑️
+        </a>
+
+      </td>
+
+    </tr>
+    {% endfor %}
+  </tbody>
+
+</table>
+
+{% endblock %}

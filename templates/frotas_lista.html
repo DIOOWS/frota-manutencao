@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2 class="titulo-pagina">🚚 Frotas</h2>
+
+<div class="frotas-grid">
+
+  {% for f in frotas %}
+    <a href="/frotas/{{ f[0] }}" class="frota-card">
+
+      <div class="frota-numero">
+        🚚 {{ f[0] }}
+      </div>
+
+      <div class="frota-info">
+        {{ f[1] }} manutenções
+      </div>
+
+    </a>
+  {% endfor %}
+
+</div>
+
+{% endblock %}

@@ -100,11 +100,11 @@ def dashboard():
     preventivas = 0
 
     for r in registros:
-        frota = formatar_frota(r.numero_frota)
+        tipo = (r.tipo_servico or "").upper()
 
-        if frotas_counter_kpi[frota] >= 3:
+        if tipo == "CORRETIVA":
             corretivas += 1
-        else:
+        elif tipo == "PREVENTIVA":
             preventivas += 1
 
     andamento = sum(

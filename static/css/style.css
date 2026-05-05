@@ -497,3 +497,190 @@ canvas {
 .kpi-box {
   box-shadow: 0 6px 16px rgba(0,0,0,0.08);
 }
+
+
+/* 🔥 GRID FROTAS */
+.frotas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+/* 🔥 CARD FROTA */
+.frota-card {
+  background: linear-gradient(135deg, #020024, #090979, #00d4ff);
+  color: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  text-decoration: none;
+  transition: all 0.25s ease;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 🔥 HOVER */
+.frota-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 10px 18px rgba(0,0,0,0.25);
+}
+
+/* 🔥 NUMERO FROTA */
+.frota-card strong {
+  font-size: 22px;
+  display: block;
+}
+
+/* 🔥 TEXTO */
+.frota-card small {
+  opacity: 0.85;
+}
+
+/* 🔥 EFEITO BRILHO */
+.frota-card::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.2),
+    transparent
+  );
+  transform: rotate(25deg);
+  transition: 0.5s;
+}
+
+.frota-card:hover::before {
+  left: 100%;
+}
+
+
+
+.btn-voltar {
+  display: inline-block;
+  background: linear-gradient(135deg, #090979, #00d4ff);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: 0.2s;
+}
+
+.btn-voltar:hover {
+  opacity: 0.9;
+  transform: translateX(-3px);
+}
+
+
+
+/* 🔥 TITULO */
+.titulo-pagina {
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+/* 🔥 GRID */
+.frotas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 18px;
+}
+
+/* 🔥 CARD */
+.frota-card {
+  background: linear-gradient(135deg, #020024, #090979, #00d4ff);
+  border-radius: 14px;
+  padding: 20px;
+  text-align: center;
+  text-decoration: none;
+  color: #fff;
+  transition: 0.25s;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 🔥 HOVER */
+.frota-card:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 12px 22px rgba(0,0,0,0.25);
+}
+
+/* 🔥 NUMERO */
+.frota-numero {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+/* 🔥 INFO */
+.frota-info {
+  margin-top: 6px;
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+/* 🔥 EFEITO BRILHO */
+.frota-card::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.2),
+    transparent
+  );
+  transform: rotate(25deg);
+  transition: 0.5s;
+}
+
+.frota-card:hover::before {
+  left: 100%;
+}
+
+
+
+
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+}
+
+.toast {
+  background: #111;
+  color: #fff;
+  padding: 12px 18px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  animation: fadeIn 0.3s ease;
+}
+
+.toast-success {
+  background: linear-gradient(135deg, #00c853, #69f0ae);
+  color: #003300;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+
+
+.obs-col {
+  max-width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

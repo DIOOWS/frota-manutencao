@@ -6,6 +6,8 @@ import os
 import cloudinary
 from sqlalchemy import text
 
+from routes.frotas import frotas_bp
+
 # ==========================================
 # 🔥 CARREGAR VARIÁVEIS
 # ==========================================
@@ -137,12 +139,14 @@ from routes.manutencoes import manutencao_bp
 from routes.auth import auth_bp
 from routes.clientes import cliente_bp
 from routes.admin import admin_bp
+from routes.frotas import frotas_bp
 
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(manutencao_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(cliente_bp)
 app.register_blueprint(admin_bp)
+app.register_blueprint(frotas_bp)
 
 # ==========================================
 # 🔥 TESTE

@@ -23,9 +23,20 @@
   <input name="tipo_veiculo" class="form-control mb-2"
          value="{{ m.tipo_veiculo if m else '' }}" placeholder="Tipo Veículo">
 
-  <select name="tipo_servico" class="form-control mb-2">
-    <option value="CORRETIVA" {% if m and m.tipo_servico == "CORRETIVA" %}selected{% endif %}>Corretiva</option>
-    <option value="PREVENTIVA" {% if m and m.tipo_servico == "PREVENTIVA" %}selected{% endif %}>Preventiva</option>
+  <select name="tipo_servico" class="form-control mb-2" required>
+
+      <option value="">Tipo Serviço</option>
+
+      <option value="CORRETIVA"
+        {% if m and m.tipo_servico == "CORRETIVA" %}selected{% endif %}>
+        Corretiva
+      </option>
+
+      <option value="PREVENTIVA"
+        {% if m and m.tipo_servico == "PREVENTIVA" %}selected{% endif %}>
+        Preventiva
+      </option>
+
   </select>
 
   <!-- 🔥 AGORA SIM: Tipo Atendimento -->
