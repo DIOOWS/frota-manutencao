@@ -5,9 +5,11 @@ from datetime import datetime
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
+
 @dashboard_bp.route("/")
 def dashboard():
 
+    # 🔐 PROTEÇÃO LOGIN
     if not session.get("user_id"):
         return redirect("/login")
 
@@ -16,6 +18,7 @@ def dashboard():
 
     query = Manutencao.query
 
+    # 🔥 FILTRO POR DATA
     if data_inicio and data_fim:
         try:
             inicio = datetime.strptime(data_inicio, "%Y-%m-%d")
@@ -26,45 +29,51 @@ def dashboard():
 
     registros = query.all()
 
+    # 🔧 FORMATA FROTA
     def formatar_frota(valor):
         try:
             return str(int(float(valor)))
         except:
             return "Sem frota"
 
+    # 🔥 ESTRUTURAS
     por_mes = defaultdict(int)
-    tipos_counter = Counter()
     frotas_counter = Counter()
     atendimento_counter = Counter()
-    dados_frotas = defaultdict(lambda: defaultdict(int))
+    servicos_counter = Counter()
 
+    # 🔥 LOOP PRINCIPAL
     for r in registros:
+
+        # MÊS
         if r.data:
             mes = r.data.strftime("%Y-%m")
             por_mes[mes] += 1
         else:
             continue
 
-        tipo = (r.tipo_manutencao or "Sem tipo")
+        # FROTA
         frota = formatar_frota(r.numero_frota)
-        atendimento = (r.tipo_atendimento or "Sem info")
-
-        tipos_counter[tipo] += 1
         frotas_counter[frota] += 1
+
+        # ATENDIMENTO
+        atendimento = (r.tipo_atendimento or "Sem info")
         atendimento_counter[atendimento] += 1
 
-        dados_frotas[frota][mes] += 1
+        # CORRETIVA / PREVENTIVA
+        tipo_servico = (r.tipo_servico or "").upper().strip()
+        if tipo_servico in ["CORRETIVA", "PREVENTIVA"]:
+            servicos_counter[tipo_servico] += 1
 
+    # =========================
     # 🔥 MENSAL
+    # =========================
     labels = sorted(por_mes.keys())
     valores = [por_mes[m] for m in labels]
 
-    # 🔥 TIPOS
-    tipos = tipos_counter.most_common()
-    labels_tipo = [t[0] for t in tipos]
-    valores_tipo = [t[1] for t in tipos]
-
+    # =========================
     # 🔥 PARETO
+    # =========================
     frotas = sorted(frotas_counter.items(), key=lambda x: x[1], reverse=True)[:10]
     total_geral = sum(frotas_counter.values()) or 1
 
@@ -79,39 +88,36 @@ def dashboard():
         acumulado += perc
         pareto_percentual.append(round(acumulado, 2))
 
-    # 🔥 ATENDIMENTO
+    # =========================
+    # 🔥 ATENDIMENTO (PIZZA)
+    # =========================
     labels_atendimento = list(atendimento_counter.keys())
     valores_atendimento = list(atendimento_counter.values())
 
-    # 🔥 INSIGHT
-    insight = ""
-    if frotas:
-        topo = frotas[0]
-        insight = f"A frota {topo[0]} concentra maior volume ({topo[1]} manutenções)"
+    # =========================
+    # 🔥 CORRETIVA vs PREVENTIVA (🔥 PRINCIPAL)
+    # =========================
+    corretivas = servicos_counter.get("CORRETIVA", 0)
+    preventivas = servicos_counter.get("PREVENTIVA", 0)
 
+    dados_corretiva = {
+        "labels": ["Corretiva", "Preventiva"],
+        "valores": [corretivas, preventivas]
+    }
+
+    # =========================
     # 🔥 KPIs
+    # =========================
     total = len(registros)
-
-    frotas_counter_kpi = Counter(
-        formatar_frota(r.numero_frota) for r in registros
-    )
-
-    corretivas = 0
-    preventivas = 0
-
-    for r in registros:
-        tipo = (r.tipo_servico or "").upper()
-
-        if tipo == "CORRETIVA":
-            corretivas += 1
-        elif tipo == "PREVENTIVA":
-            preventivas += 1
 
     andamento = sum(
         1 for r in registros
         if "andamento" in (r.status or "").lower()
     )
 
+    # =========================
+    # 🔥 RENDER
+    # =========================
     return render_template(
         "dashboard.html",
 
@@ -122,12 +128,14 @@ def dashboard():
 
         labels=labels,
         valores=valores,
-        labels_tipo=labels_tipo,
-        valores_tipo=valores_tipo,
+
         labels_frota=labels_frota,
         valores_frota=valores_frota,
         pareto_percentual=pareto_percentual,
+
         labels_atendimento=labels_atendimento,
         valores_atendimento=valores_atendimento,
-        insight=insight
+
+        # 🔥 ESSENCIAL PRO GRÁFICO
+        dados_corretiva=dados_corretiva
     )

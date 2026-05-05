@@ -684,3 +684,55 @@ canvas {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+
+.grafico-box {
+  position: relative;
+  height: 280px;
+  padding: 10px;
+}
+
+
+:root {
+  --xodo-azul: #5AA0C8;
+  --xodo-roxo: #5A3D9A;
+  --xodo-azul-forte: #2F80ED;
+}
+
+
+
+.grafico-box {
+  position: relative;
+  height: 280px;
+}
+
+.x-card-body {
+  position: relative;
+  width: 100%;
+}
+
+canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+
+.grafico-pequeno {
+  height: 260px; /* 🔥 tamanho ideal */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grafico-pequeno canvas {
+  max-width: 280px !important;
+  max-height: 280px !important;
+}
+
+
+.grafico-padrao {
+  height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
