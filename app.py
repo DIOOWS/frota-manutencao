@@ -159,6 +159,28 @@ def teste_db():
     except Exception as e:
         return f"❌ Erro: {str(e)}"
 
+
+
+
+
+@app.route("/seed")
+def seed():
+
+    from models.manutencao import Manutencao
+    from database import db
+
+    nova = Manutencao(
+        numero_frota="437",
+        tipo_servico="CORRETIVA"
+    )
+
+    db.session.add(nova)
+    db.session.commit()
+
+    return "OK"
+
+
+
 # ==========================================
 # 🚀 START
 # ==========================================
