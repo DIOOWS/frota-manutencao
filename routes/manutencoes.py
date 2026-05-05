@@ -7,7 +7,9 @@ from datetime import datetime
 manutencao_bp = Blueprint("manutencao", __name__, url_prefix="/manutencoes")
 
 
-# 🔥 MANUTENÇÕES = CADASTRO
+# ==========================================
+# ➕ NOVA MANUTENÇÃO
+# ==========================================
 @manutencao_bp.route("/", methods=["GET", "POST"])
 def nova():
 
@@ -23,15 +25,12 @@ def nova():
         except:
             data_convertida = None
 
-        # 🔥 DEBUG (pode apagar depois)
-        print("TIPO_SERVICO:", request.form.get("tipo_servico"))
-
         nova = Manutencao(
             data=data_convertida,
             numero_frota=request.form.get("numero_frota"),
             bau=request.form.get("bau"),
             tipo_veiculo=request.form.get("tipo_veiculo"),
-            tipo_servico=request.form.get("tipo_servico"),  # 🔥 CORRETO
+            tipo_servico=request.form.get("tipo_servico"),
             tipo_atendimento=request.form.get("tipo_atendimento"),
             tipo_manutencao=request.form.get("tipo_manutencao"),
             status=request.form.get("status"),
@@ -43,12 +42,11 @@ def nova():
         db.session.add(nova)
         db.session.commit()
 
-        # 🔥 TOAST FUNCIONANDO
         flash("Manutenção salva com sucesso!", "success")
 
-        return redirect("/manutencoes")
+        # 🔥 MELHOR UX: volta pra lista
+        return redirect("/manutencoes/lista")
 
-    # 🔥 CLIENTES
     clientes = Cliente.query.order_by(Cliente.nome).all()
 
     return render_template(
@@ -57,24 +55,28 @@ def nova():
     )
 
 
-# 🗑️ EXCLUIR
-@manutencao_bp.route("/excluir/<int:id>")
-def excluir(id):
+# ==========================================
+# 📋 LISTA DE MANUTENÇÕES
+# ==========================================
+@manutencao_bp.route("/lista")
+def lista():
 
     if not session.get("user_id"):
         return redirect("/login")
 
-    m = Manutencao.query.get_or_404(id)
+    registros = Manutencao.query.order_by(
+        Manutencao.data.desc().nullslast()
+    ).all()
 
-    db.session.delete(m)
-    db.session.commit()
-
-    # 🔥 TOAST CORRETO
-    flash("Manutenção excluída com sucesso!", "success")
-
-    return redirect("/manutencoes")
+    return render_template(
+        "manutencoes/lista.html",
+        registros=registros
+    )
 
 
+# ==========================================
+# ✏️ EDITAR
+# ==========================================
 @manutencao_bp.route("/editar/<int:id>", methods=["GET", "POST"])
 def editar(id):
 
@@ -107,6 +109,7 @@ def editar(id):
 
         flash("Manutenção atualizada com sucesso!", "success")
 
+        # 🔥 volta pra frota correta
         return redirect("/frotas/" + str(m.numero_frota))
 
     clientes = Cliente.query.order_by(Cliente.nome).all()
@@ -116,3 +119,22 @@ def editar(id):
         m=m,
         clientes=clientes
     )
+
+
+# ==========================================
+# 🗑️ EXCLUIR
+# ==========================================
+@manutencao_bp.route("/excluir/<int:id>")
+def excluir(id):
+
+    if not session.get("user_id"):
+        return redirect("/login")
+
+    m = Manutencao.query.get_or_404(id)
+
+    db.session.delete(m)
+    db.session.commit()
+
+    flash("Manutenção excluída com sucesso!", "success")
+
+    return redirect("/manutencoes/lista")
