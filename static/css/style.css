@@ -394,3 +394,106 @@ td:nth-child(10) {
   height: 100% !important;
   width: 100% !important;
 }
+
+
+.grafico-box {
+  height: 300px;
+}
+
+
+.grafico-box {
+  height: 300px;
+  position: relative;
+}
+
+canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+
+
+
+
+/*kpi*/
+
+.kpi-box {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 18px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #020024, #090979, #00d4ff);
+  color: white;
+}
+
+.kpi-icon {
+  font-size: 28px;
+  background: rgba(255,255,255,0.2);
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.kpi-box h2 {
+  margin: 0;
+  font-size: 26px;
+}
+
+.kpi-box span {
+  font-size: 13px;
+}
+
+/* VARIAÇÕES */
+.kpi-box.danger {
+  background: linear-gradient(135deg, #7f1d1d, #ef4444);
+}
+
+.kpi-box.success {
+  background: linear-gradient(135deg, #064e3b, #10b981);
+}
+
+.kpi-box.warning {
+  background: linear-gradient(135deg, #78350f, #f59e0b);
+}
+
+
+
+
+
+
+
+/* ===== ACABAMENTO ===== */
+
+.x-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  transition: 0.2s;
+}
+
+.x-card:hover {
+  transform: translateY(-2px);
+}
+
+.x-card h5 {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: #f8fafc;
+  border-left: 5px solid #2563eb;
+}
+
+/* KPI */
+.kpi-box h2 {
+  font-weight: 700;
+}
+
+
+
+.kpi-box {
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}

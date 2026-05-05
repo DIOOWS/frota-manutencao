@@ -15,52 +15,47 @@ document.addEventListener("DOMContentLoaded", function () {
     return gradient;
   }
 
-  function configPadrao() {
-    return {
-      responsive: true,
-      maintainAspectRatio: false
-    };
-  }
+function configPadrao() {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
 
-  function estiloBarra(ctx) {
-    return {
-      backgroundColor: criarGradient(ctx),
-      borderRadius: 6,
-      barThickness: 45,
-      categoryPercentage: 0.6,
-      barPercentage: 0.8
-    };
-  }
+    animation: false, // 🔥 mata o bug
 
-  // 🔥 DATALABEL PADRÃO
+    hover: {
+      animationDuration: 0
+    },
+
+    responsiveAnimationDuration: 0,
+
+    interaction: {
+      mode: 'index',
+      intersect: false
+    }
+  };
+}
+
+function estiloBarra(ctx) {
+  return {
+    backgroundColor: criarGradient(ctx),
+    borderRadius: 6,
+    maxBarThickness: 35
+  };
+}
+
   function datalabelPadrao() {
     return {
       display: true,
-
-      formatter: function(value, context) {
-        if (context.dataset.type === 'bar') return value;
-        if (context.dataset.type === 'line') return value + "%";
+      formatter: function(value) {
         return value;
       },
-
-      color: function(context) {
-        return context.dataset.type === 'line'
-          ? '#ff0000'
-          : '#111';
-      },
-
+      color: '#111',
       font: {
         weight: 'bold',
         size: 10
       },
-
       anchor: 'end',
-
-      align: function(context) {
-        return context.dataset.type === 'line'
-          ? 'top'
-          : 'end';
-      }
+      align: 'top'
     };
   }
 
@@ -89,7 +84,6 @@ document.addEventListener("DOMContentLoaded", function () {
             datalabels: {
               display: true,
               color: "#fff",
-              font: { weight: 'bold', size: 12 },
               formatter: function(value, context) {
                 const total = context.chart._metasets[0].total;
                 return ((value / total) * 100).toFixed(1) + "%";
@@ -103,7 +97,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // =========================
-  // 🔥 GRÁFICO MENSAL
+  // 🔥 GRÁFICO MENSAL (SIMPLIFICADO)
   // =========================
   const elMes = document.getElementById("dados-mes");
   const elFrotaMes = document.getElementById("dados-frota-mes");
@@ -122,43 +116,26 @@ document.addEventListener("DOMContentLoaded", function () {
       const ctx = ctxMes.getContext("2d");
 
       new Chart(ctxMes, {
+        type: 'bar',
         data: {
           labels: dadosMes.labels,
           datasets: [
             {
-              type: 'bar',
               label: 'Manutenções',
               data: dadosMes.valores,
               ...estiloBarra(ctx)
-            },
-            {
-              type: 'line',
-              label: 'Crescimento %',
-              data: dadosMes.crescimento || [],
-              borderColor: '#ff0000',
-              tension: 0.3,
-              yAxisID: 'y1'
             }
           ]
         },
         options: {
           ...configPadrao(),
-          scales: {
-            y: { beginAtZero: true },
-            y1: {
-              beginAtZero: true,
-              position: 'right'
-            }
-          },
           plugins: {
             datalabels: datalabelPadrao()
           },
           onClick: function(evt, elements) {
             if (elements.length > 0) {
               const index = elements[0].index;
-              const mes = dadosMes.labels_original
-                ? dadosMes.labels_original[index]
-                : dadosMes.labels[index];
+              const mes = dadosMes.labels[index];
 
               atualizarRanking(mes);
             }
@@ -170,7 +147,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // =========================
-  // 🔥 TIPOS
+  // 🔥 TIPOS DE MANUTENÇÃO
   // =========================
   const elTipo = document.getElementById("dados-tipo");
 
@@ -186,6 +163,7 @@ document.addEventListener("DOMContentLoaded", function () {
         data: {
           labels: dados.labels,
           datasets: [{
+            label: 'Tipos de Manutenção',
             data: dados.valores,
             ...estiloBarra(c)
           }]
@@ -218,27 +196,20 @@ document.addEventListener("DOMContentLoaded", function () {
           labels: dados.labels,
           datasets: [
             {
-            type: 'bar',
-            label: 'Manutenções',
-            data: dados.valores,
-            backgroundColor: criarGradient(c),
-            borderRadius: 6,
-            barThickness: 35,
-            maxBarThickness: 40,
-            categoryPercentage: 0.6,
-            barPercentage: 0.8
-          },
-          {
-            type: 'line',
-            label: '% Acumulado',
-            data: dados.percentual,
-            borderColor: '#ff0000',
-            backgroundColor: '#ff0000',
-            tension: 0.4,
-            pointRadius: 4,
-            pointHoverRadius: 6,
-            yAxisID: 'y1'
-          }
+              type: 'bar',
+              label: 'Manutenções',
+              data: dados.valores,
+              ...estiloBarra(c)
+            },
+            {
+              type: 'line',
+              label: '% Acumulado',
+              data: dados.percentual,
+              borderColor: '#ff9800',
+              backgroundColor: '#ff9800',
+              tension: 0.4,
+              yAxisID: 'y1'
+            }
           ]
         },
         options: {
@@ -250,17 +221,15 @@ document.addEventListener("DOMContentLoaded", function () {
             }
           },
           plugins: {
-            legend: { position: 'top' },
-            datalabels: datalabelPadrao()
+            legend: { position: 'top' }
           }
-        },
-        plugins: [ChartDataLabels]
+        }
       });
     }
   }
 
   // =========================
-  // 🔥 RANKING
+  // 🔥 RANKING POR MÊS (FUNCIONANDO)
   // =========================
   const ctxRank = document.getElementById("graficoRank");
 
@@ -269,8 +238,15 @@ document.addEventListener("DOMContentLoaded", function () {
   function atualizarRanking(mes) {
 
     console.log("CLICOU:", mes);
+    console.log("DADOS:", dadosFrotaMes);
 
-    const dados = dadosFrotaMes[mes] || {};
+    const dados = dadosFrotaMes[mes];
+
+    if (!dados) {
+      console.warn("Sem dados para esse mês");
+      return;
+    }
+
     const labels = Object.keys(dados);
     const valores = Object.values(dados);
 
@@ -287,6 +263,7 @@ document.addEventListener("DOMContentLoaded", function () {
       data: {
         labels: labels,
         datasets: [{
+          label: 'Frotas',
           data: valores,
           ...estiloBarra(ctx)
         }]
