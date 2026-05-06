@@ -1,39 +1,108 @@
-from flask import Blueprint, render_template, request, redirect, session, flash, current_app
+from flask import Blueprint, render_template, request, redirect, session, flash
 from models.manutencao import Manutencao
 from models.cliente import Cliente
 from database import db
 from datetime import datetime
-from werkzeug.utils import secure_filename
-import os
 import json
+import cloudinary
+import cloudinary.uploader
+from urllib.parse import urlparse
 
 manutencao_bp = Blueprint("manutencao", __name__, url_prefix="/manutencoes")
 
 
 # ==========================================
-# 🔥 SALVAR IMAGENS
+# 🔥 HELPERS IMAGENS
 # ==========================================
 def salvar_imagens():
     arquivos = request.files.getlist("imagens")
     caminhos = []
 
-    pasta_upload = current_app.config.get("UPLOAD_FOLDER")
-
-    if not pasta_upload:
-        pasta_upload = os.path.join(current_app.root_path, "static", "uploads")
-
-    os.makedirs(pasta_upload, exist_ok=True)
-
     for arquivo in arquivos:
         if arquivo and arquivo.filename:
-            nome_arquivo = secure_filename(arquivo.filename)
-
-            caminho_completo = os.path.join(pasta_upload, nome_arquivo)
-            arquivo.save(caminho_completo)
-
-            caminhos.append("/static/uploads/" + nome_arquivo)
+            upload = cloudinary.uploader.upload(arquivo)
+            caminhos.append(upload["secure_url"])
 
     return caminhos
+
+
+def carregar_lista_imagens(valor):
+    try:
+        lista = json.loads(valor) if valor else []
+        return lista if isinstance(lista, list) else []
+    except:
+        return []
+
+
+def extrair_public_id_cloudinary(url):
+    """
+    Exemplo:
+    https://res.cloudinary.com/.../image/upload/v123456/pasta/arquivo.jpg
+
+    Retorna:
+    pasta/arquivo
+    """
+    try:
+        path = urlparse(url).path
+        partes = path.split("/upload/")
+        if len(partes) < 2:
+            return None
+
+        resto = partes[1]
+
+        # remove versão tipo v123456/
+        if resto.startswith("v") and "/" in resto:
+            primeira, restante = resto.split("/", 1)
+            if primeira[1:].isdigit():
+                resto = restante
+
+        # remove extensão
+        if "." in resto:
+            resto = resto.rsplit(".", 1)[0]
+
+        return resto
+    except:
+        return None
+
+
+# ==========================================
+# 🖼️ EXCLUIR IMAGEM (🔒 ADMIN)
+# ==========================================
+@manutencao_bp.route("/<int:id>/excluir-imagem", methods=["POST"])
+def excluir_imagem(id):
+
+    if not session.get("user_id"):
+        return redirect("/login")
+
+    if session.get("user_role") != "admin":
+        return redirect("/")
+
+    m = Manutencao.query.get_or_404(id)
+
+    imagem_url = request.form.get("imagem_url")
+    if not imagem_url:
+        flash("Imagem não informada.", "danger")
+        return redirect(f"/manutencoes/editar/{id}")
+
+    imagens_atuais = carregar_lista_imagens(m.imagens)
+
+    if imagem_url not in imagens_atuais:
+        flash("Imagem não encontrada nesse registro.", "warning")
+        return redirect(f"/manutencoes/editar/{id}")
+
+    imagens_atuais.remove(imagem_url)
+    m.imagens = json.dumps(imagens_atuais)
+
+    public_id = extrair_public_id_cloudinary(imagem_url)
+    if public_id:
+        try:
+            cloudinary.uploader.destroy(public_id)
+        except Exception as e:
+            print("Erro ao apagar imagem no Cloudinary:", e)
+
+    db.session.commit()
+    flash("Imagem excluída com sucesso!", "success")
+    return redirect(f"/manutencoes/editar/{id}")
 
 
 # ==========================================
@@ -62,9 +131,6 @@ def nova():
             data_saida_convertida = datetime.strptime(data_saida, "%Y-%m-%d") if data_saida else None
         except:
             data_saida_convertida = None
-
-        print("FILES RECEBIDOS:", request.files)
-        print("IMAGENS:", request.files.getlist("imagens"))
 
         caminhos_imagens = salvar_imagens()
 
@@ -96,7 +162,8 @@ def nova():
     return render_template(
         "manutencoes/form.html",
         clientes=clientes,
-        m=None
+        m=None,
+        imagens_lista=[]
     )
 
 
@@ -115,10 +182,8 @@ def lista():
 
     if filtro == "andamento":
         query = query.filter(Manutencao.status.ilike("%ANDAMENTO%"))
-
     elif filtro == "corretiva":
         query = query.filter(Manutencao.tipo_servico.ilike("%CORRETIVA%"))
-
     elif filtro == "preventiva":
         query = query.filter(Manutencao.tipo_servico.ilike("%PREVENTIVA%"))
 
@@ -164,11 +229,7 @@ def editar(id):
         novas_imagens = salvar_imagens()
 
         if novas_imagens:
-            try:
-                imagens_atuais = json.loads(m.imagens) if m.imagens else []
-            except:
-                imagens_atuais = []
-
+            imagens_atuais = carregar_lista_imagens(m.imagens)
             m.imagens = json.dumps(imagens_atuais + novas_imagens)
 
         m.numero_frota = request.form.get("numero_frota")
@@ -189,11 +250,13 @@ def editar(id):
         return redirect("/frotas/" + str(m.numero_frota))
 
     clientes = Cliente.query.order_by(Cliente.nome).all()
+    imagens_lista = carregar_lista_imagens(m.imagens)
 
     return render_template(
         "manutencoes/form.html",
         m=m,
-        clientes=clientes
+        clientes=clientes,
+        imagens_lista=imagens_lista
     )
 
 

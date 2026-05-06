@@ -64,13 +64,31 @@
   <label>Imagem</label>
   <input type="file" name="imagens" class="form-control mb-2" multiple>
 
-  {% if m and m.imagem %}
-    <div class="mb-3">
-      <img src="{{ m.imagem }}" style="width:120px; height:80px; object-fit:cover; border-radius:8px;">
+  <textarea name="observacao" class="form-control mb-2" placeholder="Observação">{{ m.observacao if m else '' }}</textarea>
+
+  {% if m and imagens_lista %}
+    <hr>
+    <h5>Imagens cadastradas</h5>
+
+    <div class="d-flex flex-wrap gap-3 mb-3">
+      {% for img in imagens_lista %}
+        <div style="width: 160px;">
+          <img src="{{ img }}"
+               style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd;">
+
+          <form method="POST"
+                action="/manutencoes/{{ m.id }}/excluir-imagem"
+                style="margin-top: 8px;"
+                onsubmit="return confirm('Deseja excluir esta imagem?')">
+            <input type="hidden" name="imagem_url" value="{{ img }}">
+            <button type="submit" class="btn btn-danger btn-sm w-100">
+              Excluir imagem
+            </button>
+          </form>
+        </div>
+      {% endfor %}
     </div>
   {% endif %}
-
-  <textarea name="observacao" class="form-control mb-2" placeholder="Observação">{{ m.observacao if m else '' }}</textarea>
 
   <button class="btn btn-primary">Salvar</button>
 
