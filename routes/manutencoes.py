@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, session, flash
+from flask import Blueprint, render_template, request, redirect, session, flash, jsonify
 from models.manutencao import Manutencao
 from models.cliente import Cliente
 from database import db
@@ -50,13 +50,11 @@ def extrair_public_id_cloudinary(url):
 
         resto = partes[1]
 
-        # remove versão tipo v123456/
         if resto.startswith("v") and "/" in resto:
             primeira, restante = resto.split("/", 1)
             if primeira[1:].isdigit():
                 resto = restante
 
-        # remove extensão
         if "." in resto:
             resto = resto.rsplit(".", 1)[0]
 
@@ -66,29 +64,27 @@ def extrair_public_id_cloudinary(url):
 
 
 # ==========================================
-# 🖼️ EXCLUIR IMAGEM (🔒 ADMIN)
+# 🖼️ EXCLUIR IMAGEM (🔒 ADMIN) - AJAX
 # ==========================================
 @manutencao_bp.route("/<int:id>/excluir-imagem", methods=["POST"])
 def excluir_imagem(id):
 
     if not session.get("user_id"):
-        return redirect("/login")
+        return jsonify({"ok": False, "message": "Sessão expirada."}), 401
 
     if session.get("user_role") != "admin":
-        return redirect("/")
+        return jsonify({"ok": False, "message": "Sem permissão."}), 403
 
     m = Manutencao.query.get_or_404(id)
 
     imagem_url = request.form.get("imagem_url")
     if not imagem_url:
-        flash("Imagem não informada.", "danger")
-        return redirect(f"/manutencoes/editar/{id}")
+        return jsonify({"ok": False, "message": "Imagem não informada."}), 400
 
     imagens_atuais = carregar_lista_imagens(m.imagens)
 
     if imagem_url not in imagens_atuais:
-        flash("Imagem não encontrada nesse registro.", "warning")
-        return redirect(f"/manutencoes/editar/{id}")
+        return jsonify({"ok": False, "message": "Imagem não encontrada nesse registro."}), 404
 
     imagens_atuais.remove(imagem_url)
     m.imagens = json.dumps(imagens_atuais)
@@ -101,8 +97,12 @@ def excluir_imagem(id):
             print("Erro ao apagar imagem no Cloudinary:", e)
 
     db.session.commit()
-    flash("Imagem excluída com sucesso!", "success")
-    return redirect(f"/manutencoes/editar/{id}")
+
+    return jsonify({
+        "ok": True,
+        "message": "Imagem excluída com sucesso!",
+        "restantes": len(imagens_atuais)
+    })
 
 
 # ==========================================
