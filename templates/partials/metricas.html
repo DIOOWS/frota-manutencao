@@ -1,43 +1,51 @@
 <div class="row g-3 mb-4">
 
   <div class="col-md-3">
-    <div class="kpi-box">
-      <div class="kpi-icon">📊</div>
-      <div>
-        <h2>{{ total or 0 }}</h2>
-        <span>Total</span>
+    <a href="{{ url_for('manutencao.lista') }}" class="kpi-link">
+      <div class="kpi-box">
+        <div class="kpi-icon">📊</div>
+        <div>
+          <h2>{{ total or 0 }}</h2>
+          <span>Total</span>
+        </div>
       </div>
-    </div>
+    </a>
   </div>
 
   <div class="col-md-3">
-    <div class="kpi-box danger">
-      <div class="kpi-icon">🛠️</div>
-      <div>
-        <h2>{{ corretivas or 0 }}</h2>
-        <span>Corretivas</span>
+    <a href="{{ url_for('manutencao.lista') }}?filtro=corretiva" class="kpi-link">
+      <div class="kpi-box danger">
+        <div class="kpi-icon">🛠️</div>
+        <div>
+          <h2>{{ corretivas or 0 }}</h2>
+          <span>Corretivas</span>
+        </div>
       </div>
-    </div>
+    </a>
   </div>
 
   <div class="col-md-3">
-    <div class="kpi-box success">
-      <div class="kpi-icon">🛡️</div>
-      <div>
-        <h2>{{ preventivas or 0 }}</h2>
-        <span>Preventivas</span>
+    <a href="{{ url_for('manutencao.lista') }}?filtro=preventiva" class="kpi-link">
+      <div class="kpi-box success">
+        <div class="kpi-icon">🛡️</div>
+        <div>
+          <h2>{{ preventivas or 0 }}</h2>
+          <span>Preventivas</span>
+        </div>
       </div>
-    </div>
+    </a>
   </div>
 
   <div class="col-md-3">
-    <div class="kpi-box warning">
-      <div class="kpi-icon">⏳</div>
-      <div>
-        <h2>{{ andamento or 0 }}</h2>
-        <span>Em andamento</span>
+    <a href="{{ url_for('manutencao.lista') }}?filtro=andamento" class="kpi-link">
+      <div class="kpi-box warning">
+        <div class="kpi-icon">⏳</div>
+        <div>
+          <h2>{{ andamento or 0 }}</h2>
+          <span>Em andamento</span>
+        </div>
       </div>
-    </div>
+    </a>
   </div>
 
 </div>

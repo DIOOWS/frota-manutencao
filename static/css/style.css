@@ -868,3 +868,25 @@ canvas {
 .content-top {
   width: 100%;
 }
+
+
+
+.kpi-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.kpi-link:hover {
+  color: inherit;
+}
+
+.kpi-link .kpi-box {
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.kpi-link .kpi-box:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.05);
+}
