@@ -4,18 +4,21 @@
 
 <h3>{{ "Editar" if m else "Nova" }} Manutenção</h3>
 
-<form method="POST">
+<form method="POST" enctype="multipart/form-data">
 
+  <label>Data de Entrada</label>
   <input type="date" name="data" class="form-control mb-2"
-         value="{{ m.data if m else '' }}">
+         value="{{ m.data.strftime('%Y-%m-%d') if m and m.data else '' }}">
+
+  <label>Data de Saída</label>
+  <input type="date" name="data_saida" class="form-control mb-2"
+         value="{{ m.data_saida.strftime('%Y-%m-%d') if m and m.data_saida else '' }}">
 
   <input name="numero_frota" class="form-control mb-2"
          value="{{ m.numero_frota if m else '' }}" placeholder="Frota">
 
-  <div class="mb-2">
-    <input type="text" name="os" placeholder="Os" class="form-control"
-           value="{{ m.os if m else '' }}">
-  </div>
+  <input type="text" name="os" placeholder="Número da OS" class="form-control mb-2"
+         value="{{ m.os if m else '' }}">
 
   <input name="bau" class="form-control mb-2"
          value="{{ m.bau if m else '' }}" placeholder="Baú">
@@ -24,45 +27,21 @@
          value="{{ m.tipo_veiculo if m else '' }}" placeholder="Tipo Veículo">
 
   <select name="tipo_servico" class="form-control mb-2" required>
-
-      <option value="">Tipo Serviço</option>
-
-      <option value="CORRETIVA"
-        {% if m and m.tipo_servico == "CORRETIVA" %}selected{% endif %}>
-        Corretiva
-      </option>
-
-      <option value="PREVENTIVA"
-        {% if m and m.tipo_servico == "PREVENTIVA" %}selected{% endif %}>
-        Preventiva
-      </option>
-
+    <option value="">Tipo Serviço</option>
+    <option value="CORRETIVA" {% if m and m.tipo_servico == "CORRETIVA" %}selected{% endif %}>Corretiva</option>
+    <option value="PREVENTIVA" {% if m and m.tipo_servico == "PREVENTIVA" %}selected{% endif %}>Preventiva</option>
   </select>
 
-  <!-- 🔥 AGORA SIM: Tipo Atendimento -->
   <select name="tipo_atendimento" class="form-control mb-2" required>
     <option value="">Tipo Atendimento</option>
-    <option value="INTERNO"
-      {% if m and m.tipo_atendimento == "INTERNO" %}selected{% endif %}>
-      Interno
-    </option>
-    <option value="EXTERNO"
-      {% if m and m.tipo_atendimento == "EXTERNO" %}selected{% endif %}>
-      Externo
-    </option>
+    <option value="INTERNO" {% if m and m.tipo_atendimento == "INTERNO" %}selected{% endif %}>Interno</option>
+    <option value="EXTERNO" {% if m and m.tipo_atendimento == "EXTERNO" %}selected{% endif %}>Externo</option>
   </select>
 
-  <!-- 🔥 Tipo Manutenção -->
   <select name="tipo_manutencao" class="form-control mb-2" required>
     <option value="">Tipo Manutenção</option>
-    <option value="Estrutura"
-      {% if m and m.tipo_manutencao == "Estrutura" %}selected{% endif %}>
-      Estrutura
-    </option>
-    <option value="Refrigeração"
-      {% if m and m.tipo_manutencao == "Refrigeração" %}selected{% endif %}>
-      Refrigeração
-    </option>
+    <option value="Estrutura" {% if m and m.tipo_manutencao == "Estrutura" %}selected{% endif %}>Estrutura</option>
+    <option value="Refrigeração" {% if m and m.tipo_manutencao == "Refrigeração" %}selected{% endif %}>Refrigeração</option>
   </select>
 
   <select name="status" class="form-control mb-2">
@@ -70,18 +49,28 @@
     <option value="FINALIZADO" {% if m and m.status == "FINALIZADO" %}selected{% endif %}>Finalizado</option>
   </select>
 
-  <!-- 🔥 AGORA SIM: Cliente com seta -->
   <select name="cliente" class="form-control mb-2" required>
     <option value="">Selecione o Cliente</option>
     {% for c in clientes %}
-      <option value="{{ c.nome }}"
-        {% if m and m.cliente == c.nome %}selected{% endif %}>
+      <option value="{{ c.nome }}" {% if m and m.cliente == c.nome %}selected{% endif %}>
         {{ c.nome }}
       </option>
     {% endfor %}
   </select>
 
-  <textarea name="observacao" class="form-control mb-2">{{ m.observacao if m else '' }}</textarea>
+  <input name="causa" class="form-control mb-2"
+         value="{{ m.causa if m else '' }}" placeholder="Causa">
+
+  <label>Imagem</label>
+  <input type="file" name="imagens" class="form-control mb-2" multiple>
+
+  {% if m and m.imagem %}
+    <div class="mb-3">
+      <img src="{{ m.imagem }}" style="width:120px; height:80px; object-fit:cover; border-radius:8px;">
+    </div>
+  {% endif %}
+
+  <textarea name="observacao" class="form-control mb-2" placeholder="Observação">{{ m.observacao if m else '' }}</textarea>
 
   <button class="btn btn-primary">Salvar</button>
 

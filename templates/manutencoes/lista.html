@@ -32,7 +32,9 @@
 
   <thead>
     <tr>
-      <th>Data</th>
+      <th>Nº OS</th>
+      <th>Data Entrada</th>
+      <th>Data Saída</th>
       <th>Cliente</th>
       <th>Frota</th>
       <th>Baú</th>
@@ -41,6 +43,7 @@
       <th>Atendimento</th>
       <th>Manutenção</th>
       <th>Status</th>
+      <th>Causa</th>
       <th>Observação</th>
       <th>Ações</th>
     </tr>
@@ -48,58 +51,60 @@
 
   <tbody>
     {% for m in registros %}
-    <tr>
+      <tr>
+        <td>{{ m.os or '-' }}</td>
+        <td>{{ m.data.strftime('%d-%m-%Y') if m.data else '-' }}</td>
+        <td>{{ m.data_saida.strftime('%d-%m-%Y') if m.data_saida else '-' }}</td>
+        <td>{{ m.cliente or '-' }}</td>
+        <td>{{ m.numero_frota or '-' }}</td>
+        <td>{{ m.bau or '-' }}</td>
+        <td>{{ m.tipo_veiculo or '-' }}</td>
+        <td>{{ m.tipo_servico or '-' }}</td>
+        <td>{{ m.tipo_atendimento or '-' }}</td>
+        <td>{{ m.tipo_manutencao or '-' }}</td>
+        <td>{{ m.status or '-' }}</td>
+        <td>{{ m.causa or '-' }}</td>
 
-      <td>{{ m.data }}</td>
-      <td>{{ m.cliente }}</td>
-      <td>{{ m.numero_frota }}</td>
-      <td>{{ m.bau }}</td>
-      <td>{{ m.tipo_veiculo }}</td>
-      <td>{{ m.tipo_servico }}</td>
-      <td>{{ m.tipo_atendimento }}</td>
-      <td>{{ m.tipo_manutencao }}</td>
-      <td>{{ m.status }}</td>
+        <td style="max-width:250px;">
+          {{ m.observacao or '-' }}
+        </td>
 
-      <td style="max-width:250px;">
-        {{ m.observacao }}
-      </td>
+        <td>
+          <!-- 👁 VER DETALHE -->
+          <button
+            class="btn btn-info btn-sm"
+            onclick='abrirModal(
+              {{ m.cliente|tojson }},
+              {{ m.numero_frota|tojson }},
+              {{ m.tipo_servico|tojson }},
+              {{ m.causa|tojson }},
+              {{ (m.imagens or "[]")|safe }}
+            )'>
+            👁
+          </button>
 
-      <td>
+          {% if session.get("user_role") == "admin" %}
+            <!-- ✏️ EDITAR -->
+            <a href="/manutencoes/editar/{{ m.id }}" class="btn btn-warning btn-sm">
+              ✏️
+            </a>
 
-        <!-- 👁 VER DETALHE -->
-        <button
-          class="btn btn-info btn-sm"
-          onclick="abrirModal(
-            '{{ m.cliente }}',
-            '{{ m.numero_frota }}',
-            '{{ m.tipo_servico }}',
-            '{{ m.status }}',
-            `{{ m.observacao }}`
-          )">
-          👁
-        </button>
-
-        <!-- ✏️ EDITAR -->
-        <a href="/manutencoes/editar/{{ m.id }}" class="btn btn-warning btn-sm">
-          ✏️
-        </a>
-
-        <!-- 🗑️ EXCLUIR -->
-        <a href="/manutencoes/excluir/{{ m.id }}" class="btn btn-danger btn-sm">
-          🗑️
-        </a>
-
-      </td>
-
-    </tr>
+            <!-- 🗑️ EXCLUIR -->
+            <a href="/manutencoes/excluir/{{ m.id }}" class="btn btn-danger btn-sm"
+               onclick="return confirm('Tem certeza que deseja excluir esta manutenção?')">
+              🗑️
+            </a>
+          {% endif %}
+        </td>
+      </tr>
     {% endfor %}
   </tbody>
 
 </table>
 
-<!-- 🔥 MODAL -->
+<!-- 🔥 MODAL DETALHE -->
 <div class="modal fade" id="modalDetalhe" tabindex="-1">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
 
       <div class="modal-header">
@@ -112,9 +117,33 @@
         <p><strong>Cliente:</strong> <span id="mCliente"></span></p>
         <p><strong>Frota:</strong> <span id="mFrota"></span></p>
         <p><strong>Tipo:</strong> <span id="mTipo"></span></p>
-        <p><strong>Status:</strong> <span id="mStatus"></span></p>
-        <p><strong>Observação:</strong> <span id="mObs"></span></p>
+        <p><strong>Causa:</strong> <span id="mCausa"></span></p>
 
+        <hr>
+
+        <h6>Imagens</h6>
+        <div id="mImagens" class="d-flex gap-2 flex-wrap"></div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 🔥 MODAL IMAGEM AMPLIADA -->
+<div class="modal fade" id="modalImagem" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Imagem da Manutenção</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body text-center">
+        <img id="imagemAmpliada"
+             src=""
+             style="max-width:100%; max-height:75vh; object-fit:contain; border-radius:8px;">
       </div>
 
     </div>
@@ -158,17 +187,49 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
-<!-- 🔥 JS MODAL -->
+<!-- 🔥 JS MODAL COM IMAGENS -->
 <script>
-function abrirModal(cliente, frota, tipo, status, obs) {
+function abrirModal(cliente, frota, tipo, causa, imagens) {
 
-  document.getElementById("mCliente").innerText = cliente;
-  document.getElementById("mFrota").innerText = frota;
-  document.getElementById("mTipo").innerText = tipo;
-  document.getElementById("mStatus").innerText = status;
-  document.getElementById("mObs").innerText = obs;
+  document.getElementById("mCliente").innerText = cliente || "-";
+  document.getElementById("mFrota").innerText = frota || "-";
+  document.getElementById("mTipo").innerText = tipo || "-";
+  document.getElementById("mCausa").innerText = causa || "-";
+
+  const box = document.getElementById("mImagens");
+  box.innerHTML = "";
+
+  if (!imagens || imagens.length === 0) {
+    box.innerHTML = "<p class='text-muted'>Nenhuma imagem cadastrada.</p>";
+  } else {
+    imagens.forEach(src => {
+      const img = document.createElement("img");
+
+      img.src = src;
+      img.style.width = "120px";
+      img.style.height = "90px";
+      img.style.objectFit = "cover";
+      img.style.borderRadius = "8px";
+      img.style.cursor = "pointer";
+
+      img.onclick = function () {
+        abrirImagem(src);
+      };
+
+      box.appendChild(img);
+    });
+  }
 
   const modal = new bootstrap.Modal(document.getElementById("modalDetalhe"));
+  modal.show();
+}
+
+
+
+function abrirImagem(src) {
+  document.getElementById("imagemAmpliada").src = src;
+
+  const modal = new bootstrap.Modal(document.getElementById("modalImagem"));
   modal.show();
 }
 </script>

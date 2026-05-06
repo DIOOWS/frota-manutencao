@@ -736,3 +736,135 @@ canvas {
   align-items: center;
   justify-content: center;
 }
+
+
+
+
+
+/* ==============================
+   MENU TOPO INCLINADO
+================================ */
+.top-menu-skew {
+  width: 100%;
+  height: 60px;
+  background: #f3f6fb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 22px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.18);
+  overflow: hidden;
+}
+
+.top-logo {
+  width: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  z-index: 3;
+}
+
+.top-logo img {
+  height: 70px;
+  max-width: 120px;
+  object-fit: contain;
+}
+
+.top-links {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.top-user {
+  width: 230px; /* aumenta espaço da direita */
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+  z-index: 5;
+}
+
+/* garante que a foto fique na frente */
+.user-img {
+  position: relative;
+  z-index: 10;
+}
+
+/* empurra o botão sair um pouco */
+.skew-item.sair {
+  margin-left: 10px;
+}
+
+.user-img {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.skew-item {
+  height: 60px;
+  min-width: 128px;
+  padding: 0 20px;
+  margin-left: -15px;
+  background: linear-gradient(135deg, #91baff, #0052e0);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: skewX(35deg);
+  box-shadow: 5px 0 12px rgba(0,0,0,0.18);
+  transition: 0.25s ease;
+}
+
+.skew-item span {
+  transform: skewX(-35deg);
+  white-space: nowrap;
+}
+
+.skew-item:nth-child(1) {
+  background: #ffffff;
+  color: #777;
+}
+
+.skew-item:nth-child(2) {
+  background: linear-gradient(135deg, #b8d0ff, #6ea0ff);
+}
+
+.skew-item:nth-child(3) {
+  background: linear-gradient(135deg, #7fb0ff, #3f7dff);
+}
+
+.skew-item:nth-child(4) {
+  background: linear-gradient(135deg, #5b95ff, #1f63ee);
+}
+
+.skew-item:nth-child(5) {
+  background: linear-gradient(135deg, #3d7dff, #0052e0);
+}
+
+.skew-item:nth-child(6) {
+  background: linear-gradient(135deg, #286cff, #003db5);
+}
+
+.skew-item:hover {
+  filter: brightness(1.08);
+}
+
+.skew-item.sair {
+  min-width: 110px;
+  background: linear-gradient(135deg, #ff5f69, #c82333);
+}
+
+.content-top {
+  width: 100%;
+}
