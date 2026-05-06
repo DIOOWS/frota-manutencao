@@ -8,13 +8,17 @@ manutencao_bp = Blueprint("manutencao", __name__, url_prefix="/manutencoes")
 
 
 # ==========================================
-# ➕ NOVA MANUTENÇÃO
+# ➕ NOVA MANUTENÇÃO (🔒 ADMIN)
 # ==========================================
 @manutencao_bp.route("/", methods=["GET", "POST"])
 def nova():
 
     if not session.get("user_id"):
         return redirect("/login")
+
+    # 🔥 BLOQUEIO
+    if session.get("user_role") != "admin":
+        return redirect("/")
 
     if request.method == "POST":
 
@@ -44,7 +48,6 @@ def nova():
 
         flash("Manutenção salva com sucesso!", "success")
 
-        # 🔥 MELHOR UX: volta pra lista
         return redirect("/manutencoes/lista")
 
     clientes = Cliente.query.order_by(Cliente.nome).all()
@@ -56,7 +59,7 @@ def nova():
 
 
 # ==========================================
-# 📋 LISTA DE MANUTENÇÕES
+# 📋 LISTA (LIBERADO)
 # ==========================================
 @manutencao_bp.route("/lista")
 def lista():
@@ -75,13 +78,17 @@ def lista():
 
 
 # ==========================================
-# ✏️ EDITAR
+# ✏️ EDITAR (🔒 ADMIN)
 # ==========================================
 @manutencao_bp.route("/editar/<int:id>", methods=["GET", "POST"])
 def editar(id):
 
     if not session.get("user_id"):
         return redirect("/login")
+
+    # 🔥 BLOQUEIO
+    if session.get("user_role") != "admin":
+        return redirect("/")
 
     m = Manutencao.query.get_or_404(id)
 
@@ -109,7 +116,6 @@ def editar(id):
 
         flash("Manutenção atualizada com sucesso!", "success")
 
-        # 🔥 volta pra frota correta
         return redirect("/frotas/" + str(m.numero_frota))
 
     clientes = Cliente.query.order_by(Cliente.nome).all()
@@ -122,13 +128,17 @@ def editar(id):
 
 
 # ==========================================
-# 🗑️ EXCLUIR
+# 🗑️ EXCLUIR (🔒 ADMIN)
 # ==========================================
 @manutencao_bp.route("/excluir/<int:id>")
 def excluir(id):
 
     if not session.get("user_id"):
         return redirect("/login")
+
+    # 🔥 BLOQUEIO
+    if session.get("user_role") != "admin":
+        return redirect("/")
 
     m = Manutencao.query.get_or_404(id)
 

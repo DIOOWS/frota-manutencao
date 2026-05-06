@@ -61,19 +61,31 @@
     {% endif %}
 
     <!-- MENU -->
-    <a href="{{ url_for('dashboard.dashboard') }}" class="menu-item">📊 Dashboard</a>
+    <!-- MENU -->
 
-    <a href="{{ url_for('manutencao.lista') }}" class="menu-item">📋 Manutenções</a>
+<a href="{{ url_for('dashboard.dashboard') }}" class="menu-item">📊 Dashboard</a>
 
-    <!-- 🔥 CORRIGIDO AQUI -->
-    <a href="{{ url_for('manutencao.nova') }}" class="menu-item">
-      ➕ Nova Manutenção
-    </a>
+<a href="{{ url_for('manutencao.lista') }}" class="menu-item">📋 Manutenções</a>
 
-    <a href="/clientes/" class="menu-item">👥 Clientes</a>
-    <a href="/frotas" class="menu-item">🚚 Frotas</a>
+{% if session.get("user_role") == "admin" %}
 
-    <a href="/logout" class="menu-item logout">🚪 Sair</a>
+  <a href="{{ url_for('manutencao.nova') }}" class="menu-item">
+    ➕ Nova Manutenção
+  </a>
+
+  <a href="{{ url_for('admin.dashboard_admin') }}" class="menu-item">
+    👑 Admin
+  </a>
+
+  <a href="/clientes/" class="menu-item">
+    👥 Clientes
+  </a>
+
+{% endif %}
+
+<a href="/frotas" class="menu-item">🚚 Frotas</a>
+
+<a href="/logout" class="menu-item logout">🚪 Sair</a>
 
   </div>
 
