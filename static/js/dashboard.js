@@ -91,20 +91,87 @@ document.addEventListener("DOMContentLoaded", function () {
     const ctxMes = document.getElementById("graficoMes");
 
     if (ctxMes) {
-      const ctx = ctxMes.getContext("2d");
+
+      const params = new URLSearchParams(window.location.search);
+      const mesFiltrado = params.get("mes");
+
+      let datasetsMensal;
+
+      // 🔥 SE FILTRO ATIVO (3 BARRAS)
+      if (mesFiltrado) {
+        datasetsMensal = [
+          {
+            label: 'Corretiva',
+            data: dadosMes.corretivas,
+            backgroundColor: '#c90000',
+            borderRadius: 4,
+            maxBarThickness: 35
+          },
+          {
+            label: 'Total Manutenção',
+            data: dadosMes.valores,
+            backgroundColor: '#002b70',
+            borderRadius: 4,
+            maxBarThickness: 35
+          },
+          {
+            label: 'Preventiva',
+            data: dadosMes.preventivas,
+            backgroundColor: '#4f8733',
+            borderRadius: 4,
+            maxBarThickness: 35
+          }
+        ];
+      }
+
+      // 🔥 SEM FILTRO (1 BARRA)
+      else {
+        const ctx = ctxMes.getContext("2d");
+
+        datasetsMensal = [
+          {
+            label: 'Manutenções',
+            data: dadosMes.valores,
+            ...estiloBarra(ctx)
+          }
+        ];
+      }
 
       new Chart(ctxMes, {
         type: 'bar',
         data: {
           labels: dadosMes.labels,
-          datasets: [{
-            label: 'Manutenções',
-            data: dadosMes.valores,
-            ...estiloBarra(ctx)
-          }]
+          datasets: datasetsMensal
         },
         options: {
           ...configPadrao(),
+
+          onClick: function(evt, elements) {
+            if (elements.length > 0) {
+              const index = elements[0].index;
+              const mesSelecionado = dadosMes.labels[index];
+
+              // 🔥 CONVERTE 05-2026 → 2026-05
+              const partes = mesSelecionado.split("-");
+              const mesUrl = `${partes[1]}-${partes[0]}`;
+
+              window.location.href = `/?mes=${mesUrl}`;
+            }
+          },
+
+          layout: {
+            padding: {
+              top: 25
+            }
+          },
+
+          scales: {
+            y: {
+              beginAtZero: true,
+              grace: '15%'
+            }
+          },
+
           plugins: {
             datalabels: datalabelPadrao()
           }
@@ -115,7 +182,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // =========================
-  // 🔥 CORRETIVA GRANDE (FIXADO)
+  // 🔥 CORRETIVA GRANDE
   // =========================
   const elCorretiva = document.getElementById("dados-corretiva");
 
@@ -136,10 +203,10 @@ document.addEventListener("DOMContentLoaded", function () {
         },
         options: {
           ...configPadrao(),
-          cutout: "65%", // 🔥 igual ao outro (mais elegante)
+          cutout: "65%",
           plugins: {
             legend: {
-              position: 'top' // 🔥 IGUAL AO INTERNO
+              position: 'top'
             },
             datalabels: {
               color: "#fff",

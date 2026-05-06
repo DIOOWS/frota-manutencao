@@ -15,11 +15,31 @@ def dashboard():
 
     data_inicio = request.args.get("data_inicio")
     data_fim = request.args.get("data_fim")
+    mes_filtro = request.args.get("mes")
 
     query = Manutencao.query
 
-    # 🔥 FILTRO POR DATA
-    if data_inicio and data_fim:
+    inicio_mes_filtro = None
+
+    # 🔥 PRIORIDADE: FILTRO POR MÊS
+    if mes_filtro:
+        try:
+            inicio_mes_filtro = datetime.strptime(mes_filtro + "-01", "%Y-%m-%d")
+
+            if inicio_mes_filtro.month == 12:
+                fim = inicio_mes_filtro.replace(year=inicio_mes_filtro.year + 1, month=1)
+            else:
+                fim = inicio_mes_filtro.replace(month=inicio_mes_filtro.month + 1)
+
+            query = query.filter(
+                Manutencao.data >= inicio_mes_filtro,
+                Manutencao.data < fim
+            )
+        except:
+            pass
+
+    # 🔥 SENÃO, USA FILTRO POR DATA
+    elif data_inicio and data_fim:
         try:
             inicio = datetime.strptime(data_inicio, "%Y-%m-%d")
             fim = datetime.strptime(data_fim, "%Y-%m-%d")
@@ -38,6 +58,9 @@ def dashboard():
 
     # 🔥 ESTRUTURAS
     por_mes = defaultdict(int)
+    por_mes_corretiva = defaultdict(int)
+    por_mes_preventiva = defaultdict(int)
+
     frotas_counter = Counter()
     atendimento_counter = Counter()
     servicos_counter = Counter()
@@ -45,9 +68,9 @@ def dashboard():
     # 🔥 LOOP PRINCIPAL
     for r in registros:
 
-        # MÊS
         if r.data:
-            mes = r.data.strftime("%Y-%m")
+            # 🔥 APARECE NO GRÁFICO COMO MÊS-ANO
+            mes = r.data.strftime("%m-%Y")
             por_mes[mes] += 1
         else:
             continue
@@ -62,14 +85,44 @@ def dashboard():
 
         # CORRETIVA / PREVENTIVA
         tipo_servico = (r.tipo_servico or "").upper().strip()
-        if tipo_servico in ["CORRETIVA", "PREVENTIVA"]:
-            servicos_counter[tipo_servico] += 1
+
+        if tipo_servico == "CORRETIVA":
+            por_mes_corretiva[mes] += 1
+            servicos_counter["CORRETIVA"] += 1
+
+        elif tipo_servico == "PREVENTIVA":
+            por_mes_preventiva[mes] += 1
+            servicos_counter["PREVENTIVA"] += 1
 
     # =========================
-    # 🔥 MENSAL
+    # 🔥 KPIs
     # =========================
-    labels = sorted(por_mes.keys())
-    valores = [por_mes[m] for m in labels]
+    total = len(registros)
+
+    corretivas = servicos_counter.get("CORRETIVA", 0)
+    preventivas = servicos_counter.get("PREVENTIVA", 0)
+
+    andamento = sum(
+        1 for r in registros
+        if "andamento" in (r.status or "").lower()
+    )
+
+    # =========================
+    # 🔥 MENSAL CORRETO
+    # =========================
+    if mes_filtro and inicio_mes_filtro:
+        labels = [inicio_mes_filtro.strftime("%m-%Y")]
+        valores = [total]
+        valores_corretiva_mes = [corretivas]
+        valores_preventiva_mes = [preventivas]
+    else:
+        labels = sorted(
+            por_mes.keys(),
+            key=lambda x: datetime.strptime(x, "%m-%Y")
+        )
+        valores = [por_mes[m] for m in labels]
+        valores_corretiva_mes = [por_mes_corretiva[m] for m in labels]
+        valores_preventiva_mes = [por_mes_preventiva[m] for m in labels]
 
     # =========================
     # 🔥 PARETO
@@ -95,25 +148,12 @@ def dashboard():
     valores_atendimento = list(atendimento_counter.values())
 
     # =========================
-    # 🔥 CORRETIVA vs PREVENTIVA (🔥 PRINCIPAL)
+    # 🔥 CORRETIVA vs PREVENTIVA
     # =========================
-    corretivas = servicos_counter.get("CORRETIVA", 0)
-    preventivas = servicos_counter.get("PREVENTIVA", 0)
-
     dados_corretiva = {
         "labels": ["Corretiva", "Preventiva"],
         "valores": [corretivas, preventivas]
     }
-
-    # =========================
-    # 🔥 KPIs
-    # =========================
-    total = len(registros)
-
-    andamento = sum(
-        1 for r in registros
-        if "andamento" in (r.status or "").lower()
-    )
 
     # =========================
     # 🔥 RENDER
@@ -136,6 +176,8 @@ def dashboard():
         labels_atendimento=labels_atendimento,
         valores_atendimento=valores_atendimento,
 
-        # 🔥 ESSENCIAL PRO GRÁFICO
-        dados_corretiva=dados_corretiva
+        dados_corretiva=dados_corretiva,
+
+        valores_corretiva_mes=valores_corretiva_mes,
+        valores_preventiva_mes=valores_preventiva_mes,
     )

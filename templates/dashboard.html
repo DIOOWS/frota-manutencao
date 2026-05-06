@@ -12,6 +12,15 @@
   <button class="btn btn-dark">Filtrar</button>
 </form>
 
+{% if request.args.get("mes") %}
+  <div class="alert alert-info d-flex align-items-center justify-content-between">
+    <div>
+      🔎 Filtrando mês: <strong>{{ request.args.get("mes") }}</strong>
+    </div>
+    <a href="/" class="btn btn-sm btn-dark">Limpar filtro</a>
+  </div>
+{% endif %}
+
 <!-- 🔥 KPIs -->
 {% include "partials/metricas.html" %}
 
@@ -45,11 +54,10 @@
 <!-- ========================= -->
 <div class="row g-4 mt-1">
 
-    <!-- 🔥 PARETO -->
+  <!-- 🔥 PARETO -->
   <div class="col-md-6">
     <div class="x-card p-3 h-100">
       <h5>Pareto (80/20)</h5>
-
       <div class="grafico-box grafico-padrao">
         <canvas id="graficoPareto"></canvas>
       </div>
@@ -60,12 +68,12 @@
   <div class="col-md-6">
     <div class="x-card p-3 h-100">
       <h5>Corretiva vs Preventiva</h5>
-
       <div class="grafico-box grafico-padrao">
-          <canvas id="graficoCorretivaGrande"></canvas>
+        <canvas id="graficoCorretivaGrande"></canvas>
       </div>
     </div>
   </div>
+
 </div>
 
 <!-- ========================= -->
@@ -77,7 +85,12 @@
 </script>
 
 <script id="dados-mes" type="application/json">
-{{ {"labels": labels, "valores": valores} | tojson }}
+{{ {
+  "labels": labels,
+  "valores": valores,
+  "corretivas": valores_corretiva_mes,
+  "preventivas": valores_preventiva_mes
+} | tojson }}
 </script>
 
 <script id="dados-pareto" type="application/json">
