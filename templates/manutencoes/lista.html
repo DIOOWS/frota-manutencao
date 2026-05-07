@@ -6,7 +6,6 @@
 
 <h3 class="mb-3">Manutenções</h3>
 
-<!-- 🔍 FILTRO -->
 <div class="row mb-3">
 
   <div class="col-md-4">
@@ -27,7 +26,6 @@
 
 </div>
 
-<!-- 📋 TABELA -->
 <table class="table table-striped table-hover" id="tabelaManutencoes">
 
   <thead>
@@ -70,7 +68,6 @@
         </td>
 
         <td>
-          <!-- 👁 VER DETALHE -->
           <button
             class="btn btn-info btn-sm"
             onclick='abrirModal(
@@ -78,18 +75,27 @@
               {{ m.numero_frota|tojson }},
               {{ m.tipo_servico|tojson }},
               {{ m.causa|tojson }},
-              {{ (m.imagens or "[]")|safe }}
+
+              {{ m.placa_afericao|tojson }},
+              {{ m.placa_data_afericao|tojson }},
+              {{ m.placa_status|tojson }},
+
+              {{ m.ambiente_afericao|tojson }},
+              {{ m.ambiente_data_afericao|tojson }},
+              {{ m.ambiente_status|tojson }},
+
+              {{ m.imagens_lista|tojson }},
+              {{ m.placa_imagens|tojson }},
+              {{ m.ambiente_imagens|tojson }}
             )'>
             👁
           </button>
 
           {% if session.get("user_role") == "admin" %}
-            <!-- ✏️ EDITAR -->
             <a href="/manutencoes/editar/{{ m.id }}" class="btn btn-warning btn-sm">
               ✏️
             </a>
 
-            <!-- 🗑️ EXCLUIR -->
             <a href="/manutencoes/excluir/{{ m.id }}" class="btn btn-danger btn-sm"
                onclick="return confirm('Tem certeza que deseja excluir esta manutenção?')">
               🗑️
@@ -102,27 +108,70 @@
 
 </table>
 
-<!-- 🔥 MODAL DETALHE -->
+<!-- MODAL DETALHE -->
 <div class="modal fade" id="modalDetalhe" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content">
 
       <div class="modal-header">
-        <h5 class="modal-title">Detalhes da Manutenção</h5>
+        <h4 class="modal-title">Detalhes da Manutenção</h4>
         <button class="btn-close" data-bs-dismiss="modal"></button>
       </div>
 
       <div class="modal-body">
+        <div class="mb-4">
+          <p><strong>Cliente:</strong> <span id="mCliente"></span></p>
+          <p><strong>Frota:</strong> <span id="mFrota"></span></p>
+          <p><strong>Tipo:</strong> <span id="mTipo"></span></p>
+          <p><strong>Causa:</strong> <span id="mCausa"></span></p>
+        </div>
 
-        <p><strong>Cliente:</strong> <span id="mCliente"></span></p>
-        <p><strong>Frota:</strong> <span id="mFrota"></span></p>
-        <p><strong>Tipo:</strong> <span id="mTipo"></span></p>
-        <p><strong>Causa:</strong> <span id="mCausa"></span></p>
+        <div class="mb-4">
+          <hr>
+          <h5 class="mb-3">Descrição das Temperaturas</h5>
 
-        <hr>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="border rounded p-3 h-100 shadow-sm">
+                <h6 class="mb-3">Aferição Placa</h6>
+                <p class="mb-2"><strong>Aferição:</strong> <span id="mPlacaAfericao"></span></p>
+                <p class="mb-2"><strong>Data:</strong> <span id="mPlacaData"></span></p>
+                <p class="mb-0">
+                  <strong>Status:</strong>
+                  <span id="mPlacaStatus" class="badge"></span>
+                </p>
+              </div>
+            </div>
 
-        <h6>Imagens</h6>
-        <div id="mImagens" class="d-flex gap-2 flex-wrap"></div>
+            <div class="col-md-6">
+              <div class="border rounded p-3 h-100 shadow-sm">
+                <h6 class="mb-3">Aferição Ambiente</h6>
+                <p class="mb-2"><strong>Aferição:</strong> <span id="mAmbienteAfericao"></span></p>
+                <p class="mb-2"><strong>Data:</strong> <span id="mAmbienteData"></span></p>
+                <p class="mb-0">
+                  <strong>Status:</strong>
+                  <span id="mAmbienteStatus" class="badge"></span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <hr>
+          <h5 class="mb-3">Imagens Manutenção</h5>
+          <div id="mImagens" class="d-flex gap-2 flex-wrap"></div>
+        </div>
+
+        <div class="mb-4">
+          <h5 class="mb-3">Imagens Aferição Placa</h5>
+          <div id="mImagensPlaca" class="d-flex gap-2 flex-wrap"></div>
+        </div>
+
+        <div class="mb-2">
+          <h5 class="mb-3">Imagens Aferição Ambiente</h5>
+          <div id="mImagensAmbiente" class="d-flex gap-2 flex-wrap"></div>
+        </div>
 
       </div>
 
@@ -130,13 +179,13 @@
   </div>
 </div>
 
-<!-- 🔥 MODAL IMAGEM AMPLIADA -->
+<!-- MODAL IMAGEM AMPLIADA -->
 <div class="modal fade" id="modalImagem" tabindex="-1">
   <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content">
 
       <div class="modal-header">
-        <h5 class="modal-title">Imagem da Manutenção</h5>
+        <h5 class="modal-title">Imagem</h5>
         <button class="btn-close" data-bs-dismiss="modal"></button>
       </div>
 
@@ -150,33 +199,27 @@
   </div>
 </div>
 
-<!-- 🔥 JS FILTRO -->
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
   const filtroCliente = document.getElementById("filtroCliente");
   const filtroFrota = document.getElementById("filtroFrota");
   const filtroStatus = document.getElementById("filtroStatus");
-
   const linhas = document.querySelectorAll("#tabelaManutencoes tbody tr");
 
   function aplicarFiltro() {
-
     const cliente = filtroCliente.value.toLowerCase();
     const frota = filtroFrota.value.toLowerCase();
     const status = filtroStatus.value.toLowerCase();
 
     linhas.forEach(linha => {
-
       const texto = linha.innerText.toLowerCase();
 
       const matchCliente = texto.includes(cliente);
       const matchFrota = texto.includes(frota);
       const matchStatus = texto.includes(status);
 
-      linha.style.display = (matchCliente && matchFrota && matchStatus)
-        ? ""
-        : "none";
+      linha.style.display = (matchCliente && matchFrota && matchStatus) ? "" : "none";
     });
   }
 
@@ -185,46 +228,85 @@ document.addEventListener("DOMContentLoaded", function () {
   filtroStatus.addEventListener("change", aplicarFiltro);
 
 });
-</script>
 
-<!-- 🔥 JS MODAL COM IMAGENS -->
-<script>
-function abrirModal(cliente, frota, tipo, causa, imagens) {
+function aplicarStatusBadge(elementId, status) {
+  const el = document.getElementById(elementId);
 
+  if (!status) {
+    el.innerText = "-";
+    el.className = "badge bg-secondary";
+    return;
+  }
+
+  if (status === "C") {
+    el.innerText = "C - Conforme";
+    el.className = "badge bg-success";
+  } else if (status === "NC") {
+    el.innerText = "NC - Não conforme";
+    el.className = "badge bg-danger";
+  } else if (status === "NA") {
+    el.innerText = "NA - Não se aplica";
+    el.className = "badge bg-secondary";
+  } else {
+    el.innerText = status;
+    el.className = "badge bg-secondary";
+  }
+}
+
+function renderizarGaleria(containerId, imagens, textoVazio) {
+  const box = document.getElementById(containerId);
+  box.innerHTML = "";
+
+  if (!imagens || imagens.length === 0) {
+    box.innerHTML = `<p class="text-muted">${textoVazio}</p>`;
+    return;
+  }
+
+  imagens.forEach(src => {
+    const img = document.createElement("img");
+
+    img.src = src;
+    img.style.width = "120px";
+    img.style.height = "90px";
+    img.style.objectFit = "cover";
+    img.style.borderRadius = "8px";
+    img.style.cursor = "pointer";
+    img.style.border = "1px solid #ddd";
+
+    img.onclick = function () {
+      abrirImagem(src);
+    };
+
+    box.appendChild(img);
+  });
+}
+
+function abrirModal(
+  cliente, frota, tipo, causa,
+  placaAfericao, placaData, placaStatus,
+  ambienteAfericao, ambienteData, ambienteStatus,
+  imagensManutencao, imagensPlaca, imagensAmbiente
+) {
   document.getElementById("mCliente").innerText = cliente || "-";
   document.getElementById("mFrota").innerText = frota || "-";
   document.getElementById("mTipo").innerText = tipo || "-";
   document.getElementById("mCausa").innerText = causa || "-";
 
-  const box = document.getElementById("mImagens");
-  box.innerHTML = "";
+  document.getElementById("mPlacaAfericao").innerText = placaAfericao || "-";
+  document.getElementById("mPlacaData").innerText = placaData || "-";
+  aplicarStatusBadge("mPlacaStatus", placaStatus);
 
-  if (!imagens || imagens.length === 0) {
-    box.innerHTML = "<p class='text-muted'>Nenhuma imagem cadastrada.</p>";
-  } else {
-    imagens.forEach(src => {
-      const img = document.createElement("img");
+  document.getElementById("mAmbienteAfericao").innerText = ambienteAfericao || "-";
+  document.getElementById("mAmbienteData").innerText = ambienteData || "-";
+  aplicarStatusBadge("mAmbienteStatus", ambienteStatus);
 
-      img.src = src;
-      img.style.width = "120px";
-      img.style.height = "90px";
-      img.style.objectFit = "cover";
-      img.style.borderRadius = "8px";
-      img.style.cursor = "pointer";
-
-      img.onclick = function () {
-        abrirImagem(src);
-      };
-
-      box.appendChild(img);
-    });
-  }
+  renderizarGaleria("mImagens", imagensManutencao, "Nenhuma imagem de manutenção cadastrada.");
+  renderizarGaleria("mImagensPlaca", imagensPlaca, "Nenhuma imagem da aferição de placa cadastrada.");
+  renderizarGaleria("mImagensAmbiente", imagensAmbiente, "Nenhuma imagem da aferição de ambiente cadastrada.");
 
   const modal = new bootstrap.Modal(document.getElementById("modalDetalhe"));
   modal.show();
 }
-
-
 
 function abrirImagem(src) {
   document.getElementById("imagemAmpliada").src = src;

@@ -61,6 +61,99 @@
   <input name="causa" class="form-control mb-2"
          value="{{ m.causa if m else '' }}" placeholder="Causa">
 
+  <hr>
+  <h5>Aferição dos Termômetros</h5>
+
+  <div class="row">
+    <div class="col-md-6">
+      <div class="border rounded p-3 mb-3">
+        <h6>Termômetro de Placa</h6>
+
+        <label>Aferição</label>
+        <input type="text" name="placa_afericao" class="form-control mb-2"
+               value="{{ afericao_placa.afericao if afericao_placa else '' }}"
+               placeholder="Ex.: 3,5°C">
+
+        <label>Data</label>
+        <input type="date" name="placa_data_afericao" class="form-control mb-2"
+               value="{{ afericao_placa.data_afericao if afericao_placa else '' }}">
+
+        <label>Status</label>
+        <select name="placa_status" class="form-control mb-2">
+          <option value="">Selecione</option>
+          <option value="C" {% if afericao_placa and afericao_placa.status == "C" %}selected{% endif %}>C - Conforme</option>
+          <option value="NC" {% if afericao_placa and afericao_placa.status == "NC" %}selected{% endif %}>NC - Não conforme</option>
+          <option value="NA" {% if afericao_placa and afericao_placa.status == "NA" %}selected{% endif %}>NA - Não se aplica</option>
+        </select>
+
+        <label>Imagens do termômetro de placa (máx. 4)</label>
+        <input type="file" name="placa_imagens" class="form-control mb-2" multiple accept="image/*">
+
+        {% if afericao_placa and afericao_placa.imagens %}
+          <div class="d-flex flex-wrap gap-2 mt-2">
+            {% for img in afericao_placa.imagens %}
+              <div class="imagem-card-afericao" data-url="{{ img }}" style="width: 140px;">
+                <img src="{{ img }}"
+                     style="width: 100%; height: 95px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd;">
+
+                <button type="button"
+                        class="btn btn-danger btn-sm w-100 mt-2 btn-excluir-imagem-afericao"
+                        data-afericao-id="{{ afericao_placa.id }}"
+                        data-imagem-url="{{ img }}">
+                  Excluir imagem
+                </button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="border rounded p-3 mb-3">
+        <h6>Termômetro de Ambiente</h6>
+
+        <label>Aferição</label>
+        <input type="text" name="ambiente_afericao" class="form-control mb-2"
+               value="{{ afericao_ambiente.afericao if afericao_ambiente else '' }}"
+               placeholder="Ex.: 7,2°C">
+
+        <label>Data</label>
+        <input type="date" name="ambiente_data_afericao" class="form-control mb-2"
+               value="{{ afericao_ambiente.data_afericao if afericao_ambiente else '' }}">
+
+        <label>Status</label>
+        <select name="ambiente_status" class="form-control mb-2">
+          <option value="">Selecione</option>
+          <option value="C" {% if afericao_ambiente and afericao_ambiente.status == "C" %}selected{% endif %}>C - Conforme</option>
+          <option value="NC" {% if afericao_ambiente and afericao_ambiente.status == "NC" %}selected{% endif %}>NC - Não conforme</option>
+          <option value="NA" {% if afericao_ambiente and afericao_ambiente.status == "NA" %}selected{% endif %}>NA - Não se aplica</option>
+        </select>
+
+        <label>Imagens do termômetro de ambiente (máx. 4)</label>
+        <input type="file" name="ambiente_imagens" class="form-control mb-2" multiple accept="image/*">
+
+        {% if afericao_ambiente and afericao_ambiente.imagens %}
+          <div class="d-flex flex-wrap gap-2 mt-2">
+            {% for img in afericao_ambiente.imagens %}
+              <div class="imagem-card-afericao" data-url="{{ img }}" style="width: 140px;">
+                <img src="{{ img }}"
+                     style="width: 100%; height: 95px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd;">
+
+                <button type="button"
+                        class="btn btn-danger btn-sm w-100 mt-2 btn-excluir-imagem-afericao"
+                        data-afericao-id="{{ afericao_ambiente.id }}"
+                        data-imagem-url="{{ img }}">
+                  Excluir imagem
+                </button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
   <label>Imagem</label>
   <input type="file" name="imagens" class="form-control mb-2" multiple>
 
@@ -93,6 +186,8 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+
+  // exclusão imagem da manutenção
   const botoesExcluir = document.querySelectorAll(".btn-excluir-imagem");
 
   botoesExcluir.forEach((botao) => {
@@ -138,6 +233,54 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   });
+
+  // exclusão imagem da aferição
+  const botoesExcluirAfericao = document.querySelectorAll(".btn-excluir-imagem-afericao");
+
+  botoesExcluirAfericao.forEach((botao) => {
+    botao.addEventListener("click", async function () {
+      const afericaoId = this.dataset.afericaoId;
+      const imagemUrl = this.dataset.imagemUrl;
+
+      if (!confirm("Deseja excluir esta imagem da aferição?")) {
+        return;
+      }
+
+      this.disabled = true;
+      this.innerText = "Excluindo...";
+
+      try {
+        const formData = new FormData();
+        formData.append("imagem_url", imagemUrl);
+
+        const response = await fetch(`/manutencoes/afericao/${afericaoId}/excluir-imagem`, {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.ok) {
+          alert(data.message || "Erro ao excluir imagem da aferição.");
+          this.disabled = false;
+          this.innerText = "Excluir imagem";
+          return;
+        }
+
+        const card = this.closest(".imagem-card-afericao");
+        if (card) {
+          card.remove();
+        }
+
+      } catch (error) {
+        console.error(error);
+        alert("Erro ao excluir imagem da aferição.");
+        this.disabled = false;
+        this.innerText = "Excluir imagem";
+      }
+    });
+  });
+
 });
 </script>
 

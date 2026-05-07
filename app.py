@@ -89,9 +89,10 @@ migrate = Migrate(app, db)
 from models.usuario import Usuario
 from models.cliente import Cliente
 from models.manutencao import Manutencao
+from models.afericao_termometro import AfericaoTermometro
 
 # ==========================================
-# 🚨 GARANTIR COLUNAS (ANTES DE QUALQUER QUERY)
+# 🚨 GARANTIR COLUNAS / TABELAS
 # ==========================================
 with app.app_context():
     try:
@@ -108,13 +109,26 @@ with app.app_context():
     except Exception as e:
         print("foto:", e)
 
+    # 🔥 garante que a tabela exista
+    try:
+        db.create_all()
+        print("🔥 tabelas verificadas/criadas")
+    except Exception as e:
+        print("create_all:", e)
+
+    # 🔥 garante coluna imagens em afericoes_termometros
+    try:
+        db.session.execute(text("ALTER TABLE afericoes_termometros ADD COLUMN imagens TEXT;"))
+        db.session.commit()
+        print("🔥 coluna imagens criada em afericoes_termometros")
+    except Exception as e:
+        print("imagens afericoes_termometros:", e)
+
 # ==========================================
-# 🔥 CRIAR ADMIN (DEPOIS DAS COLUNAS)
+# 🔥 CRIAR ADMIN
 # ==========================================
 with app.app_context():
     try:
-        db.create_all()
-
         if not Usuario.query.filter_by(nome="admin").first():
             admin = Usuario(
                 nome="admin",
@@ -158,9 +172,6 @@ def teste_db():
         return "✅ Banco conectado!"
     except Exception as e:
         return f"❌ Erro: {str(e)}"
-
-
-
 
 # ==========================================
 # 🚀 START
