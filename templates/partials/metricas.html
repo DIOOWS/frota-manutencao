@@ -1,7 +1,10 @@
 <div class="row g-3 mb-4">
 
+  {% set data_inicio = request.args.get('data_inicio', '') %}
+  {% set data_fim = request.args.get('data_fim', '') %}
+
   <div class="col-md-3">
-    <a href="{{ url_for('manutencao.lista') }}" class="kpi-link">
+    <a href="{{ url_for('manutencao.lista', data_inicio=data_inicio, data_fim=data_fim) if data_inicio and data_fim else url_for('manutencao.lista') }}" class="kpi-link">
       <div class="kpi-box">
         <div class="kpi-icon">📊</div>
         <div>
@@ -13,7 +16,7 @@
   </div>
 
   <div class="col-md-3">
-    <a href="{{ url_for('manutencao.lista') }}?filtro=corretiva" class="kpi-link">
+    <a href="{{ url_for('manutencao.lista', filtro='corretiva', data_inicio=data_inicio, data_fim=data_fim) if data_inicio and data_fim else url_for('manutencao.lista', filtro='corretiva') }}" class="kpi-link">
       <div class="kpi-box danger">
         <div class="kpi-icon">🛠️</div>
         <div>
@@ -25,7 +28,7 @@
   </div>
 
   <div class="col-md-3">
-    <a href="{{ url_for('manutencao.lista') }}?filtro=preventiva" class="kpi-link">
+    <a href="{{ url_for('manutencao.lista', filtro='preventiva', data_inicio=data_inicio, data_fim=data_fim) if data_inicio and data_fim else url_for('manutencao.lista', filtro='preventiva') }}" class="kpi-link">
       <div class="kpi-box success">
         <div class="kpi-icon">🛡️</div>
         <div>
@@ -37,7 +40,7 @@
   </div>
 
   <div class="col-md-3">
-    <a href="{{ url_for('manutencao.lista') }}?filtro=andamento" class="kpi-link">
+    <a href="{{ url_for('manutencao.lista', filtro='andamento', data_inicio=data_inicio, data_fim=data_fim) if data_inicio and data_fim else url_for('manutencao.lista', filtro='andamento') }}" class="kpi-link">
       <div class="kpi-box warning">
         <div class="kpi-icon">⏳</div>
         <div>

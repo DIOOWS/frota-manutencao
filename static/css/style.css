@@ -890,3 +890,11 @@ canvas {
   transform: translateY(-3px);
   filter: brightness(1.05);
 }
+
+
+.top-menu-skew {
+  position: sticky;
+  top: 0;
+  z-index: 1050;
+  background: #f8fafc;
+}

@@ -177,6 +177,8 @@ def lista():
         return redirect("/login")
 
     filtro = request.args.get("filtro")
+    data_inicio = request.args.get("data_inicio")
+    data_fim = request.args.get("data_fim")
 
     query = Manutencao.query
 
@@ -186,6 +188,14 @@ def lista():
         query = query.filter(Manutencao.tipo_servico.ilike("%CORRETIVA%"))
     elif filtro == "preventiva":
         query = query.filter(Manutencao.tipo_servico.ilike("%PREVENTIVA%"))
+
+    if data_inicio and data_fim:
+        try:
+            inicio = datetime.strptime(data_inicio, "%Y-%m-%d")
+            fim = datetime.strptime(data_fim, "%Y-%m-%d")
+            query = query.filter(Manutencao.data.between(inicio, fim))
+        except:
+            pass
 
     registros = query.order_by(
         Manutencao.data.desc().nullslast()
