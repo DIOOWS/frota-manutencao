@@ -8,6 +8,7 @@ class Manutencao(db.Model):
 
     data = db.Column(db.Date)          # Data de entrada
     data_saida = db.Column(db.Date)    # Data de saída
+    dtm = db.Column(db.Integer)        # Dias entre entrada e saída
 
     numero_frota = db.Column(db.String)
     os = db.Column(db.String(50))

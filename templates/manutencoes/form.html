@@ -14,6 +14,11 @@
   <input type="date" name="data_saida" class="form-control mb-2"
          value="{{ m.data_saida.strftime('%Y-%m-%d') if m and m.data_saida else '' }}">
 
+  <label>DTM</label>
+  <input type="number" class="form-control mb-2"
+         value="{{ m.dtm if m and m.dtm is not none else '' }}"
+         readonly placeholder="Calculado automaticamente">
+
   <input name="numero_frota" class="form-control mb-2"
          value="{{ m.numero_frota if m else '' }}" placeholder="Frota">
 
@@ -187,7 +192,6 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-  // exclusão imagem da manutenção
   const botoesExcluir = document.querySelectorAll(".btn-excluir-imagem");
 
   botoesExcluir.forEach((botao) => {
@@ -234,7 +238,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // exclusão imagem da aferição
   const botoesExcluirAfericao = document.querySelectorAll(".btn-excluir-imagem-afericao");
 
   botoesExcluirAfericao.forEach((botao) => {

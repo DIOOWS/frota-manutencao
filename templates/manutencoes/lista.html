@@ -33,6 +33,7 @@
       <th>Nº OS</th>
       <th>Data Entrada</th>
       <th>Data Saída</th>
+      <th>DTM</th>
       <th>Cliente</th>
       <th>Frota</th>
       <th>Baú</th>
@@ -53,6 +54,7 @@
         <td>{{ m.os or '-' }}</td>
         <td>{{ m.data.strftime('%d-%m-%Y') if m.data else '-' }}</td>
         <td>{{ m.data_saida.strftime('%d-%m-%Y') if m.data_saida else '-' }}</td>
+        <td>{{ m.dtm if m.dtm is not none else '-' }}</td>
         <td>{{ m.cliente or '-' }}</td>
         <td>{{ m.numero_frota or '-' }}</td>
         <td>{{ m.bau or '-' }}</td>

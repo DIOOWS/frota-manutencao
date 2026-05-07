@@ -90,6 +90,16 @@ def parse_data(valor):
         return None
 
 
+def calcular_dtm(data_entrada, data_saida):
+    if not data_entrada or not data_saida:
+        return None
+
+    if data_saida < data_entrada:
+        raise ValueError("A data de saída não pode ser menor que a data de entrada.")
+
+    return (data_saida - data_entrada).days
+
+
 def carregar_afericao(numero_frota, os, tipo_termometro):
     if not numero_frota or not os:
         return {
@@ -296,6 +306,7 @@ def nova():
 
         data_convertida = parse_data(request.form.get("data"))
         data_saida_convertida = parse_data(request.form.get("data_saida"))
+        dtm_calculado = calcular_dtm(data_convertida, data_saida_convertida)
         caminhos_imagens = salvar_imagens()
 
         numero_frota = request.form.get("numero_frota")
@@ -307,6 +318,7 @@ def nova():
         nova_manutencao = Manutencao(
             data=data_convertida,
             data_saida=data_saida_convertida,
+            dtm=dtm_calculado,
             numero_frota=numero_frota,
             bau=request.form.get("bau"),
             tipo_veiculo=request.form.get("tipo_veiculo"),
@@ -457,6 +469,7 @@ def editar(id):
 
         m.data = parse_data(request.form.get("data"))
         m.data_saida = parse_data(request.form.get("data_saida"))
+        m.dtm = calcular_dtm(m.data, m.data_saida)
 
         novas_imagens = salvar_imagens()
 

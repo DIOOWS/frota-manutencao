@@ -109,20 +109,25 @@ with app.app_context():
     except Exception as e:
         print("foto:", e)
 
-    # 🔥 garante que a tabela exista
     try:
         db.create_all()
         print("🔥 tabelas verificadas/criadas")
     except Exception as e:
         print("create_all:", e)
 
-    # 🔥 garante coluna imagens em afericoes_termometros
     try:
         db.session.execute(text("ALTER TABLE afericoes_termometros ADD COLUMN imagens TEXT;"))
         db.session.commit()
         print("🔥 coluna imagens criada em afericoes_termometros")
     except Exception as e:
         print("imagens afericoes_termometros:", e)
+
+    try:
+        db.session.execute(text("ALTER TABLE manutencoes ADD COLUMN dtm INTEGER;"))
+        db.session.commit()
+        print("🔥 coluna dtm criada em manutencoes")
+    except Exception as e:
+        print("dtm manutencoes:", e)
 
 # ==========================================
 # 🔥 CRIAR ADMIN

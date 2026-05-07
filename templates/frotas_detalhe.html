@@ -21,6 +21,7 @@
       <th>Nº OS</th>
       <th>Data Entrada</th>
       <th>Data Saída</th>
+      <th>DTM</th>
       <th>Cliente</th>
       <th>Frota</th>
       <th>Baú</th>
@@ -41,6 +42,7 @@
       <td>{{ m.os or '-' }}</td>
       <td>{{ m.data.strftime('%d/%m/%Y') if m.data else '-' }}</td>
       <td>{{ m.data_saida.strftime('%d/%m/%Y') if m.data_saida else '-' }}</td>
+      <td>{{ m.dtm if m.dtm is not none else '-' }}</td>
       <td>{{ m.cliente or '-' }}</td>
       <td>{{ m.numero_frota or '-' }}</td>
       <td>{{ m.bau or '-' }}</td>
@@ -119,7 +121,6 @@
 
       <div class="modal-body">
 
-        <!-- DADOS PRINCIPAIS -->
         <div class="mb-4">
           <p><strong>Cliente:</strong> <span id="mCliente"></span></p>
           <p><strong>Frota:</strong> <span id="mFrota"></span></p>
@@ -127,7 +128,6 @@
           <p><strong>Causa:</strong> <span id="mCausa"></span></p>
         </div>
 
-        <!-- TEMPERATURAS -->
         <div class="mb-4">
           <hr>
           <h5 class="mb-3">Descrição das Temperaturas</h5>
@@ -159,7 +159,6 @@
           </div>
         </div>
 
-        <!-- IMAGENS -->
         <div class="mb-4">
           <hr>
           <h5 class="mb-3">Imagens Manutenção</h5>
