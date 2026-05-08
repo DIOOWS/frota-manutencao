@@ -1823,3 +1823,21 @@ canvas {
 
 
 
+/* =========================
+   🔐 LOGIN - REMOVER LED GIRANDO
+========================= */
+
+.neon-rotating-border {
+  display: none !important;
+}
+
+.neon-login-box {
+  border: 1px solid rgba(33, 245, 229, 0.35);
+  box-shadow:
+    0 0 45px rgba(0, 0, 0, 0.85),
+    0 0 22px rgba(33, 245, 229, 0.18),
+    inset 0 0 18px rgba(255, 255, 255, 0.04);
+}
+
+
+
