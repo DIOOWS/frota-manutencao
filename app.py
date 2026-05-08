@@ -1,4 +1,4 @@
-from flask import Flask, request, session
+from flask import Flask
 from database import db
 from flask_migrate import Migrate
 from dotenv import load_dotenv
@@ -166,94 +166,6 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(cliente_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(frotas_bp)
-
-# ==========================================
-# 🔧 HELPERS DE CORREÇÃO
-# ==========================================
-def normalizar_texto(valor):
-    if valor is None:
-        return None
-
-    valor = str(valor).strip()
-
-    if not valor:
-        return None
-
-    return " ".join(valor.split()).upper()
-
-
-# ==========================================
-# 🚨 ROTA TEMPORÁRIA - CORRIGIR DADOS PRODUÇÃO
-# ==========================================
-@app.route("/corrigir-dados-producao")
-def corrigir_dados_producao():
-
-    token_url = request.args.get("token")
-    token_env = os.getenv("CORRECAO_TOKEN")
-
-    usuario_admin = session.get("user_role") == "admin"
-    token_valido = token_env and token_url == token_env
-
-    if not usuario_admin and not token_valido:
-        return "❌ Sem permissão para executar correção.", 403
-
-    try:
-        registros = Manutencao.query.all()
-
-        total_atm_corrigido = 0
-        total_textos_corrigidos = 0
-
-        campos_texto = [
-            "cliente",
-            "bau",
-            "tipo_veiculo",
-            "tipo_servico",
-            "tipo_atendimento",
-            "tipo_manutencao",
-            "status",
-            "causa",
-            "observacao",
-        ]
-
-        for m in registros:
-
-            # =========================
-            # 🔥 CORRIGIR ATM
-            # =========================
-            if m.data and m.data_saida:
-
-                if m.data_saida >= m.data:
-                    dias = (m.data_saida - m.data).days
-                    novo_atm = max(dias, 1)
-
-                    if m.dtm != novo_atm:
-                        m.dtm = novo_atm
-                        total_atm_corrigido += 1
-
-            # =========================
-            # 🔥 PADRONIZAR TEXTOS
-            # =========================
-            for campo in campos_texto:
-                valor_atual = getattr(m, campo)
-                valor_novo = normalizar_texto(valor_atual)
-
-                if valor_atual != valor_novo:
-                    setattr(m, campo, valor_novo)
-                    total_textos_corrigidos += 1
-
-        db.session.commit()
-
-        return f"""
-        ✅ Correção finalizada com sucesso!<br><br>
-        ATM corrigidos: {total_atm_corrigido}<br>
-        Campos de texto corrigidos: {total_textos_corrigidos}<br><br>
-        ⚠️ Agora remova essa rota do app.py depois de confirmar.
-        """
-
-    except Exception as e:
-        db.session.rollback()
-        return f"❌ Erro ao corrigir dados: {str(e)}", 500
-
 
 # ==========================================
 # 🔥 TESTE
