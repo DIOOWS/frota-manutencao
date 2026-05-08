@@ -86,13 +86,37 @@ def extrair_public_id_cloudinary(url):
 
 
 # ==========================================
-# 🔥 HELPERS AFERIÇÃO TERMÔMETRO
+# 🔥 HELPERS DADOS
 # ==========================================
 def parse_data(valor):
     try:
         return datetime.strptime(valor, "%Y-%m-%d").date() if valor else None
     except:
         return None
+
+
+def normalizar_texto(valor):
+    if valor is None:
+        return None
+
+    valor = str(valor).strip()
+
+    if not valor:
+        return None
+
+    return " ".join(valor.split()).upper()
+
+
+def normalizar_simples(valor):
+    if valor is None:
+        return None
+
+    valor = str(valor).strip()
+
+    if not valor:
+        return None
+
+    return " ".join(valor.split())
 
 
 def calcular_dtm(data_entrada, data_saida):
@@ -108,6 +132,9 @@ def calcular_dtm(data_entrada, data_saida):
     return max(dias, 1)
 
 
+# ==========================================
+# 🔥 HELPERS AFERIÇÃO TERMÔMETRO
+# ==========================================
 def carregar_afericao(numero_frota, os, tipo_termometro):
     if not numero_frota or not os:
         return {
@@ -166,6 +193,9 @@ def salvar_ou_atualizar_afericao(
 
     imagens_atuais = carregar_lista_imagens(reg.imagens) if reg else []
 
+    afericao = normalizar_texto(afericao)
+    status = normalizar_texto(status)
+
     if not (
         str(afericao or "").strip()
         or data_afericao
@@ -194,9 +224,9 @@ def salvar_ou_atualizar_afericao(
     reg.numero_frota = numero_frota
     reg.os = os
     reg.tipo_termometro = tipo_termometro
-    reg.afericao = str(afericao).strip() if afericao else None
+    reg.afericao = afericao
     reg.data_afericao = data_afericao
-    reg.status = str(status).strip() if status else None
+    reg.status = status
     reg.imagens = json.dumps(imagens_atuais + novas_imagens)
 
 
@@ -317,8 +347,8 @@ def nova():
         dtm_calculado = calcular_dtm(data_convertida, data_saida_convertida)
         caminhos_imagens = salvar_imagens()
 
-        numero_frota = request.form.get("numero_frota")
-        os_numero = request.form.get("os")
+        numero_frota = normalizar_simples(request.form.get("numero_frota"))
+        os_numero = normalizar_simples(request.form.get("os"))
 
         placa_novas_imagens = salvar_imagens_arquivos(request.files.getlist("placa_imagens"))
         ambiente_novas_imagens = salvar_imagens_arquivos(request.files.getlist("ambiente_imagens"))
@@ -328,16 +358,16 @@ def nova():
             data_saida=data_saida_convertida,
             dtm=dtm_calculado,
             numero_frota=numero_frota,
-            bau=request.form.get("bau"),
-            tipo_veiculo=request.form.get("tipo_veiculo"),
-            tipo_servico=request.form.get("tipo_servico"),
-            tipo_atendimento=request.form.get("tipo_atendimento"),
-            tipo_manutencao=request.form.get("tipo_manutencao"),
-            status=request.form.get("status"),
-            observacao=request.form.get("observacao"),
-            cliente=request.form.get("cliente"),
+            bau=normalizar_texto(request.form.get("bau")),
+            tipo_veiculo=normalizar_texto(request.form.get("tipo_veiculo")),
+            tipo_servico=normalizar_texto(request.form.get("tipo_servico")),
+            tipo_atendimento=normalizar_texto(request.form.get("tipo_atendimento")),
+            tipo_manutencao=normalizar_texto(request.form.get("tipo_manutencao")),
+            status=normalizar_texto(request.form.get("status")),
+            observacao=normalizar_texto(request.form.get("observacao")),
+            cliente=normalizar_texto(request.form.get("cliente")),
             os=os_numero,
-            causa=request.form.get("causa"),
+            causa=normalizar_texto(request.form.get("causa")),
             imagens=json.dumps(caminhos_imagens)
         )
 
@@ -485,17 +515,17 @@ def editar(id):
             imagens_atuais = carregar_lista_imagens(m.imagens)
             m.imagens = json.dumps(imagens_atuais + novas_imagens)
 
-        m.numero_frota = request.form.get("numero_frota")
-        m.bau = request.form.get("bau")
-        m.tipo_veiculo = request.form.get("tipo_veiculo")
-        m.tipo_servico = request.form.get("tipo_servico")
-        m.tipo_atendimento = request.form.get("tipo_atendimento")
-        m.tipo_manutencao = request.form.get("tipo_manutencao")
-        m.status = request.form.get("status")
-        m.observacao = request.form.get("observacao")
-        m.cliente = request.form.get("cliente")
-        m.os = request.form.get("os")
-        m.causa = request.form.get("causa")
+        m.numero_frota = normalizar_simples(request.form.get("numero_frota"))
+        m.bau = normalizar_texto(request.form.get("bau"))
+        m.tipo_veiculo = normalizar_texto(request.form.get("tipo_veiculo"))
+        m.tipo_servico = normalizar_texto(request.form.get("tipo_servico"))
+        m.tipo_atendimento = normalizar_texto(request.form.get("tipo_atendimento"))
+        m.tipo_manutencao = normalizar_texto(request.form.get("tipo_manutencao"))
+        m.status = normalizar_texto(request.form.get("status"))
+        m.observacao = normalizar_texto(request.form.get("observacao"))
+        m.cliente = normalizar_texto(request.form.get("cliente"))
+        m.os = normalizar_simples(request.form.get("os"))
+        m.causa = normalizar_texto(request.form.get("causa"))
 
         placa_novas_imagens = salvar_imagens_arquivos(request.files.getlist("placa_imagens"))
         ambiente_novas_imagens = salvar_imagens_arquivos(request.files.getlist("ambiente_imagens"))
