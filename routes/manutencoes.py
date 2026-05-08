@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, session, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, session, flash, jsonify, send_file
 from models.manutencao import Manutencao
 from models.cliente import Cliente
 from models.afericao_termometro import AfericaoTermometro
@@ -9,6 +9,11 @@ import os
 import cloudinary
 import cloudinary.uploader
 from urllib.parse import urlparse
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill
+from openpyxl.utils import get_column_letter
+from io import BytesIO
+
 
 manutencao_bp = Blueprint("manutencao", __name__, url_prefix="/manutencoes")
 
@@ -91,13 +96,16 @@ def parse_data(valor):
 
 
 def calcular_dtm(data_entrada, data_saida):
+
     if not data_entrada or not data_saida:
         return None
 
     if data_saida < data_entrada:
         raise ValueError("A data de saída não pode ser menor que a data de entrada.")
 
-    return (data_saida - data_entrada).days
+    dias = (data_saida - data_entrada).days
+
+    return max(dias, 1)
 
 
 def carregar_afericao(numero_frota, os, tipo_termometro):
@@ -571,3 +579,141 @@ def excluir(id):
 
     flash("Manutenção excluída com sucesso!", "success")
     return redirect("/manutencoes/lista")
+
+
+# ==========================================
+# 📊 EXPORTAR EXCEL
+# ==========================================
+@manutencao_bp.route("/exportar-excel")
+def exportar_excel():
+
+    if not session.get("user_id"):
+        return redirect("/login")
+
+    data_inicio = request.args.get("data_inicio")
+    data_fim = request.args.get("data_fim")
+
+    query = Manutencao.query
+
+    if data_inicio and data_fim:
+        try:
+            inicio = datetime.strptime(data_inicio, "%Y-%m-%d")
+            fim = datetime.strptime(data_fim, "%Y-%m-%d")
+
+            query = query.filter(
+                Manutencao.data.between(inicio, fim)
+            )
+
+        except:
+            pass
+
+    registros = query.order_by(
+        Manutencao.data.desc().nullslast()
+    ).all()
+
+    wb = Workbook()
+    ws = wb.active
+
+    ws.title = "Manutenções"
+
+    headers = [
+        "DATA ENTRADA",
+        "DATA SAÍDA",
+        "ATM",
+        "FROTA",
+        "OS",
+        "BAÚ",
+        "TIPO VEÍCULO",
+        "TIPO SERVIÇO",
+        "TIPO ATENDIMENTO",
+        "TIPO MANUTENÇÃO",
+        "STATUS",
+        "CLIENTE",
+        "CAUSA",
+        "PLACA AFERIÇÃO",
+        "PLACA STATUS",
+        "AMBIENTE AFERIÇÃO",
+        "AMBIENTE STATUS",
+        "OBSERVAÇÃO",
+    ]
+
+    ws.append(headers)
+
+    fill = PatternFill(
+        start_color="1F4E78",
+        end_color="1F4E78",
+        fill_type="solid"
+    )
+
+    for cell in ws[1]:
+        cell.font = Font(bold=True, color="FFFFFF")
+        cell.fill = fill
+
+    for r in registros:
+
+        afericao_placa = AfericaoTermometro.query.filter_by(
+            numero_frota=str(r.numero_frota).strip() if r.numero_frota else "",
+            os=str(r.os).strip() if r.os else "",
+            tipo_termometro="PLACA"
+        ).first()
+
+        afericao_ambiente = AfericaoTermometro.query.filter_by(
+            numero_frota=str(r.numero_frota).strip() if r.numero_frota else "",
+            os=str(r.os).strip() if r.os else "",
+            tipo_termometro="AMBIENTE"
+        ).first()
+
+        ws.append([
+            r.data.strftime("%d/%m/%Y") if r.data else "",
+            r.data_saida.strftime("%d/%m/%Y") if r.data_saida else "",
+            r.dtm if r.dtm is not None else "",
+            r.numero_frota or "",
+            r.os or "",
+            r.bau or "",
+            r.tipo_veiculo or "",
+            r.tipo_servico or "",
+            r.tipo_atendimento or "",
+            r.tipo_manutencao or "",
+            r.status or "",
+            r.cliente or "",
+            r.causa or "",
+            afericao_placa.afericao if afericao_placa else "",
+            afericao_placa.status if afericao_placa else "",
+            afericao_ambiente.afericao if afericao_ambiente else "",
+            afericao_ambiente.status if afericao_ambiente else "",
+            r.observacao or "",
+        ])
+
+    for column in ws.columns:
+
+        max_length = 0
+        column_letter = get_column_letter(column[0].column)
+
+        for cell in column:
+            try:
+                if cell.value:
+                    max_length = max(
+                        max_length,
+                        len(str(cell.value))
+                    )
+            except:
+                pass
+
+        adjusted_width = max_length + 5
+        ws.column_dimensions[column_letter].width = adjusted_width
+
+    ws.freeze_panes = "A2"
+    ws.auto_filter.ref = ws.dimensions
+
+    output = BytesIO()
+
+    wb.save(output)
+
+    output.seek(0)
+
+    return send_file(
+        output,
+        download_name="relatorio_manutencoes.xlsx",
+        as_attachment=True,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )

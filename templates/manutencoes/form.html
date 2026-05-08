@@ -14,7 +14,7 @@
   <input type="date" name="data_saida" class="form-control mb-2"
          value="{{ m.data_saida.strftime('%Y-%m-%d') if m and m.data_saida else '' }}">
 
-  <label>DTM</label>
+  <label>Tempo Médio de Atendimento</label>
   <input type="number" class="form-control mb-2"
          value="{{ m.dtm if m and m.dtm is not none else '' }}"
          readonly placeholder="Calculado automaticamente">
@@ -33,14 +33,14 @@
 
   <select name="tipo_servico" class="form-control mb-2" required>
     <option value="">Tipo Serviço</option>
-    <option value="CORRETIVA" {% if m and m.tipo_servico == "CORRETIVA" %}selected{% endif %}>Corretiva</option>
-    <option value="PREVENTIVA" {% if m and m.tipo_servico == "PREVENTIVA" %}selected{% endif %}>Preventiva</option>
+    <option value="CORRETIVA" {% if m and m.tipo_servico == "Corretiva" %}selected{% endif %}>Corretiva</option>
+    <option value="PREVENTIVA" {% if m and m.tipo_servico == "Preventiva" %}selected{% endif %}>Preventiva</option>
   </select>
 
   <select name="tipo_atendimento" class="form-control mb-2" required>
     <option value="">Tipo Atendimento</option>
-    <option value="INTERNO" {% if m and m.tipo_atendimento == "INTERNO" %}selected{% endif %}>Interno</option>
-    <option value="EXTERNO" {% if m and m.tipo_atendimento == "EXTERNO" %}selected{% endif %}>Externo</option>
+    <option value="INTERNO" {% if m and m.tipo_atendimento == "Interno" %}selected{% endif %}>Interno</option>
+    <option value="EXTERNO" {% if m and m.tipo_atendimento == "Externo" %}selected{% endif %}>Externo</option>
   </select>
 
   <select name="tipo_manutencao" class="form-control mb-2" required>
@@ -50,8 +50,8 @@
   </select>
 
   <select name="status" class="form-control mb-2">
-    <option value="ANDAMENTO" {% if m and m.status == "ANDAMENTO" %}selected{% endif %}>Em andamento</option>
-    <option value="FINALIZADO" {% if m and m.status == "FINALIZADO" %}selected{% endif %}>Finalizado</option>
+    <option value="ANDAMENTO" {% if m and m.status == "Andamento" %}selected{% endif %}>Em andamento</option>
+    <option value="FINALIZADO" {% if m and m.status == "Finalizado" %}selected{% endif %}>Finalizado</option>
   </select>
 
   <select name="cliente" class="form-control mb-2" required>
