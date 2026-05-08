@@ -162,6 +162,12 @@
                     <a href="/manutencoes/editar/{{ m.id }}" class="btn btn-warning btn-sm">
                       ✏️
                     </a>
+
+                    <a href="/manutencoes/excluir/{{ m.id }}"
+                       class="btn btn-danger btn-sm"
+                       onclick="return confirm('Tem certeza que deseja excluir esta manutenção?')">
+                      🗑️
+                    </a>
                   {% endif %}
 
                 </div>
