@@ -50,7 +50,7 @@
 </div>
 
 <!-- ========================= -->
-<!-- 🔥 LINHA: CORRETIVA + PARETO -->
+<!-- 🔥 LINHA: PARETO + ÚLTIMAS FINALIZAÇÕES -->
 <!-- ========================= -->
 <div class="row g-4 mt-1">
 
@@ -64,17 +64,75 @@
     </div>
   </div>
 
-  <!-- 🔥 CORRETIVA -->
+  <!-- 🔥 ÚLTIMAS FINALIZAÇÕES -->
   <div class="col-md-6">
     <div class="x-card p-3 h-100">
-      <h5>Corretiva vs Preventiva</h5>
-      <div class="grafico-box grafico-padrao">
-        <canvas id="graficoCorretivaGrande"></canvas>
+
+      <h5>Últimas Finalizações</h5>
+
+      <div class="ultimas-finalizacoes-box">
+
+        {% if ultimas_finalizacoes %}
+
+          {% for m in ultimas_finalizacoes %}
+
+            {% if m.numero_frota %}
+              <a href="/frotas/{{ m.numero_frota }}"
+                 class="ultima-finalizacao-item ultima-finalizacao-link"
+                 title="Abrir histórico da frota {{ m.numero_frota }}">
+            {% else %}
+              <div class="ultima-finalizacao-item">
+            {% endif %}
+
+                <div class="ultima-finalizacao-icon">
+                  ✅
+                </div>
+
+                <div class="ultima-finalizacao-info">
+                  <strong>
+                    OS {{ m.os or '-' }} • Frota {{ m.numero_frota or '-' }}
+                  </strong>
+
+                  <small>
+                    Finalizado em
+                    {{ m.data_saida.strftime('%d/%m/%Y') if m.data_saida else '-' }}
+                    {% if m.dtm is not none %}
+                      • ATM: {{ m.dtm }} dia{% if m.dtm != 1 %}s{% endif %}
+                    {% endif %}
+                  </small>
+                </div>
+
+                {% if m.numero_frota %}
+                  <div class="ultima-finalizacao-action">
+                    Ver frota →
+                  </div>
+                {% endif %}
+
+            {% if m.numero_frota %}
+              </a>
+            {% else %}
+              </div>
+            {% endif %}
+
+          {% endfor %}
+
+        {% else %}
+
+          <div class="text-muted">
+            Nenhuma manutenção finalizada no período selecionado.
+          </div>
+
+        {% endif %}
+
       </div>
+
     </div>
   </div>
 
 </div>
+
+<!-- Canvas oculto mantido para evitar quebra caso exista JS antigo procurando esse ID -->
+<canvas id="graficoCorretivaGrande" style="display:none;"></canvas>
 
 <!-- ========================= -->
 <!-- 🔥 JSONS -->

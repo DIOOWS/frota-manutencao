@@ -108,6 +108,21 @@ def dashboard():
     )
 
     # =========================
+    # 🔥 ÚLTIMAS FINALIZAÇÕES
+    # =========================
+    ultimas_finalizacoes = [
+        r for r in registros
+        if "FINALIZADO" in (r.status or "").upper()
+        and r.data_saida
+    ]
+
+    ultimas_finalizacoes = sorted(
+        ultimas_finalizacoes,
+        key=lambda r: (r.data_saida, r.id),
+        reverse=True
+    )[:5]
+
+    # =========================
     # 🔥 MENSAL CORRETO
     # =========================
     if mes_filtro and inicio_mes_filtro:
@@ -149,6 +164,7 @@ def dashboard():
 
     # =========================
     # 🔥 CORRETIVA vs PREVENTIVA
+    # Mantido no backend para não quebrar JS antigo
     # =========================
     dados_corretiva = {
         "labels": ["Corretiva", "Preventiva"],
@@ -180,4 +196,6 @@ def dashboard():
 
         valores_corretiva_mes=valores_corretiva_mes,
         valores_preventiva_mes=valores_preventiva_mes,
+
+        ultimas_finalizacoes=ultimas_finalizacoes,
     )

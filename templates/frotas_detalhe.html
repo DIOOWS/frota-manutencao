@@ -1,116 +1,192 @@
 {% extends "base.html" %}
 
+{% block title %}Frota {{ frota }}{% endblock %}
+
 {% block content %}
 
-<h2 class="mb-2">🚚 Frota {{ frota }}</h2>
+<div class="d-flex justify-content-between align-items-center mb-4">
 
-<p class="text-muted mb-3">
-  Total de manutenções: {{ registros|length }}
-</p>
+  <div>
+    <h3 class="mb-1">Frota {{ frota }}</h3>
+    <small class="text-muted">
+      Histórico de manutenções, aferições e evidências da frota.
+    </small>
+  </div>
 
-<div class="mb-3">
-  <a href="/frotas" class="btn-voltar">
-    ← Voltar para frotas
+  <a href="/frotas/" class="btn btn-dark">
+    ← Voltar
   </a>
+
 </div>
 
-<table class="table table-striped table-hover" id="tabelaManutencoes">
+<!-- ========================= -->
+<!-- 🔥 CARDS RESUMO DA FROTA -->
+<!-- ========================= -->
+<div class="row g-3 mb-4">
 
-  <thead>
-    <tr>
-      <th>Nº OS</th>
-      <th>Data Entrada</th>
-      <th>Data Saída</th>
-      <th>ATM</th>
-      <th>Cliente</th>
-      <th>Frota</th>
-      <th>Baú</th>
-      <th>Veículo</th>
-      <th>Serviço</th>
-      <th>Atendimento</th>
-      <th>Manutenção</th>
-      <th>Status</th>
-      <th>Causa</th>
-      <th>Observação</th>
-      <th>Ações</th>
-    </tr>
-  </thead>
+  <div class="col-md-4">
+    <div class="frota-resumo-card">
+      <div class="frota-resumo-top">
+        <span class="frota-resumo-icon">📋</span>
+        <span>Total de Manutenções</span>
+      </div>
 
-  <tbody>
-    {% for m in registros %}
-    <tr>
-      <td>{{ m.os or '-' }}</td>
-      <td>{{ m.data.strftime('%d/%m/%Y') if m.data else '-' }}</td>
-      <td>{{ m.data_saida.strftime('%d/%m/%Y') if m.data_saida else '-' }}</td>
-      <td>{{ m.dtm if m.dtm is not none else '-' }}</td>
-      <td>{{ m.cliente or '-' }}</td>
-      <td>{{ m.numero_frota or '-' }}</td>
-      <td>{{ m.bau or '-' }}</td>
-      <td>{{ m.tipo_veiculo or '-' }}</td>
-      <td>{{ m.tipo_servico or '-' }}</td>
-      <td>{{ m.tipo_atendimento or '-' }}</td>
-      <td>{{ m.tipo_manutencao or '-' }}</td>
+      <div class="frota-resumo-value">
+        {{ registros|length }}
+      </div>
 
-      <td>
-        {% if "finalizado" in (m.status or "").lower() %}
-          <span class="badge bg-success">Finalizado</span>
-        {% elif "andamento" in (m.status or "").lower() %}
-          <span class="badge bg-warning text-dark">Em andamento</span>
+      <div class="frota-resumo-desc">
+        Registros encontrados
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="frota-resumo-card">
+      <div class="frota-resumo-top">
+        <span class="frota-resumo-icon">📅</span>
+        <span>Última Entrada</span>
+      </div>
+
+      <div class="frota-resumo-value">
+        {% if registros %}
+          {{ registros[0].data.strftime('%d/%m/%Y') if registros[0].data else '-' }}
         {% else %}
-          <span class="badge bg-secondary">{{ m.status or '-' }}</span>
+          -
         {% endif %}
-      </td>
+      </div>
 
-      <td>{{ m.causa or '-' }}</td>
+      <div class="frota-resumo-desc">
+        Registro mais recente
+      </div>
+    </div>
+  </div>
 
-      <td class="obs-col">
-        {{ m.observacao or '-' }}
-      </td>
+  <div class="col-md-4">
+    <div class="frota-resumo-card">
+      <div class="frota-resumo-top">
+        <span class="frota-resumo-icon">🚦</span>
+        <span>Status Atual</span>
+      </div>
 
-      <td>
-        <button
-          class="btn btn-info btn-sm"
-          onclick='abrirModal(
-            {{ m.cliente|tojson }},
-            {{ m.numero_frota|tojson }},
-            {{ m.tipo_servico|tojson }},
-            {{ m.causa|tojson }},
-
-            {{ m.placa_afericao|tojson }},
-            {{ m.placa_data_afericao|tojson }},
-            {{ m.placa_status|tojson }},
-
-            {{ m.ambiente_afericao|tojson }},
-            {{ m.ambiente_data_afericao|tojson }},
-            {{ m.ambiente_status|tojson }},
-
-            {{ m.imagens_lista|tojson }},
-            {{ m.placa_imagens|tojson }},
-            {{ m.ambiente_imagens|tojson }}
-          )'>
-          👁
-        </button>
-
-        {% if session.get("user_role") == "admin" %}
-          <a href="/manutencoes/editar/{{ m.id }}" class="btn btn-warning btn-sm">
-            ✏️
-          </a>
-
-          <a href="/manutencoes/excluir/{{ m.id }}"
-             class="btn btn-danger btn-sm"
-             onclick="return confirm('Deseja excluir essa manutenção?')">
-            🗑️
-          </a>
+      <div class="frota-resumo-value frota-status-value">
+        {% if registros %}
+          {{ registros[0].status or '-' }}
+        {% else %}
+          -
         {% endif %}
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
+      </div>
 
-</table>
+      <div class="frota-resumo-desc">
+        Baseado na última manutenção
+      </div>
+    </div>
+  </div>
 
-<!-- MODAL DETALHE -->
-<div class="modal fade" id="modalDetalhe" tabindex="-1">
+</div>
+
+<!-- ========================= -->
+<!-- 🔥 HISTÓRICO -->
+<!-- ========================= -->
+<div class="x-card">
+
+  <h5>Histórico de Manutenções</h5>
+
+  {% if registros %}
+
+    <div class="table-responsive">
+      <table class="table table-striped table-hover align-middle">
+
+        <thead>
+          <tr>
+            <th>OS</th>
+            <th>Entrada</th>
+            <th>Saída</th>
+            <th>TMA</th>
+            <th>Cliente</th>
+            <th>Serviço</th>
+            <th>Atendimento</th>
+            <th>Manutenção</th>
+            <th>Status</th>
+            <th>Causa</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for m in registros %}
+            <tr>
+              <td>{{ m.os or '-' }}</td>
+              <td>{{ m.data.strftime('%d/%m/%Y') if m.data else '-' }}</td>
+              <td>{{ m.data_saida.strftime('%d/%m/%Y') if m.data_saida else '-' }}</td>
+              <td>{{ m.dtm if m.dtm is not none else '-' }}</td>
+              <td>{{ m.cliente or '-' }}</td>
+              <td>{{ m.tipo_servico or '-' }}</td>
+              <td>{{ m.tipo_atendimento or '-' }}</td>
+              <td>{{ m.tipo_manutencao or '-' }}</td>
+              <td>{{ m.status or '-' }}</td>
+              <td class="obs-col">{{ m.causa or '-' }}</td>
+
+              <td>
+                <div class="d-flex gap-1">
+
+                  <button
+                    class="btn btn-info btn-sm"
+                    onclick='abrirModalFrota(
+                      {{ m.cliente|tojson }},
+                      {{ m.numero_frota|tojson }},
+                      {{ m.os|tojson }},
+                      {{ m.tipo_servico|tojson }},
+                      {{ m.tipo_atendimento|tojson }},
+                      {{ m.tipo_manutencao|tojson }},
+                      {{ m.status|tojson }},
+                      {{ m.causa|tojson }},
+                      {{ m.observacao|tojson }},
+
+                      {{ m.placa_afericao|tojson }},
+                      {{ m.placa_data_afericao|tojson }},
+                      {{ m.placa_status|tojson }},
+
+                      {{ m.ambiente_afericao|tojson }},
+                      {{ m.ambiente_data_afericao|tojson }},
+                      {{ m.ambiente_status|tojson }},
+
+                      {{ m.imagens_lista|tojson }},
+                      {{ m.placa_imagens|tojson }},
+                      {{ m.ambiente_imagens|tojson }}
+                    )'>
+                    👁
+                  </button>
+
+                  {% if session.get("user_role") == "admin" %}
+                    <a href="/manutencoes/editar/{{ m.id }}" class="btn btn-warning btn-sm">
+                      ✏️
+                    </a>
+                  {% endif %}
+
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+
+      </table>
+    </div>
+
+  {% else %}
+
+    <div class="text-muted">
+      Nenhuma manutenção encontrada para esta frota.
+    </div>
+
+  {% endif %}
+
+</div>
+
+<!-- ========================= -->
+<!-- 🔥 MODAL DETALHE -->
+<!-- ========================= -->
+<div class="modal fade" id="modalDetalheFrota" tabindex="-1">
   <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content">
 
@@ -121,11 +197,30 @@
 
       <div class="modal-body">
 
+        <div class="row g-3 mb-4">
+
+          <div class="col-md-4">
+            <p><strong>Cliente:</strong> <span id="mCliente"></span></p>
+            <p><strong>Frota:</strong> <span id="mFrota"></span></p>
+            <p><strong>OS:</strong> <span id="mOs"></span></p>
+          </div>
+
+          <div class="col-md-4">
+            <p><strong>Serviço:</strong> <span id="mServico"></span></p>
+            <p><strong>Atendimento:</strong> <span id="mAtendimento"></span></p>
+            <p><strong>Manutenção:</strong> <span id="mManutencao"></span></p>
+          </div>
+
+          <div class="col-md-4">
+            <p><strong>Status:</strong> <span id="mStatus"></span></p>
+            <p><strong>Causa:</strong> <span id="mCausa"></span></p>
+          </div>
+
+        </div>
+
         <div class="mb-4">
-          <p><strong>Cliente:</strong> <span id="mCliente"></span></p>
-          <p><strong>Frota:</strong> <span id="mFrota"></span></p>
-          <p><strong>Tipo:</strong> <span id="mTipo"></span></p>
-          <p><strong>Causa:</strong> <span id="mCausa"></span></p>
+          <strong>Observação:</strong>
+          <p id="mObservacao" class="mt-2 text-muted"></p>
         </div>
 
         <div class="mb-4">
@@ -133,6 +228,7 @@
           <h5 class="mb-3">Descrição das Temperaturas</h5>
 
           <div class="row g-3">
+
             <div class="col-md-6">
               <div class="border rounded p-3 h-100 shadow-sm">
                 <h6 class="mb-3">Aferição Placa</h6>
@@ -156,6 +252,7 @@
                 </p>
               </div>
             </div>
+
           </div>
         </div>
 
@@ -181,8 +278,10 @@
   </div>
 </div>
 
-<!-- MODAL IMAGEM AMPLIADA -->
-<div class="modal fade" id="modalImagem" tabindex="-1">
+<!-- ========================= -->
+<!-- 🔥 MODAL IMAGEM AMPLIADA -->
+<!-- ========================= -->
+<div class="modal fade" id="modalImagemFrota" tabindex="-1">
   <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content">
 
@@ -192,9 +291,9 @@
       </div>
 
       <div class="modal-body text-center">
-        <img id="imagemAmpliada"
-             src=""
-             style="max-width:100%; max-height:75vh; object-fit:contain; border-radius:8px;">
+        <img id="imagemAmpliadaFrota"
+             class="imagem-ampliada-modal"
+             src="">
       </div>
 
     </div>
@@ -202,7 +301,7 @@
 </div>
 
 <script>
-function aplicarStatusBadge(elementId, status) {
+function aplicarStatusBadgeFrota(elementId, status) {
   const el = document.getElementById(elementId);
 
   if (!status) {
@@ -226,7 +325,7 @@ function aplicarStatusBadge(elementId, status) {
   }
 }
 
-function renderizarGaleria(containerId, imagens, textoVazio) {
+function renderizarGaleriaFrota(containerId, imagens, textoVazio) {
   const box = document.getElementById(containerId);
   box.innerHTML = "";
 
@@ -239,52 +338,52 @@ function renderizarGaleria(containerId, imagens, textoVazio) {
     const img = document.createElement("img");
 
     img.src = src;
-    img.style.width = "120px";
-    img.style.height = "90px";
-    img.style.objectFit = "cover";
-    img.style.borderRadius = "8px";
-    img.style.cursor = "pointer";
-    img.style.border = "1px solid #ddd";
+    img.className = "galeria-modal-img";
 
     img.onclick = function () {
-      abrirImagem(src);
+      abrirImagemFrota(src);
     };
 
     box.appendChild(img);
   });
 }
 
-function abrirModal(
-  cliente, frota, tipo, causa,
+function abrirModalFrota(
+  cliente, frota, os, servico, atendimento, manutencao, status, causa, observacao,
   placaAfericao, placaData, placaStatus,
   ambienteAfericao, ambienteData, ambienteStatus,
   imagensManutencao, imagensPlaca, imagensAmbiente
 ) {
   document.getElementById("mCliente").innerText = cliente || "-";
   document.getElementById("mFrota").innerText = frota || "-";
-  document.getElementById("mTipo").innerText = tipo || "-";
+  document.getElementById("mOs").innerText = os || "-";
+  document.getElementById("mServico").innerText = servico || "-";
+  document.getElementById("mAtendimento").innerText = atendimento || "-";
+  document.getElementById("mManutencao").innerText = manutencao || "-";
+  document.getElementById("mStatus").innerText = status || "-";
   document.getElementById("mCausa").innerText = causa || "-";
+  document.getElementById("mObservacao").innerText = observacao || "-";
 
   document.getElementById("mPlacaAfericao").innerText = placaAfericao || "-";
   document.getElementById("mPlacaData").innerText = placaData || "-";
-  aplicarStatusBadge("mPlacaStatus", placaStatus);
+  aplicarStatusBadgeFrota("mPlacaStatus", placaStatus);
 
   document.getElementById("mAmbienteAfericao").innerText = ambienteAfericao || "-";
   document.getElementById("mAmbienteData").innerText = ambienteData || "-";
-  aplicarStatusBadge("mAmbienteStatus", ambienteStatus);
+  aplicarStatusBadgeFrota("mAmbienteStatus", ambienteStatus);
 
-  renderizarGaleria("mImagens", imagensManutencao, "Nenhuma imagem de manutenção cadastrada.");
-  renderizarGaleria("mImagensPlaca", imagensPlaca, "Nenhuma imagem da aferição de placa cadastrada.");
-  renderizarGaleria("mImagensAmbiente", imagensAmbiente, "Nenhuma imagem da aferição de ambiente cadastrada.");
+  renderizarGaleriaFrota("mImagens", imagensManutencao, "Nenhuma imagem de manutenção cadastrada.");
+  renderizarGaleriaFrota("mImagensPlaca", imagensPlaca, "Nenhuma imagem da aferição de placa cadastrada.");
+  renderizarGaleriaFrota("mImagensAmbiente", imagensAmbiente, "Nenhuma imagem da aferição de ambiente cadastrada.");
 
-  const modal = new bootstrap.Modal(document.getElementById("modalDetalhe"));
+  const modal = new bootstrap.Modal(document.getElementById("modalDetalheFrota"));
   modal.show();
 }
 
-function abrirImagem(src) {
-  document.getElementById("imagemAmpliada").src = src;
+function abrirImagemFrota(src) {
+  document.getElementById("imagemAmpliadaFrota").src = src;
 
-  const modal = new bootstrap.Modal(document.getElementById("modalImagem"));
+  const modal = new bootstrap.Modal(document.getElementById("modalImagemFrota"));
   modal.show();
 }
 </script>
