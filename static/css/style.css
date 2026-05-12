@@ -2102,3 +2102,475 @@ canvas {
   font-size: 13px;
   border-radius: 6px;
 }
+
+
+
+
+
+/* =========================
+   🤖 ASSISTENTE INTELIGENTE
+========================= */
+
+.assistente-page {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.assistente-header {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--primary);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.assistente-header h3 {
+  margin: 0;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.assistente-header small {
+  color: var(--muted);
+}
+
+.assistente-badge {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #ffffff;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.assistente-sugestoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.assistente-sugestoes button {
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--text);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  transition: 0.2s ease;
+}
+
+.assistente-sugestoes button:hover {
+  background: #eef6ff;
+  border-color: var(--secondary);
+  color: var(--primary);
+}
+
+.assistente-chat {
+  height: 460px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.assistente-msg {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.assistente-msg-user {
+  flex-direction: row-reverse;
+}
+
+.assistente-avatar {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.assistente-balao {
+  max-width: 75%;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  padding: 12px 14px;
+  border-radius: 14px;
+  white-space: pre-line;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.assistente-msg-user .assistente-balao {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #ffffff;
+  border: none;
+}
+
+.assistente-input-box {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.assistente-input-box input {
+  flex: 1;
+  height: 46px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 0 14px;
+  outline: none;
+}
+
+.assistente-input-box input:focus {
+  border-color: var(--secondary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.assistente-input-box button {
+  height: 46px;
+  min-width: 120px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.assistente-input-box button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+
+
+
+/* =========================
+   🤖 SIDINHO - ASSISTENTE FLUTUANTE
+========================= */
+
+.sidinho-widget {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 9998;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.sidinho-bubble {
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  box-shadow:
+    0 10px 25px rgba(0,0,0,0.25),
+    0 0 0 4px rgba(255,255,255,0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: 0.25s ease;
+}
+
+.sidinho-bubble:hover {
+  transform: translateY(-4px) scale(1.03);
+}
+
+.sidinho-bubble img {
+  width: 76px;
+  height: 76px;
+  object-fit: cover;
+  object-position: top center;
+  border-radius: 50%;
+}
+
+.sidinho-bubble-alert {
+  position: absolute;
+  right: 78px;
+  bottom: 18px;
+  background: #ffffff;
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+
+.sidinho-bubble-alert::after {
+  content: "";
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-left: 7px solid #ffffff;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+}
+
+.sidinho-active .sidinho-bubble-alert {
+  display: none;
+}
+
+.sidinho-chat-panel {
+  width: 365px;
+  height: 500px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 16px 45px rgba(0,0,0,0.22);
+  overflow: hidden;
+  position: absolute;
+  right: 0;
+  bottom: 100px;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(18px) scale(0.96);
+  transition: 0.25s ease;
+}
+
+.sidinho-chat-panel.sidinho-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.sidinho-chat-header {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #ffffff;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidinho-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidinho-header-left img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: top center;
+  border: 2px solid rgba(255,255,255,0.8);
+}
+
+.sidinho-header-left strong {
+  display: block;
+  font-size: 15px;
+}
+
+.sidinho-header-left small {
+  display: block;
+  font-size: 11px;
+  opacity: 0.9;
+}
+
+.sidinho-chat-header button {
+  background: rgba(255,255,255,0.18);
+  color: #ffffff;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.sidinho-quick-actions {
+  display: flex;
+  gap: 6px;
+  padding: 10px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+  background: #f8fafc;
+}
+
+.sidinho-quick-actions button {
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--primary);
+  border-radius: 999px;
+  padding: 6px 9px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.sidinho-messages {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  background: #f1f5f9;
+}
+
+.sidinho-message {
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.sidinho-message.sidinho-user {
+  justify-content: flex-end;
+}
+
+.sidinho-message.sidinho-bot {
+  justify-content: flex-start;
+}
+
+.sidinho-balloon {
+  max-width: 82%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: pre-line;
+}
+
+.sidinho-bot .sidinho-balloon {
+  background: #ffffff;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+}
+
+.sidinho-user .sidinho-balloon {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #ffffff;
+  border-bottom-right-radius: 4px;
+}
+
+.sidinho-input-area {
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  border-top: 1px solid var(--border);
+  background: #ffffff;
+}
+
+.sidinho-input-area input {
+  flex: 1;
+  height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0 12px;
+  font-size: 13px;
+  outline: none;
+}
+
+.sidinho-input-area input:focus {
+  border-color: var(--secondary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.sidinho-input-area button {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.sidinho-input-area button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .sidinho-widget {
+    right: 14px;
+    bottom: 14px;
+  }
+
+  .sidinho-chat-panel {
+    width: calc(100vw - 28px);
+    height: 520px;
+    right: 0;
+    bottom: 92px;
+  }
+
+  .sidinho-bubble-alert {
+    display: none;
+  }
+}
+
+
+
+/* =========================
+   🤖 SIDINHO - DIGITANDO
+========================= */
+
+.sidinho-typing-balloon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.sidinho-typing-text {
+  font-size: 13px;
+}
+
+.sidinho-typing-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sidinho-typing-dots span {
+  width: 6px;
+  height: 6px;
+  background: var(--secondary);
+  border-radius: 50%;
+  display: block;
+  animation: sidinhoTyping 1.2s infinite ease-in-out;
+}
+
+.sidinho-typing-dots span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.sidinho-typing-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.sidinho-typing-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes sidinhoTyping {
+  0%, 80%, 100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+
+  40% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+}

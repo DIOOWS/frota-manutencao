@@ -159,6 +159,7 @@ from routes.auth import auth_bp
 from routes.clientes import cliente_bp
 from routes.admin import admin_bp
 from routes.frotas import frotas_bp
+from routes.assistente import assistente_bp
 
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(manutencao_bp)
@@ -166,6 +167,7 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(cliente_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(frotas_bp)
+app.register_blueprint(assistente_bp)
 
 # ==========================================
 # 🔥 TESTE
