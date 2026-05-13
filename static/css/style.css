@@ -4121,3 +4121,63 @@ canvas {
   width: 95%;
   height: 95%;
 }
+
+
+
+/* =========================
+   FOOTER FIXO DO SISTEMA
+========================= */
+
+.app-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 76px;
+  background: #f8fafc;
+  border-top: 1px solid #dbe3ef;
+  box-shadow: 0 -6px 18px rgba(15, 23, 42, 0.08);
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-footer-content {
+  width: 100%;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-footer-text {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+/* Dá espaço para o conteúdo não ficar escondido atrás do footer */
+body {
+  padding-bottom: 86px;
+}
+
+/* =========================
+   SIDINHO DENTRO DO ESPAÇO DO FOOTER
+========================= */
+
+.sidinho-widget {
+  right: 22px !important;
+  bottom: 10px !important;
+  z-index: 1200 !important;
+}
+
+.sidinho-bubble-alert {
+  bottom: 18px !important;
+  right: 82px !important;
+}
+
+.sidinho-chat-panel {
+  bottom: 88px !important;
+  right: 0 !important;
+}
