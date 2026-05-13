@@ -37,13 +37,13 @@
     </div>
   {% endif %}
 
-  <!-- 🔥 KPIs -->
+  <!-- KPIs -->
   <div class="dashboard-kpis">
     {% include "partials/metricas.html" %}
   </div>
 
   <!-- ========================= -->
-  <!-- 🔥 LINHA 1 -->
+  <!-- LINHA 1 -->
   <!-- ========================= -->
   <div class="row g-4 dashboard-row">
 
@@ -88,17 +88,24 @@
   </div>
 
   <!-- ========================= -->
-  <!-- 🔥 LINHA 2 -->
+  <!-- LINHA 2 -->
+  <!-- FUNIL LARGURA TOTAL -->
   <!-- ========================= -->
   <div class="row g-4 mt-1 dashboard-row">
 
-    <!-- 🔥 FUNIL EXECUTIVO DE CAUSAS -->
-    <div class="col-md-6">
+    <div class="col-12">
       {% include "partials/funil_causas.html" %}
     </div>
 
-    <!-- 🔥 ÚLTIMAS FINALIZAÇÕES -->
-    <div class="col-md-6">
+  </div>
+
+  <!-- ========================= -->
+  <!-- LINHA 3 -->
+  <!-- ÚLTIMAS FINALIZAÇÕES EMBAIXO -->
+  <!-- ========================= -->
+  <div class="row g-4 mt-1 dashboard-row">
+
+    <div class="col-12">
       <div class="dashboard-executive-card h-100">
 
         <div class="dashboard-executive-header">
@@ -176,9 +183,7 @@
   <canvas id="graficoPareto" style="display:none;"></canvas>
   <canvas id="graficoCorretivaGrande" style="display:none;"></canvas>
 
-  <!-- ========================= -->
-  <!-- 🔥 JSONS -->
-  <!-- ========================= -->
+  <!-- JSONS -->
   <script id="dados-atendimento" type="application/json">
   {{ {"labels": labels_atendimento, "valores": valores_atendimento} | tojson }}
   </script>

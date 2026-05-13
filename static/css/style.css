@@ -4181,3 +4181,287 @@ body {
   bottom: 88px !important;
   right: 0 !important;
 }
+
+
+
+/* =========================================================
+   🔧 AJUSTE FUNIL DE CAUSAS - BARRAS MAIS BONITAS
+========================================================= */
+
+.dashboard-page .funil-executivo-body {
+  grid-template-columns: 1fr 260px !important;
+  gap: 28px !important;
+  padding: 26px 28px !important;
+  align-items: flex-start;
+}
+
+.dashboard-page .funil-executivo-chart {
+  width: 100% !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+}
+
+.dashboard-page .funil-executivo-row {
+  display: grid !important;
+  grid-template-columns: 150px minmax(220px, 1fr) 62px !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.dashboard-page .funil-executivo-label {
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  color: #020024 !important;
+  text-align: right !important;
+  line-height: 1.15 !important;
+}
+
+.dashboard-page .funil-executivo-track {
+  width: 100% !important;
+  height: 34px !important;
+  background: #eaf2ff !important;
+  border-radius: 999px !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+.dashboard-page .funil-executivo-bar {
+  height: 100% !important;
+  min-width: 42px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #020024, #090979, #00d4ff) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  padding-right: 12px !important;
+  color: #ffffff !important;
+  font-weight: 900 !important;
+  box-shadow: 0 8px 16px rgba(9, 9, 121, 0.22) !important;
+}
+
+.dashboard-page .funil-executivo-bar strong {
+  font-size: 15px !important;
+  line-height: 1 !important;
+}
+
+.dashboard-page .funil-executivo-percent {
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  color: #020024 !important;
+}
+
+/* TABELA */
+.dashboard-page .funil-executivo-table {
+  width: 260px !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  border: 1px solid #dbe3ef !important;
+}
+
+.dashboard-page .funil-executivo-table table {
+  width: 100% !important;
+  font-size: 13px !important;
+}
+
+.dashboard-page .funil-executivo-table th,
+.dashboard-page .funil-executivo-table td {
+  padding: 12px !important;
+}
+
+/* RESPONSIVO */
+@media (max-width: 1200px) {
+  .dashboard-page .funil-executivo-body {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-page .funil-executivo-table {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-page .funil-executivo-row {
+    grid-template-columns: 110px minmax(140px, 1fr) 52px !important;
+  }
+
+  .dashboard-page .funil-executivo-label {
+    font-size: 11px !important;
+  }
+
+  .dashboard-page .funil-executivo-track {
+    height: 30px !important;
+  }
+}
+
+
+
+/* =========================================================
+   🔧 CORREÇÃO FINAL - FUNIL NÃO SOBREPOR A TABELA
+========================================================= */
+
+.dashboard-page .funil-executivo-card {
+  overflow: hidden !important;
+}
+
+.dashboard-page .funil-executivo-body {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 260px !important;
+  gap: 24px !important;
+  padding: 26px !important;
+  align-items: flex-start !important;
+}
+
+/* Área das barras */
+.dashboard-page .funil-executivo-chart {
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+}
+
+/* Cada linha do funil */
+.dashboard-page .funil-executivo-row {
+  display: grid !important;
+  grid-template-columns: 140px minmax(120px, 1fr) 58px !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+/* Texto da causa */
+.dashboard-page .funil-executivo-label {
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  color: #020024 !important;
+  text-align: right !important;
+  line-height: 1.15 !important;
+  word-break: normal !important;
+}
+
+/* Fundo da barra */
+.dashboard-page .funil-executivo-track {
+  width: 100% !important;
+  height: 34px !important;
+  background: #eaf2ff !important;
+  border-radius: 999px !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+/* Barra preenchida */
+.dashboard-page .funil-executivo-bar {
+  height: 100% !important;
+  min-width: 42px !important;
+  max-width: 100% !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #020024, #090979, #00d4ff) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  padding-right: 12px !important;
+  color: #ffffff !important;
+  font-weight: 900 !important;
+  box-shadow: 0 8px 16px rgba(9, 9, 121, 0.22) !important;
+}
+
+.dashboard-page .funil-executivo-bar strong {
+  font-size: 15px !important;
+  line-height: 1 !important;
+}
+
+.dashboard-page .funil-executivo-percent {
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  color: #020024 !important;
+  white-space: nowrap !important;
+}
+
+/* Tabela */
+.dashboard-page .funil-executivo-table {
+  width: 260px !important;
+  min-width: 260px !important;
+  max-width: 260px !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  border: 1px solid #dbe3ef !important;
+  align-self: flex-start !important;
+}
+
+.dashboard-page .funil-executivo-table table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-size: 13px !important;
+}
+
+.dashboard-page .funil-executivo-table th,
+.dashboard-page .funil-executivo-table td {
+  padding: 11px 12px !important;
+  white-space: normal !important;
+}
+
+/* Quando o card ficar apertado, a tabela vai para baixo */
+@media (max-width: 1500px) {
+  .dashboard-page .funil-executivo-body {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-page .funil-executivo-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
+
+/* Ajuste mobile */
+@media (max-width: 768px) {
+  .dashboard-page .funil-executivo-body {
+    padding: 18px !important;
+  }
+
+  .dashboard-page .funil-executivo-row {
+    grid-template-columns: 105px minmax(90px, 1fr) 48px !important;
+    gap: 8px !important;
+  }
+
+  .dashboard-page .funil-executivo-label {
+    font-size: 11px !important;
+  }
+
+  .dashboard-page .funil-executivo-track {
+    height: 30px !important;
+  }
+
+  .dashboard-page .funil-executivo-percent {
+    font-size: 11px !important;
+  }
+}
+
+
+/* =========================================================
+   🔧 ÚLTIMAS FINALIZAÇÕES ABAIXO - MAIS BONITO
+========================================================= */
+
+.dashboard-page .ultimas-finalizacoes-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dashboard-page .ultima-finalizacao-item {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.dashboard-page .ultima-finalizacao-info {
+  flex: 1;
+}
+
+.dashboard-page .ultima-finalizacao-action {
+  font-weight: 800;
+  white-space: nowrap;
+}
