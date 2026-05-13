@@ -6,9 +6,9 @@ class Manutencao(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
 
-    data = db.Column(db.Date)          # Data de entrada
-    data_saida = db.Column(db.Date)    # Data de saída
-    dtm = db.Column(db.Integer)        # Dias entre entrada e saída
+    data = db.Column(db.Date)
+    data_saida = db.Column(db.Date)
+    dtm = db.Column(db.Integer)
 
     numero_frota = db.Column(db.String)
     os = db.Column(db.String(50))
@@ -19,7 +19,9 @@ class Manutencao(db.Model):
     tipo_manutencao = db.Column(db.String)
     status = db.Column(db.String)
 
+    problema = db.Column(db.String)
     causa = db.Column(db.String)
+
     observacao = db.Column(db.String)
     cliente = db.Column(db.String)
 

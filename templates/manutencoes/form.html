@@ -33,38 +33,57 @@
 
   <select name="tipo_servico" class="form-control mb-2" required>
     <option value="">Tipo Serviço</option>
-    <option value="CORRETIVA" {% if m and m.tipo_servico == "Corretiva" %}selected{% endif %}>Corretiva</option>
-    <option value="PREVENTIVA" {% if m and m.tipo_servico == "Preventiva" %}selected{% endif %}>Preventiva</option>
+    <option value="CORRETIVA" {% if m and m.tipo_servico|upper == "CORRETIVA" %}selected{% endif %}>Corretiva</option>
+    <option value="PREVENTIVA" {% if m and m.tipo_servico|upper == "PREVENTIVA" %}selected{% endif %}>Preventiva</option>
   </select>
 
   <select name="tipo_atendimento" class="form-control mb-2" required>
     <option value="">Tipo Atendimento</option>
-    <option value="INTERNO" {% if m and m.tipo_atendimento == "Interno" %}selected{% endif %}>Interno</option>
-    <option value="EXTERNO" {% if m and m.tipo_atendimento == "Externo" %}selected{% endif %}>Externo</option>
+    <option value="INTERNO" {% if m and m.tipo_atendimento|upper == "INTERNO" %}selected{% endif %}>Interno</option>
+    <option value="EXTERNO" {% if m and m.tipo_atendimento|upper == "EXTERNO" %}selected{% endif %}>Externo</option>
   </select>
 
   <select name="tipo_manutencao" class="form-control mb-2" required>
     <option value="">Tipo Manutenção</option>
-    <option value="Estrutura" {% if m and m.tipo_manutencao == "Estrutura" %}selected{% endif %}>Estrutura</option>
-    <option value="Refrigeração" {% if m and m.tipo_manutencao == "Refrigeração" %}selected{% endif %}>Refrigeração</option>
+    <option value="Estrutura" {% if m and m.tipo_manutencao|upper == "ESTRUTURA" %}selected{% endif %}>Estrutura</option>
+    <option value="Refrigeração" {% if m and m.tipo_manutencao|upper == "REFRIGERAÇÃO" %}selected{% endif %}>Refrigeração</option>
   </select>
 
   <select name="status" class="form-control mb-2">
-    <option value="ANDAMENTO" {% if m and m.status == "Andamento" %}selected{% endif %}>Em andamento</option>
-    <option value="FINALIZADO" {% if m and m.status == "Finalizado" %}selected{% endif %}>Finalizado</option>
+    <option value="ANDAMENTO" {% if m and m.status|upper == "ANDAMENTO" %}selected{% endif %}>Em andamento</option>
+    <option value="FINALIZADO" {% if m and m.status|upper == "FINALIZADO" %}selected{% endif %}>Finalizado</option>
   </select>
 
   <select name="cliente" class="form-control mb-2" required>
     <option value="">Selecione o Cliente</option>
     {% for c in clientes %}
-      <option value="{{ c.nome }}" {% if m and m.cliente == c.nome %}selected{% endif %}>
+      <option value="{{ c.nome }}" {% if m and m.cliente|upper == c.nome|upper %}selected{% endif %}>
         {{ c.nome }}
       </option>
     {% endfor %}
   </select>
 
-  <input name="causa" class="form-control mb-2"
-         value="{{ m.causa if m else '' }}" placeholder="Causa">
+  <label>Problema</label>
+  <select name="problema" id="problema" class="form-control mb-2">
+    <option value="">Selecione o Problema</option>
+
+    <option value="Preventiva" {% if m and m.problema|upper == "PREVENTIVA" %}selected{% endif %}>Preventiva</option>
+    <option value="Vazamento placa eutética" {% if m and m.problema|upper == "VAZAMENTO PLACA EUTÉTICA" %}selected{% endif %}>Vazamento placa eutética</option>
+    <option value="Substituição de peça" {% if m and m.problema|upper == "SUBSTITUIÇÃO DE PEÇA" %}selected{% endif %}>Substituição de peça</option>
+    <option value="Desencarroçamento" {% if m and m.problema|upper == "DESENCARROÇAMENTO" %}selected{% endif %}>Desencarroçamento</option>
+    <option value="Encarroçamento" {% if m and m.problema|upper == "ENCARROÇAMENTO" %}selected{% endif %}>Encarroçamento</option>
+    <option value="Curto elétrico" {% if m and m.problema|upper == "CURTO ELÉTRICO" %}selected{% endif %}>Curto elétrico</option>
+    <option value="Vazamento de gás no sistema" {% if m and m.problema|upper == "VAZAMENTO DE GÁS NO SISTEMA" %}selected{% endif %}>Vazamento de gás no sistema</option>
+    <option value="Componente elétrico queimado" {% if m and m.problema|upper == "COMPONENTE ELÉTRICO QUEIMADO" %}selected{% endif %}>Componente elétrico queimado</option>
+    <option value="Compressor queimado" {% if m and m.problema|upper == "COMPRESSOR QUEIMADO" %}selected{% endif %}>Compressor queimado</option>
+    <option value="Tomada avariada" {% if m and m.problema|upper == "TOMADA AVARIADA" %}selected{% endif %}>Tomada avariada</option>
+    <option value="Estrutura avariada" {% if m and m.problema|upper == "ESTRUTURA AVARIADA" %}selected{% endif %}>Estrutura avariada</option>
+  </select>
+
+  <label>Causa</label>
+  <select name="causa" id="causa" class="form-control mb-2">
+    <option value="">Selecione primeiro o problema</option>
+  </select>
 
   <hr>
   <h5>Aferição dos Termômetros</h5>
@@ -86,9 +105,9 @@
         <label>Status</label>
         <select name="placa_status" class="form-control mb-2">
           <option value="">Selecione</option>
-          <option value="C" {% if afericao_placa and afericao_placa.status == "C" %}selected{% endif %}>C - Conforme</option>
-          <option value="NC" {% if afericao_placa and afericao_placa.status == "NC" %}selected{% endif %}>NC - Não conforme</option>
-          <option value="NA" {% if afericao_placa and afericao_placa.status == "NA" %}selected{% endif %}>NA - Não se aplica</option>
+          <option value="C" {% if afericao_placa and afericao_placa.status|upper == "C" %}selected{% endif %}>C - Conforme</option>
+          <option value="NC" {% if afericao_placa and afericao_placa.status|upper == "NC" %}selected{% endif %}>NC - Não conforme</option>
+          <option value="NA" {% if afericao_placa and afericao_placa.status|upper == "NA" %}selected{% endif %}>NA - Não se aplica</option>
         </select>
 
         <label>Imagens do termômetro de placa (máx. 4)</label>
@@ -130,9 +149,9 @@
         <label>Status</label>
         <select name="ambiente_status" class="form-control mb-2">
           <option value="">Selecione</option>
-          <option value="C" {% if afericao_ambiente and afericao_ambiente.status == "C" %}selected{% endif %}>C - Conforme</option>
-          <option value="NC" {% if afericao_ambiente and afericao_ambiente.status == "NC" %}selected{% endif %}>NC - Não conforme</option>
-          <option value="NA" {% if afericao_ambiente and afericao_ambiente.status == "NA" %}selected{% endif %}>NA - Não se aplica</option>
+          <option value="C" {% if afericao_ambiente and afericao_ambiente.status|upper == "C" %}selected{% endif %}>C - Conforme</option>
+          <option value="NC" {% if afericao_ambiente and afericao_ambiente.status|upper == "NC" %}selected{% endif %}>NC - Não conforme</option>
+          <option value="NA" {% if afericao_ambiente and afericao_ambiente.status|upper == "NA" %}selected{% endif %}>NA - Não se aplica</option>
         </select>
 
         <label>Imagens do termômetro de ambiente (máx. 4)</label>
@@ -191,6 +210,52 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+
+  const problemaSelect = document.getElementById("problema");
+  const causaSelect = document.getElementById("causa");
+  const causaAtual = {{ (m.causa if m and m.causa else '')|tojson }};
+
+  const causasPorProblema = {
+    "Preventiva": ["Preventiva"],
+    "Vazamento placa eutética": ["Desgaste"],
+    "Substituição de peça": ["Desgaste por uso"],
+    "Desencarroçamento": ["Contrato"],
+    "Encarroçamento": ["Contrato"],
+    "Curto elétrico": ["Queda de energia", "Tomada queimada", "Mau uso da tomada"],
+    "Vazamento de gás no sistema": ["Desgaste natural", "Avaria / mau uso"],
+    "Componente elétrico queimado": ["Mal contato", "Sistema mal feito"],
+    "Compressor queimado": ["Queda de energia", "Desgaste natural", "Vazamento de óleo"],
+    "Tomada avariada": ["Mau uso", "Desgaste natural", "Sobrecarga elétrica", "Mal contato", "Tomada queimada"],
+    "Estrutura avariada": ["Mau uso"]
+  };
+
+  function carregarCausas() {
+    if (!problemaSelect || !causaSelect) {
+      return;
+    }
+
+    const problema = problemaSelect.value;
+    const causas = causasPorProblema[problema] || [];
+
+    causaSelect.innerHTML = '<option value="">Selecione a Causa</option>';
+
+    causas.forEach(function (causa) {
+      const option = document.createElement("option");
+      option.value = causa;
+      option.textContent = causa;
+
+      if (causaAtual && causaAtual.toUpperCase() === causa.toUpperCase()) {
+        option.selected = true;
+      }
+
+      causaSelect.appendChild(option);
+    });
+  }
+
+  if (problemaSelect && causaSelect) {
+    problemaSelect.addEventListener("change", carregarCausas);
+    carregarCausas();
+  }
 
   const botoesExcluir = document.querySelectorAll(".btn-excluir-imagem");
 

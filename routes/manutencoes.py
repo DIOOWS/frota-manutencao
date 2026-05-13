@@ -245,7 +245,7 @@ def mover_afericoes_se_trocar_frota_ou_os(numero_frota_antiga, os_antiga, numero
 
 
 # ==========================================
-# 🖼️ EXCLUIR IMAGEM MANUTENÇÃO (🔒 ADMIN) - AJAX
+# 🖼️ EXCLUIR IMAGEM MANUTENÇÃO
 # ==========================================
 @manutencao_bp.route("/<int:id>/excluir-imagem", methods=["POST"])
 def excluir_imagem(id):
@@ -287,7 +287,7 @@ def excluir_imagem(id):
 
 
 # ==========================================
-# 🖼️ EXCLUIR IMAGEM AFERIÇÃO (🔒 ADMIN) - AJAX
+# 🖼️ EXCLUIR IMAGEM AFERIÇÃO
 # ==========================================
 @manutencao_bp.route("/afericao/<int:afericao_id>/excluir-imagem", methods=["POST"])
 def excluir_imagem_afericao(afericao_id):
@@ -317,7 +317,7 @@ def excluir_imagem_afericao(afericao_id):
         try:
             cloudinary.uploader.destroy(public_id)
         except Exception as e:
-            print("Erro ao apagar imagem da aferição no Cloudinary:", e)
+            print("Erro ao apagar imagem da aferição:", e)
 
     db.session.commit()
 
@@ -329,7 +329,7 @@ def excluir_imagem_afericao(afericao_id):
 
 
 # ==========================================
-# ➕ NOVA MANUTENÇÃO (🔒 ADMIN)
+# ➕ NOVA MANUTENÇÃO
 # ==========================================
 @manutencao_bp.route("/", methods=["GET", "POST"])
 def nova():
@@ -367,6 +367,7 @@ def nova():
             observacao=normalizar_texto(request.form.get("observacao")),
             cliente=normalizar_texto(request.form.get("cliente")),
             os=os_numero,
+            problema=normalizar_texto(request.form.get("problema")),
             causa=normalizar_texto(request.form.get("causa")),
             imagens=json.dumps(caminhos_imagens)
         )
@@ -488,7 +489,7 @@ def lista():
 
 
 # ==========================================
-# ✏️ EDITAR (🔒 ADMIN)
+# ✏️ EDITAR
 # ==========================================
 @manutencao_bp.route("/editar/<int:id>", methods=["GET", "POST"])
 def editar(id):
@@ -525,6 +526,7 @@ def editar(id):
         m.observacao = normalizar_texto(request.form.get("observacao"))
         m.cliente = normalizar_texto(request.form.get("cliente"))
         m.os = normalizar_simples(request.form.get("os"))
+        m.problema = normalizar_texto(request.form.get("problema"))
         m.causa = normalizar_texto(request.form.get("causa"))
 
         placa_novas_imagens = salvar_imagens_arquivos(request.files.getlist("placa_imagens"))
@@ -585,7 +587,7 @@ def editar(id):
 
 
 # ==========================================
-# 🗑️ EXCLUIR (🔒 ADMIN)
+# 🗑️ EXCLUIR
 # ==========================================
 @manutencao_bp.route("/excluir/<int:id>")
 def excluir(id):
@@ -659,6 +661,7 @@ def exportar_excel():
         "TIPO MANUTENÇÃO",
         "STATUS",
         "CLIENTE",
+        "PROBLEMA",
         "CAUSA",
         "PLACA AFERIÇÃO",
         "PLACA STATUS",
@@ -706,6 +709,7 @@ def exportar_excel():
             r.tipo_manutencao or "",
             r.status or "",
             r.cliente or "",
+            r.problema or "",
             r.causa or "",
             afericao_placa.afericao if afericao_placa else "",
             afericao_placa.status if afericao_placa else "",

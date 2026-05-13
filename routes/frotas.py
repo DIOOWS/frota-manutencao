@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, session, redirect
 from models.manutencao import Manutencao
 from models.afericao_termometro import AfericaoTermometro
-from collections import Counter
+from collections import Counter, defaultdict
 from datetime import datetime
 import json
 
@@ -41,6 +41,19 @@ def montar_status_afericao(status):
     return status
 
 
+def parse_data_segura(data):
+    if not data:
+        return None
+
+    if isinstance(data, datetime):
+        return data
+
+    try:
+        return datetime.strptime(str(data), "%Y-%m-%d")
+    except:
+        return None
+
+
 # 🔥 LISTA DE FROTAS
 @frotas_bp.route("/")
 def lista_frotas():
@@ -48,20 +61,53 @@ def lista_frotas():
     if not session.get("user_id"):
         return redirect("/login")
 
-    registros = Manutencao.query.with_entities(Manutencao.numero_frota).all()
+    registros = Manutencao.query.all()
 
-    frotas = Counter(
-        formatar_frota(r.numero_frota) for r in registros
-    )
+    frotas_counter = Counter()
+    meses_counter = defaultdict(int)
 
+    for r in registros:
+
+        frota_formatada = formatar_frota(r.numero_frota)
+
+        if frota_formatada and frota_formatada != "Sem frota":
+            frotas_counter[frota_formatada] += 1
+
+        if r.data:
+            try:
+                mes = r.data.strftime("%m-%Y")
+                meses_counter[mes] += 1
+            except:
+                pass
+
+    # Ordena por número da frota
     frotas_ordenadas = sorted(
-        frotas.items(),
-        key=lambda x: int(x[0]) if x[0].isdigit() else 0
+        frotas_counter.items(),
+        key=lambda x: int(x[0]) if str(x[0]).isdigit() else 0
     )
+
+    total_frotas = len(frotas_ordenadas)
+    total_manutencoes = sum(frotas_counter.values())
+
+    media_por_frota = round(total_manutencoes / total_frotas, 1) if total_frotas else 0
+
+    if meses_counter:
+        mes_mais_manutencoes, qtd_mes_mais_manutencoes = max(
+            meses_counter.items(),
+            key=lambda x: x[1]
+        )
+    else:
+        mes_mais_manutencoes = "-"
+        qtd_mes_mais_manutencoes = 0
 
     return render_template(
         "frotas_lista.html",
-        frotas=frotas_ordenadas
+        frotas=frotas_ordenadas,
+        total_frotas=total_frotas,
+        total_manutencoes=total_manutencoes,
+        media_por_frota=media_por_frota,
+        mes_mais_manutencoes=mes_mais_manutencoes,
+        qtd_mes_mais_manutencoes=qtd_mes_mais_manutencoes
     )
 
 

@@ -17,20 +17,15 @@
 
     <div class="excel-field">
       <label for="dataInicio">Data inicial</label>
-      <input type="date"
-             id="dataInicio"
-             class="form-control">
+      <input type="date" id="dataInicio" class="form-control">
     </div>
 
     <div class="excel-field">
       <label for="dataFim">Data final</label>
-      <input type="date"
-             id="dataFim"
-             class="form-control">
+      <input type="date" id="dataFim" class="form-control">
     </div>
 
-    <button class="btn-export-excel"
-            onclick="exportarExcel()">
+    <button class="btn-export-excel" onclick="exportarExcel()">
       <span>📊</span>
       <span>Exportar Excel</span>
     </button>
@@ -42,17 +37,11 @@
 <div class="row mb-3">
 
   <div class="col-md-4 mb-2 mb-md-0">
-    <input type="text"
-           id="filtroCliente"
-           class="form-control"
-           placeholder="Buscar cliente...">
+    <input type="text" id="filtroCliente" class="form-control" placeholder="Buscar cliente...">
   </div>
 
   <div class="col-md-4 mb-2 mb-md-0">
-    <input type="text"
-           id="filtroFrota"
-           class="form-control"
-           placeholder="Buscar frota...">
+    <input type="text" id="filtroFrota" class="form-control" placeholder="Buscar frota...">
   </div>
 
   <div class="col-md-4">
@@ -82,8 +71,8 @@
         <th>Atendimento</th>
         <th>Manutenção</th>
         <th>Status</th>
+        <th>Problema</th>
         <th>Causa</th>
-        <th>Observação</th>
         <th>Ações</th>
       </tr>
     </thead>
@@ -103,11 +92,8 @@
           <td>{{ m.tipo_atendimento or '-' }}</td>
           <td>{{ m.tipo_manutencao or '-' }}</td>
           <td>{{ m.status or '-' }}</td>
+          <td>{{ m.problema or '-' }}</td>
           <td>{{ m.causa or '-' }}</td>
-
-          <td class="obs-col">
-            {{ m.observacao or '-' }}
-          </td>
 
           <td>
             <div class="acoes-manutencao">
@@ -117,8 +103,14 @@
                 onclick='abrirModal(
                   {{ m.cliente|tojson }},
                   {{ m.numero_frota|tojson }},
+                  {{ m.os|tojson }},
                   {{ m.tipo_servico|tojson }},
+                  {{ m.tipo_atendimento|tojson }},
+                  {{ m.tipo_manutencao|tojson }},
+                  {{ m.status|tojson }},
+                  {{ m.problema|tojson }},
                   {{ m.causa|tojson }},
+                  {{ m.observacao|tojson }},
 
                   {{ m.placa_afericao|tojson }},
                   {{ m.placa_data_afericao|tojson }},
@@ -168,11 +160,31 @@
 
       <div class="modal-body">
 
+        <div class="row g-3 mb-4">
+
+          <div class="col-md-4">
+            <p><strong>Cliente:</strong> <span id="mCliente"></span></p>
+            <p><strong>Frota:</strong> <span id="mFrota"></span></p>
+            <p><strong>OS:</strong> <span id="mOs"></span></p>
+          </div>
+
+          <div class="col-md-4">
+            <p><strong>Serviço:</strong> <span id="mServico"></span></p>
+            <p><strong>Atendimento:</strong> <span id="mAtendimento"></span></p>
+            <p><strong>Manutenção:</strong> <span id="mManutencao"></span></p>
+          </div>
+
+          <div class="col-md-4">
+            <p><strong>Status:</strong> <span id="mStatus"></span></p>
+            <p><strong>Problema:</strong> <span id="mProblema"></span></p>
+            <p><strong>Causa:</strong> <span id="mCausa"></span></p>
+          </div>
+
+        </div>
+
         <div class="mb-4">
-          <p><strong>Cliente:</strong> <span id="mCliente"></span></p>
-          <p><strong>Frota:</strong> <span id="mFrota"></span></p>
-          <p><strong>Tipo:</strong> <span id="mTipo"></span></p>
-          <p><strong>Causa:</strong> <span id="mCausa"></span></p>
+          <strong>Observação:</strong>
+          <p id="mObservacao" class="mt-2 text-muted"></p>
         </div>
 
         <div class="mb-4">
@@ -342,15 +354,21 @@ function renderizarGaleria(containerId, imagens, textoVazio) {
 }
 
 function abrirModal(
-  cliente, frota, tipo, causa,
+  cliente, frota, os, servico, atendimento, manutencao, status, problema, causa, observacao,
   placaAfericao, placaData, placaStatus,
   ambienteAfericao, ambienteData, ambienteStatus,
   imagensManutencao, imagensPlaca, imagensAmbiente
 ) {
   document.getElementById("mCliente").innerText = cliente || "-";
   document.getElementById("mFrota").innerText = frota || "-";
-  document.getElementById("mTipo").innerText = tipo || "-";
+  document.getElementById("mOs").innerText = os || "-";
+  document.getElementById("mServico").innerText = servico || "-";
+  document.getElementById("mAtendimento").innerText = atendimento || "-";
+  document.getElementById("mManutencao").innerText = manutencao || "-";
+  document.getElementById("mStatus").innerText = status || "-";
+  document.getElementById("mProblema").innerText = problema || "-";
   document.getElementById("mCausa").innerText = causa || "-";
+  document.getElementById("mObservacao").innerText = observacao || "-";
 
   document.getElementById("mPlacaAfericao").innerText = placaAfericao || "-";
   document.getElementById("mPlacaData").innerText = placaData || "-";

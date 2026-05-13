@@ -2574,3 +2574,1550 @@ canvas {
     transform: translateY(-4px);
   }
 }
+
+
+
+
+
+
+/* =========================
+   🔥 FUNIL DE CAUSAS
+========================= */
+
+.funil-card {
+
+  background: #fff;
+
+  border-radius: 16px;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 8px 24px rgba(0,0,0,0.08);
+
+  border:
+    1px solid rgba(0,0,0,0.06);
+}
+
+/* HEADER */
+
+.funil-header {
+
+  background:
+    linear-gradient(
+      135deg,
+      #020024,
+      #090979,
+      #00d4ff
+    );
+
+  color: #fff;
+
+  padding: 18px 22px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+}
+
+.funil-header h4 {
+
+  margin: 0;
+
+  font-size: 20px;
+
+  font-weight: 700;
+}
+
+.funil-header small {
+
+  opacity: 0.8;
+}
+
+.funil-badge {
+
+  background: rgba(255,255,255,0.15);
+
+  border: 1px solid rgba(255,255,255,0.2);
+
+  padding: 6px 12px;
+
+  border-radius: 999px;
+
+  font-size: 12px;
+
+  font-weight: 700;
+}
+
+/* BODY */
+
+.funil-body {
+
+  display: grid;
+
+  grid-template-columns: 1fr 220px;
+
+  gap: 22px;
+
+  padding: 24px;
+}
+
+/* CHART */
+
+.funil-chart {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 14px;
+}
+
+.funil-item {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 6px;
+}
+
+.funil-label {
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+  color: #374151;
+}
+
+.funil-bar-area {
+
+  width: 100%;
+
+  height: 42px;
+
+  background: #eef2ff;
+
+  border-radius: 12px;
+
+  overflow: hidden;
+}
+
+.funil-bar {
+
+  height: 100%;
+
+  border-radius: 12px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #020024,
+      #090979,
+      #00d4ff
+    );
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: flex-end;
+
+  padding-right: 14px;
+
+  color: #fff;
+
+  font-weight: 700;
+
+  font-size: 14px;
+
+  transition: 0.4s ease;
+}
+
+.funil-bar:hover {
+
+  filter: brightness(1.08);
+
+  transform: scale(1.01);
+}
+
+/* SIDE */
+
+.funil-side {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 14px;
+}
+
+.funil-side-card {
+
+  background: #f8fafc;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 14px;
+
+  padding: 18px;
+}
+
+.funil-side-card strong {
+
+  display: block;
+
+  color: #6b7280;
+
+  font-size: 12px;
+
+  margin-bottom: 8px;
+}
+
+.funil-side-card h2 {
+
+  margin: 0;
+
+  font-size: 30px;
+
+  font-weight: 800;
+
+  color: #111827;
+}
+
+.funil-side-card p {
+
+  margin: 0;
+
+  font-size: 15px;
+
+  font-weight: 700;
+
+  color: #111827;
+}
+
+/* RESPONSIVO */
+
+@media (max-width: 991px) {
+
+  .funil-body {
+
+    grid-template-columns: 1fr;
+  }
+
+}
+
+
+
+/* =========================
+   🔥 FUNIL EXECUTIVO DE CAUSAS
+========================= */
+
+.funil-executivo-card {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+}
+
+.funil-executivo-header {
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  padding: 18px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.funil-executivo-header h4 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.funil-executivo-header small {
+  opacity: 0.85;
+  font-size: 13px;
+}
+
+.funil-executivo-header span {
+  background: rgba(0, 0, 0, 0.35);
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.funil-executivo-body {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 28px;
+  padding: 26px;
+}
+
+.funil-executivo-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.funil-executivo-row {
+  display: grid;
+  grid-template-columns: 170px 1fr 70px;
+  align-items: center;
+  gap: 12px;
+}
+
+.funil-executivo-label {
+  font-size: 13px;
+  font-weight: 800;
+  color: #111827;
+  text-align: right;
+}
+
+.funil-executivo-track {
+  height: 42px;
+  background: #eef4ff;
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.funil-executivo-bar {
+  height: 100%;
+  min-width: 34px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #020024, #090979, #00d4ff);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 14px;
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(9, 9, 121, 0.25);
+}
+
+.funil-executivo-bar strong {
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.funil-executivo-percent {
+  font-size: 14px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.funil-executivo-table {
+  border: 1px solid #dbe3ef;
+  border-radius: 14px;
+  overflow: hidden;
+  align-self: start;
+}
+
+.funil-executivo-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.funil-executivo-table th {
+  background: #f8fafc;
+  color: #0f172a;
+  padding: 12px;
+  font-weight: 900;
+}
+
+.funil-executivo-table td {
+  padding: 11px 12px;
+  border-top: 1px solid #e5e7eb;
+  color: #111827;
+}
+
+.funil-executivo-table tfoot td {
+  background: #f8fafc;
+  font-weight: 900;
+  color: #090979;
+}
+
+@media (max-width: 1100px) {
+  .funil-executivo-body {
+    grid-template-columns: 1fr;
+  }
+
+  .funil-executivo-row {
+    grid-template-columns: 130px 1fr 60px;
+  }
+}
+
+
+
+
+
+/* =========================================================
+   🔥 DASHBOARD PAGE - IDENTIDADE VISUAL SEGURA
+   Aplica somente dentro de .dashboard-page
+========================================================= */
+
+.dashboard-page {
+  --dash-dark: #020024;
+  --dash-mid: #090979;
+  --dash-blue: #0052e0;
+  --dash-cyan: #00d4ff;
+  --dash-border: #dbe3ef;
+  --dash-soft: #f8fafc;
+  --dash-text: #0f172a;
+  --dash-muted: #64748b;
+}
+
+/* =========================
+   FILTRO
+========================= */
+
+.dashboard-page .dashboard-filter {
+  background: #ffffff;
+  border: 1px solid var(--dash-border);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+.dashboard-page .dashboard-filter .form-control {
+  border-radius: 10px;
+  border: 1px solid var(--dash-border);
+  height: 42px;
+}
+
+.dashboard-page .dashboard-filter .btn {
+  border-radius: 10px;
+  min-width: 110px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--dash-dark), var(--dash-mid), var(--dash-blue));
+  border: none;
+}
+
+/* =========================
+   CARDS EXECUTIVOS
+========================= */
+
+.dashboard-page .dashboard-executive-card {
+  background: #ffffff;
+  border: 1px solid var(--dash-border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  transition: 0.22s ease;
+}
+
+.dashboard-page .dashboard-executive-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.12);
+}
+
+.dashboard-page .dashboard-executive-header {
+  min-height: 58px;
+  background: linear-gradient(135deg, var(--dash-dark), var(--dash-mid), var(--dash-blue));
+  color: #ffffff;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dashboard-page .dashboard-executive-header h5 {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: #ffffff;
+  border: none;
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.dashboard-page .dashboard-executive-header small {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.82);
+}
+
+.dashboard-page .dashboard-executive-body {
+  padding: 18px;
+}
+
+.dashboard-page .dashboard-executive-body .grafico-box {
+  height: 270px;
+  padding: 4px;
+}
+
+/* =========================
+   KPIs SOMENTE NO DASHBOARD
+========================= */
+
+.dashboard-page .dashboard-kpis .row {
+  margin-bottom: 18px !important;
+}
+
+.dashboard-page .dashboard-kpis .kpi-link {
+  text-decoration: none;
+}
+
+.dashboard-page .dashboard-kpis .kpi-box {
+  min-height: 104px;
+  border-radius: 16px;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: linear-gradient(135deg, var(--dash-dark), var(--dash-mid), var(--dash-blue));
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.13);
+  overflow: hidden;
+  position: relative;
+}
+
+.dashboard-page .dashboard-kpis .kpi-box::before {
+  content: "";
+  position: absolute;
+  inset: auto -40px -45px auto;
+  width: 120px;
+  height: 120px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 50%;
+}
+
+.dashboard-page .dashboard-kpis .kpi-box:hover {
+  transform: translateY(-4px);
+  filter: brightness(1.05);
+}
+
+.dashboard-page .dashboard-kpis .kpi-box.danger {
+  background: linear-gradient(135deg, #450a0a, #991b1b, #ef4444);
+}
+
+.dashboard-page .dashboard-kpis .kpi-box.success {
+  background: linear-gradient(135deg, #022c22, #047857, #10b981);
+}
+
+.dashboard-page .dashboard-kpis .kpi-box.warning {
+  background: linear-gradient(135deg, #451a03, #b45309, #f59e0b);
+}
+
+.dashboard-page .dashboard-kpis .kpi-icon {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  backdrop-filter: blur(4px);
+}
+
+.dashboard-page .dashboard-kpis .kpi-box h2 {
+  font-size: 30px;
+  font-weight: 900;
+  margin: 0;
+  line-height: 1;
+}
+
+.dashboard-page .dashboard-kpis .kpi-box span {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  opacity: 0.9;
+}
+
+/* =========================
+   ÚLTIMAS FINALIZAÇÕES
+========================= */
+
+.dashboard-page .ultimas-finalizacoes-box {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dashboard-page .ultima-finalizacao-item {
+  background: #f8fafc;
+  border: 1px solid var(--dash-border);
+  border-left: 4px solid #10b981;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.04);
+}
+
+.dashboard-page .ultima-finalizacao-item:hover {
+  background: #eefcf6;
+  transform: translateX(3px);
+}
+
+.dashboard-page .ultima-finalizacao-icon {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #064e3b, #10b981);
+  color: #ffffff;
+  font-size: 16px;
+}
+
+.dashboard-page .ultima-finalizacao-info strong {
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--dash-text);
+}
+
+.dashboard-page .ultima-finalizacao-info small {
+  font-size: 11px;
+  color: var(--dash-muted);
+}
+
+.dashboard-page .ultima-finalizacao-action {
+  color: #10b981;
+}
+
+/* =========================
+   AJUSTE DO FUNIL PARA CONVERSAR COM OS OUTROS CARDS
+========================= */
+
+.dashboard-page .funil-executivo-card {
+  height: 100%;
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  border: 1px solid var(--dash-border);
+}
+
+.dashboard-page .funil-executivo-header {
+  min-height: 58px;
+  background: linear-gradient(135deg, var(--dash-dark), var(--dash-mid), var(--dash-blue));
+}
+
+.dashboard-page .funil-executivo-header h4 {
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.dashboard-page .funil-executivo-header small {
+  font-size: 11px;
+}
+
+.dashboard-page .funil-executivo-header span {
+  background: rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+/* =========================
+   RESPONSIVO
+========================= */
+
+@media (max-width: 768px) {
+  .dashboard-page .dashboard-filter {
+    flex-direction: column;
+  }
+
+  .dashboard-page .dashboard-filter .btn {
+    width: 100%;
+  }
+
+  .dashboard-page .dashboard-executive-body .grafico-box {
+    height: 240px;
+  }
+}
+
+
+
+
+
+/* =========================
+   🔧 AJUSTE FINO - HEADER FUNIL NO DASHBOARD
+========================= */
+
+.dashboard-page .funil-executivo-header {
+  min-height: 54px !important;
+  padding: 12px 18px !important;
+}
+
+.dashboard-page .funil-executivo-header h4 {
+  font-size: 14px !important;
+  line-height: 1.1 !important;
+  margin: 0 !important;
+}
+
+.dashboard-page .funil-executivo-header small {
+  font-size: 10px !important;
+  line-height: 1.1 !important;
+  margin-top: 2px !important;
+}
+
+.dashboard-page .funil-executivo-header span {
+  padding: 5px 10px !important;
+  font-size: 10px !important;
+}
+
+
+
+
+
+
+
+.frota-card {
+  background: linear-gradient(135deg, #020024, #090979, #00d4ff);
+  color: #ffffff;
+  border-radius: 16px;
+  padding: 18px 20px;
+  min-height: 120px;
+  text-decoration: none;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+  border: 1px solid rgba(255,255,255,0.14);
+  transition: 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.frota-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.25);
+  color: #ffffff;
+}
+
+.frota-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top right, rgba(255,255,255,0.22), transparent 35%),
+    linear-gradient(135deg, transparent, rgba(255,255,255,0.08));
+  pointer-events: none;
+}
+
+.frota-numero {
+  position: relative;
+  z-index: 2;
+  font-size: 26px;
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+
+.frota-info {
+  position: relative;
+  z-index: 2;
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0.92;
+}
+
+.frota-link-text {
+  position: relative;
+  z-index: 2;
+  margin-top: 18px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+
+
+
+
+
+/* =========================================================
+   🚚 FROTAS - CARDS PREMIUM AZUL GRADIENTE
+   Escopo seguro apenas para a tela .frotas-page
+========================================================= */
+
+.frotas-page {
+  padding: 4px 2px 30px;
+}
+
+/* HEADER DA PÁGINA */
+.frotas-page .frotas-page-header {
+  margin-bottom: 20px;
+}
+
+.frotas-page .frotas-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.frotas-page .frotas-title-icon {
+  width: 54px;
+  height: 54px;
+  min-width: 54px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #020024, #090979, #00d4ff);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.18);
+}
+
+.frotas-page .titulo-pagina {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1.1;
+}
+
+.frotas-page .frotas-subtitle {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* GRID */
+.frotas-page .frotas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 18px;
+}
+
+/* CARD */
+.frotas-page .frota-card {
+  min-height: 138px;
+  background:
+    radial-gradient(circle at top right, rgba(255,255,255,0.28), transparent 34%),
+    linear-gradient(135deg, #020024 0%, #090979 48%, #00d4ff 100%);
+  color: #ffffff;
+  border-radius: 18px;
+  padding: 18px;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.16);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  transition: 0.25s ease;
+}
+
+/* brilho suave */
+.frotas-page .frota-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      120deg,
+      transparent 0%,
+      rgba(255,255,255,0.18) 42%,
+      transparent 70%
+    );
+  transform: translateX(-100%);
+  transition: 0.55s ease;
+  pointer-events: none;
+}
+
+.frotas-page .frota-card::after {
+  content: "";
+  position: absolute;
+  right: -40px;
+  bottom: -55px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.10);
+  pointer-events: none;
+}
+
+.frotas-page .frota-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.26);
+  color: #ffffff;
+}
+
+.frotas-page .frota-card:hover::before {
+  transform: translateX(100%);
+}
+
+/* ÍCONE */
+.frotas-page .frota-card-icon {
+  width: 54px;
+  height: 54px;
+  min-width: 54px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.92);
+  color: #0f4edb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.55),
+    0 8px 18px rgba(0,0,0,0.16);
+  position: relative;
+  z-index: 2;
+}
+
+/* CONTEÚDO */
+.frotas-page .frota-card-content {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+}
+
+.frotas-page .frota-numero {
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+  margin-bottom: 8px;
+  color: #ffffff;
+}
+
+.frotas-page .frota-divider {
+  width: 28px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.88);
+  margin-bottom: 8px;
+}
+
+.frotas-page .frota-info {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.92);
+}
+
+.frotas-page .frota-link-text {
+  margin-top: 18px;
+  font-size: 13px;
+  font-weight: 900;
+  color: rgba(255,255,255,0.96);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: 0.2s ease;
+}
+
+.frotas-page .frota-card:hover .frota-link-text {
+  transform: translateX(4px);
+}
+
+/* RESPONSIVO */
+@media (max-width: 768px) {
+  .frotas-page .frotas-grid {
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 14px;
+  }
+
+  .frotas-page .frota-card {
+    min-height: 128px;
+    padding: 15px;
+  }
+
+  .frotas-page .frota-card-icon {
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    font-size: 22px;
+  }
+
+  .frotas-page .frota-numero {
+    font-size: 24px;
+  }
+}
+
+
+
+/* =========================================================
+   🚚 FROTAS - RESUMO + BUSCA
+========================================================= */
+
+.frotas-page .frotas-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.frotas-page .frotas-resumo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.frotas-page .frotas-resumo-card {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  min-height: 120px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+  position: relative;
+  overflow: hidden;
+}
+
+.frotas-page .frotas-resumo-card::after {
+  content: "";
+  position: absolute;
+  right: -30px;
+  bottom: -45px;
+  width: 140px;
+  height: 90px;
+  background: rgba(0, 212, 255, 0.08);
+  border-radius: 50%;
+}
+
+.frotas-page .frotas-resumo-icon {
+  width: 62px;
+  height: 62px;
+  min-width: 62px;
+  border-radius: 50%;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+}
+
+.frotas-page .frotas-resumo-icon.azul {
+  background: linear-gradient(135deg, #0f4edb, #00d4ff);
+}
+
+.frotas-page .frotas-resumo-icon.roxo {
+  background: linear-gradient(135deg, #4c1d95, #7c3aed);
+}
+
+.frotas-page .frotas-resumo-icon.verde {
+  background: linear-gradient(135deg, #047857, #14b8a6);
+}
+
+.frotas-page .frotas-resumo-icon.azul2 {
+  background: linear-gradient(135deg, #1d4ed8, #6366f1);
+}
+
+.frotas-page .frotas-resumo-info {
+  position: relative;
+  z-index: 2;
+}
+
+.frotas-page .frotas-resumo-info span {
+  display: block;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #334155;
+  margin-bottom: 5px;
+}
+
+.frotas-page .frotas-resumo-info strong {
+  display: block;
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 900;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.frotas-page .frotas-resumo-info small {
+  display: block;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.frotas-page .frotas-resumo-line {
+  width: 42px;
+  height: 4px;
+  border-radius: 999px;
+  margin-top: 12px;
+}
+
+.frotas-page .frotas-resumo-line.azul {
+  background: #0f4edb;
+}
+
+.frotas-page .frotas-resumo-line.roxo {
+  background: #7c3aed;
+}
+
+.frotas-page .frotas-resumo-line.verde {
+  background: #14b8a6;
+}
+
+.frotas-page .frotas-resumo-line.azul2 {
+  background: #1d4ed8;
+}
+
+/* BUSCA */
+.frotas-page .frotas-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 18px;
+}
+
+.frotas-page .frotas-search-box {
+  width: 320px;
+  max-width: 100%;
+  height: 44px;
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+.frotas-page .frotas-search-box span {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.frotas-page .frotas-search-box input {
+  border: none;
+  outline: none;
+  background: transparent;
+  flex: 1;
+  height: 100%;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.frotas-page .frotas-search-box input::placeholder {
+  color: #94a3b8;
+}
+
+/* RESPONSIVO */
+@media (max-width: 1100px) {
+  .frotas-page .frotas-resumo-grid {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .frotas-page .frotas-resumo-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .frotas-page .frotas-toolbar {
+    justify-content: stretch;
+  }
+
+  .frotas-page .frotas-search-box {
+    width: 100%;
+  }
+}
+
+
+
+/* =========================================================
+   🚚 FROTAS - AJUSTE FINAL PREMIUM
+   Busca em cima + cards brancos padronizados
+========================================================= */
+
+.frotas-page {
+  padding: 4px 2px 30px;
+}
+
+/* HEADER COM BUSCA */
+.frotas-page .frotas-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.frotas-page .frotas-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.frotas-page .frotas-title-icon {
+  width: 54px;
+  height: 54px;
+  min-width: 54px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #0f4edb, #00d4ff);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.16);
+}
+
+.frotas-page .titulo-pagina {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1.1;
+}
+
+.frotas-page .frotas-subtitle {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* BUSCA NO TOPO */
+.frotas-page .frotas-search-box {
+  width: 320px;
+  max-width: 100%;
+  height: 44px;
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+.frotas-page .frotas-search-box span {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.frotas-page .frotas-search-box input {
+  border: none;
+  outline: none;
+  background: transparent;
+  flex: 1;
+  height: 100%;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.frotas-page .frotas-search-box input::placeholder {
+  color: #94a3b8;
+}
+
+/* CARDS DE RESUMO */
+.frotas-page .frotas-resumo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.frotas-page .frotas-resumo-card {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  min-height: 120px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+  position: relative;
+  overflow: hidden;
+}
+
+.frotas-page .frotas-resumo-card::after {
+  content: "";
+  position: absolute;
+  right: -30px;
+  bottom: -45px;
+  width: 140px;
+  height: 90px;
+  background: rgba(0, 212, 255, 0.08);
+  border-radius: 50%;
+}
+
+.frotas-page .frotas-resumo-icon {
+  width: 62px;
+  height: 62px;
+  min-width: 62px;
+  border-radius: 50%;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+}
+
+.frotas-page .frotas-resumo-icon.azul {
+  background: linear-gradient(135deg, #0f4edb, #00d4ff);
+}
+
+.frotas-page .frotas-resumo-icon.roxo {
+  background: linear-gradient(135deg, #4c1d95, #7c3aed);
+}
+
+.frotas-page .frotas-resumo-icon.verde {
+  background: linear-gradient(135deg, #047857, #14b8a6);
+}
+
+.frotas-page .frotas-resumo-icon.azul2 {
+  background: linear-gradient(135deg, #1d4ed8, #6366f1);
+}
+
+.frotas-page .frotas-resumo-info {
+  position: relative;
+  z-index: 2;
+}
+
+.frotas-page .frotas-resumo-info span {
+  display: block;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #334155;
+  margin-bottom: 5px;
+}
+
+.frotas-page .frotas-resumo-info strong {
+  display: block;
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 900;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.frotas-page .frotas-resumo-info small {
+  display: block;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.frotas-page .frotas-resumo-line {
+  width: 42px;
+  height: 4px;
+  border-radius: 999px;
+  margin-top: 12px;
+}
+
+.frotas-page .frotas-resumo-line.azul {
+  background: #0f4edb;
+}
+
+.frotas-page .frotas-resumo-line.roxo {
+  background: #7c3aed;
+}
+
+.frotas-page .frotas-resumo-line.verde {
+  background: #14b8a6;
+}
+
+.frotas-page .frotas-resumo-line.azul2 {
+  background: #1d4ed8;
+}
+
+/* GRID DAS FROTAS */
+.frotas-page .frotas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 18px;
+}
+
+/* CARD FROTA BRANCO PADRÃO RESUMO */
+.frotas-page .frota-card {
+  min-height: 138px;
+ background-image: radial-gradient( circle farthest-corner at -24.7% -47.3%,  rgba(6,130,165,1) 0%, rgba(34,48,86,1) 66.8%, rgba(15,23,42,1) 100.2% );
+  color: #ffffff;
+  border-radius: 16px;
+  padding: 18px;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #dbe3ef;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  transition: 0.25s ease;
+}
+
+/* detalhe suave igual cards de cima */
+.frotas-page .frota-card::after {
+  content: "";
+  position: absolute;
+  right: -32px;
+  bottom: -44px;
+  width: 140px;
+  height: 90px;
+  background: rgba(0, 212, 255, 0.08);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.frotas-page .frota-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.12);
+  color: #0f172a;
+}
+
+/* ÍCONE */
+.frotas-page .frota-card-icon {
+  width: 54px;
+  height: 54px;
+  min-width: 54px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0f4edb, #00d4ff);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.13);
+  position: relative;
+  z-index: 2;
+}
+
+/* CONTEÚDO */
+.frotas-page .frota-card-content {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+}
+
+.frotas-page .frota-numero {
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+  margin-bottom: 8px;
+  color: #ffffff;
+}
+
+.frotas-page .frota-divider {
+  width: 28px;
+  height: 3px;
+  border-radius: 999px;
+  background: #1d4ed8;
+  margin-bottom: 8px;
+}
+
+.frotas-page .frota-info {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.frotas-page .frota-link-text {
+  margin-top: 18px;
+  font-size: 13px;
+  font-weight: 900;
+  color: #ffffff;;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: 0.2s ease;
+}
+
+.frotas-page .frota-card:hover .frota-link-text {
+  transform: translateX(4px);
+}
+
+/* RESPONSIVO */
+@media (max-width: 1100px) {
+  .frotas-page .frotas-resumo-grid {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .frotas-page .frotas-page-header {
+    align-items: flex-start;
+  }
+
+  .frotas-page .frotas-search-box {
+    width: 100%;
+  }
+
+  .frotas-page .frotas-grid {
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 14px;
+  }
+
+  .frotas-page .frota-card {
+    min-height: 128px;
+    padding: 15px;
+  }
+
+  .frotas-page .frota-card-icon {
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    font-size: 22px;
+  }
+
+  .frotas-page .frota-numero {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 650px) {
+  .frotas-page .frotas-resumo-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+/* =========================================================
+   🚚 FROTAS - IMAGEM DO CAMINHÃO NOS ÍCONES
+========================================================= */
+
+.frotas-page .frotas-title-icon img,
+.frotas-page .frotas-resumo-icon img,
+.frotas-page .frota-card-icon img {
+  width: 82%;
+  height: 82%;
+  object-fit: contain;
+  display: block;
+}
+
+.frotas-page .frotas-title-icon,
+.frotas-page .frotas-resumo-icon,
+.frotas-page .frota-card-icon {
+  overflow: hidden;
+}
+
+/* Ajuste especial do caminhão nos cards menores */
+.frotas-page .frota-card-icon img {
+  width: 90%;
+  height: 90%;
+}
+
+/* Deixa o fundo branco para destacar o caminhão */
+.frotas-page .frota-card-icon {
+  background: #ffffff !important;
+}
+
+/* No card de resumo, mantém o círculo azul mas mostra a imagem limpa */
+.frotas-page .frotas-resumo-icon.azul img {
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+}
+
+/* Ícone grande do título */
+.frotas-page .frotas-title-icon img {
+  width: 95%;
+  height: 95%;
+}

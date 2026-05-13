@@ -19,9 +19,6 @@
 
 </div>
 
-<!-- ========================= -->
-<!-- 🔥 CARDS RESUMO DA FROTA -->
-<!-- ========================= -->
 <div class="row g-3 mb-4">
 
   <div class="col-md-4">
@@ -30,14 +27,8 @@
         <span class="frota-resumo-icon">📋</span>
         <span>Total de Manutenções</span>
       </div>
-
-      <div class="frota-resumo-value">
-        {{ registros|length }}
-      </div>
-
-      <div class="frota-resumo-desc">
-        Registros encontrados
-      </div>
+      <div class="frota-resumo-value">{{ registros|length }}</div>
+      <div class="frota-resumo-desc">Registros encontrados</div>
     </div>
   </div>
 
@@ -47,7 +38,6 @@
         <span class="frota-resumo-icon">📅</span>
         <span>Última Entrada</span>
       </div>
-
       <div class="frota-resumo-value">
         {% if registros %}
           {{ registros[0].data.strftime('%d/%m/%Y') if registros[0].data else '-' }}
@@ -55,10 +45,7 @@
           -
         {% endif %}
       </div>
-
-      <div class="frota-resumo-desc">
-        Registro mais recente
-      </div>
+      <div class="frota-resumo-desc">Registro mais recente</div>
     </div>
   </div>
 
@@ -68,7 +55,6 @@
         <span class="frota-resumo-icon">🚦</span>
         <span>Status Atual</span>
       </div>
-
       <div class="frota-resumo-value frota-status-value">
         {% if registros %}
           {{ registros[0].status or '-' }}
@@ -76,18 +62,12 @@
           -
         {% endif %}
       </div>
-
-      <div class="frota-resumo-desc">
-        Baseado na última manutenção
-      </div>
+      <div class="frota-resumo-desc">Baseado na última manutenção</div>
     </div>
   </div>
 
 </div>
 
-<!-- ========================= -->
-<!-- 🔥 HISTÓRICO -->
-<!-- ========================= -->
 <div class="x-card">
 
   <h5>Histórico de Manutenções</h5>
@@ -108,6 +88,7 @@
             <th>Atendimento</th>
             <th>Manutenção</th>
             <th>Status</th>
+            <th>Problema</th>
             <th>Causa</th>
             <th>Ações</th>
           </tr>
@@ -125,6 +106,7 @@
               <td>{{ m.tipo_atendimento or '-' }}</td>
               <td>{{ m.tipo_manutencao or '-' }}</td>
               <td>{{ m.status or '-' }}</td>
+              <td class="obs-col">{{ m.problema or '-' }}</td>
               <td class="obs-col">{{ m.causa or '-' }}</td>
 
               <td>
@@ -140,6 +122,7 @@
                       {{ m.tipo_atendimento|tojson }},
                       {{ m.tipo_manutencao|tojson }},
                       {{ m.status|tojson }},
+                      {{ m.problema|tojson }},
                       {{ m.causa|tojson }},
                       {{ m.observacao|tojson }},
 
@@ -189,9 +172,6 @@
 
 </div>
 
-<!-- ========================= -->
-<!-- 🔥 MODAL DETALHE -->
-<!-- ========================= -->
 <div class="modal fade" id="modalDetalheFrota" tabindex="-1">
   <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content">
@@ -219,6 +199,7 @@
 
           <div class="col-md-4">
             <p><strong>Status:</strong> <span id="mStatus"></span></p>
+            <p><strong>Problema:</strong> <span id="mProblema"></span></p>
             <p><strong>Causa:</strong> <span id="mCausa"></span></p>
           </div>
 
@@ -284,9 +265,6 @@
   </div>
 </div>
 
-<!-- ========================= -->
-<!-- 🔥 MODAL IMAGEM AMPLIADA -->
-<!-- ========================= -->
 <div class="modal fade" id="modalImagemFrota" tabindex="-1">
   <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content">
@@ -355,7 +333,7 @@ function renderizarGaleriaFrota(containerId, imagens, textoVazio) {
 }
 
 function abrirModalFrota(
-  cliente, frota, os, servico, atendimento, manutencao, status, causa, observacao,
+  cliente, frota, os, servico, atendimento, manutencao, status, problema, causa, observacao,
   placaAfericao, placaData, placaStatus,
   ambienteAfericao, ambienteData, ambienteStatus,
   imagensManutencao, imagensPlaca, imagensAmbiente
@@ -367,6 +345,7 @@ function abrirModalFrota(
   document.getElementById("mAtendimento").innerText = atendimento || "-";
   document.getElementById("mManutencao").innerText = manutencao || "-";
   document.getElementById("mStatus").innerText = status || "-";
+  document.getElementById("mProblema").innerText = problema || "-";
   document.getElementById("mCausa").innerText = causa || "-";
   document.getElementById("mObservacao").innerText = observacao || "-";
 

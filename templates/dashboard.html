@@ -3,160 +3,207 @@
 
 {% block content %}
 
-<!-- FILTRO -->
-<form method="GET" class="mb-4 d-flex gap-2">
-  <input type="date" name="data_inicio" class="form-control"
-         value="{{ request.args.get('data_inicio', '') }}">
-  <input type="date" name="data_fim" class="form-control"
-         value="{{ request.args.get('data_fim', '') }}">
-  <button class="btn btn-dark">Filtrar</button>
-</form>
+<div class="dashboard-page">
 
-{% if request.args.get("mes") %}
-  <div class="alert alert-info d-flex align-items-center justify-content-between">
-    <div>
-      🔎 Filtrando mês: <strong>{{ request.args.get("mes") }}</strong>
+  <!-- FILTRO -->
+  <form method="GET" class="dashboard-filter mb-4 d-flex gap-2">
+
+    <input type="date"
+           name="data_inicio"
+           class="form-control"
+           value="{{ request.args.get('data_inicio', '') }}">
+
+    <input type="date"
+           name="data_fim"
+           class="form-control"
+           value="{{ request.args.get('data_fim', '') }}">
+
+    <button class="btn btn-dark">
+      Filtrar
+    </button>
+
+  </form>
+
+  {% if request.args.get("mes") %}
+    <div class="alert alert-info d-flex align-items-center justify-content-between">
+      <div>
+        🔎 Filtrando mês:
+        <strong>{{ request.args.get("mes") }}</strong>
+      </div>
+
+      <a href="/" class="btn btn-sm btn-dark">
+        Limpar filtro
+      </a>
     </div>
-    <a href="/" class="btn btn-sm btn-dark">Limpar filtro</a>
+  {% endif %}
+
+  <!-- 🔥 KPIs -->
+  <div class="dashboard-kpis">
+    {% include "partials/metricas.html" %}
   </div>
-{% endif %}
 
-<!-- 🔥 KPIs -->
-{% include "partials/metricas.html" %}
+  <!-- ========================= -->
+  <!-- 🔥 LINHA 1 -->
+  <!-- ========================= -->
+  <div class="row g-4 dashboard-row">
 
-<!-- ========================= -->
-<!-- 🔥 LINHA 1 -->
-<!-- ========================= -->
-<div class="row g-4">
+    <div class="col-md-6">
+      <div class="dashboard-executive-card h-100">
 
-  <div class="col-md-6">
-    <div class="x-card p-3 h-100">
-      <h5>Tipo de Atendimento</h5>
-      <div class="grafico-box">
-        <canvas id="graficoAtendimento"></canvas>
+        <div class="dashboard-executive-header">
+          <div>
+            <h5>Tipo de Atendimento</h5>
+            <small>Distribuição entre atendimento interno e externo</small>
+          </div>
+        </div>
+
+        <div class="dashboard-executive-body">
+          <div class="grafico-box">
+            <canvas id="graficoAtendimento"></canvas>
+          </div>
+        </div>
+
       </div>
     </div>
-  </div>
 
-  <div class="col-md-6">
-    <div class="x-card p-3 h-100">
-      <h5>Atendimento Mensal</h5>
-      <div class="grafico-box">
-        <canvas id="graficoMes"></canvas>
+    <div class="col-md-6">
+      <div class="dashboard-executive-card h-100">
+
+        <div class="dashboard-executive-header">
+          <div>
+            <h5>Atendimento Mensal</h5>
+            <small>Evolução mensal das manutenções registradas</small>
+          </div>
+        </div>
+
+        <div class="dashboard-executive-body">
+          <div class="grafico-box">
+            <canvas id="graficoMes"></canvas>
+          </div>
+        </div>
+
       </div>
     </div>
+
   </div>
 
-</div>
+  <!-- ========================= -->
+  <!-- 🔥 LINHA 2 -->
+  <!-- ========================= -->
+  <div class="row g-4 mt-1 dashboard-row">
 
-<!-- ========================= -->
-<!-- 🔥 LINHA: PARETO + ÚLTIMAS FINALIZAÇÕES -->
-<!-- ========================= -->
-<div class="row g-4 mt-1">
-
-  <!-- 🔥 PARETO -->
-  <div class="col-md-6">
-    <div class="x-card p-3 h-100">
-      <h5>Pareto (80/20)</h5>
-      <div class="grafico-box grafico-padrao">
-        <canvas id="graficoPareto"></canvas>
-      </div>
+    <!-- 🔥 FUNIL EXECUTIVO DE CAUSAS -->
+    <div class="col-md-6">
+      {% include "partials/funil_causas.html" %}
     </div>
-  </div>
 
-  <!-- 🔥 ÚLTIMAS FINALIZAÇÕES -->
-  <div class="col-md-6">
-    <div class="x-card p-3 h-100">
+    <!-- 🔥 ÚLTIMAS FINALIZAÇÕES -->
+    <div class="col-md-6">
+      <div class="dashboard-executive-card h-100">
 
-      <h5>Últimas Finalizações</h5>
+        <div class="dashboard-executive-header">
+          <div>
+            <h5>Últimas Finalizações</h5>
+            <small>Registros finalizados mais recentes</small>
+          </div>
+        </div>
 
-      <div class="ultimas-finalizacoes-box">
+        <div class="dashboard-executive-body">
+          <div class="ultimas-finalizacoes-box">
 
-        {% if ultimas_finalizacoes %}
+            {% if ultimas_finalizacoes %}
 
-          {% for m in ultimas_finalizacoes %}
-
-            {% if m.numero_frota %}
-              <a href="/frotas/{{ m.numero_frota }}"
-                 class="ultima-finalizacao-item ultima-finalizacao-link"
-                 title="Abrir histórico da frota {{ m.numero_frota }}">
-            {% else %}
-              <div class="ultima-finalizacao-item">
-            {% endif %}
-
-                <div class="ultima-finalizacao-icon">
-                  ✅
-                </div>
-
-                <div class="ultima-finalizacao-info">
-                  <strong>
-                    OS {{ m.os or '-' }} • Frota {{ m.numero_frota or '-' }}
-                  </strong>
-
-                  <small>
-                    Finalizado em
-                    {{ m.data_saida.strftime('%d/%m/%Y') if m.data_saida else '-' }}
-                    {% if m.dtm is not none %}
-                      • ATM: {{ m.dtm }} dia{% if m.dtm != 1 %}s{% endif %}
-                    {% endif %}
-                  </small>
-                </div>
+              {% for m in ultimas_finalizacoes %}
 
                 {% if m.numero_frota %}
-                  <div class="ultima-finalizacao-action">
-                    Ver frota →
+                  <a href="/frotas/{{ m.numero_frota }}"
+                     class="ultima-finalizacao-item ultima-finalizacao-link"
+                     title="Abrir histórico da frota {{ m.numero_frota }}">
+                {% else %}
+                  <div class="ultima-finalizacao-item">
+                {% endif %}
+
+                    <div class="ultima-finalizacao-icon">
+                      ✅
+                    </div>
+
+                    <div class="ultima-finalizacao-info">
+                      <strong>
+                        OS {{ m.os or '-' }} • Frota {{ m.numero_frota or '-' }}
+                      </strong>
+
+                      <small>
+                        Finalizado em
+                        {{ m.data_saida.strftime('%d/%m/%Y') if m.data_saida else '-' }}
+
+                        {% if m.dtm is not none %}
+                          • ATM: {{ m.dtm }} dia{% if m.dtm != 1 %}s{% endif %}
+                        {% endif %}
+                      </small>
+                    </div>
+
+                    {% if m.numero_frota %}
+                      <div class="ultima-finalizacao-action">
+                        Ver frota →
+                      </div>
+                    {% endif %}
+
+                {% if m.numero_frota %}
+                  </a>
+                {% else %}
                   </div>
                 {% endif %}
 
-            {% if m.numero_frota %}
-              </a>
+              {% endfor %}
+
             {% else %}
+
+              <div class="text-muted">
+                Nenhuma manutenção finalizada no período selecionado.
               </div>
+
             {% endif %}
 
-          {% endfor %}
-
-        {% else %}
-
-          <div class="text-muted">
-            Nenhuma manutenção finalizada no período selecionado.
           </div>
-
-        {% endif %}
+        </div>
 
       </div>
-
     </div>
+
   </div>
 
+  <!-- Canvas oculto para não quebrar JS antigo -->
+  <canvas id="graficoPareto" style="display:none;"></canvas>
+  <canvas id="graficoCorretivaGrande" style="display:none;"></canvas>
+
+  <!-- ========================= -->
+  <!-- 🔥 JSONS -->
+  <!-- ========================= -->
+  <script id="dados-atendimento" type="application/json">
+  {{ {"labels": labels_atendimento, "valores": valores_atendimento} | tojson }}
+  </script>
+
+  <script id="dados-mes" type="application/json">
+  {{ {
+    "labels": labels,
+    "valores": valores,
+    "corretivas": valores_corretiva_mes,
+    "preventivas": valores_preventiva_mes
+  } | tojson }}
+  </script>
+
+  <script id="dados-pareto" type="application/json">
+  {{ {
+    "labels": labels_frota,
+    "valores": valores_frota,
+    "percentual": []
+  } | tojson }}
+  </script>
+
+  <script id="dados-corretiva" type="application/json">
+  {{ dados_corretiva | tojson }}
+  </script>
+
 </div>
-
-<!-- Canvas oculto mantido para evitar quebra caso exista JS antigo procurando esse ID -->
-<canvas id="graficoCorretivaGrande" style="display:none;"></canvas>
-
-<!-- ========================= -->
-<!-- 🔥 JSONS -->
-<!-- ========================= -->
-
-<script id="dados-atendimento" type="application/json">
-{{ {"labels": labels_atendimento, "valores": valores_atendimento} | tojson }}
-</script>
-
-<script id="dados-mes" type="application/json">
-{{ {
-  "labels": labels,
-  "valores": valores,
-  "corretivas": valores_corretiva_mes,
-  "preventivas": valores_preventiva_mes
-} | tojson }}
-</script>
-
-<script id="dados-pareto" type="application/json">
-{{ {"labels": labels_frota, "valores": valores_frota, "percentual": pareto_percentual} | tojson }}
-</script>
-
-<script id="dados-corretiva" type="application/json">
-{{ dados_corretiva | tojson }}
-</script>
 
 {% endblock %}

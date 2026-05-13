@@ -1,0 +1,80 @@
+<div class="funil-executivo-card">
+
+  <div class="funil-executivo-header">
+    <div>
+      <h4>Funil de Causas</h4>
+      <small>Principais causas das manutenções registradas</small>
+    </div>
+
+    <span>TOP 10</span>
+  </div>
+
+  <div class="funil-executivo-body">
+
+    {% set total_causas = valores_frota|sum %}
+    {% set maximo = valores_frota[0] if valores_frota else 1 %}
+
+    <div class="funil-executivo-chart">
+
+      {% for label in labels_frota %}
+        {% set valor = valores_frota[loop.index0] %}
+        {% set largura = (valor / maximo * 100)|round(0) %}
+        {% set percentual = (valor / total_causas * 100)|round(1) if total_causas else 0 %}
+
+        <div class="funil-executivo-row">
+
+          <div class="funil-executivo-label">
+            {{ label }}
+          </div>
+
+          <div class="funil-executivo-track">
+            <div class="funil-executivo-bar" style="width: {{ largura }}%;">
+              <strong>{{ valor }}</strong>
+            </div>
+          </div>
+
+          <div class="funil-executivo-percent">
+            {{ percentual }}%
+          </div>
+
+        </div>
+      {% endfor %}
+
+    </div>
+
+    <div class="funil-executivo-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Causa</th>
+            <th>Qtd</th>
+            <th>%</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for label in labels_frota %}
+            {% set valor = valores_frota[loop.index0] %}
+            {% set percentual = (valor / total_causas * 100)|round(1) if total_causas else 0 %}
+
+            <tr>
+              <td>{{ label }}</td>
+              <td>{{ valor }}</td>
+              <td>{{ percentual }}%</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+
+        <tfoot>
+          <tr>
+            <td>Total</td>
+            <td>{{ total_causas }}</td>
+            <td>100%</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+  </div>
+
+</div>

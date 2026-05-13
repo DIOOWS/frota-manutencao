@@ -2,24 +2,146 @@
 
 {% block content %}
 
-<h2 class="titulo-pagina">🚚 Frotas</h2>
+<div class="frotas-page">
 
-<div class="frotas-grid">
+  <!-- HEADER + BUSCA -->
+  <div class="frotas-page-header">
 
-  {% for f in frotas %}
-    <a href="/frotas/{{ f[0] }}" class="frota-card">
-
-      <div class="frota-numero">
-        🚚 {{ f[0] }}
+    <div class="frotas-title-wrap">
+      <div class="frotas-title-icon">
+        <img src="{{ url_for('static', filename='img/caminhao.png') }}" alt="Caminhão">
       </div>
 
-      <div class="frota-info">
-        {{ f[1] }} manutenções
+      <div>
+        <h2 class="titulo-pagina">Frotas</h2>
+        <p class="frotas-subtitle">
+          Visualize o histórico de manutenções por frota
+        </p>
+      </div>
+    </div>
+
+    <div class="frotas-search-box">
+      <span>🔎</span>
+      <input type="text" id="buscarFrota" placeholder="Buscar frota...">
+    </div>
+
+  </div>
+
+  <!-- RESUMO DAS FROTAS -->
+  <div class="frotas-resumo-grid">
+
+    <div class="frotas-resumo-card">
+      <div class="frotas-resumo-icon azul">
+        <img src="{{ url_for('static', filename='img/caminhao.png') }}" alt="Caminhão">
       </div>
 
-    </a>
-  {% endfor %}
+      <div class="frotas-resumo-info">
+        <span>Total de frotas</span>
+        <strong>{{ total_frotas or 0 }}</strong>
+        <small>Frotas cadastradas</small>
+        <div class="frotas-resumo-line azul"></div>
+      </div>
+    </div>
+
+    <div class="frotas-resumo-card">
+      <div class="frotas-resumo-icon roxo">
+        🛠️
+      </div>
+
+      <div class="frotas-resumo-info">
+        <span>Total de manutenções</span>
+        <strong>{{ total_manutencoes or 0 }}</strong>
+        <small>Todas as frotas</small>
+        <div class="frotas-resumo-line roxo"></div>
+      </div>
+    </div>
+
+    <div class="frotas-resumo-card">
+      <div class="frotas-resumo-icon verde">
+        📊
+      </div>
+
+      <div class="frotas-resumo-info">
+        <span>Média por frota</span>
+        <strong>{{ media_por_frota or 0 }}</strong>
+        <small>Manutenções/frota</small>
+        <div class="frotas-resumo-line verde"></div>
+      </div>
+    </div>
+
+    <div class="frotas-resumo-card">
+      <div class="frotas-resumo-icon azul2">
+        📈
+      </div>
+
+      <div class="frotas-resumo-info">
+        <span>Mês com mais manutenções</span>
+        <strong>{{ mes_mais_manutencoes or "-" }}</strong>
+        <small>{{ qtd_mes_mais_manutencoes or 0 }} manutenções</small>
+        <div class="frotas-resumo-line azul2"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- GRID DAS FROTAS -->
+  <div class="frotas-grid" id="frotasGrid">
+
+    {% for f in frotas %}
+      <a href="/frotas/{{ f[0] }}" class="frota-card" data-frota="{{ f[0] }}">
+
+        <div class="frota-card-icon">
+          <img src="{{ url_for('static', filename='img/caminhao.png') }}" alt="Caminhão">
+        </div>
+
+        <div class="frota-card-content">
+
+          <div class="frota-numero">
+            {{ f[0] }}
+          </div>
+
+          <div class="frota-divider"></div>
+
+          <div class="frota-info">
+            {{ f[1] }} manutenção{% if f[1] != 1 %}es{% endif %}
+          </div>
+
+          <div class="frota-link-text">
+            Ver histórico →
+          </div>
+
+        </div>
+
+      </a>
+    {% endfor %}
+
+  </div>
 
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const input = document.getElementById("buscarFrota");
+  const cards = document.querySelectorAll(".frotas-page .frota-card");
+
+  if (!input) {
+    return;
+  }
+
+  input.addEventListener("input", function () {
+    const termo = this.value.trim().toLowerCase();
+
+    cards.forEach(function (card) {
+      const frota = card.dataset.frota.toLowerCase();
+
+      if (frota.includes(termo)) {
+        card.style.display = "";
+      } else {
+        card.style.display = "none";
+      }
+    });
+  });
+});
+</script>
 
 {% endblock %}
