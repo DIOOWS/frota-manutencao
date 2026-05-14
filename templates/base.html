@@ -53,7 +53,7 @@
       <span>Assistente</span>
     </a>
 
-    {% if session.get("user_role") == "admin" %}
+    {% if session.get("user_role") in ["admin", "gestao"] %}
       <a href="{{ url_for('manutencao.nova') }}" class="skew-item">
         <span>Nova</span>
       </a>
@@ -64,6 +64,13 @@
 
       <a href="{{ url_for('admin.dashboard_admin') }}" class="skew-item">
         <span>Admin</span>
+      </a>
+    {% endif %}
+
+
+    {% if session.get("user_role") == "gestao" %}
+      <a href="/gestao/dashboard" class="skew-item">
+        <span>Gestão</span>
       </a>
     {% endif %}
 

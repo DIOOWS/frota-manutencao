@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Gestão Financeira{% endblock %}
+
+{% block content %}
+
+<div class="gestao-page">
+
+  <div class="gestao-header">
+    <div>
+      <h2>Gestão Financeira</h2>
+      <p>Fechamento de {{ "%02d"|format(mes) }}/{{ ano }}</p>
+    </div>
+
+    <a href="/gestao/lancamentos" class="btn btn-dark">
+      Lançamentos
+    </a>
+  </div>
+
+  <form method="GET" class="gestao-filtro">
+    <input type="number" name="mes" min="1" max="12" value="{{ mes }}" class="form-control">
+    <input type="number" name="ano" value="{{ ano }}" class="form-control">
+    <button class="btn btn-primary">Filtrar</button>
+  </form>
+
+  <div class="gestao-kpis">
+
+    <div class="gestao-kpi">
+      <span>Saldo Inicial</span>
+      <strong>R$ {{ "%.2f"|format(saldo_inicial) }}</strong>
+    </div>
+
+    <div class="gestao-kpi danger">
+      <span>Saídas</span>
+      <strong>R$ {{ "%.2f"|format(total_saidas) }}</strong>
+    </div>
+
+    <div class="gestao-kpi success">
+      <span>Entradas</span>
+      <strong>R$ {{ "%.2f"|format(total_entradas) }}</strong>
+    </div>
+
+    <div class="gestao-kpi {% if lucro_mes < 0 %}danger{% else %}success{% endif %}">
+      <span>Lucro do Mês</span>
+      <strong>R$ {{ "%.2f"|format(lucro_mes) }}</strong>
+    </div>
+
+    <div class="gestao-kpi">
+      <span>Saldo Final</span>
+      <strong>R$ {{ "%.2f"|format(saldo_final) }}</strong>
+    </div>
+
+    <div class="gestao-kpi danger">
+      <span>A Pagar</span>
+      <strong>R$ {{ "%.2f"|format(total_a_pagar) }}</strong>
+    </div>
+
+    <div class="gestao-kpi success">
+      <span>A Receber</span>
+      <strong>R$ {{ "%.2f"|format(total_a_receber) }}</strong>
+    </div>
+
+    <div class="gestao-kpi {% if margem_operacional < 0 %}danger{% else %}success{% endif %}">
+      <span>Margem Operacional</span>
+      <strong>{{ "%.2f"|format(margem_operacional) }}%</strong>
+    </div>
+
+  </div>
+
+  <div class="row g-4 mt-2">
+
+    <div class="col-md-4">
+      <div class="gestao-card">
+        <h5>Ranking de Despesas</h5>
+
+        {% for nome, valor in ranking_despesas %}
+          <div class="gestao-ranking-item">
+            <span>{{ nome }}</span>
+            <strong>R$ {{ "%.2f"|format(valor) }}</strong>
+          </div>
+        {% else %}
+          <p class="text-muted">Sem despesas no período.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="gestao-card">
+        <h5>Ranking de Receitas</h5>
+
+        {% for nome, valor in ranking_receitas %}
+          <div class="gestao-ranking-item">
+            <span>{{ nome }}</span>
+            <strong>R$ {{ "%.2f"|format(valor) }}</strong>
+          </div>
+        {% else %}
+          <p class="text-muted">Sem receitas no período.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="gestao-card">
+        <h5>Ranking Cliente Valor</h5>
+
+        {% for nome, valor in ranking_clientes %}
+          <div class="gestao-ranking-item">
+            <span>{{ nome }}</span>
+            <strong>R$ {{ "%.2f"|format(valor) }}</strong>
+          </div>
+        {% else %}
+          <p class="text-muted">Sem clientes no período.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}

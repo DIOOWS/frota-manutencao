@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% block title %}Lançamento Financeiro{% endblock %}
+
+{% block content %}
+
+<div class="gestao-page">
+
+  <div class="gestao-header">
+    <div>
+      <h2>
+        {% if lancamento %}
+          Editar Lançamento
+        {% else %}
+          Novo Lançamento Financeiro
+        {% endif %}
+      </h2>
+
+      <p>
+        Cadastre receitas, despesas, contas a pagar e contas a receber
+      </p>
+    </div>
+
+    <a href="/gestao/lancamentos" class="btn btn-secondary">
+      ← Voltar
+    </a>
+  </div>
+
+  <form method="POST" class="gestao-form">
+
+    <div class="row">
+
+      <div class="col-md-3 mb-3">
+        <label>Data</label>
+        <input type="date"
+               name="data"
+               class="form-control"
+               value="{{ lancamento.data.strftime('%Y-%m-%d') if lancamento and lancamento.data else '' }}"
+               required>
+      </div>
+
+      <div class="col-md-3 mb-3">
+        <label>Tipo</label>
+        <select name="tipo" class="form-control" required>
+          <option value="">Selecione</option>
+
+          <option value="RECEITA"
+            {% if lancamento and lancamento.tipo == "RECEITA" %}selected{% endif %}>
+            Receita
+          </option>
+
+          <option value="DESPESA"
+            {% if lancamento and lancamento.tipo == "DESPESA" %}selected{% endif %}>
+            Despesa
+          </option>
+        </select>
+      </div>
+
+      <div class="col-md-3 mb-3">
+        <label>Status</label>
+        <select name="status" class="form-control" required>
+
+          <option value="PENDENTE"
+            {% if not lancamento or lancamento.status == "PENDENTE" %}selected{% endif %}>
+            Pendente
+          </option>
+
+          <option value="PAGO"
+            {% if lancamento and lancamento.status == "PAGO" %}selected{% endif %}>
+            Pago
+          </option>
+
+          <option value="RECEBIDO"
+            {% if lancamento and lancamento.status == "RECEBIDO" %}selected{% endif %}>
+            Recebido
+          </option>
+
+          <option value="OK"
+            {% if lancamento and lancamento.status == "OK" %}selected{% endif %}>
+            OK
+          </option>
+
+          <option value="CANCELADO"
+            {% if lancamento and lancamento.status == "CANCELADO" %}selected{% endif %}>
+            Cancelado
+          </option>
+
+        </select>
+      </div>
+
+      <div class="col-md-3 mb-3">
+        <label>Valor</label>
+        <input type="number"
+               name="valor"
+               step="0.01"
+               class="form-control"
+               value="{{ lancamento.valor if lancamento else '' }}"
+               required>
+      </div>
+
+    </div>
+
+    <div class="row">
+
+      <div class="col-md-4 mb-3">
+        <label>Categoria</label>
+        <input type="text"
+               name="categoria"
+               class="form-control"
+               value="{{ lancamento.categoria if lancamento else '' }}"
+               placeholder="Ex.: SERVIÇOS, SALÁRIO, PEÇAS..."
+               required>
+      </div>
+
+      <div class="col-md-4 mb-3">
+        <label>Subcategoria</label>
+        <input type="text"
+               name="subcategoria"
+               class="form-control"
+               value="{{ lancamento.subcategoria if lancamento else '' }}"
+               placeholder="Ex.: MANUTENÇÃO, REFRIGERAÇÃO...">
+      </div>
+
+      <div class="col-md-4 mb-3">
+        <label>Setor</label>
+        <select name="setor" class="form-control">
+          <option value="">Selecione</option>
+
+          <option value="ASSISTÊNCIA"
+            {% if lancamento and lancamento.setor == "ASSISTÊNCIA" %}selected{% endif %}>
+            Assistência
+          </option>
+
+          <option value="LOGÍSTICA"
+            {% if lancamento and lancamento.setor == "LOGÍSTICA" %}selected{% endif %}>
+            Logística
+          </option>
+
+          <option value="ADMINISTRATIVO"
+            {% if lancamento and lancamento.setor == "ADMINISTRATIVO" %}selected{% endif %}>
+            Administrativo
+          </option>
+
+          <option value="GERAL"
+            {% if lancamento and lancamento.setor == "GERAL" %}selected{% endif %}>
+            Geral
+          </option>
+
+        </select>
+      </div>
+
+    </div>
+
+    <div class="row">
+
+      <div class="col-md-6 mb-3">
+        <label>Cliente</label>
+        <input type="text"
+               name="cliente"
+               class="form-control"
+               value="{{ lancamento.cliente if lancamento else '' }}"
+               placeholder="Ex.: UNILEVER, EASY, CLIENTE X...">
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label>Origem</label>
+        <select name="origem" class="form-control">
+          <option value="">Selecione</option>
+
+          <option value="MANUAL"
+            {% if lancamento and lancamento.origem == "MANUAL" %}selected{% endif %}>
+            Manual
+          </option>
+
+          <option value="IMPORTAÇÃO"
+            {% if lancamento and lancamento.origem == "IMPORTAÇÃO" %}selected{% endif %}>
+            Importação
+          </option>
+
+          <option value="EXERCÍCIO ATUAL"
+            {% if lancamento and lancamento.origem == "EXERCÍCIO ATUAL" %}selected{% endif %}>
+            Exercício atual
+          </option>
+
+          <option value="EXERCÍCIO ANTERIOR"
+            {% if lancamento and lancamento.origem == "EXERCÍCIO ANTERIOR" %}selected{% endif %}>
+            Exercício anterior
+          </option>
+        </select>
+      </div>
+
+    </div>
+
+    <div class="mb-3">
+      <label>Descrição</label>
+      <textarea name="descricao"
+                class="form-control"
+                rows="3"
+                placeholder="Descreva o lançamento...">{{ lancamento.descricao if lancamento else '' }}</textarea>
+    </div>
+
+    <div class="form-check mb-3">
+      <input type="checkbox"
+             name="recorrente"
+             class="form-check-input"
+             id="recorrente"
+             {% if lancamento and lancamento.recorrente %}checked{% endif %}>
+
+      <label for="recorrente" class="form-check-label">
+        Lançamento recorrente
+      </label>
+    </div>
+
+    <button class="btn btn-success">
+      {% if lancamento %}
+        Atualizar lançamento
+      {% else %}
+        Salvar lançamento
+      {% endif %}
+    </button>
+
+  </form>
+
+</div>
+
+{% endblock %}

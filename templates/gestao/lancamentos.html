@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block title %}Lançamentos Financeiros{% endblock %}
+
+{% block content %}
+
+<div class="gestao-page">
+
+  <div class="gestao-header">
+    <div>
+      <h2>Lançamentos Financeiros</h2>
+      <p>Controle de receitas, despesas, contas a pagar e contas a receber</p>
+    </div>
+
+    <div class="d-flex gap-2">
+      <a href="/gestao/dashboard" class="btn btn-dark">
+        Dashboard
+      </a>
+
+      <a href="/gestao/lancamentos/novo" class="btn btn-success">
+        Novo lançamento
+      </a>
+    </div>
+  </div>
+
+  <form method="GET" class="gestao-filtros-lancamentos">
+
+    <input type="number"
+           name="mes"
+           min="1"
+           max="12"
+           value="{{ mes or '' }}"
+           placeholder="Mês"
+           class="form-control">
+
+    <input type="number"
+           name="ano"
+           value="{{ ano or '' }}"
+           placeholder="Ano"
+           class="form-control">
+
+    <select name="tipo" class="form-control">
+      <option value="">Tipo</option>
+      <option value="RECEITA" {% if tipo == "RECEITA" %}selected{% endif %}>Receita</option>
+      <option value="DESPESA" {% if tipo == "DESPESA" %}selected{% endif %}>Despesa</option>
+    </select>
+
+    <select name="status" class="form-control">
+      <option value="">Status</option>
+      <option value="PENDENTE" {% if status == "PENDENTE" %}selected{% endif %}>Pendente</option>
+      <option value="PAGO" {% if status == "PAGO" %}selected{% endif %}>Pago</option>
+      <option value="RECEBIDO" {% if status == "RECEBIDO" %}selected{% endif %}>Recebido</option>
+      <option value="OK" {% if status == "OK" %}selected{% endif %}>OK</option>
+      <option value="CANCELADO" {% if status == "CANCELADO" %}selected{% endif %}>Cancelado</option>
+    </select>
+
+    <input type="text"
+           name="categoria"
+           value="{{ categoria or '' }}"
+           placeholder="Categoria"
+           class="form-control">
+
+    <button class="btn btn-primary">
+      Filtrar
+    </button>
+
+    <a href="/gestao/lancamentos" class="btn btn-secondary">
+      Limpar
+    </a>
+
+  </form>
+
+  <div class="gestao-card mt-3">
+
+    <h5>Lista de Lançamentos</h5>
+
+    <div class="table-responsive">
+      <table class="table table-striped align-middle mb-0">
+
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Tipo</th>
+            <th>Categoria</th>
+            <th>Subcategoria</th>
+            <th>Setor</th>
+            <th>Cliente</th>
+            <th>Status</th>
+            <th>Valor</th>
+            <th>Descrição</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for l in lancamentos %}
+            <tr>
+              <td>{{ l.data.strftime('%d/%m/%Y') if l.data else '-' }}</td>
+
+              <td>
+                {% if l.tipo == "RECEITA" %}
+                  <span class="badge bg-success">Receita</span>
+                {% elif l.tipo == "DESPESA" %}
+                  <span class="badge bg-danger">Despesa</span>
+                {% else %}
+                  <span class="badge bg-secondary">{{ l.tipo or "-" }}</span>
+                {% endif %}
+              </td>
+
+              <td>{{ l.categoria or '-' }}</td>
+              <td>{{ l.subcategoria or '-' }}</td>
+              <td>{{ l.setor or '-' }}</td>
+              <td>{{ l.cliente or '-' }}</td>
+
+              <td>
+                {% if l.status in ["PAGO", "RECEBIDO", "OK"] %}
+                  <span class="badge bg-success">{{ l.status }}</span>
+                {% elif l.status == "PENDENTE" %}
+                  <span class="badge bg-warning text-dark">PENDENTE</span>
+                {% elif l.status == "CANCELADO" %}
+                  <span class="badge bg-secondary">CANCELADO</span>
+                {% else %}
+                  <span class="badge bg-secondary">{{ l.status or "-" }}</span>
+                {% endif %}
+              </td>
+
+              <td>
+                <strong>
+                  R$ {{ "%.2f"|format(l.valor) }}
+                </strong>
+              </td>
+
+              <td>{{ l.descricao or '-' }}</td>
+
+              <td>
+                <div class="d-flex gap-1">
+                  <a href="/gestao/lancamentos/editar/{{ l.id }}"
+                     class="btn btn-warning btn-sm">
+                    ✏️
+                  </a>
+
+                  <a href="/gestao/lancamentos/excluir/{{ l.id }}"
+                     class="btn btn-danger btn-sm"
+                     onclick="return confirm('Tem certeza que deseja excluir este lançamento?')">
+                    🗑️
+                  </a>
+                </div>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="10" class="text-center text-muted py-4">
+                Nenhum lançamento encontrado.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+
+      </table>
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}
