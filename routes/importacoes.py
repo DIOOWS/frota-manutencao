@@ -1,0 +1,378 @@
+from flask import Blueprint, render_template, request, redirect, flash
+from utils.auth import gestao_required
+from database import db
+from models.conta_pagar_importada import ContaPagarImportada
+from models.conta_receber_importada import ContaReceberImportada
+from datetime import datetime
+from decimal import Decimal
+from io import BytesIO
+import openpyxl
+
+
+importacoes_bp = Blueprint(
+    "importacoes",
+    __name__,
+    url_prefix="/gestao/importacoes"
+)
+
+
+# =========================================================
+# HELPERS
+# =========================================================
+
+def texto(valor):
+    if valor is None:
+        return ""
+    return str(valor).strip()
+
+
+def normalizar_bool(valor):
+    if valor is True:
+        return True
+
+    valor_txt = texto(valor).upper()
+
+    return valor_txt in ["TRUE", "VERDADEIRO", "SIM", "S", "1", "PAGO", "OK"]
+
+
+def normalizar_decimal(valor):
+    if valor is None or valor == "":
+        return Decimal("0.00")
+
+    if isinstance(valor, (int, float, Decimal)):
+        return Decimal(str(valor)).quantize(Decimal("0.01"))
+
+    valor_txt = str(valor).strip()
+    valor_txt = valor_txt.replace("R$", "")
+    valor_txt = valor_txt.replace(".", "")
+    valor_txt = valor_txt.replace(",", ".")
+    valor_txt = valor_txt.strip()
+
+    try:
+        return Decimal(valor_txt).quantize(Decimal("0.01"))
+    except Exception:
+        return Decimal("0.00")
+
+
+def normalizar_data(valor):
+    if not valor:
+        return None
+
+    if isinstance(valor, datetime):
+        return valor
+
+    formatos = [
+        "%d/%m/%Y %H:%M:%S",
+        "%d/%m/%Y %H:%M",
+        "%d/%m/%Y",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d",
+    ]
+
+    valor_txt = texto(valor)
+
+    for formato in formatos:
+        try:
+            return datetime.strptime(valor_txt, formato)
+        except Exception:
+            pass
+
+    return None
+
+
+def identificar_setor(plano_contas, receita=False):
+    plano = texto(plano_contas).upper()
+
+    if plano.endswith(" T"):
+        return "LOGÍSTICA"
+
+    if receita:
+        return "GERAL"
+
+    return "ASSISTÊNCIA"
+
+
+def limpar_categoria(plano_contas):
+    plano = texto(plano_contas)
+
+    if plano.upper().endswith(" T"):
+        return plano[:-2].strip()
+
+    return plano
+
+
+def achar_linha_cabecalho(sheet, primeira_coluna):
+    """
+    Procura a linha onde começa o cabeçalho.
+    Ex.: primeira coluna = "Nº Fatura"
+    """
+    primeira_coluna = primeira_coluna.upper()
+
+    for row in sheet.iter_rows():
+        valor = texto(row[0].value).upper()
+
+        if valor == primeira_coluna:
+            return row[0].row
+
+    return None
+
+
+def valor_por_coluna(row_dict, nome):
+    return row_dict.get(nome, "")
+
+
+def ler_planilha_upload(file_storage):
+    conteudo = file_storage.read()
+    workbook = openpyxl.load_workbook(BytesIO(conteudo), data_only=True)
+    return workbook.active
+
+
+def montar_linhas(sheet, header_row):
+    headers = []
+
+    for cell in sheet[header_row]:
+        headers.append(texto(cell.value))
+
+    linhas = []
+
+    for row in sheet.iter_rows(min_row=header_row + 1, values_only=True):
+        if not row or all(v is None or texto(v) == "" for v in row):
+            continue
+
+        item = {}
+
+        for idx, header in enumerate(headers):
+            if header:
+                item[header] = row[idx] if idx < len(row) else None
+
+        linhas.append(item)
+
+    return linhas
+
+
+# =========================================================
+# TELA ÚNICA DE IMPORTAÇÕES
+# =========================================================
+
+@importacoes_bp.route("/")
+@gestao_required
+def index():
+
+    contas_pagar = ContaPagarImportada.query.order_by(
+        ContaPagarImportada.data_vencimento.asc(),
+        ContaPagarImportada.id.asc()
+    ).all()
+
+    contas_receber = ContaReceberImportada.query.order_by(
+        ContaReceberImportada.data_vencimento.asc(),
+        ContaReceberImportada.id.asc()
+    ).all()
+
+    total_pagar = sum([float(c.valor or 0) for c in contas_pagar])
+    total_pagar_pago = sum([float(c.valor or 0) for c in contas_pagar if c.pago])
+    total_pagar_pendente = sum([float(c.valor or 0) for c in contas_pagar if not c.pago])
+
+    total_pagar_assistencia = sum([
+        float(c.valor or 0) for c in contas_pagar
+        if c.setor == "ASSISTÊNCIA"
+    ])
+
+    total_pagar_logistica = sum([
+        float(c.valor or 0) for c in contas_pagar
+        if c.setor == "LOGÍSTICA"
+    ])
+
+    total_receber = sum([float(c.total or c.valor or 0) for c in contas_receber])
+    total_receber_pago = sum([
+        float(c.total or c.valor or 0) for c in contas_receber
+        if c.pago
+    ])
+    total_receber_pendente = sum([
+        float(c.total or c.valor or 0) for c in contas_receber
+        if not c.pago
+    ])
+
+    return render_template(
+        "gestao/importacoes.html",
+
+        contas_pagar=contas_pagar,
+        contas_receber=contas_receber,
+
+        total_pagar=total_pagar,
+        total_pagar_pago=total_pagar_pago,
+        total_pagar_pendente=total_pagar_pendente,
+        total_pagar_assistencia=total_pagar_assistencia,
+        total_pagar_logistica=total_pagar_logistica,
+
+        total_receber=total_receber,
+        total_receber_pago=total_receber_pago,
+        total_receber_pendente=total_receber_pendente
+    )
+
+
+# =========================================================
+# IMPORTAR CONTAS A PAGAR
+# =========================================================
+
+@importacoes_bp.route("/contas-a-pagar", methods=["POST"])
+@gestao_required
+def importar_contas_pagar():
+
+    arquivo = request.files.get("arquivo_pagar")
+
+    if not arquivo or not arquivo.filename:
+        flash("Selecione uma planilha de Contas a Pagar.", "danger")
+        return redirect("/gestao/importacoes/")
+
+    try:
+        sheet = ler_planilha_upload(arquivo)
+        header_row = achar_linha_cabecalho(sheet, "Nº Fatura")
+
+        if not header_row:
+            flash("Cabeçalho de Contas a Pagar não encontrado.", "danger")
+            return redirect("/gestao/importacoes/")
+
+        linhas = montar_linhas(sheet, header_row)
+
+        # Sobrescreve a importação anterior SOMENTE de contas a pagar
+        ContaPagarImportada.query.delete()
+
+        total_importado = 0
+
+        for linha in linhas:
+            plano_contas = texto(valor_por_coluna(linha, "Pl. Contas"))
+
+            data_pagamento = normalizar_data(valor_por_coluna(linha, "Dt. Pgto"))
+            data_vencimento = normalizar_data(valor_por_coluna(linha, "Dt. Vencto"))
+            data_documento = normalizar_data(valor_por_coluna(linha, "Dt. Docto"))
+
+            data_base = data_pagamento or data_vencimento or data_documento
+
+            pago = normalizar_bool(valor_por_coluna(linha, "Pg?"))
+
+            conta = ContaPagarImportada(
+                numero_fatura=texto(valor_por_coluna(linha, "Nº Fatura")),
+                fornecedor_funcionario=texto(valor_por_coluna(linha, "Fornecedor/Funcionário")),
+                telefone=texto(valor_por_coluna(linha, "Telefone")),
+                email=texto(valor_por_coluna(linha, "Email")),
+
+                plano_contas=plano_contas,
+                categoria=limpar_categoria(plano_contas),
+                setor=identificar_setor(plano_contas, receita=False),
+
+                data_documento=data_documento,
+                data_vencimento=data_vencimento,
+                data_pagamento=data_pagamento,
+
+                valor=normalizar_decimal(valor_por_coluna(linha, "Valor")),
+
+                pago=pago,
+                status="PAGO" if pago else "PENDENTE",
+
+                observacoes=texto(valor_por_coluna(linha, "Observações")),
+
+                mes=data_base.month if data_base else None,
+                ano=data_base.year if data_base else None,
+            )
+
+            db.session.add(conta)
+            total_importado += 1
+
+        db.session.commit()
+
+        flash(f"Contas a Pagar importadas com sucesso! {total_importado} linha(s).", "success")
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao importar Contas a Pagar: {str(e)}", "danger")
+
+    return redirect("/gestao/importacoes/")
+
+
+# =========================================================
+# IMPORTAR CONTAS A RECEBER
+# =========================================================
+
+@importacoes_bp.route("/contas-a-receber", methods=["POST"])
+@gestao_required
+def importar_contas_receber():
+
+    arquivo = request.files.get("arquivo_receber")
+
+    if not arquivo or not arquivo.filename:
+        flash("Selecione uma planilha de Contas a Receber.", "danger")
+        return redirect("/gestao/importacoes/")
+
+    try:
+        sheet = ler_planilha_upload(arquivo)
+        header_row = achar_linha_cabecalho(sheet, "Nº Fatura")
+
+        if not header_row:
+            flash("Cabeçalho de Contas a Receber não encontrado.", "danger")
+            return redirect("/gestao/importacoes/")
+
+        linhas = montar_linhas(sheet, header_row)
+
+        # Sobrescreve a importação anterior SOMENTE de contas a receber
+        ContaReceberImportada.query.delete()
+
+        total_importado = 0
+
+        for linha in linhas:
+            plano_contas = texto(valor_por_coluna(linha, "Pl. Contas"))
+
+            data_pagamento = normalizar_data(valor_por_coluna(linha, "Dt. Pgto"))
+            data_vencimento = normalizar_data(valor_por_coluna(linha, "Dt. Vencto"))
+            data_documento = normalizar_data(valor_por_coluna(linha, "Dt. Docto"))
+
+            data_base = data_pagamento or data_vencimento or data_documento
+
+            pago = normalizar_bool(valor_por_coluna(linha, "Pg?"))
+            valor = normalizar_decimal(valor_por_coluna(linha, "Valor"))
+            juros = normalizar_decimal(valor_por_coluna(linha, "Juros"))
+            total = normalizar_decimal(valor_por_coluna(linha, "Total"))
+
+            if total == Decimal("0.00"):
+                total = valor + juros
+
+            conta = ContaReceberImportada(
+                numero_fatura=texto(valor_por_coluna(linha, "Nº Fatura")),
+                cliente=texto(valor_por_coluna(linha, "Cliente")),
+                telefone=texto(valor_por_coluna(linha, "Telefone")),
+                email=texto(valor_por_coluna(linha, "Email")),
+
+                plano_contas=plano_contas,
+                categoria=limpar_categoria(plano_contas),
+                setor=identificar_setor(plano_contas, receita=True),
+
+                cobranca=texto(valor_por_coluna(linha, "Cobrança")),
+
+                data_documento=data_documento,
+                data_vencimento=data_vencimento,
+                data_pagamento=data_pagamento,
+
+                valor=valor,
+                juros=juros,
+                total=total,
+
+                pago=pago,
+                status="RECEBIDO" if pago else "PENDENTE",
+
+                observacoes=texto(valor_por_coluna(linha, "Observações")),
+
+                mes=data_base.month if data_base else None,
+                ano=data_base.year if data_base else None,
+            )
+
+            db.session.add(conta)
+            total_importado += 1
+
+        db.session.commit()
+
+        flash(f"Contas a Receber importadas com sucesso! {total_importado} linha(s).", "success")
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao importar Contas a Receber: {str(e)}", "danger")
+
+    return redirect("/gestao/importacoes/")

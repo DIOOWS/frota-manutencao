@@ -10,7 +10,8 @@ def admin_only():
     if not session.get("user_id"):
         return redirect("/login")
 
-    if session.get("user_role") != "admin":
+    # 🔥 ADMIN E GESTÃO TÊM ACESSO
+    if session.get("user_role") not in ["admin", "gestao"]:
         abort(403)
 
 

@@ -92,6 +92,8 @@ from models.manutencao import Manutencao
 from models.afericao_termometro import AfericaoTermometro
 from models.lancamento_financeiro import LancamentoFinanceiro
 from models.fechamento_mensal import FechamentoMensal
+from models.conta_pagar_importada import ContaPagarImportada
+from models.conta_receber_importada import ContaReceberImportada
 
 # ==========================================
 # 🚨 GARANTIR COLUNAS / TABELAS
@@ -163,7 +165,7 @@ from routes.admin import admin_bp
 from routes.frotas import frotas_bp
 from routes.assistente import assistente_bp
 from routes.gestao import gestao_bp
-
+from routes.importacoes import importacoes_bp
 
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(manutencao_bp)
@@ -173,6 +175,7 @@ app.register_blueprint(admin_bp)
 app.register_blueprint(frotas_bp)
 app.register_blueprint(assistente_bp)
 app.register_blueprint(gestao_bp)
+app.register_blueprint(importacoes_bp)
 
 # ==========================================
 # 🔥 TESTE

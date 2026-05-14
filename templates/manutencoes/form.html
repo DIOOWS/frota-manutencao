@@ -77,7 +77,7 @@
     <option value="Componente elétrico queimado" {% if m and m.problema|upper == "COMPONENTE ELÉTRICO QUEIMADO" %}selected{% endif %}>Componente elétrico queimado</option>
     <option value="Compressor queimado" {% if m and m.problema|upper == "COMPRESSOR QUEIMADO" %}selected{% endif %}>Compressor queimado</option>
     <option value="Tomada avariada" {% if m and m.problema|upper == "TOMADA AVARIADA" %}selected{% endif %}>Tomada avariada</option>
-    <option value="Estrutura avariada" {% if m and m.problema|upper == "ESTRUTURA AVARIADA" %}selected{% endif %}>Estrutura avariada</option>
+    <option value="Queda de energia" {% if m and m.problema|upper == "QUEDA DE ENERGIA" %}selected{% endif %}>Queda de energia</option>
   </select>
 
   <label>Causa</label>
@@ -228,8 +228,6 @@ document.addEventListener("DOMContentLoaded", function () {
     "Tomada avariada": ["Mau uso", "Desgaste natural", "Sobrecarga elétrica", "Mal contato", "Tomada queimada"],
     "Estrutura avariada": ["Mau uso"],
     "Queda de energia": ["Não apresentou problema", "Componente eletrico desarmado (djuntor)"]
-
-
   };
 
   function carregarCausas() {

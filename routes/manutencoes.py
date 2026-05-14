@@ -19,6 +19,13 @@ manutencao_bp = Blueprint("manutencao", __name__, url_prefix="/manutencoes")
 
 
 # ==========================================
+# 🔥 PERMISSÃO OPERACIONAL
+# ==========================================
+def usuario_tem_permissao_operacional():
+    return session.get("user_role") in ["admin", "gestao"]
+
+
+# ==========================================
 # 🔥 HELPERS CLOUDINARY
 # ==========================================
 def cloudinary_esta_configurado():
@@ -253,7 +260,7 @@ def excluir_imagem(id):
     if not session.get("user_id"):
         return jsonify({"ok": False, "message": "Sessão expirada."}), 401
 
-    if session.get("user_role") != "admin":
+    if not usuario_tem_permissao_operacional():
         return jsonify({"ok": False, "message": "Sem permissão."}), 403
 
     m = Manutencao.query.get_or_404(id)
@@ -295,7 +302,7 @@ def excluir_imagem_afericao(afericao_id):
     if not session.get("user_id"):
         return jsonify({"ok": False, "message": "Sessão expirada."}), 401
 
-    if session.get("user_role") != "admin":
+    if not usuario_tem_permissao_operacional():
         return jsonify({"ok": False, "message": "Sem permissão."}), 403
 
     afericao = AfericaoTermometro.query.get_or_404(afericao_id)
@@ -337,7 +344,7 @@ def nova():
     if not session.get("user_id"):
         return redirect("/login")
 
-    if session.get("user_role") != "admin":
+    if not usuario_tem_permissao_operacional():
         return redirect("/")
 
     if request.method == "POST":
@@ -497,7 +504,7 @@ def editar(id):
     if not session.get("user_id"):
         return redirect("/login")
 
-    if session.get("user_role") != "admin":
+    if not usuario_tem_permissao_operacional():
         return redirect("/")
 
     m = Manutencao.query.get_or_404(id)
@@ -595,7 +602,7 @@ def excluir(id):
     if not session.get("user_id"):
         return redirect("/login")
 
-    if session.get("user_role") != "admin":
+    if not usuario_tem_permissao_operacional():
         return redirect("/")
 
     m = Manutencao.query.get_or_404(id)

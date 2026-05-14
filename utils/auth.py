@@ -16,7 +16,8 @@ def login_required(f):
 
 def admin_required(f):
     """
-    Admin e Gestão têm acesso operacional completo.
+    Admin e Gestão acessam rotas operacionais/admin.
+    Gestão tem acesso completo ao sistema.
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -34,7 +35,7 @@ def admin_required(f):
 
 def admin_ou_gestao_required(f):
     """
-    Alias para deixar o código mais claro em rotas operacionais.
+    Mesma regra do admin_required, mas com nome mais claro.
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -52,7 +53,7 @@ def admin_ou_gestao_required(f):
 
 def gestao_required(f):
     """
-    Apenas Gestão acessa a área financeira.
+    Apenas Gestão acessa financeiro/importações/fechamento.
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
