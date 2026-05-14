@@ -115,11 +115,14 @@ def calcular_totais_financeiros(mes, ano, saldo_inicial=0):
         "saldo_final": saldo_final,
         "margem_operacional": margem_operacional,
 
-        "ranking_despesas": despesas_counter.most_common(10),
-        "ranking_despesas_assistencia": despesas_assistencia_counter.most_common(10),
-        "ranking_despesas_logistica": despesas_logistica_counter.most_common(10),
-        "ranking_receitas": receitas_counter.most_common(10),
-        "ranking_clientes": clientes_counter.most_common(10),
+        # 🔥 SEM LIMITE
+        # Antes estava most_common(10), por isso só apareciam 10 itens.
+        # Agora aparece tudo que existir no mês/ano filtrado.
+        "ranking_despesas": despesas_counter.most_common(),
+        "ranking_despesas_assistencia": despesas_assistencia_counter.most_common(),
+        "ranking_despesas_logistica": despesas_logistica_counter.most_common(),
+        "ranking_receitas": receitas_counter.most_common(),
+        "ranking_clientes": clientes_counter.most_common(),
     }
 
 
