@@ -18,7 +18,6 @@
 
 </div>
 
-
 <table class="table table-striped">
 
   <thead>
@@ -37,8 +36,11 @@
       <td>{{ u.id }}</td>
       <td>{{ u.nome }}</td>
       <td>{{ u.email }}</td>
+
       <td>
-        {% if u.role == "admin" %}
+        {% if u.role == "gestao" %}
+          <span class="badge bg-primary">Gestão</span>
+        {% elif u.role == "admin" %}
           <span class="badge bg-danger">Admin</span>
         {% else %}
           <span class="badge bg-secondary">Usuário</span>

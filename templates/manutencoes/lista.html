@@ -127,7 +127,7 @@
                 👁
               </button>
 
-              {% if session.get("user_role") == "admin" %}
+              {% if session.get("user_role") in ["admin", "gestao", "gestor"] %}
                 <a href="/manutencoes/editar/{{ m.id }}" class="btn btn-warning btn-sm">
                   ✏️
                 </a>

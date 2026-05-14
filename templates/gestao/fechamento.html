@@ -1,10 +1,157 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}Fechamento Mensal{% endblock %}
 
-</body>
-</html>
+{% block content %}
+
+<div class="gestao-page">
+
+  <!-- HEADER -->
+  <div class="gestao-header">
+    <div>
+      <h2>Fechamento Mensal</h2>
+      <p>
+        Fechamento financeiro de {{ "%02d"|format(mes) }}/{{ ano }}
+      </p>
+    </div>
+
+    <div class="d-flex gap-2">
+      <a href="/gestao/dashboard?mes={{ mes }}&ano={{ ano }}" class="btn btn-dark">
+        Dashboard
+      </a>
+
+      <a href="/gestao/importacoes/?mes={{ mes }}&ano={{ ano }}" class="btn btn-primary">
+        Importações
+      </a>
+    </div>
+  </div>
+
+  <!-- FILTRO -->
+  <form method="GET" action="/gestao/fechamento" class="gestao-filtro mb-4">
+
+    <input type="number"
+           name="mes"
+           min="1"
+           max="12"
+           value="{{ mes }}"
+           class="form-control"
+           placeholder="Mês">
+
+    <input type="number"
+           name="ano"
+           value="{{ ano }}"
+           class="form-control"
+           placeholder="Ano">
+
+    <button class="btn btn-primary">
+      Visualizar mês
+    </button>
+
+  </form>
+
+  {% if fechamento and fechamento.fechado %}
+    <div class="alert alert-success">
+      ✅ Este mês já possui fechamento salvo.
+    </div>
+  {% else %}
+    <div class="alert alert-warning">
+      ⚠️ Este mês ainda não foi fechado. Informe o saldo inicial e salve o fechamento.
+    </div>
+  {% endif %}
+
+  <!-- FORM FECHAMENTO -->
+  <form method="POST">
+
+    <input type="hidden" name="mes" value="{{ mes }}">
+    <input type="hidden" name="ano" value="{{ ano }}">
+
+    <div class="gestao-card mb-4">
+
+      <h5>Saldo Inicial</h5>
+
+      <div class="p-3">
+        <label class="fw-bold mb-2">
+          Informe o saldo inicial do mês
+        </label>
+
+        <input type="number"
+               name="saldo_inicial"
+               step="0.01"
+               class="form-control"
+               value="{{ saldo_inicial }}"
+               required>
+
+        <small class="text-muted d-block mt-2">
+          O saldo final será calculado assim:
+          Saldo Inicial + Entradas - Saídas.
+        </small>
+      </div>
+
+    </div>
+
+    <!-- KPIs -->
+    <div class="gestao-kpis">
+
+      <div class="gestao-kpi">
+        <span>Saldo Inicial</span>
+        <strong>R$ {{ "%.2f"|format(saldo_inicial) }}</strong>
+      </div>
+
+      <div class="gestao-kpi success">
+        <span>Entradas</span>
+        <strong>R$ {{ "%.2f"|format(total_entradas) }}</strong>
+      </div>
+
+      <div class="gestao-kpi danger">
+        <span>Saídas</span>
+        <strong>R$ {{ "%.2f"|format(total_saidas) }}</strong>
+      </div>
+
+      <div class="gestao-kpi {% if lucro_mes < 0 %}danger{% else %}success{% endif %}">
+        <span>Lucro do Mês</span>
+        <strong>R$ {{ "%.2f"|format(lucro_mes) }}</strong>
+      </div>
+
+      <div class="gestao-kpi">
+        <span>Saldo Final</span>
+        <strong>R$ {{ "%.2f"|format(saldo_final) }}</strong>
+      </div>
+
+      <div class="gestao-kpi danger">
+        <span>A Pagar</span>
+        <strong>R$ {{ "%.2f"|format(total_a_pagar) }}</strong>
+      </div>
+
+      <div class="gestao-kpi success">
+        <span>A Receber</span>
+        <strong>R$ {{ "%.2f"|format(total_a_receber) }}</strong>
+      </div>
+
+      <div class="gestao-kpi {% if margem_operacional < 0 %}danger{% else %}success{% endif %}">
+        <span>Margem Operacional</span>
+        <strong>{{ "%.2f"|format(margem_operacional) }}%</strong>
+      </div>
+
+    </div>
+
+    <!-- AÇÕES -->
+    <div class="mt-4 d-flex gap-2 flex-wrap">
+
+      <button class="btn btn-success">
+        Salvar fechamento
+      </button>
+
+      <a href="/gestao/dashboard?mes={{ mes }}&ano={{ ano }}" class="btn btn-dark">
+        Voltar para dashboard
+      </a>
+
+      <a href="/gestao/importacoes/?mes={{ mes }}&ano={{ ano }}" class="btn btn-primary">
+        Ver importações do mês
+      </a>
+
+    </div>
+
+  </form>
+
+</div>
+
+{% endblock %}

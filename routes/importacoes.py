@@ -32,7 +32,16 @@ def normalizar_bool(valor):
 
     valor_txt = texto(valor).upper()
 
-    return valor_txt in ["TRUE", "VERDADEIRO", "SIM", "S", "1", "PAGO", "OK"]
+    return valor_txt in [
+        "TRUE",
+        "VERDADEIRO",
+        "SIM",
+        "S",
+        "1",
+        "PAGO",
+        "OK",
+        "RECEBIDO"
+    ]
 
 
 def normalizar_decimal(valor):
@@ -102,10 +111,6 @@ def limpar_categoria(plano_contas):
 
 
 def achar_linha_cabecalho(sheet, primeira_coluna):
-    """
-    Procura a linha onde começa o cabeçalho.
-    Ex.: primeira coluna = "Nº Fatura"
-    """
     primeira_coluna = primeira_coluna.upper()
 
     for row in sheet.iter_rows():
@@ -150,20 +155,45 @@ def montar_linhas(sheet, header_row):
     return linhas
 
 
+def validar_mes_ano(mes, ano):
+    if not mes or not ano:
+        return False
+
+    if mes < 1 or mes > 12:
+        return False
+
+    if ano < 2000:
+        return False
+
+    return True
+
+
 # =========================================================
 # TELA ÚNICA DE IMPORTAÇÕES
 # =========================================================
 
-@importacoes_bp.route("/")
+@importacoes_bp.route("", strict_slashes=False)
+@importacoes_bp.route("/", strict_slashes=False)
 @gestao_required
 def index():
 
-    contas_pagar = ContaPagarImportada.query.order_by(
+    hoje = datetime.now()
+
+    mes = request.args.get("mes", type=int) or hoje.month
+    ano = request.args.get("ano", type=int) or hoje.year
+
+    contas_pagar = ContaPagarImportada.query.filter_by(
+        mes=mes,
+        ano=ano
+    ).order_by(
         ContaPagarImportada.data_vencimento.asc(),
         ContaPagarImportada.id.asc()
     ).all()
 
-    contas_receber = ContaReceberImportada.query.order_by(
+    contas_receber = ContaReceberImportada.query.filter_by(
+        mes=mes,
+        ano=ano
+    ).order_by(
         ContaReceberImportada.data_vencimento.asc(),
         ContaReceberImportada.id.asc()
     ).all()
@@ -183,10 +213,12 @@ def index():
     ])
 
     total_receber = sum([float(c.total or c.valor or 0) for c in contas_receber])
+
     total_receber_pago = sum([
         float(c.total or c.valor or 0) for c in contas_receber
         if c.pago
     ])
+
     total_receber_pendente = sum([
         float(c.total or c.valor or 0) for c in contas_receber
         if not c.pago
@@ -194,6 +226,9 @@ def index():
 
     return render_template(
         "gestao/importacoes.html",
+
+        mes=mes,
+        ano=ano,
 
         contas_pagar=contas_pagar,
         contas_receber=contas_receber,
@@ -219,10 +254,16 @@ def index():
 def importar_contas_pagar():
 
     arquivo = request.files.get("arquivo_pagar")
+    mes_importacao = request.form.get("mes_pagar", type=int)
+    ano_importacao = request.form.get("ano_pagar", type=int)
+
+    if not validar_mes_ano(mes_importacao, ano_importacao):
+        flash("Informe mês e ano válidos para Contas a Pagar.", "danger")
+        return redirect("/gestao/importacoes/")
 
     if not arquivo or not arquivo.filename:
         flash("Selecione uma planilha de Contas a Pagar.", "danger")
-        return redirect("/gestao/importacoes/")
+        return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
 
     try:
         sheet = ler_planilha_upload(arquivo)
@@ -230,12 +271,15 @@ def importar_contas_pagar():
 
         if not header_row:
             flash("Cabeçalho de Contas a Pagar não encontrado.", "danger")
-            return redirect("/gestao/importacoes/")
+            return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
 
         linhas = montar_linhas(sheet, header_row)
 
-        # Sobrescreve a importação anterior SOMENTE de contas a pagar
-        ContaPagarImportada.query.delete()
+        # Sobrescreve somente o mês/ano importado
+        ContaPagarImportada.query.filter_by(
+            mes=mes_importacao,
+            ano=ano_importacao
+        ).delete()
 
         total_importado = 0
 
@@ -245,8 +289,6 @@ def importar_contas_pagar():
             data_pagamento = normalizar_data(valor_por_coluna(linha, "Dt. Pgto"))
             data_vencimento = normalizar_data(valor_por_coluna(linha, "Dt. Vencto"))
             data_documento = normalizar_data(valor_por_coluna(linha, "Dt. Docto"))
-
-            data_base = data_pagamento or data_vencimento or data_documento
 
             pago = normalizar_bool(valor_por_coluna(linha, "Pg?"))
 
@@ -271,8 +313,8 @@ def importar_contas_pagar():
 
                 observacoes=texto(valor_por_coluna(linha, "Observações")),
 
-                mes=data_base.month if data_base else None,
-                ano=data_base.year if data_base else None,
+                mes=mes_importacao,
+                ano=ano_importacao,
             )
 
             db.session.add(conta)
@@ -280,13 +322,16 @@ def importar_contas_pagar():
 
         db.session.commit()
 
-        flash(f"Contas a Pagar importadas com sucesso! {total_importado} linha(s).", "success")
+        flash(
+            f"Contas a Pagar de {mes_importacao:02d}/{ano_importacao} importadas com sucesso! {total_importado} linha(s).",
+            "success"
+        )
 
     except Exception as e:
         db.session.rollback()
         flash(f"Erro ao importar Contas a Pagar: {str(e)}", "danger")
 
-    return redirect("/gestao/importacoes/")
+    return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
 
 
 # =========================================================
@@ -298,10 +343,16 @@ def importar_contas_pagar():
 def importar_contas_receber():
 
     arquivo = request.files.get("arquivo_receber")
+    mes_importacao = request.form.get("mes_receber", type=int)
+    ano_importacao = request.form.get("ano_receber", type=int)
+
+    if not validar_mes_ano(mes_importacao, ano_importacao):
+        flash("Informe mês e ano válidos para Contas a Receber.", "danger")
+        return redirect("/gestao/importacoes/")
 
     if not arquivo or not arquivo.filename:
         flash("Selecione uma planilha de Contas a Receber.", "danger")
-        return redirect("/gestao/importacoes/")
+        return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
 
     try:
         sheet = ler_planilha_upload(arquivo)
@@ -309,12 +360,15 @@ def importar_contas_receber():
 
         if not header_row:
             flash("Cabeçalho de Contas a Receber não encontrado.", "danger")
-            return redirect("/gestao/importacoes/")
+            return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
 
         linhas = montar_linhas(sheet, header_row)
 
-        # Sobrescreve a importação anterior SOMENTE de contas a receber
-        ContaReceberImportada.query.delete()
+        # Sobrescreve somente o mês/ano importado
+        ContaReceberImportada.query.filter_by(
+            mes=mes_importacao,
+            ano=ano_importacao
+        ).delete()
 
         total_importado = 0
 
@@ -324,8 +378,6 @@ def importar_contas_receber():
             data_pagamento = normalizar_data(valor_por_coluna(linha, "Dt. Pgto"))
             data_vencimento = normalizar_data(valor_por_coluna(linha, "Dt. Vencto"))
             data_documento = normalizar_data(valor_por_coluna(linha, "Dt. Docto"))
-
-            data_base = data_pagamento or data_vencimento or data_documento
 
             pago = normalizar_bool(valor_por_coluna(linha, "Pg?"))
             valor = normalizar_decimal(valor_por_coluna(linha, "Valor"))
@@ -360,8 +412,8 @@ def importar_contas_receber():
 
                 observacoes=texto(valor_por_coluna(linha, "Observações")),
 
-                mes=data_base.month if data_base else None,
-                ano=data_base.year if data_base else None,
+                mes=mes_importacao,
+                ano=ano_importacao,
             )
 
             db.session.add(conta)
@@ -369,10 +421,13 @@ def importar_contas_receber():
 
         db.session.commit()
 
-        flash(f"Contas a Receber importadas com sucesso! {total_importado} linha(s).", "success")
+        flash(
+            f"Contas a Receber de {mes_importacao:02d}/{ano_importacao} importadas com sucesso! {total_importado} linha(s).",
+            "success"
+        )
 
     except Exception as e:
         db.session.rollback()
         flash(f"Erro ao importar Contas a Receber: {str(e)}", "danger")
 
-    return redirect("/gestao/importacoes/")
+    return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")

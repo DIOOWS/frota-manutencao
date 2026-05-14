@@ -11,18 +11,42 @@
       <p>Fechamento de {{ "%02d"|format(mes) }}/{{ ano }}</p>
     </div>
 
-    <a href="/gestao/lancamentos" class="btn btn-dark">
-      Lançamentos
-    </a>
+    <div class="d-flex gap-2">
+      <a href="/gestao/importacoes/?mes={{ mes }}&ano={{ ano }}" class="btn btn-primary">
+        Importações
+      </a>
+
+      <a href="/gestao/fechamento?mes={{ mes }}&ano={{ ano }}" class="btn btn-secondary">
+        Fechamento
+      </a>
+
+      <a href="/gestao/lancamentos?mes={{ mes }}&ano={{ ano }}" class="btn btn-dark">
+        Lançamentos
+      </a>
+    </div>
   </div>
 
   <form method="GET" class="gestao-filtro">
-    <input type="number" name="mes" min="1" max="12" value="{{ mes }}" class="form-control">
-    <input type="number" name="ano" value="{{ ano }}" class="form-control">
-    <button class="btn btn-primary">Filtrar</button>
+    <input type="number"
+           name="mes"
+           min="1"
+           max="12"
+           value="{{ mes }}"
+           class="form-control"
+           placeholder="Mês">
+
+    <input type="number"
+           name="ano"
+           value="{{ ano }}"
+           class="form-control"
+           placeholder="Ano">
+
+    <button class="btn btn-primary">
+      Filtrar
+    </button>
   </form>
 
-  <div class="gestao-kpis">
+  <div class="gestao-kpis mt-3">
 
     <div class="gestao-kpi">
       <span>Saldo Inicial</span>
@@ -68,22 +92,37 @@
 
   <div class="row g-4 mt-2">
 
-    <div class="col-md-4">
+    <div class="col-md-3">
       <div class="gestao-card">
-        <h5>Ranking de Despesas</h5>
+        <h5>Ranking Despesas Assistência</h5>
 
-        {% for nome, valor in ranking_despesas %}
+        {% for nome, valor in ranking_despesas_assistencia %}
           <div class="gestao-ranking-item">
             <span>{{ nome }}</span>
             <strong>R$ {{ "%.2f"|format(valor) }}</strong>
           </div>
         {% else %}
-          <p class="text-muted">Sem despesas no período.</p>
+          <p class="text-muted p-3">Sem despesas de assistência no período.</p>
         {% endfor %}
       </div>
     </div>
 
-    <div class="col-md-4">
+    <div class="col-md-3">
+      <div class="gestao-card">
+        <h5>Ranking Despesas Logística</h5>
+
+        {% for nome, valor in ranking_despesas_logistica %}
+          <div class="gestao-ranking-item">
+            <span>{{ nome }}</span>
+            <strong>R$ {{ "%.2f"|format(valor) }}</strong>
+          </div>
+        {% else %}
+          <p class="text-muted p-3">Sem despesas de logística no período.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="col-md-3">
       <div class="gestao-card">
         <h5>Ranking de Receitas</h5>
 
@@ -93,12 +132,12 @@
             <strong>R$ {{ "%.2f"|format(valor) }}</strong>
           </div>
         {% else %}
-          <p class="text-muted">Sem receitas no período.</p>
+          <p class="text-muted p-3">Sem receitas no período.</p>
         {% endfor %}
       </div>
     </div>
 
-    <div class="col-md-4">
+    <div class="col-md-3">
       <div class="gestao-card">
         <h5>Ranking Cliente Valor</h5>
 
@@ -108,7 +147,7 @@
             <strong>R$ {{ "%.2f"|format(valor) }}</strong>
           </div>
         {% else %}
-          <p class="text-muted">Sem clientes no período.</p>
+          <p class="text-muted p-3">Sem clientes no período.</p>
         {% endfor %}
       </div>
     </div>

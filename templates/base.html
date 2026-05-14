@@ -53,8 +53,8 @@
       <span>Assistente</span>
     </a>
 
-    <!-- Admin e Gestão acessam a parte operacional -->
-    {% if session.get("user_role") in ["admin", "gestao"] %}
+    <!-- Admin, Gestão e Gestor acessam a parte operacional -->
+    {% if session.get("user_role") in ["admin", "gestao", "gestor"] %}
       <a href="{{ url_for('manutencao.nova') }}" class="skew-item">
         <span>Nova</span>
       </a>
@@ -68,8 +68,8 @@
       </a>
     {% endif %}
 
-    <!-- Somente Gestão acessa financeiro interno EASY -->
-    {% if session.get("user_role") == "gestao" %}
+    <!-- Somente Gestão/Gestor acessa financeiro interno EASY -->
+    {% if session.get("user_role") in ["gestao", "gestor"] %}
       <a href="/gestao/dashboard" class="skew-item">
         <span>Gestão</span>
       </a>

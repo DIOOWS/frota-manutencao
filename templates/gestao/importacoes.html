@@ -9,26 +9,47 @@
   <div class="gestao-header">
     <div>
       <h2>Importações Financeiras</h2>
-      <p>Importe as planilhas internas da EASY e espelhe os dados no sistema</p>
+      <p>Importe as planilhas internas da EASY e espelhe os dados por mês/ano</p>
     </div>
 
     <div class="d-flex gap-2">
-      <a href="/gestao/dashboard" class="btn btn-dark">
+      <a href="/gestao/dashboard?mes={{ mes }}&ano={{ ano }}" class="btn btn-dark">
         Dashboard
       </a>
 
-      <a href="/gestao/fechamento" class="btn btn-primary">
+      <a href="/gestao/fechamento?mes={{ mes }}&ano={{ ano }}" class="btn btn-primary">
         Fechamento
       </a>
     </div>
   </div>
+
+  <!-- FILTRO VISUALIZAÇÃO -->
+  <form method="GET" action="/gestao/importacoes/" class="gestao-filtro mb-4">
+    <input type="number"
+           name="mes"
+           min="1"
+           max="12"
+           value="{{ mes }}"
+           class="form-control"
+           placeholder="Mês">
+
+    <input type="number"
+           name="ano"
+           value="{{ ano }}"
+           class="form-control"
+           placeholder="Ano">
+
+    <button class="btn btn-primary">
+      Visualizar mês
+    </button>
+  </form>
 
   <!-- ========================= -->
   <!-- CONTAS A PAGAR -->
   <!-- ========================= -->
   <div class="gestao-card mb-4">
 
-    <h5>Contas a Pagar</h5>
+    <h5>Contas a Pagar • {{ "%02d"|format(mes) }}/{{ ano }}</h5>
 
     <div class="importacao-box">
 
@@ -37,22 +58,45 @@
             enctype="multipart/form-data"
             class="importacao-form">
 
-        <div>
+        <div class="importacao-form-info">
           <strong>Importar planilha de despesas</strong>
           <small>
-            Pl. Contas com <b>T</b> no final = Logística.
-            Sem <b>T</b> = Assistência.
+            Pl. Contas com <b>T</b> no final = Logística. Sem <b>T</b> = Assistência.
+            A importação sobrescreve somente o mês/ano informado.
           </small>
         </div>
 
-        <input type="file"
-               name="arquivo_pagar"
-               accept=".xlsx,.xlsm"
-               class="form-control"
-               required>
+        <div class="importacao-field">
+          <label>Mês</label>
+          <input type="number"
+                 name="mes_pagar"
+                 min="1"
+                 max="12"
+                 value="{{ mes }}"
+                 class="form-control"
+                 required>
+        </div>
 
-        <button class="btn btn-success">
-          Importar Contas a Pagar
+        <div class="importacao-field">
+          <label>Ano</label>
+          <input type="number"
+                 name="ano_pagar"
+                 value="{{ ano }}"
+                 class="form-control"
+                 required>
+        </div>
+
+        <div class="importacao-field importacao-file">
+          <label>Arquivo Excel</label>
+          <input type="file"
+                 name="arquivo_pagar"
+                 accept=".xlsx,.xlsm"
+                 class="form-control"
+                 required>
+        </div>
+
+        <button class="btn-importacao">
+          📥 Importar despesas
         </button>
 
       </form>
@@ -163,7 +207,7 @@
             {% else %}
               <tr>
                 <td colspan="13" class="text-center text-muted py-4">
-                  Nenhuma planilha de Contas a Pagar importada.
+                  Nenhuma planilha de Contas a Pagar importada para este mês.
                 </td>
               </tr>
             {% endfor %}
@@ -181,7 +225,7 @@
   <!-- ========================= -->
   <div class="gestao-card mb-4">
 
-    <h5>Contas a Receber</h5>
+    <h5>Contas a Receber • {{ "%02d"|format(mes) }}/{{ ano }}</h5>
 
     <div class="importacao-box">
 
@@ -190,22 +234,45 @@
             enctype="multipart/form-data"
             class="importacao-form">
 
-        <div>
+        <div class="importacao-form-info">
           <strong>Importar planilha de receitas</strong>
           <small>
-            A planilha será espelhada e usada para entradas,
-            ranking de receitas e ranking de clientes.
+            A planilha será espelhada e usada para entradas, ranking de receitas
+            e ranking de clientes. A importação sobrescreve somente o mês/ano informado.
           </small>
         </div>
 
-        <input type="file"
-               name="arquivo_receber"
-               accept=".xlsx,.xlsm"
-               class="form-control"
-               required>
+        <div class="importacao-field">
+          <label>Mês</label>
+          <input type="number"
+                 name="mes_receber"
+                 min="1"
+                 max="12"
+                 value="{{ mes }}"
+                 class="form-control"
+                 required>
+        </div>
 
-        <button class="btn btn-success">
-          Importar Contas a Receber
+        <div class="importacao-field">
+          <label>Ano</label>
+          <input type="number"
+                 name="ano_receber"
+                 value="{{ ano }}"
+                 class="form-control"
+                 required>
+        </div>
+
+        <div class="importacao-field importacao-file">
+          <label>Arquivo Excel</label>
+          <input type="file"
+                 name="arquivo_receber"
+                 accept=".xlsx,.xlsm"
+                 class="form-control"
+                 required>
+        </div>
+
+        <button class="btn-importacao">
+          📥 Importar receitas
         </button>
 
       </form>
@@ -319,7 +386,7 @@
             {% else %}
               <tr>
                 <td colspan="16" class="text-center text-muted py-4">
-                  Nenhuma planilha de Contas a Receber importada.
+                  Nenhuma planilha de Contas a Receber importada para este mês.
                 </td>
               </tr>
             {% endfor %}

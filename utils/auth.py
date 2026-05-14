@@ -2,6 +2,10 @@ from functools import wraps
 from flask import session, redirect
 
 
+ROLES_GESTAO = ["gestao", "gestor"]
+ROLES_ADMINISTRATIVAS = ["admin", "gestao", "gestor"]
+
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -14,10 +18,18 @@ def login_required(f):
     return decorated_function
 
 
+def is_gestao():
+    return session.get("user_role") in ROLES_GESTAO
+
+
+def is_admin_ou_gestao():
+    return session.get("user_role") in ROLES_ADMINISTRATIVAS
+
+
 def admin_required(f):
     """
-    Admin e Gestão acessam rotas operacionais/admin.
-    Gestão tem acesso completo ao sistema.
+    Admin e Gestão/Gestor acessam rotas operacionais/admin.
+    Gestão/Gestor tem acesso completo ao sistema.
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -25,7 +37,7 @@ def admin_required(f):
         if not session.get("user_id"):
             return redirect("/login")
 
-        if session.get("user_role") not in ["admin", "gestao"]:
+        if not is_admin_ou_gestao():
             return "Acesso negado 🚫"
 
         return f(*args, **kwargs)
@@ -35,7 +47,7 @@ def admin_required(f):
 
 def admin_ou_gestao_required(f):
     """
-    Mesma regra do admin_required, mas com nome mais claro.
+    Mesma regra do admin_required.
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -43,7 +55,7 @@ def admin_ou_gestao_required(f):
         if not session.get("user_id"):
             return redirect("/login")
 
-        if session.get("user_role") not in ["admin", "gestao"]:
+        if not is_admin_ou_gestao():
             return "Acesso negado 🚫"
 
         return f(*args, **kwargs)
@@ -53,7 +65,7 @@ def admin_ou_gestao_required(f):
 
 def gestao_required(f):
     """
-    Apenas Gestão acessa financeiro/importações/fechamento.
+    Apenas Gestão/Gestor acessa financeiro, importações e fechamento.
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -61,7 +73,7 @@ def gestao_required(f):
         if not session.get("user_id"):
             return redirect("/login")
 
-        if session.get("user_role") != "gestao":
+        if not is_gestao():
             return "Acesso negado 🚫"
 
         return f(*args, **kwargs)
