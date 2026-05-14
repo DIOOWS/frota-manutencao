@@ -56,6 +56,27 @@ def arquivo_excel_valido(filename):
     return extensao_arquivo(filename) in EXTENSOES_PERMITIDAS
 
 
+def detectar_tipo_real_excel(conteudo):
+    """
+    Detecta o tipo real do arquivo pelo conteúdo interno.
+
+    Arquivo começando com PK:
+    - .xlsx
+    - .xlsm
+    - .xlsb
+
+    Arquivo começando com D0 CF:
+    - .xls antigo
+    """
+    if conteudo.startswith(b"PK"):
+        return "zip_excel"
+
+    if conteudo.startswith(b"\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1"):
+        return "xls_antigo"
+
+    return "desconhecido"
+
+
 def normalizar_bool(valor):
     if valor is True:
         return True
@@ -256,15 +277,33 @@ def ler_linhas_upload(file_storage, primeira_coluna="Nº Fatura"):
     if not conteudo:
         raise ValueError("O arquivo enviado está vazio.")
 
-    # .xlsx e .xlsm
-    if extensao in ["xlsx", "xlsm"]:
+    tipo_real = detectar_tipo_real_excel(conteudo)
+
+    # =====================================================
+    # CASO 1: ARQUIVO .XLS ANTIGO
+    # Mesmo se estiver renomeado como .xlsx
+    # =====================================================
+    if tipo_real == "xls_antigo":
+        return montar_linhas_pandas(conteudo, "xls", primeira_coluna)
+
+    # =====================================================
+    # CASO 2: EXCEL MODERNO REAL
+    # .xlsx / .xlsm / .xlsb
+    # =====================================================
+    if tipo_real == "zip_excel":
+
+        if extensao == "xlsb":
+            return montar_linhas_pandas(conteudo, "xlsb", primeira_coluna)
+
         try:
             workbook = openpyxl.load_workbook(BytesIO(conteudo), data_only=True)
             sheet = workbook.active
         except Exception as e:
             raise ValueError(
-                f"Não foi possível abrir a planilha .{extensao}. "
-                f"Verifique se o arquivo é um Excel válido. Erro: {str(e)}"
+                "Não foi possível abrir a planilha. "
+                "O arquivo parece ser Excel moderno, mas pode estar corrompido. "
+                "Abra no Excel e salve novamente como .xlsx. "
+                f"Erro: {str(e)}"
             )
 
         header_row = achar_linha_cabecalho_openpyxl(sheet, primeira_coluna)
@@ -274,11 +313,13 @@ def ler_linhas_upload(file_storage, primeira_coluna="Nº Fatura"):
 
         return montar_linhas_openpyxl(sheet, header_row)
 
-    # .xls e .xlsb
-    if extensao in ["xls", "xlsb"]:
-        return montar_linhas_pandas(conteudo, extensao, primeira_coluna)
-
-    raise ValueError("Formato de planilha não suportado.")
+    # =====================================================
+    # CASO 3: ARQUIVO NÃO É EXCEL REAL
+    # =====================================================
+    raise ValueError(
+        "O arquivo enviado não parece ser uma planilha Excel válida. "
+        "Abra o arquivo no Excel e salve novamente como 'Pasta de Trabalho do Excel (*.xlsx)'."
+    )
 
 
 def validar_mes_ano(mes, ano):
