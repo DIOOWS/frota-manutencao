@@ -3,9 +3,9 @@ from utils.auth import gestao_required
 from database import db
 from models.conta_pagar_importada import ContaPagarImportada
 from models.conta_receber_importada import ContaReceberImportada
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
-from io import BytesIO
+from io import BytesIO, StringIO
 import openpyxl
 
 try:
@@ -59,20 +59,24 @@ def arquivo_excel_valido(filename):
 def detectar_tipo_real_excel(conteudo):
     """
     Detecta o tipo real do arquivo pelo conteúdo interno.
-
-    Arquivo começando com PK:
-    - .xlsx
-    - .xlsm
-    - .xlsb
-
-    Arquivo começando com D0 CF:
-    - .xls antigo
     """
+    inicio = conteudo[:500].lstrip().lower()
+
+    # XLSX / XLSM / XLSB moderno
     if conteudo.startswith(b"PK"):
         return "zip_excel"
 
+    # XLS antigo real
     if conteudo.startswith(b"\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1"):
         return "xls_antigo"
+
+    # HTML salvo como XLS
+    if inicio.startswith(b"<html") or b"<table" in inicio or b"<body" in inicio:
+        return "html_excel"
+
+    # XML Spreadsheet 2003 salvo como XLS
+    if inicio.startswith(b"<?xml") or b"<workbook" in inicio:
+        return "xml_excel"
 
     return "desconhecido"
 
@@ -104,9 +108,12 @@ def normalizar_decimal(valor):
 
     valor_txt = str(valor).strip()
     valor_txt = valor_txt.replace("R$", "")
-    valor_txt = valor_txt.replace(".", "")
-    valor_txt = valor_txt.replace(",", ".")
-    valor_txt = valor_txt.strip()
+    valor_txt = valor_txt.replace(" ", "")
+
+    # Caso venha no padrão brasileiro: 1.234,56
+    if "," in valor_txt:
+        valor_txt = valor_txt.replace(".", "")
+        valor_txt = valor_txt.replace(",", ".")
 
     try:
         return Decimal(valor_txt).quantize(Decimal("0.01"))
@@ -120,6 +127,9 @@ def normalizar_data(valor):
 
     if isinstance(valor, datetime):
         return valor
+
+    if isinstance(valor, date):
+        return datetime.combine(valor, datetime.min.time())
 
     formatos = [
         "%d/%m/%Y %H:%M:%S",
@@ -161,6 +171,14 @@ def limpar_categoria(plano_contas):
     return plano
 
 
+def valor_por_coluna(row_dict, nome):
+    return row_dict.get(nome, "")
+
+
+# =========================================================
+# LEITURA COM OPENPYXL
+# =========================================================
+
 def achar_linha_cabecalho_openpyxl(sheet, primeira_coluna):
     primeira_coluna = primeira_coluna.upper()
 
@@ -171,10 +189,6 @@ def achar_linha_cabecalho_openpyxl(sheet, primeira_coluna):
             return row[0].row
 
     return None
-
-
-def valor_por_coluna(row_dict, nome):
-    return row_dict.get(nome, "")
 
 
 def montar_linhas_openpyxl(sheet, header_row):
@@ -200,44 +214,32 @@ def montar_linhas_openpyxl(sheet, header_row):
     return linhas
 
 
-def montar_linhas_pandas(conteudo, extensao, primeira_coluna):
-    if pd is None:
-        raise ImportError(
-            "Para importar arquivos .xls ou .xlsb, instale pandas, xlrd e pyxlsb."
-        )
+# =========================================================
+# LEITURA COM PANDAS
+# =========================================================
 
-    engine = None
-
-    if extensao == "xls":
-        engine = "xlrd"
-
-    if extensao == "xlsb":
-        engine = "pyxlsb"
-
-    try:
-        df_raw = pd.read_excel(
-            BytesIO(conteudo),
-            header=None,
-            engine=engine
-        )
-    except Exception as e:
-        raise ValueError(
-            f"Não foi possível ler a planilha .{extensao}. "
-            f"Verifique se o arquivo não está corrompido. Erro: {str(e)}"
-        )
-
-    header_index = None
+def achar_linha_cabecalho_dataframe(df_raw, primeira_coluna):
     primeira_coluna = primeira_coluna.upper()
 
     for idx, row in df_raw.iterrows():
+        if len(row) == 0:
+            continue
+
         primeiro_valor = texto(row.iloc[0]).upper()
 
         if primeiro_valor == primeira_coluna:
-            header_index = idx
-            break
+            return idx
+
+    return None
+
+
+def montar_linhas_dataframe(df_raw, primeira_coluna):
+    header_index = achar_linha_cabecalho_dataframe(df_raw, primeira_coluna)
 
     if header_index is None:
-        raise ValueError("Cabeçalho não encontrado. A primeira coluna precisa conter 'Nº Fatura'.")
+        raise ValueError(
+            f"Cabeçalho não encontrado. A primeira coluna precisa conter '{primeira_coluna}'."
+        )
 
     headers = []
 
@@ -263,6 +265,103 @@ def montar_linhas_pandas(conteudo, extensao, primeira_coluna):
     return linhas
 
 
+def montar_linhas_pandas_excel(conteudo, extensao, primeira_coluna):
+    if pd is None:
+        raise ImportError(
+            "Para importar arquivos .xls ou .xlsb, instale pandas, xlrd e pyxlsb."
+        )
+
+    engine = None
+
+    if extensao == "xls":
+        engine = "xlrd"
+
+    if extensao == "xlsb":
+        engine = "pyxlsb"
+
+    try:
+        df_raw = pd.read_excel(
+            BytesIO(conteudo),
+            header=None,
+            engine=engine
+        )
+
+        return montar_linhas_dataframe(df_raw, primeira_coluna)
+
+    except Exception as e:
+        raise ValueError(
+            f"Não foi possível ler a planilha .{extensao}. "
+            f"Verifique se o arquivo não está corrompido. Erro: {str(e)}"
+        )
+
+
+def montar_linhas_pandas_html(conteudo, primeira_coluna):
+    if pd is None:
+        raise ImportError(
+            "Para importar arquivos HTML com extensão .xls, instale pandas e lxml."
+        )
+
+    encodings = ["utf-8", "latin1", "cp1252"]
+
+    ultimo_erro = None
+
+    for enc in encodings:
+        try:
+            html = conteudo.decode(enc, errors="ignore")
+            tabelas = pd.read_html(StringIO(html), header=None)
+
+            if not tabelas:
+                continue
+
+            for df_raw in tabelas:
+                try:
+                    return montar_linhas_dataframe(df_raw, primeira_coluna)
+                except Exception:
+                    continue
+
+        except Exception as e:
+            ultimo_erro = e
+
+    raise ValueError(
+        "Não foi possível ler o arquivo .xls como HTML. "
+        "Abra no Excel e salve novamente como .xlsx. "
+        f"Erro: {str(ultimo_erro)}"
+    )
+
+
+def montar_linhas_pandas_tentativas(conteudo, extensao, primeira_coluna):
+    """
+    Tenta várias formas de leitura.
+    Esse fallback é para planilhas antigas/exportadas que o Excel abre,
+    mas que não são XLSX moderno nem XLS antigo tradicional.
+    """
+    erros = []
+
+    # 1) Tenta como XLS antigo
+    try:
+        return montar_linhas_pandas_excel(conteudo, "xls", primeira_coluna)
+    except Exception as e:
+        erros.append(f"XLS: {str(e)}")
+
+    # 2) Tenta como HTML salvo com extensão XLS
+    try:
+        return montar_linhas_pandas_html(conteudo, primeira_coluna)
+    except Exception as e:
+        erros.append(f"HTML: {str(e)}")
+
+    # 3) Tenta como XML/HTML textual
+    try:
+        return montar_linhas_pandas_html(conteudo, primeira_coluna)
+    except Exception as e:
+        erros.append(f"XML/HTML: {str(e)}")
+
+    raise ValueError(
+        "O arquivo foi reconhecido como .xls, mas não consegui ler a estrutura interna. "
+        "Abra no Excel e use: Arquivo > Salvar Como > Pasta de Trabalho do Excel (*.xlsx). "
+        "Detalhes: " + " | ".join(erros)
+    )
+
+
 def ler_linhas_upload(file_storage, primeira_coluna="Nº Fatura"):
     filename = file_storage.filename
     extensao = extensao_arquivo(filename)
@@ -280,20 +379,24 @@ def ler_linhas_upload(file_storage, primeira_coluna="Nº Fatura"):
     tipo_real = detectar_tipo_real_excel(conteudo)
 
     # =====================================================
-    # CASO 1: ARQUIVO .XLS ANTIGO
-    # Mesmo se estiver renomeado como .xlsx
+    # XLS antigo real
     # =====================================================
     if tipo_real == "xls_antigo":
-        return montar_linhas_pandas(conteudo, "xls", primeira_coluna)
+        return montar_linhas_pandas_excel(conteudo, "xls", primeira_coluna)
 
     # =====================================================
-    # CASO 2: EXCEL MODERNO REAL
-    # .xlsx / .xlsm / .xlsb
+    # HTML/XML salvo como XLS
+    # =====================================================
+    if tipo_real in ["html_excel", "xml_excel"]:
+        return montar_linhas_pandas_html(conteudo, primeira_coluna)
+
+    # =====================================================
+    # Excel moderno real: XLSX/XLSM/XLSB
     # =====================================================
     if tipo_real == "zip_excel":
 
         if extensao == "xlsb":
-            return montar_linhas_pandas(conteudo, "xlsb", primeira_coluna)
+            return montar_linhas_pandas_excel(conteudo, "xlsb", primeira_coluna)
 
         try:
             workbook = openpyxl.load_workbook(BytesIO(conteudo), data_only=True)
@@ -309,13 +412,18 @@ def ler_linhas_upload(file_storage, primeira_coluna="Nº Fatura"):
         header_row = achar_linha_cabecalho_openpyxl(sheet, primeira_coluna)
 
         if not header_row:
-            raise ValueError("Cabeçalho não encontrado. A primeira coluna precisa conter 'Nº Fatura'.")
+            raise ValueError(
+                f"Cabeçalho não encontrado. A primeira coluna precisa conter '{primeira_coluna}'."
+            )
 
         return montar_linhas_openpyxl(sheet, header_row)
 
     # =====================================================
-    # CASO 3: ARQUIVO NÃO É EXCEL REAL
+    # Fallback para XLS problemático
     # =====================================================
+    if extensao == "xls":
+        return montar_linhas_pandas_tentativas(conteudo, extensao, primeira_coluna)
+
     raise ValueError(
         "O arquivo enviado não parece ser uma planilha Excel válida. "
         "Abra o arquivo no Excel e salve novamente como 'Pasta de Trabalho do Excel (*.xlsx)'."
