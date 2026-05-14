@@ -29,7 +29,7 @@ EXTENSOES_PERMITIDAS = {"xlsx", "xlsm", "xls", "xlsb"}
 
 
 # =========================================================
-# HELPERS
+# HELPERS GERAIS
 # =========================================================
 
 def texto(valor):
@@ -59,23 +59,32 @@ def arquivo_excel_valido(filename):
 def detectar_tipo_real_excel(conteudo):
     """
     Detecta o tipo real do arquivo pelo conteúdo interno.
-    """
-    inicio = conteudo[:500].lstrip().lower()
 
-    # XLSX / XLSM / XLSB moderno
+    PK = xlsx/xlsm/xlsb
+    D0 CF = xls antigo real
+    HTML/XML = exportações antigas que o Excel abre como .xls
+    """
+    inicio = conteudo[:1000].lstrip().lower()
+
     if conteudo.startswith(b"PK"):
         return "zip_excel"
 
-    # XLS antigo real
     if conteudo.startswith(b"\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1"):
         return "xls_antigo"
 
-    # HTML salvo como XLS
-    if inicio.startswith(b"<html") or b"<table" in inicio or b"<body" in inicio:
+    if (
+        inicio.startswith(b"<html")
+        or b"<table" in inicio
+        or b"<body" in inicio
+        or b"<!doctype html" in inicio
+    ):
         return "html_excel"
 
-    # XML Spreadsheet 2003 salvo como XLS
-    if inicio.startswith(b"<?xml") or b"<workbook" in inicio:
+    if (
+        inicio.startswith(b"<?xml")
+        or b"<workbook" in inicio
+        or b"urn:schemas-microsoft-com:office:spreadsheet" in inicio
+    ):
         return "xml_excel"
 
     return "desconhecido"
@@ -104,13 +113,16 @@ def normalizar_decimal(valor):
         return Decimal("0.00")
 
     if isinstance(valor, (int, float, Decimal)):
-        return Decimal(str(valor)).quantize(Decimal("0.01"))
+        try:
+            return Decimal(str(valor)).quantize(Decimal("0.01"))
+        except Exception:
+            return Decimal("0.00")
 
     valor_txt = str(valor).strip()
     valor_txt = valor_txt.replace("R$", "")
     valor_txt = valor_txt.replace(" ", "")
 
-    # Caso venha no padrão brasileiro: 1.234,56
+    # Padrão brasileiro: 1.234,56
     if "," in valor_txt:
         valor_txt = valor_txt.replace(".", "")
         valor_txt = valor_txt.replace(",", ".")
@@ -176,7 +188,7 @@ def valor_por_coluna(row_dict, nome):
 
 
 # =========================================================
-# LEITURA COM OPENPYXL
+# LEITURA OPENPYXL - XLSX / XLSM
 # =========================================================
 
 def achar_linha_cabecalho_openpyxl(sheet, primeira_coluna):
@@ -215,7 +227,7 @@ def montar_linhas_openpyxl(sheet, header_row):
 
 
 # =========================================================
-# LEITURA COM PANDAS
+# LEITURA PANDAS - XLS / XLSB / HTML / XML
 # =========================================================
 
 def achar_linha_cabecalho_dataframe(df_raw, primeira_coluna):
@@ -298,62 +310,61 @@ def montar_linhas_pandas_excel(conteudo, extensao, primeira_coluna):
 def montar_linhas_pandas_html(conteudo, primeira_coluna):
     if pd is None:
         raise ImportError(
-            "Para importar arquivos HTML com extensão .xls, instale pandas e lxml."
+            "Para importar arquivos HTML com extensão .xls, instale pandas, lxml, html5lib e beautifulsoup4."
         )
 
     encodings = ["utf-8", "latin1", "cp1252"]
+    flavors = ["lxml", "bs4", "html5lib"]
 
-    ultimo_erro = None
+    erros = []
 
     for enc in encodings:
-        try:
-            html = conteudo.decode(enc, errors="ignore")
-            tabelas = pd.read_html(StringIO(html), header=None)
+        html = conteudo.decode(enc, errors="ignore")
 
-            if not tabelas:
-                continue
+        for flavor in flavors:
+            try:
+                tabelas = pd.read_html(
+                    StringIO(html),
+                    header=None,
+                    flavor=flavor
+                )
 
-            for df_raw in tabelas:
-                try:
-                    return montar_linhas_dataframe(df_raw, primeira_coluna)
-                except Exception:
+                if not tabelas:
                     continue
 
-        except Exception as e:
-            ultimo_erro = e
+                for df_raw in tabelas:
+                    try:
+                        return montar_linhas_dataframe(df_raw, primeira_coluna)
+                    except Exception as e:
+                        erros.append(f"{flavor}/{enc}: {str(e)}")
+                        continue
+
+            except Exception as e:
+                erros.append(f"{flavor}/{enc}: {str(e)}")
 
     raise ValueError(
-        "Não foi possível ler o arquivo .xls como HTML. "
+        "Não foi possível ler o arquivo .xls como HTML/XML. "
         "Abra no Excel e salve novamente como .xlsx. "
-        f"Erro: {str(ultimo_erro)}"
+        "Detalhes: " + " | ".join(erros[:5])
     )
 
 
 def montar_linhas_pandas_tentativas(conteudo, extensao, primeira_coluna):
     """
-    Tenta várias formas de leitura.
-    Esse fallback é para planilhas antigas/exportadas que o Excel abre,
-    mas que não são XLSX moderno nem XLS antigo tradicional.
+    Fallback para arquivos .xls antigos/exportados.
+    Tenta ler como XLS real e depois como HTML/XML.
     """
     erros = []
 
-    # 1) Tenta como XLS antigo
     try:
         return montar_linhas_pandas_excel(conteudo, "xls", primeira_coluna)
     except Exception as e:
         erros.append(f"XLS: {str(e)}")
 
-    # 2) Tenta como HTML salvo com extensão XLS
     try:
         return montar_linhas_pandas_html(conteudo, primeira_coluna)
     except Exception as e:
-        erros.append(f"HTML: {str(e)}")
-
-    # 3) Tenta como XML/HTML textual
-    try:
-        return montar_linhas_pandas_html(conteudo, primeira_coluna)
-    except Exception as e:
-        erros.append(f"XML/HTML: {str(e)}")
+        erros.append(f"HTML/XML: {str(e)}")
 
     raise ValueError(
         "O arquivo foi reconhecido como .xls, mas não consegui ler a estrutura interna. "
@@ -378,21 +389,15 @@ def ler_linhas_upload(file_storage, primeira_coluna="Nº Fatura"):
 
     tipo_real = detectar_tipo_real_excel(conteudo)
 
-    # =====================================================
     # XLS antigo real
-    # =====================================================
     if tipo_real == "xls_antigo":
         return montar_linhas_pandas_excel(conteudo, "xls", primeira_coluna)
 
-    # =====================================================
     # HTML/XML salvo como XLS
-    # =====================================================
     if tipo_real in ["html_excel", "xml_excel"]:
         return montar_linhas_pandas_html(conteudo, primeira_coluna)
 
-    # =====================================================
-    # Excel moderno real: XLSX/XLSM/XLSB
-    # =====================================================
+    # XLSX / XLSM / XLSB moderno
     if tipo_real == "zip_excel":
 
         if extensao == "xlsb":
@@ -418,9 +423,7 @@ def ler_linhas_upload(file_storage, primeira_coluna="Nº Fatura"):
 
         return montar_linhas_openpyxl(sheet, header_row)
 
-    # =====================================================
-    # Fallback para XLS problemático
-    # =====================================================
+    # Fallback para .xls problemático
     if extensao == "xls":
         return montar_linhas_pandas_tentativas(conteudo, extensao, primeira_coluna)
 
