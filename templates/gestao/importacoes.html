@@ -90,7 +90,7 @@
           <label>Arquivo Excel</label>
           <input type="file"
                  name="arquivo_pagar"
-                 accept=".xlsx,.xlsm"
+                 accept=".xlsx,.xls,.xlsm,.xlsb"
                  class="form-control"
                  required>
         </div>
@@ -190,9 +190,9 @@
 
                 <td>
                   {% if c.pago %}
-                    <span class="badge bg-success">True</span>
+                    <span class="badge bg-success">PAGO</span>
                   {% else %}
-                    <span class="badge bg-warning text-dark">False</span>
+                    <span class="badge bg-warning text-dark">PENDENTE</span>
                   {% endif %}
                 </td>
 
@@ -266,7 +266,7 @@
           <label>Arquivo Excel</label>
           <input type="file"
                  name="arquivo_receber"
-                 accept=".xlsx,.xlsm"
+                 accept=".xlsx,.xls,.xlsm,.xlsb"
                  class="form-control"
                  required>
         </div>
@@ -361,9 +361,9 @@
 
                 <td>
                   {% if c.pago %}
-                    <span class="badge bg-success">True</span>
+                    <span class="badge bg-success">RECEBIDO</span>
                   {% else %}
-                    <span class="badge bg-warning text-dark">False</span>
+                    <span class="badge bg-warning text-dark">PENDENTE</span>
                   {% endif %}
                 </td>
 

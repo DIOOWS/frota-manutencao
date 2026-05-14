@@ -8,6 +8,11 @@ from decimal import Decimal
 from io import BytesIO
 import openpyxl
 
+try:
+    import pandas as pd
+except Exception:
+    pd = None
+
 
 importacoes_bp = Blueprint(
     "importacoes",
@@ -17,13 +22,38 @@ importacoes_bp = Blueprint(
 
 
 # =========================================================
+# CONFIGURAÇÃO DE ARQUIVOS
+# =========================================================
+
+EXTENSOES_PERMITIDAS = {"xlsx", "xlsm", "xls", "xlsb"}
+
+
+# =========================================================
 # HELPERS
 # =========================================================
 
 def texto(valor):
     if valor is None:
         return ""
+
+    try:
+        if pd is not None and pd.isna(valor):
+            return ""
+    except Exception:
+        pass
+
     return str(valor).strip()
+
+
+def extensao_arquivo(filename):
+    if not filename or "." not in filename:
+        return ""
+
+    return filename.rsplit(".", 1)[1].lower().strip()
+
+
+def arquivo_excel_valido(filename):
+    return extensao_arquivo(filename) in EXTENSOES_PERMITIDAS
 
 
 def normalizar_bool(valor):
@@ -45,7 +75,7 @@ def normalizar_bool(valor):
 
 
 def normalizar_decimal(valor):
-    if valor is None or valor == "":
+    if valor is None or texto(valor) == "":
         return Decimal("0.00")
 
     if isinstance(valor, (int, float, Decimal)):
@@ -110,7 +140,7 @@ def limpar_categoria(plano_contas):
     return plano
 
 
-def achar_linha_cabecalho(sheet, primeira_coluna):
+def achar_linha_cabecalho_openpyxl(sheet, primeira_coluna):
     primeira_coluna = primeira_coluna.upper()
 
     for row in sheet.iter_rows():
@@ -126,13 +156,7 @@ def valor_por_coluna(row_dict, nome):
     return row_dict.get(nome, "")
 
 
-def ler_planilha_upload(file_storage):
-    conteudo = file_storage.read()
-    workbook = openpyxl.load_workbook(BytesIO(conteudo), data_only=True)
-    return workbook.active
-
-
-def montar_linhas(sheet, header_row):
+def montar_linhas_openpyxl(sheet, header_row):
     headers = []
 
     for cell in sheet[header_row]:
@@ -153,6 +177,108 @@ def montar_linhas(sheet, header_row):
         linhas.append(item)
 
     return linhas
+
+
+def montar_linhas_pandas(conteudo, extensao, primeira_coluna):
+    if pd is None:
+        raise ImportError(
+            "Para importar arquivos .xls ou .xlsb, instale pandas, xlrd e pyxlsb."
+        )
+
+    engine = None
+
+    if extensao == "xls":
+        engine = "xlrd"
+
+    if extensao == "xlsb":
+        engine = "pyxlsb"
+
+    try:
+        df_raw = pd.read_excel(
+            BytesIO(conteudo),
+            header=None,
+            engine=engine
+        )
+    except Exception as e:
+        raise ValueError(
+            f"Não foi possível ler a planilha .{extensao}. "
+            f"Verifique se o arquivo não está corrompido. Erro: {str(e)}"
+        )
+
+    header_index = None
+    primeira_coluna = primeira_coluna.upper()
+
+    for idx, row in df_raw.iterrows():
+        primeiro_valor = texto(row.iloc[0]).upper()
+
+        if primeiro_valor == primeira_coluna:
+            header_index = idx
+            break
+
+    if header_index is None:
+        raise ValueError("Cabeçalho não encontrado. A primeira coluna precisa conter 'Nº Fatura'.")
+
+    headers = []
+
+    for valor in df_raw.iloc[header_index].tolist():
+        headers.append(texto(valor))
+
+    linhas = []
+
+    for _, row in df_raw.iloc[header_index + 1:].iterrows():
+        valores = row.tolist()
+
+        if all(texto(v) == "" for v in valores):
+            continue
+
+        item = {}
+
+        for idx, header in enumerate(headers):
+            if header:
+                item[header] = valores[idx] if idx < len(valores) else None
+
+        linhas.append(item)
+
+    return linhas
+
+
+def ler_linhas_upload(file_storage, primeira_coluna="Nº Fatura"):
+    filename = file_storage.filename
+    extensao = extensao_arquivo(filename)
+
+    if not arquivo_excel_valido(filename):
+        raise ValueError(
+            "Formato não aceito. Envie uma planilha Excel nos formatos .xlsx, .xlsm, .xls ou .xlsb."
+        )
+
+    conteudo = file_storage.read()
+
+    if not conteudo:
+        raise ValueError("O arquivo enviado está vazio.")
+
+    # .xlsx e .xlsm
+    if extensao in ["xlsx", "xlsm"]:
+        try:
+            workbook = openpyxl.load_workbook(BytesIO(conteudo), data_only=True)
+            sheet = workbook.active
+        except Exception as e:
+            raise ValueError(
+                f"Não foi possível abrir a planilha .{extensao}. "
+                f"Verifique se o arquivo é um Excel válido. Erro: {str(e)}"
+            )
+
+        header_row = achar_linha_cabecalho_openpyxl(sheet, primeira_coluna)
+
+        if not header_row:
+            raise ValueError("Cabeçalho não encontrado. A primeira coluna precisa conter 'Nº Fatura'.")
+
+        return montar_linhas_openpyxl(sheet, header_row)
+
+    # .xls e .xlsb
+    if extensao in ["xls", "xlsb"]:
+        return montar_linhas_pandas(conteudo, extensao, primeira_coluna)
+
+    raise ValueError("Formato de planilha não suportado.")
 
 
 def validar_mes_ano(mes, ano):
@@ -265,17 +391,16 @@ def importar_contas_pagar():
         flash("Selecione uma planilha de Contas a Pagar.", "danger")
         return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
 
+    if not arquivo_excel_valido(arquivo.filename):
+        flash(
+            "Formato não aceito. Envie uma planilha Excel nos formatos .xlsx, .xlsm, .xls ou .xlsb.",
+            "danger"
+        )
+        return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
+
     try:
-        sheet = ler_planilha_upload(arquivo)
-        header_row = achar_linha_cabecalho(sheet, "Nº Fatura")
+        linhas = ler_linhas_upload(arquivo, "Nº Fatura")
 
-        if not header_row:
-            flash("Cabeçalho de Contas a Pagar não encontrado.", "danger")
-            return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
-
-        linhas = montar_linhas(sheet, header_row)
-
-        # Sobrescreve somente o mês/ano importado
         ContaPagarImportada.query.filter_by(
             mes=mes_importacao,
             ano=ano_importacao
@@ -354,17 +479,16 @@ def importar_contas_receber():
         flash("Selecione uma planilha de Contas a Receber.", "danger")
         return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
 
+    if not arquivo_excel_valido(arquivo.filename):
+        flash(
+            "Formato não aceito. Envie uma planilha Excel nos formatos .xlsx, .xlsm, .xls ou .xlsb.",
+            "danger"
+        )
+        return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
+
     try:
-        sheet = ler_planilha_upload(arquivo)
-        header_row = achar_linha_cabecalho(sheet, "Nº Fatura")
+        linhas = ler_linhas_upload(arquivo, "Nº Fatura")
 
-        if not header_row:
-            flash("Cabeçalho de Contas a Receber não encontrado.", "danger")
-            return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
-
-        linhas = montar_linhas(sheet, header_row)
-
-        # Sobrescreve somente o mês/ano importado
         ContaReceberImportada.query.filter_by(
             mes=mes_importacao,
             ano=ano_importacao
