@@ -31,8 +31,67 @@ def parse_data(data_str):
     return datetime.strptime(data_str, "%Y-%m-%d").date()
 
 
+def mes_ano_anterior(mes, ano):
+    if mes == 1:
+        return 12, ano - 1
+
+    return mes - 1, ano
+
+
+def obter_fechamento_anterior(mes, ano):
+    mes_ant, ano_ant = mes_ano_anterior(mes, ano)
+
+    return FechamentoMensal.query.filter_by(
+        mes=mes_ant,
+        ano=ano_ant
+    ).first()
+
+
+def obter_saldo_inicial_automatico(mes, ano):
+    fechamento_anterior = obter_fechamento_anterior(mes, ano)
+
+    if fechamento_anterior:
+        return dinheiro(fechamento_anterior.saldo_final)
+
+    return 0
+
+
+def obter_saldo_inicial_mes(mes, ano):
+    fechamento_atual = FechamentoMensal.query.filter_by(
+        mes=mes,
+        ano=ano
+    ).first()
+
+    if fechamento_atual:
+        return dinheiro(fechamento_atual.saldo_inicial)
+
+    return obter_saldo_inicial_automatico(mes, ano)
+
+
+def status_pago(valor):
+    status = normalizar_texto(valor)
+
+    return status in [
+        "PAGO",
+        "RECEBIDO",
+        "OK",
+        "QUITADO",
+        "BAIXADO"
+    ]
+
+
+def status_cancelado(valor):
+    status = normalizar_texto(valor)
+
+    return status in [
+        "CANCELADO",
+        "CANCELADA"
+    ]
+
+
 # =========================================================
-# CÁLCULO USANDO PLANILHAS IMPORTADAS
+# CÁLCULO FINANCEIRO
+# IMPORTADAS + LANÇAMENTOS MANUAIS
 # =========================================================
 def calcular_totais_financeiros(mes, ano, saldo_inicial=0):
 
@@ -42,6 +101,11 @@ def calcular_totais_financeiros(mes, ano, saldo_inicial=0):
     ).all()
 
     contas_receber = ContaReceberImportada.query.filter_by(
+        mes=mes,
+        ano=ano
+    ).all()
+
+    lancamentos = LancamentoFinanceiro.query.filter_by(
         mes=mes,
         ano=ano
     ).all()
@@ -59,7 +123,7 @@ def calcular_totais_financeiros(mes, ano, saldo_inicial=0):
     clientes_counter = Counter()
 
     # =========================
-    # CONTAS A PAGAR
+    # CONTAS A PAGAR IMPORTADAS
     # =========================
     for c in contas_pagar:
 
@@ -81,7 +145,7 @@ def calcular_totais_financeiros(mes, ano, saldo_inicial=0):
             despesas_assistencia_counter[categoria] += valor
 
     # =========================
-    # CONTAS A RECEBER
+    # CONTAS A RECEBER IMPORTADAS
     # =========================
     for c in contas_receber:
 
@@ -97,6 +161,44 @@ def calcular_totais_financeiros(mes, ano, saldo_inicial=0):
 
         receitas_counter[categoria] += valor
         clientes_counter[cliente] += valor
+
+    # =========================
+    # LANÇAMENTOS MANUAIS
+    # =========================
+    for l in lancamentos:
+
+        if status_cancelado(l.status):
+            continue
+
+        valor = dinheiro(l.valor)
+        tipo = normalizar_texto(l.tipo)
+        categoria = l.categoria or "SEM CATEGORIA"
+        setor = l.setor or "GERAL"
+        cliente = l.cliente or "SEM CLIENTE"
+
+        if tipo == "RECEITA":
+
+            if status_pago(l.status):
+                total_entradas += valor
+            else:
+                total_a_receber += valor
+
+            receitas_counter[categoria] += valor
+            clientes_counter[cliente] += valor
+
+        elif tipo == "DESPESA":
+
+            if status_pago(l.status):
+                total_saidas += valor
+            else:
+                total_a_pagar += valor
+
+            despesas_counter[categoria] += valor
+
+            if setor == "LOGÍSTICA":
+                despesas_logistica_counter[categoria] += valor
+            else:
+                despesas_assistencia_counter[categoria] += valor
 
     lucro_mes = total_entradas - total_saidas
     saldo_final = dinheiro(saldo_inicial) + total_entradas - total_saidas
@@ -115,9 +217,7 @@ def calcular_totais_financeiros(mes, ano, saldo_inicial=0):
         "saldo_final": saldo_final,
         "margem_operacional": margem_operacional,
 
-        # 🔥 SEM LIMITE
-        # Antes estava most_common(10), por isso só apareciam 10 itens.
-        # Agora aparece tudo que existir no mês/ano filtrado.
+        # SEM LIMITE NO RANKING
         "ranking_despesas": despesas_counter.most_common(),
         "ranking_despesas_assistencia": despesas_assistencia_counter.most_common(),
         "ranking_despesas_logistica": despesas_logistica_counter.most_common(),
@@ -149,7 +249,7 @@ def dashboard():
         ano=ano
     ).first()
 
-    saldo_inicial = dinheiro(fechamento.saldo_inicial) if fechamento else 0
+    saldo_inicial = obter_saldo_inicial_mes(mes, ano)
 
     totais = calcular_totais_financeiros(
         mes=mes,
@@ -197,11 +297,15 @@ def fechamento():
         ano=ano
     ).first()
 
-    saldo_inicial = dinheiro(fechamento_existente.saldo_inicial) if fechamento_existente else 0
+    saldo_inicial = obter_saldo_inicial_mes(mes, ano)
+    saldo_inicial_automatico = obter_saldo_inicial_automatico(mes, ano)
 
     if request.method == "POST":
         mes = request.form.get("mes", type=int)
         ano = request.form.get("ano", type=int)
+
+        # Aqui fica a possibilidade de edição manual.
+        # Se o usuário editar no formulário, o valor digitado será salvo.
         saldo_inicial = dinheiro(request.form.get("saldo_inicial"))
 
         totais = calcular_totais_financeiros(
@@ -259,6 +363,7 @@ def fechamento():
         ano=ano,
         fechamento=fechamento_existente,
         saldo_inicial=saldo_inicial,
+        saldo_inicial_automatico=saldo_inicial_automatico,
         total_entradas=totais["total_entradas"],
         total_saidas=totais["total_saidas"],
         lucro_mes=totais["lucro_mes"],
