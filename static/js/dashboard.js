@@ -20,9 +20,14 @@ document.addEventListener("DOMContentLoaded", function () {
       responsive: true,
       maintainAspectRatio: false,
       animation: false,
-      hover: { animationDuration: 0 },
+      hover: {
+        animationDuration: 0
+      },
       responsiveAnimationDuration: 0,
-      interaction: { mode: 'index', intersect: false }
+      interaction: {
+        mode: "index",
+        intersect: false
+      }
     };
   }
 
@@ -38,11 +43,23 @@ document.addEventListener("DOMContentLoaded", function () {
     return {
       display: true,
       formatter: value => value,
-      color: '#111',
-      font: { weight: 'bold', size: 10 },
-      anchor: 'end',
-      align: 'top'
+      color: "#111",
+      font: {
+        weight: "bold",
+        size: 10
+      },
+      anchor: "end",
+      align: "top"
     };
+  }
+
+  function moeda(valor) {
+    const numero = Number(valor || 0);
+
+    return numero.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL"
+    });
   }
 
   // =========================
@@ -56,21 +73,28 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (ctx) {
       new Chart(ctx, {
-        type: 'doughnut',
+        type: "doughnut",
         data: {
           labels: dados.labels,
-          datasets: [{
-            data: dados.valores,
-            backgroundColor: ["#01C0F2", "#090979"]
-          }]
+          datasets: [
+            {
+              data: dados.valores,
+              backgroundColor: ["#01C0F2", "#090979"]
+            }
+          ]
         },
         options: {
           ...configPadrao(),
           plugins: {
             datalabels: {
               color: "#fff",
-              formatter: function(value, context) {
+              formatter: function (value, context) {
                 const total = context.chart._metasets[0].total;
+
+                if (!total) {
+                  return "0%";
+                }
+
                 return ((value / total) * 100).toFixed(1) + "%";
               }
             }
@@ -91,7 +115,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const ctxMes = document.getElementById("graficoMes");
 
     if (ctxMes) {
-
       const params = new URLSearchParams(window.location.search);
       const mesFiltrado = params.get("mes");
 
@@ -101,23 +124,23 @@ document.addEventListener("DOMContentLoaded", function () {
       if (mesFiltrado) {
         datasetsMensal = [
           {
-            label: 'Corretiva',
+            label: "Corretiva",
             data: dadosMes.corretivas,
-            backgroundColor: '#c90000',
+            backgroundColor: "#c90000",
             borderRadius: 4,
             maxBarThickness: 35
           },
           {
-            label: 'Total Manutenção',
+            label: "Total Manutenção",
             data: dadosMes.valores,
-            backgroundColor: '#002b70',
+            backgroundColor: "#002b70",
             borderRadius: 4,
             maxBarThickness: 35
           },
           {
-            label: 'Preventiva',
+            label: "Preventiva",
             data: dadosMes.preventivas,
-            backgroundColor: '#4f8733',
+            backgroundColor: "#4f8733",
             borderRadius: 4,
             maxBarThickness: 35
           }
@@ -130,7 +153,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         datasetsMensal = [
           {
-            label: 'Manutenções',
+            label: "Manutenções",
             data: dadosMes.valores,
             ...estiloBarra(ctx)
           }
@@ -138,7 +161,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       new Chart(ctxMes, {
-        type: 'bar',
+        type: "bar",
         data: {
           labels: dadosMes.labels,
           datasets: datasetsMensal
@@ -146,16 +169,18 @@ document.addEventListener("DOMContentLoaded", function () {
         options: {
           ...configPadrao(),
 
-          onClick: function(evt, elements) {
+          onClick: function (evt, elements) {
             if (elements.length > 0) {
               const index = elements[0].index;
               const mesSelecionado = dadosMes.labels[index];
 
-              // 🔥 CONVERTE 05-2026 → 2026-05
+              // Converte 05-2026 para 2026-05
               const partes = mesSelecionado.split("-");
-              const mesUrl = `${partes[1]}-${partes[0]}`;
 
-              window.location.href = `/?mes=${mesUrl}`;
+              if (partes.length === 2) {
+                const mesUrl = `${partes[1]}-${partes[0]}`;
+                window.location.href = `/?mes=${mesUrl}`;
+              }
             }
           },
 
@@ -168,7 +193,7 @@ document.addEventListener("DOMContentLoaded", function () {
           scales: {
             y: {
               beginAtZero: true,
-              grace: '15%'
+              grace: "15%"
             }
           },
 
@@ -192,26 +217,33 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (ctx) {
       new Chart(ctx, {
-        type: 'doughnut',
+        type: "doughnut",
         data: {
           labels: dados.labels,
-          datasets: [{
-            data: dados.valores,
-            backgroundColor: ["#00d4ff", "#020024"],
-            borderWidth: 0
-          }]
+          datasets: [
+            {
+              data: dados.valores,
+              backgroundColor: ["#00d4ff", "#020024"],
+              borderWidth: 0
+            }
+          ]
         },
         options: {
           ...configPadrao(),
           cutout: "65%",
           plugins: {
             legend: {
-              position: 'top'
+              position: "top"
             },
             datalabels: {
               color: "#fff",
-              formatter: function(value, context) {
+              formatter: function (value, context) {
                 const total = context.chart._metasets[0].total;
+
+                if (!total) {
+                  return "0%";
+                }
+
                 return ((value / total) * 100).toFixed(1) + "%";
               }
             }
@@ -235,39 +267,193 @@ document.addEventListener("DOMContentLoaded", function () {
       const ctx = ctxPareto.getContext("2d");
 
       new Chart(ctxPareto, {
-        type: 'bar',
+        type: "bar",
         data: {
           labels: dadosPareto.labels,
           datasets: [
             {
-              label: 'Manutenções',
+              label: "Manutenções",
               data: dadosPareto.valores,
               ...estiloBarra(ctx)
             },
             {
-              label: '% Acumulado',
+              label: "% Acumulado",
               data: dadosPareto.percentual,
-              type: 'line',
-              borderColor: '#ff8c00',
-              backgroundColor: '#ff8c00',
+              type: "line",
+              borderColor: "#ff8c00",
+              backgroundColor: "#ff8c00",
               tension: 0.3,
-              yAxisID: 'y1'
+              yAxisID: "y1"
             }
           ]
         },
         options: {
           ...configPadrao(),
           scales: {
-            y: { beginAtZero: true },
+            y: {
+              beginAtZero: true
+            },
             y1: {
-              position: 'right',
+              position: "right",
               beginAtZero: true,
               max: 100,
-              grid: { drawOnChartArea: false }
+              grid: {
+                drawOnChartArea: false
+              }
             }
           },
           plugins: {
             datalabels: datalabelPadrao()
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+    }
+  }
+
+  // =========================
+  // 💰 GESTÃO - EVOLUÇÃO FINANCEIRA MENSAL
+  // =========================
+  const elEvolucaoFinanceira = document.getElementById("dados-evolucao-financeira");
+
+  if (elEvolucaoFinanceira) {
+    const dados = JSON.parse(elEvolucaoFinanceira.textContent);
+
+    const ctxEntradasSaidas = document.getElementById("graficoEvolucaoEntradasSaidas");
+    const ctxLucro = document.getElementById("graficoEvolucaoLucro");
+    const ctxSaldo = document.getElementById("graficoEvolucaoSaldo");
+
+    // =========================
+    // ENTRADAS X SAÍDAS
+    // =========================
+    if (ctxEntradasSaidas) {
+      new Chart(ctxEntradasSaidas, {
+        type: "bar",
+        data: {
+          labels: dados.labels,
+          datasets: [
+            {
+              label: "Entradas",
+              data: dados.entradas,
+              backgroundColor: "#10b981",
+              borderRadius: 6,
+              maxBarThickness: 34
+            },
+            {
+              label: "Saídas",
+              data: dados.saidas,
+              backgroundColor: "#ef4444",
+              borderRadius: 6,
+              maxBarThickness: 34
+            }
+          ]
+        },
+        options: {
+          ...configPadrao(),
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: value => moeda(value)
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: context => `${context.dataset.label}: ${moeda(context.raw)}`
+              }
+            },
+            datalabels: {
+              display: false
+            }
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+    }
+
+    // =========================
+    // LUCRO MENSAL
+    // =========================
+    if (ctxLucro) {
+      new Chart(ctxLucro, {
+        type: "line",
+        data: {
+          labels: dados.labels,
+          datasets: [
+            {
+              label: "Lucro",
+              data: dados.lucros,
+              borderColor: "#2563eb",
+              backgroundColor: "rgba(37, 99, 235, 0.15)",
+              tension: 0.35,
+              fill: true,
+              pointRadius: 4,
+              pointHoverRadius: 6
+            }
+          ]
+        },
+        options: {
+          ...configPadrao(),
+          scales: {
+            y: {
+              ticks: {
+                callback: value => moeda(value)
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: context => `${context.dataset.label}: ${moeda(context.raw)}`
+              }
+            },
+            datalabels: {
+              display: false
+            }
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+    }
+
+    // =========================
+    // SALDO FINAL POR MÊS
+    // =========================
+    if (ctxSaldo) {
+      new Chart(ctxSaldo, {
+        type: "bar",
+        data: {
+          labels: dados.labels,
+          datasets: [
+            {
+              label: "Saldo Final",
+              data: dados.saldos_finais,
+              backgroundColor: "#0f172a",
+              borderRadius: 6,
+              maxBarThickness: 42
+            }
+          ]
+        },
+        options: {
+          ...configPadrao(),
+          scales: {
+            y: {
+              ticks: {
+                callback: value => moeda(value)
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: context => `${context.dataset.label}: ${moeda(context.raw)}`
+              }
+            },
+            datalabels: {
+              display: false
+            }
           }
         },
         plugins: [ChartDataLabels]

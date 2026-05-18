@@ -11,7 +11,7 @@
       <p>Fechamento de {{ "%02d"|format(mes) }}/{{ ano }}</p>
     </div>
 
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 flex-wrap">
       <a href="/gestao/importacoes/?mes={{ mes }}&ano={{ ano }}" class="btn btn-primary">
         Importações
       </a>
@@ -90,7 +90,10 @@
 
   </div>
 
-  <div class="row g-4 mt-2">
+  <!-- =======================================================
+       RANKINGS
+  ======================================================== -->
+  <div class="row g-4 mt-4">
 
     <div class="col-md-3">
       <div class="gestao-card">
@@ -149,6 +152,180 @@
         {% else %}
           <p class="text-muted p-3">Sem clientes no período.</p>
         {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- =======================================================
+       EVOLUÇÃO FINANCEIRA MENSAL
+  ======================================================== -->
+  <div class="gestao-evolucao mt-4">
+
+    <div class="gestao-section-title">
+      <div>
+        <h4>Evolução Financeira Mensal</h4>
+        <p>Comparativo de entradas, saídas, lucro e saldo final em {{ ano }}</p>
+      </div>
+    </div>
+
+    <script type="application/json" id="dados-evolucao-financeira">
+      {{ evolucao_mensal|tojson }}
+    </script>
+
+    {% if comparativo_mes_anterior %}
+      <div class="gestao-comparativo-grid mb-4">
+
+        <div class="gestao-comparativo-card {% if comparativo_mes_anterior.entradas.diferenca < 0 %}danger{% else %}success{% endif %}">
+          <span>Entradas vs {{ comparativo_mes_anterior.mes_anterior }}</span>
+
+          <strong>
+            {% if comparativo_mes_anterior.entradas.percentual is not none %}
+              {{ "%.2f"|format(comparativo_mes_anterior.entradas.percentual) }}%
+            {% else %}
+              Sem base
+            {% endif %}
+          </strong>
+
+          <small>
+            Diferença: R$ {{ "%.2f"|format(comparativo_mes_anterior.entradas.diferenca) }}
+          </small>
+        </div>
+
+        <div class="gestao-comparativo-card {% if comparativo_mes_anterior.saidas.diferenca > 0 %}danger{% else %}success{% endif %}">
+          <span>Saídas vs {{ comparativo_mes_anterior.mes_anterior }}</span>
+
+          <strong>
+            {% if comparativo_mes_anterior.saidas.percentual is not none %}
+              {{ "%.2f"|format(comparativo_mes_anterior.saidas.percentual) }}%
+            {% else %}
+              Sem base
+            {% endif %}
+          </strong>
+
+          <small>
+            Diferença: R$ {{ "%.2f"|format(comparativo_mes_anterior.saidas.diferenca) }}
+          </small>
+        </div>
+
+        <div class="gestao-comparativo-card {% if comparativo_mes_anterior.lucro.diferenca < 0 %}danger{% else %}success{% endif %}">
+          <span>Lucro vs {{ comparativo_mes_anterior.mes_anterior }}</span>
+
+          <strong>
+            {% if comparativo_mes_anterior.lucro.percentual is not none %}
+              {{ "%.2f"|format(comparativo_mes_anterior.lucro.percentual) }}%
+            {% else %}
+              Sem base
+            {% endif %}
+          </strong>
+
+          <small>
+            Diferença: R$ {{ "%.2f"|format(comparativo_mes_anterior.lucro.diferenca) }}
+          </small>
+        </div>
+
+        <div class="gestao-comparativo-card {% if comparativo_mes_anterior.saldo.diferenca < 0 %}danger{% else %}success{% endif %}">
+          <span>Saldo final vs {{ comparativo_mes_anterior.mes_anterior }}</span>
+
+          <strong>
+            {% if comparativo_mes_anterior.saldo.percentual is not none %}
+              {{ "%.2f"|format(comparativo_mes_anterior.saldo.percentual) }}%
+            {% else %}
+              Sem base
+            {% endif %}
+          </strong>
+
+          <small>
+            Diferença: R$ {{ "%.2f"|format(comparativo_mes_anterior.saldo.diferenca) }}
+          </small>
+        </div>
+
+      </div>
+    {% endif %}
+
+    <div class="row g-4">
+
+      <div class="col-lg-6">
+        <div class="gestao-card gestao-chart-card">
+          <h5>Entradas x Saídas</h5>
+
+          <div class="gestao-chart-box">
+            <canvas id="graficoEvolucaoEntradasSaidas"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="gestao-card gestao-chart-card">
+          <h5>Lucro Mensal</h5>
+
+          <div class="gestao-chart-box">
+            <canvas id="graficoEvolucaoLucro"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-12">
+        <div class="gestao-card gestao-chart-card">
+          <h5>Saldo Final por Mês</h5>
+
+          <div class="gestao-chart-box">
+            <canvas id="graficoEvolucaoSaldo"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="gestao-card mt-4">
+      <h5>Tabela Comparativa dos Meses</h5>
+
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle gestao-evolucao-table">
+          <thead>
+            <tr>
+              <th>Mês</th>
+              <th>Saldo Inicial</th>
+              <th>Entradas</th>
+              <th>Saídas</th>
+              <th>Lucro</th>
+              <th>Saldo Final</th>
+              <th>Margem</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for item in evolucao_mensal.tabela %}
+              <tr class="{% if item.mes == mes %}table-primary{% endif %}">
+                <td>
+                  <strong>{{ item.nome_mes }}/{{ item.ano }}</strong>
+                </td>
+
+                <td>R$ {{ "%.2f"|format(item.saldo_inicial) }}</td>
+
+                <td class="text-success">
+                  R$ {{ "%.2f"|format(item.entradas) }}
+                </td>
+
+                <td class="text-danger">
+                  R$ {{ "%.2f"|format(item.saidas) }}
+                </td>
+
+                <td class="{% if item.lucro < 0 %}text-danger{% else %}text-success{% endif %}">
+                  R$ {{ "%.2f"|format(item.lucro) }}
+                </td>
+
+                <td>
+                  <strong>R$ {{ "%.2f"|format(item.saldo_final) }}</strong>
+                </td>
+
+                <td class="{% if item.margem < 0 %}text-danger{% else %}text-success{% endif %}">
+                  {{ "%.2f"|format(item.margem) }}%
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
     </div>
 

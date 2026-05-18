@@ -1,10 +1,10 @@
-from flask import Flask
+from flask import Flask, send_from_directory
 from database import db
 from flask_migrate import Migrate
 from dotenv import load_dotenv
 import os
 import cloudinary
-from sqlalchemy import text
+from sqlalchemy import text, inspect
 
 from routes.frotas import frotas_bp
 
@@ -21,9 +21,9 @@ app = Flask(__name__, template_folder="templates")
 # ==========================================
 # 🔐 SECRET KEY
 # ==========================================
-app.config['SECRET_KEY'] = os.getenv(
-    'SECRET_KEY',
-    'dev-insecure-key-change-this'
+app.config["SECRET_KEY"] = os.getenv(
+    "SECRET_KEY",
+    "dev-insecure-key-change-this"
 )
 
 # ==========================================
@@ -54,20 +54,20 @@ if ENV == "production":
     if database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql://", 1)
 
-    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 
-    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
         "connect_args": {"sslmode": "require"}
     }
 
 else:
     print("🔥 USANDO SQLITE LOCAL")
-    app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///dev.db"
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///dev.db"
 
 # ==========================================
 # 🔧 CONFIG
 # ==========================================
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # ==========================================
 # 📷 UPLOAD LOCAL (fallback)
@@ -95,43 +95,80 @@ from models.fechamento_mensal import FechamentoMensal
 from models.conta_pagar_importada import ContaPagarImportada
 from models.conta_receber_importada import ContaReceberImportada
 
+
 # ==========================================
-# 🚨 GARANTIR COLUNAS / TABELAS
+# 🧱 HELPERS DE BANCO
+# ==========================================
+def tabela_existe(nome_tabela):
+    inspector = inspect(db.engine)
+    return nome_tabela in inspector.get_table_names()
+
+
+def coluna_existe(nome_tabela, nome_coluna):
+    if not tabela_existe(nome_tabela):
+        return False
+
+    inspector = inspect(db.engine)
+    colunas = inspector.get_columns(nome_tabela)
+
+    return any(coluna["name"] == nome_coluna for coluna in colunas)
+
+
+def garantir_coluna(nome_tabela, nome_coluna, definicao_sql):
+    try:
+        if not tabela_existe(nome_tabela):
+            print(f"⚠️ tabela {nome_tabela} ainda não existe.")
+            return
+
+        if coluna_existe(nome_tabela, nome_coluna):
+            print(f"✅ coluna {nome_coluna} já existe em {nome_tabela}")
+            return
+
+        db.session.execute(
+            text(f"ALTER TABLE {nome_tabela} ADD COLUMN {nome_coluna} {definicao_sql};")
+        )
+        db.session.commit()
+
+        print(f"🔥 coluna {nome_coluna} criada em {nome_tabela}")
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ erro ao criar coluna {nome_coluna} em {nome_tabela}: {e}")
+
+
+# ==========================================
+# 🚨 GARANTIR TABELAS / COLUNAS
 # ==========================================
 with app.app_context():
-    try:
-        db.session.execute(text("ALTER TABLE usuarios ADD COLUMN role VARCHAR(20);"))
-        db.session.commit()
-        print("🔥 role criada")
-    except Exception as e:
-        print("role:", e)
-
-    try:
-        db.session.execute(text("ALTER TABLE usuarios ADD COLUMN foto VARCHAR(255);"))
-        db.session.commit()
-        print("🔥 foto criada")
-    except Exception as e:
-        print("foto:", e)
-
     try:
         db.create_all()
         print("🔥 tabelas verificadas/criadas")
     except Exception as e:
         print("create_all:", e)
 
-    try:
-        db.session.execute(text("ALTER TABLE afericoes_termometros ADD COLUMN imagens TEXT;"))
-        db.session.commit()
-        print("🔥 coluna imagens criada em afericoes_termometros")
-    except Exception as e:
-        print("imagens afericoes_termometros:", e)
+    garantir_coluna(
+        nome_tabela="usuarios",
+        nome_coluna="role",
+        definicao_sql="VARCHAR(20)"
+    )
 
-    try:
-        db.session.execute(text("ALTER TABLE manutencoes ADD COLUMN dtm INTEGER;"))
-        db.session.commit()
-        print("🔥 coluna dtm criada em manutencoes")
-    except Exception as e:
-        print("dtm manutencoes:", e)
+    garantir_coluna(
+        nome_tabela="usuarios",
+        nome_coluna="foto",
+        definicao_sql="VARCHAR(255)"
+    )
+
+    garantir_coluna(
+        nome_tabela="afericoes_termometros",
+        nome_coluna="imagens",
+        definicao_sql="TEXT"
+    )
+
+    garantir_coluna(
+        nome_tabela="manutencoes",
+        nome_coluna="dtm",
+        definicao_sql="INTEGER"
+    )
 
 # ==========================================
 # 🔥 CRIAR ADMIN
@@ -152,6 +189,7 @@ with app.app_context():
             print("🔥 ADMIN CRIADO: admin / 123")
 
     except Exception as e:
+        db.session.rollback()
         print("❌ ERRO AO INICIAR DB:", e)
 
 # ==========================================
@@ -176,6 +214,19 @@ app.register_blueprint(frotas_bp)
 app.register_blueprint(assistente_bp)
 app.register_blueprint(gestao_bp)
 app.register_blueprint(importacoes_bp)
+
+
+# ==========================================
+# 🌐 FAVICON
+# ==========================================
+@app.route("/favicon.ico")
+def favicon():
+    return send_from_directory(
+        os.path.join(app.root_path, "static", "css", "img"),
+        "logo.png",
+        mimetype="image/png"
+    )
+
 
 # ==========================================
 # 🔥 TESTE

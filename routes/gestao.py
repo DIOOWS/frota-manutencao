@@ -22,12 +22,14 @@ def dinheiro(valor):
 def normalizar_texto(valor):
     if not valor:
         return None
+
     return valor.strip().upper()
 
 
 def parse_data(data_str):
     if not data_str:
         return None
+
     return datetime.strptime(data_str, "%Y-%m-%d").date()
 
 
@@ -87,6 +89,19 @@ def status_cancelado(valor):
         "CANCELADO",
         "CANCELADA"
     ]
+
+
+def calcular_variacao_percentual(valor_atual, valor_anterior):
+    valor_atual = dinheiro(valor_atual)
+    valor_anterior = dinheiro(valor_anterior)
+
+    if valor_anterior == 0:
+        if valor_atual == 0:
+            return 0
+
+        return None
+
+    return ((valor_atual - valor_anterior) / abs(valor_anterior)) * 100
 
 
 # =========================================================
@@ -226,6 +241,126 @@ def calcular_totais_financeiros(mes, ano, saldo_inicial=0):
     }
 
 
+# =========================================================
+# EVOLUÇÃO FINANCEIRA MENSAL
+# =========================================================
+def calcular_evolucao_mensal(ano):
+    labels = []
+    entradas = []
+    saidas = []
+    lucros = []
+    saldos_finais = []
+    margens = []
+    tabela = []
+
+    nomes_meses = [
+        "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+        "Jul", "Ago", "Set", "Out", "Nov", "Dez"
+    ]
+
+    for mes in range(1, 13):
+        saldo_inicial = obter_saldo_inicial_mes(mes, ano)
+
+        totais = calcular_totais_financeiros(
+            mes=mes,
+            ano=ano,
+            saldo_inicial=saldo_inicial
+        )
+
+        total_entradas = dinheiro(totais["total_entradas"])
+        total_saidas = dinheiro(totais["total_saidas"])
+        lucro_mes = dinheiro(totais["lucro_mes"])
+        saldo_final = dinheiro(totais["saldo_final"])
+        margem_operacional = dinheiro(totais["margem_operacional"])
+
+        labels.append(nomes_meses[mes - 1])
+        entradas.append(round(total_entradas, 2))
+        saidas.append(round(total_saidas, 2))
+        lucros.append(round(lucro_mes, 2))
+        saldos_finais.append(round(saldo_final, 2))
+        margens.append(round(margem_operacional, 2))
+
+        tabela.append({
+            "mes": mes,
+            "nome_mes": nomes_meses[mes - 1],
+            "ano": ano,
+            "saldo_inicial": round(dinheiro(saldo_inicial), 2),
+            "entradas": round(total_entradas, 2),
+            "saidas": round(total_saidas, 2),
+            "lucro": round(lucro_mes, 2),
+            "saldo_final": round(saldo_final, 2),
+            "margem": round(margem_operacional, 2),
+        })
+
+    return {
+        "labels": labels,
+        "entradas": entradas,
+        "saidas": saidas,
+        "lucros": lucros,
+        "saldos_finais": saldos_finais,
+        "margens": margens,
+        "tabela": tabela,
+    }
+
+
+def calcular_comparativo_mes_anterior(evolucao_mensal, mes):
+    tabela = evolucao_mensal.get("tabela", [])
+
+    if mes <= 1 or mes > 12:
+        return None
+
+    if len(tabela) < mes:
+        return None
+
+    atual = tabela[mes - 1]
+    anterior = tabela[mes - 2]
+
+    entradas_atual = dinheiro(atual["entradas"])
+    entradas_anterior = dinheiro(anterior["entradas"])
+
+    saidas_atual = dinheiro(atual["saidas"])
+    saidas_anterior = dinheiro(anterior["saidas"])
+
+    lucro_atual = dinheiro(atual["lucro"])
+    lucro_anterior = dinheiro(anterior["lucro"])
+
+    saldo_atual = dinheiro(atual["saldo_final"])
+    saldo_anterior = dinheiro(anterior["saldo_final"])
+
+    return {
+        "mes_atual": atual["nome_mes"],
+        "mes_anterior": anterior["nome_mes"],
+
+        "entradas": {
+            "atual": entradas_atual,
+            "anterior": entradas_anterior,
+            "diferenca": entradas_atual - entradas_anterior,
+            "percentual": calcular_variacao_percentual(entradas_atual, entradas_anterior),
+        },
+
+        "saidas": {
+            "atual": saidas_atual,
+            "anterior": saidas_anterior,
+            "diferenca": saidas_atual - saidas_anterior,
+            "percentual": calcular_variacao_percentual(saidas_atual, saidas_anterior),
+        },
+
+        "lucro": {
+            "atual": lucro_atual,
+            "anterior": lucro_anterior,
+            "diferenca": lucro_atual - lucro_anterior,
+            "percentual": calcular_variacao_percentual(lucro_atual, lucro_anterior),
+        },
+
+        "saldo": {
+            "atual": saldo_atual,
+            "anterior": saldo_anterior,
+            "diferenca": saldo_atual - saldo_anterior,
+            "percentual": calcular_variacao_percentual(saldo_atual, saldo_anterior),
+        },
+    }
+
+
 @gestao_bp.route("/")
 @gestao_required
 def index():
@@ -257,6 +392,9 @@ def dashboard():
         saldo_inicial=saldo_inicial
     )
 
+    evolucao_mensal = calcular_evolucao_mensal(ano)
+    comparativo_mes_anterior = calcular_comparativo_mes_anterior(evolucao_mensal, mes)
+
     return render_template(
         "gestao/dashboard.html",
         mes=mes,
@@ -271,6 +409,9 @@ def dashboard():
         total_a_pagar=totais["total_a_pagar"],
         total_a_receber=totais["total_a_receber"],
         margem_operacional=totais["margem_operacional"],
+
+        evolucao_mensal=evolucao_mensal,
+        comparativo_mes_anterior=comparativo_mes_anterior,
 
         ranking_despesas=totais["ranking_despesas"],
         ranking_despesas_assistencia=totais["ranking_despesas_assistencia"],
@@ -304,8 +445,6 @@ def fechamento():
         mes = request.form.get("mes", type=int)
         ano = request.form.get("ano", type=int)
 
-        # Aqui fica a possibilidade de edição manual.
-        # Se o usuário editar no formulário, o valor digitado será salvo.
         saldo_inicial = dinheiro(request.form.get("saldo_inicial"))
 
         totais = calcular_totais_financeiros(
