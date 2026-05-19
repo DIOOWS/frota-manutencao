@@ -6,6 +6,7 @@ from models.conta_receber_importada import ContaReceberImportada
 from datetime import datetime, date
 from decimal import Decimal
 from io import BytesIO, StringIO
+from sqlalchemy import or_
 import openpyxl
 import unicodedata
 
@@ -179,6 +180,16 @@ def normalizar_data(valor):
     return None
 
 
+def data_para_input(valor):
+    if not valor:
+        return ""
+
+    try:
+        return valor.strftime("%Y-%m-%d")
+    except Exception:
+        return ""
+
+
 def identificar_setor(plano_contas, receita=False):
     plano = texto(plano_contas).upper()
 
@@ -232,6 +243,15 @@ def valor_por_colunas(row_dict, nomes):
             return valor
 
     return ""
+
+
+def redirect_importacoes(mes, ano, extra=""):
+    url = f"/gestao/importacoes/?mes={mes}&ano={ano}"
+
+    if extra:
+        url += extra
+
+    return redirect(url)
 
 
 # =========================================================
@@ -507,18 +527,77 @@ def index():
     mes = request.args.get("mes", type=int) or hoje.month
     ano = request.args.get("ano", type=int) or hoje.year
 
-    contas_pagar = ContaPagarImportada.query.filter_by(
+    busca_pagar = texto(request.args.get("busca_pagar"))
+    status_pagar = texto(request.args.get("status_pagar")).upper()
+    setor_pagar = texto(request.args.get("setor_pagar")).upper()
+
+    busca_receber = texto(request.args.get("busca_receber"))
+    status_receber = texto(request.args.get("status_receber")).upper()
+
+    contas_pagar_query = ContaPagarImportada.query.filter_by(
         mes=mes,
         ano=ano
-    ).order_by(
+    )
+
+    if busca_pagar:
+        like = f"%{busca_pagar}%"
+        contas_pagar_query = contas_pagar_query.filter(
+            or_(
+                ContaPagarImportada.numero_fatura.ilike(like),
+                ContaPagarImportada.fornecedor_funcionario.ilike(like),
+                ContaPagarImportada.telefone.ilike(like),
+                ContaPagarImportada.email.ilike(like),
+                ContaPagarImportada.plano_contas.ilike(like),
+                ContaPagarImportada.categoria.ilike(like),
+                ContaPagarImportada.setor.ilike(like),
+                ContaPagarImportada.status.ilike(like),
+                ContaPagarImportada.observacoes.ilike(like),
+            )
+        )
+
+    if status_pagar in ["PAGO", "PENDENTE"]:
+        contas_pagar_query = contas_pagar_query.filter(
+            ContaPagarImportada.status == status_pagar
+        )
+
+    if setor_pagar in ["ASSISTÊNCIA", "LOGÍSTICA"]:
+        contas_pagar_query = contas_pagar_query.filter(
+            ContaPagarImportada.setor == setor_pagar
+        )
+
+    contas_pagar = contas_pagar_query.order_by(
         ContaPagarImportada.data_vencimento.asc(),
         ContaPagarImportada.id.asc()
     ).all()
 
-    contas_receber = ContaReceberImportada.query.filter_by(
+    contas_receber_query = ContaReceberImportada.query.filter_by(
         mes=mes,
         ano=ano
-    ).order_by(
+    )
+
+    if busca_receber:
+        like = f"%{busca_receber}%"
+        contas_receber_query = contas_receber_query.filter(
+            or_(
+                ContaReceberImportada.numero_fatura.ilike(like),
+                ContaReceberImportada.cliente.ilike(like),
+                ContaReceberImportada.telefone.ilike(like),
+                ContaReceberImportada.email.ilike(like),
+                ContaReceberImportada.plano_contas.ilike(like),
+                ContaReceberImportada.categoria.ilike(like),
+                ContaReceberImportada.setor.ilike(like),
+                ContaReceberImportada.cobranca.ilike(like),
+                ContaReceberImportada.status.ilike(like),
+                ContaReceberImportada.observacoes.ilike(like),
+            )
+        )
+
+    if status_receber in ["RECEBIDO", "PENDENTE"]:
+        contas_receber_query = contas_receber_query.filter(
+            ContaReceberImportada.status == status_receber
+        )
+
+    contas_receber = contas_receber_query.order_by(
         ContaReceberImportada.data_vencimento.asc(),
         ContaReceberImportada.id.asc()
     ).all()
@@ -566,7 +645,15 @@ def index():
 
         total_receber=total_receber,
         total_receber_pago=total_receber_pago,
-        total_receber_pendente=total_receber_pendente
+        total_receber_pendente=total_receber_pendente,
+
+        busca_pagar=busca_pagar,
+        status_pagar=status_pagar,
+        setor_pagar=setor_pagar,
+        busca_receber=busca_receber,
+        status_receber=status_receber,
+
+        data_para_input=data_para_input
     )
 
 
@@ -674,6 +761,75 @@ def importar_contas_pagar():
         flash(f"Erro ao importar Contas a Pagar: {str(e)}", "danger")
 
     return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
+
+
+# =========================================================
+# EDITAR / EXCLUIR CONTAS A PAGAR IMPORTADAS
+# =========================================================
+
+@importacoes_bp.route("/contas-a-pagar/editar/<int:id>", methods=["POST"])
+@gestao_required
+def editar_conta_pagar(id):
+
+    conta = ContaPagarImportada.query.get_or_404(id)
+
+    mes_redirect = request.form.get("mes_redirect", type=int) or conta.mes
+    ano_redirect = request.form.get("ano_redirect", type=int) or conta.ano
+
+    try:
+        plano_contas = texto(request.form.get("plano_contas"))
+
+        conta.numero_fatura = texto(request.form.get("numero_fatura"))
+        conta.fornecedor_funcionario = texto(request.form.get("fornecedor_funcionario"))
+        conta.telefone = texto(request.form.get("telefone"))
+        conta.email = texto(request.form.get("email"))
+
+        conta.plano_contas = plano_contas
+        conta.categoria = limpar_categoria(plano_contas)
+        conta.setor = texto(request.form.get("setor")) or identificar_setor(plano_contas, receita=False)
+
+        conta.data_documento = normalizar_data(request.form.get("data_documento"))
+        conta.data_vencimento = normalizar_data(request.form.get("data_vencimento"))
+        conta.data_pagamento = normalizar_data(request.form.get("data_pagamento"))
+
+        conta.valor = normalizar_decimal(request.form.get("valor"))
+
+        conta.pago = True if request.form.get("pago") == "on" else False
+        conta.status = "PAGO" if conta.pago else "PENDENTE"
+
+        conta.observacoes = texto(request.form.get("observacoes"))
+
+        db.session.commit()
+
+        flash("Conta a pagar atualizada com sucesso!", "success")
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao editar conta a pagar: {str(e)}", "danger")
+
+    return redirect_importacoes(mes_redirect, ano_redirect)
+
+
+@importacoes_bp.route("/contas-a-pagar/excluir/<int:id>", methods=["POST"])
+@gestao_required
+def excluir_conta_pagar(id):
+
+    conta = ContaPagarImportada.query.get_or_404(id)
+
+    mes_redirect = request.form.get("mes_redirect", type=int) or conta.mes
+    ano_redirect = request.form.get("ano_redirect", type=int) or conta.ano
+
+    try:
+        db.session.delete(conta)
+        db.session.commit()
+
+        flash("Conta a pagar excluída com sucesso!", "success")
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao excluir conta a pagar: {str(e)}", "danger")
+
+    return redirect_importacoes(mes_redirect, ano_redirect)
 
 
 # =========================================================
@@ -790,3 +946,79 @@ def importar_contas_receber():
         flash(f"Erro ao importar Contas a Receber: {str(e)}", "danger")
 
     return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
+
+
+# =========================================================
+# EDITAR / EXCLUIR CONTAS A RECEBER IMPORTADAS
+# =========================================================
+
+@importacoes_bp.route("/contas-a-receber/editar/<int:id>", methods=["POST"])
+@gestao_required
+def editar_conta_receber(id):
+
+    conta = ContaReceberImportada.query.get_or_404(id)
+
+    mes_redirect = request.form.get("mes_redirect", type=int) or conta.mes
+    ano_redirect = request.form.get("ano_redirect", type=int) or conta.ano
+
+    try:
+        plano_contas = texto(request.form.get("plano_contas"))
+
+        conta.numero_fatura = texto(request.form.get("numero_fatura"))
+        conta.cliente = texto(request.form.get("cliente"))
+        conta.telefone = texto(request.form.get("telefone"))
+        conta.email = texto(request.form.get("email"))
+
+        conta.plano_contas = plano_contas
+        conta.categoria = limpar_categoria(plano_contas)
+        conta.setor = texto(request.form.get("setor")) or identificar_setor(plano_contas, receita=True)
+
+        conta.cobranca = texto(request.form.get("cobranca"))
+
+        conta.data_documento = normalizar_data(request.form.get("data_documento"))
+        conta.data_vencimento = normalizar_data(request.form.get("data_vencimento"))
+        conta.data_pagamento = normalizar_data(request.form.get("data_pagamento"))
+
+        conta.valor = normalizar_decimal(request.form.get("valor"))
+        conta.juros = normalizar_decimal(request.form.get("juros"))
+        conta.total = normalizar_decimal(request.form.get("total"))
+
+        if conta.total == Decimal("0.00"):
+            conta.total = normalizar_decimal(conta.valor) + normalizar_decimal(conta.juros)
+
+        conta.pago = True if request.form.get("pago") == "on" else False
+        conta.status = "RECEBIDO" if conta.pago else "PENDENTE"
+
+        conta.observacoes = texto(request.form.get("observacoes"))
+
+        db.session.commit()
+
+        flash("Conta a receber atualizada com sucesso!", "success")
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao editar conta a receber: {str(e)}", "danger")
+
+    return redirect_importacoes(mes_redirect, ano_redirect)
+
+
+@importacoes_bp.route("/contas-a-receber/excluir/<int:id>", methods=["POST"])
+@gestao_required
+def excluir_conta_receber(id):
+
+    conta = ContaReceberImportada.query.get_or_404(id)
+
+    mes_redirect = request.form.get("mes_redirect", type=int) or conta.mes
+    ano_redirect = request.form.get("ano_redirect", type=int) or conta.ano
+
+    try:
+        db.session.delete(conta)
+        db.session.commit()
+
+        flash("Conta a receber excluída com sucesso!", "success")
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao excluir conta a receber: {str(e)}", "danger")
+
+    return redirect_importacoes(mes_redirect, ano_redirect)
