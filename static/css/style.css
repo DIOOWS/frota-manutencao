@@ -5448,3 +5448,369 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+
+
+/* =========================================================
+   💰 CENTRAL DE DECISÃO FINANCEIRA
+========================================================= */
+
+.decisao-financeira {
+  display: block;
+}
+
+.decisao-hero {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-left: 6px solid #2563eb;
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.decisao-hero.success {
+  border-left-color: #10b981;
+}
+
+.decisao-hero.warning {
+  border-left-color: #f59e0b;
+}
+
+.decisao-hero.danger {
+  border-left-color: #ef4444;
+}
+
+.decisao-label {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 900;
+  color: #2563eb;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  margin-bottom: 6px;
+}
+
+.decisao-hero h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 25px;
+  font-weight: 900;
+}
+
+.decisao-hero p {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  max-width: 760px;
+}
+
+.decisao-hero-number {
+  background: #f8fafc;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  padding: 16px;
+  min-width: 230px;
+  text-align: right;
+}
+
+.decisao-hero-number span {
+  display: block;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.decisao-hero-number strong {
+  display: block;
+  font-size: 24px;
+  font-weight: 900;
+  margin-top: 4px;
+}
+
+.decisao-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.decisao-card {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+  border-top: 4px solid #2563eb;
+  min-height: 130px;
+}
+
+.decisao-card.success {
+  border-top-color: #10b981;
+}
+
+.decisao-card.danger {
+  border-top-color: #ef4444;
+}
+
+.decisao-card span {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.decisao-card strong {
+  display: block;
+  color: #0f172a;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.decisao-card small {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.decisao-card-lista {
+  height: 100%;
+}
+
+.alerta-financeiro {
+  border: 1px solid #dbe3ef;
+  border-left: 5px solid #2563eb;
+  border-radius: 14px;
+  padding: 13px;
+  margin-bottom: 10px;
+  background: #f8fafc;
+}
+
+.alerta-financeiro.success {
+  border-left-color: #10b981;
+}
+
+.alerta-financeiro.warning {
+  border-left-color: #f59e0b;
+}
+
+.alerta-financeiro.danger {
+  border-left-color: #ef4444;
+}
+
+.alerta-financeiro.info {
+  border-left-color: #2563eb;
+}
+
+.alerta-financeiro strong {
+  color: #0f172a;
+  font-weight: 900;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.alerta-financeiro p {
+  color: #475569;
+  font-size: 13px;
+  margin: 0 0 4px;
+}
+
+.alerta-financeiro small {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.acao-recomendada {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border: 1px solid #dbe3ef;
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 10px;
+  background: #ffffff;
+}
+
+.acao-recomendada span {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #020024, #0052e0);
+  color: #ffffff;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 900;
+  flex: 0 0 auto;
+}
+
+.acao-recomendada p {
+  margin: 0;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.impacto-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 10px 0;
+}
+
+.impacto-item strong {
+  display: block;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.impacto-item small {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+}
+
+.impacto-item span {
+  color: #dc2626;
+  font-weight: 900;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.leitura-ano-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 9px 0;
+}
+
+.leitura-ano-item span {
+  color: #64748b;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.leitura-ano-item strong {
+  color: #0f172a;
+  font-weight: 900;
+}
+
+.leitura-ano-destaque {
+  margin-top: 12px;
+  border-radius: 14px;
+  padding: 12px;
+  background: #f8fafc;
+  border-left: 5px solid #2563eb;
+}
+
+.leitura-ano-destaque.success {
+  border-left-color: #10b981;
+}
+
+.leitura-ano-destaque.danger {
+  border-left-color: #ef4444;
+}
+
+.leitura-ano-destaque small {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.leitura-ano-destaque strong {
+  display: block;
+  margin-top: 4px;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.projecao-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.projecao-box > span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.projecao-box div {
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 8px;
+}
+
+.projecao-box small {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.projecao-box strong {
+  display: block;
+  color: #0f172a;
+  font-size: 17px;
+  font-weight: 900;
+  margin-top: 3px;
+}
+
+.projecao-resultado {
+  border-bottom: none !important;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 10px !important;
+}
+
+.sem-projecao {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.sem-projecao p {
+  color: #64748b;
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+
+@media (max-width: 1200px) {
+  .decisao-grid {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .decisao-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .decisao-hero-number {
+    width: 100%;
+    text-align: left;
+  }
+
+  .decisao-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

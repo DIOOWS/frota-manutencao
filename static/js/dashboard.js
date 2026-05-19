@@ -2,16 +2,23 @@ console.log("JS CARREGOU 🚀");
 
 document.addEventListener("DOMContentLoaded", function () {
 
+  // =========================
+  // 🔥 REGISTRA PLUGIN DE LABELS
+  // =========================
+  if (typeof Chart !== "undefined" && typeof ChartDataLabels !== "undefined") {
+    Chart.register(ChartDataLabels);
+  }
+
   const styles = getComputedStyle(document.documentElement);
-  const c1 = styles.getPropertyValue('--gradient-start').trim();
-  const c2 = styles.getPropertyValue('--gradient-mid').trim();
-  const c3 = styles.getPropertyValue('--gradient-end').trim();
+  const c1 = styles.getPropertyValue("--gradient-start").trim();
+  const c2 = styles.getPropertyValue("--gradient-mid").trim();
+  const c3 = styles.getPropertyValue("--gradient-end").trim();
 
   function criarGradient(ctx) {
     const gradient = ctx.createLinearGradient(0, 0, 400, 0);
-    gradient.addColorStop(0, c1);
-    gradient.addColorStop(0.5, c2);
-    gradient.addColorStop(1, c3);
+    gradient.addColorStop(0, c1 || "#020024");
+    gradient.addColorStop(0.5, c2 || "#090979");
+    gradient.addColorStop(1, c3 || "#00d4ff");
     return gradient;
   }
 
@@ -49,7 +56,10 @@ document.addEventListener("DOMContentLoaded", function () {
         size: 10
       },
       anchor: "end",
-      align: "top"
+      align: "top",
+      offset: 2,
+      clamp: false,
+      clip: false
     };
   }
 
@@ -60,6 +70,31 @@ document.addEventListener("DOMContentLoaded", function () {
       style: "currency",
       currency: "BRL"
     });
+  }
+
+  function numeroCompacto(valor) {
+    const numero = Number(valor || 0);
+    const absoluto = Math.abs(numero);
+
+    if (absoluto >= 1000000) {
+      return (numero / 1000000).toLocaleString("pt-BR", {
+        maximumFractionDigits: 1
+      }) + " mi";
+    }
+
+    if (absoluto >= 1000) {
+      return (numero / 1000).toLocaleString("pt-BR", {
+        maximumFractionDigits: 0
+      }) + "k";
+    }
+
+    return numero.toLocaleString("pt-BR", {
+      maximumFractionDigits: 0
+    });
+  }
+
+  function temValor(valor) {
+    return Number(valor || 0) !== 0;
   }
 
   // =========================
@@ -87,7 +122,12 @@ document.addEventListener("DOMContentLoaded", function () {
           ...configPadrao(),
           plugins: {
             datalabels: {
+              display: true,
               color: "#fff",
+              font: {
+                weight: "900",
+                size: 11
+              },
               formatter: function (value, context) {
                 const total = context.chart._metasets[0].total;
 
@@ -99,14 +139,13 @@ document.addEventListener("DOMContentLoaded", function () {
               }
             }
           }
-        },
-        plugins: [ChartDataLabels]
+        }
       });
     }
   }
 
   // =========================
-  // 🔥 MENSAL
+  // 🔥 MENSAL MANUTENÇÕES
   // =========================
   const elMes = document.getElementById("dados-mes");
 
@@ -120,7 +159,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
       let datasetsMensal;
 
-      // 🔥 SE FILTRO ATIVO (3 BARRAS)
       if (mesFiltrado) {
         datasetsMensal = [
           {
@@ -145,10 +183,7 @@ document.addEventListener("DOMContentLoaded", function () {
             maxBarThickness: 35
           }
         ];
-      }
-
-      // 🔥 SEM FILTRO (1 BARRA)
-      else {
+      } else {
         const ctx = ctxMes.getContext("2d");
 
         datasetsMensal = [
@@ -174,7 +209,6 @@ document.addEventListener("DOMContentLoaded", function () {
               const index = elements[0].index;
               const mesSelecionado = dadosMes.labels[index];
 
-              // Converte 05-2026 para 2026-05
               const partes = mesSelecionado.split("-");
 
               if (partes.length === 2) {
@@ -200,8 +234,7 @@ document.addEventListener("DOMContentLoaded", function () {
           plugins: {
             datalabels: datalabelPadrao()
           }
-        },
-        plugins: [ChartDataLabels]
+        }
       });
     }
   }
@@ -236,7 +269,12 @@ document.addEventListener("DOMContentLoaded", function () {
               position: "top"
             },
             datalabels: {
+              display: true,
               color: "#fff",
+              font: {
+                weight: "900",
+                size: 11
+              },
               formatter: function (value, context) {
                 const total = context.chart._metasets[0].total;
 
@@ -248,8 +286,7 @@ document.addEventListener("DOMContentLoaded", function () {
               }
             }
           }
-        },
-        plugins: [ChartDataLabels]
+        }
       });
     }
   }
@@ -289,9 +326,15 @@ document.addEventListener("DOMContentLoaded", function () {
         },
         options: {
           ...configPadrao(),
+          layout: {
+            padding: {
+              top: 25
+            }
+          },
           scales: {
             y: {
-              beginAtZero: true
+              beginAtZero: true,
+              grace: "15%"
             },
             y1: {
               position: "right",
@@ -305,15 +348,14 @@ document.addEventListener("DOMContentLoaded", function () {
           plugins: {
             datalabels: datalabelPadrao()
           }
-        },
-        plugins: [ChartDataLabels]
+        }
       });
     }
   }
 
-  // =========================
+  // =========================================================
   // 💰 GESTÃO - EVOLUÇÃO FINANCEIRA MENSAL
-  // =========================
+  // =========================================================
   const elEvolucaoFinanceira = document.getElementById("dados-evolucao-financeira");
 
   if (elEvolucaoFinanceira) {
@@ -321,11 +363,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const ctxEntradasSaidas = document.getElementById("graficoEvolucaoEntradasSaidas");
     const ctxLucro = document.getElementById("graficoEvolucaoLucro");
-    const ctxSaldo = document.getElementById("graficoEvolucaoSaldo");
 
-    // =========================
-    // ENTRADAS X SAÍDAS
-    // =========================
     if (ctxEntradasSaidas) {
       new Chart(ctxEntradasSaidas, {
         type: "bar",
@@ -350,32 +388,61 @@ document.addEventListener("DOMContentLoaded", function () {
         },
         options: {
           ...configPadrao(),
+
+          layout: {
+            padding: {
+              top: 35
+            }
+          },
+
           scales: {
             y: {
               beginAtZero: true,
+              grace: "22%",
               ticks: {
-                callback: value => moeda(value)
+                callback: function (value) {
+                  return moeda(value);
+                }
               }
             }
           },
+
           plugins: {
+            legend: {
+              position: "top"
+            },
+
             tooltip: {
               callbacks: {
-                label: context => `${context.dataset.label}: ${moeda(context.raw)}`
+                label: function (context) {
+                  return `${context.dataset.label}: ${moeda(context.raw)}`;
+                }
               }
             },
+
             datalabels: {
-              display: false
+              display: function (context) {
+                return temValor(context.raw);
+              },
+              formatter: function (value) {
+                return numeroCompacto(value);
+              },
+              color: "#111827",
+              font: {
+                weight: "900",
+                size: 11
+              },
+              anchor: "end",
+              align: "top",
+              offset: 2,
+              clamp: false,
+              clip: false
             }
           }
-        },
-        plugins: [ChartDataLabels]
+        }
       });
     }
 
-    // =========================
-    // LUCRO MENSAL
-    // =========================
     if (ctxLucro) {
       new Chart(ctxLucro, {
         type: "line",
@@ -383,80 +450,78 @@ document.addEventListener("DOMContentLoaded", function () {
           labels: dados.labels,
           datasets: [
             {
-              label: "Lucro",
+              label: "Resultado",
               data: dados.lucros,
               borderColor: "#2563eb",
               backgroundColor: "rgba(37, 99, 235, 0.15)",
               tension: 0.35,
               fill: true,
-              pointRadius: 4,
-              pointHoverRadius: 6
+              pointRadius: 5,
+              pointHoverRadius: 7,
+              pointBackgroundColor: "#ffffff",
+              pointBorderColor: "#2563eb",
+              pointBorderWidth: 2
             }
           ]
         },
         options: {
           ...configPadrao(),
-          scales: {
-            y: {
-              ticks: {
-                callback: value => moeda(value)
-              }
-            }
-          },
-          plugins: {
-            tooltip: {
-              callbacks: {
-                label: context => `${context.dataset.label}: ${moeda(context.raw)}`
-              }
-            },
-            datalabels: {
-              display: false
-            }
-          }
-        },
-        plugins: [ChartDataLabels]
-      });
-    }
 
-    // =========================
-    // SALDO FINAL POR MÊS
-    // =========================
-    if (ctxSaldo) {
-      new Chart(ctxSaldo, {
-        type: "bar",
-        data: {
-          labels: dados.labels,
-          datasets: [
-            {
-              label: "Saldo Final",
-              data: dados.saldos_finais,
-              backgroundColor: "#0f172a",
-              borderRadius: 6,
-              maxBarThickness: 42
+          layout: {
+            padding: {
+              top: 35,
+              bottom: 18
             }
-          ]
-        },
-        options: {
-          ...configPadrao(),
+          },
+
           scales: {
             y: {
+              grace: "25%",
               ticks: {
-                callback: value => moeda(value)
+                callback: function (value) {
+                  return moeda(value);
+                }
               }
             }
           },
+
           plugins: {
+            legend: {
+              position: "top"
+            },
+
             tooltip: {
               callbacks: {
-                label: context => `${context.dataset.label}: ${moeda(context.raw)}`
+                label: function (context) {
+                  return `${context.dataset.label}: ${moeda(context.raw)}`;
+                }
               }
             },
+
             datalabels: {
-              display: false
+              display: function (context) {
+                return temValor(context.raw);
+              },
+              formatter: function (value) {
+                return numeroCompacto(value);
+              },
+              color: function (context) {
+                return Number(context.raw || 0) < 0 ? "#dc2626" : "#059669";
+              },
+              font: {
+                weight: "900",
+                size: 11
+              },
+              anchor: "end",
+              align: function (context) {
+                return Number(context.raw || 0) < 0 ? "bottom" : "top";
+              },
+              offset: 6,
+              clamp: false,
+              clip: false
             }
           }
-        },
-        plugins: [ChartDataLabels]
+        }
       });
     }
   }

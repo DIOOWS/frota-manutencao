@@ -91,13 +91,228 @@
   </div>
 
   <!-- =======================================================
+       CENTRAL DE DECISÃO FINANCEIRA
+  ======================================================== -->
+  <div class="decisao-financeira mt-4">
+
+    <div class="decisao-hero {{ inteligencia_financeira.nivel }}">
+      <div>
+        <span class="decisao-label">Central de Decisão Financeira</span>
+        <h3>{{ inteligencia_financeira.titulo_situacao }}</h3>
+        <p>{{ inteligencia_financeira.resumo_situacao }}</p>
+      </div>
+
+      <div class="decisao-hero-number">
+        <span>Resultado do mês</span>
+        <strong class="{% if lucro_mes < 0 %}text-danger{% else %}text-success{% endif %}">
+          R$ {{ "%.2f"|format(lucro_mes) }}
+        </strong>
+      </div>
+    </div>
+
+    <div class="decisao-grid mt-4">
+
+      <div class="decisao-card">
+        <span>Saídas sobre entradas</span>
+        <strong>{{ "%.2f"|format(inteligencia_financeira.percentual_saidas) }}%</strong>
+        <small>
+          {% if inteligencia_financeira.percentual_saidas >= 80 %}
+            As despesas estão pressionando a operação.
+          {% elif inteligencia_financeira.percentual_saidas == 0 %}
+            Não há base suficiente para leitura.
+          {% else %}
+            A relação entre entradas e saídas está controlada.
+          {% endif %}
+        </small>
+      </div>
+
+      <div class="decisao-card {% if inteligencia_financeira.saldo_projetado_pos_obrigacoes < 0 %}danger{% else %}success{% endif %}">
+        <span>Caixa após obrigações</span>
+        <strong>R$ {{ "%.2f"|format(inteligencia_financeira.saldo_projetado_pos_obrigacoes) }}</strong>
+        <small>Saldo final + a receber - a pagar</small>
+      </div>
+
+      <div class="decisao-card {% if inteligencia_financeira.faltante_equilibrio > 0 %}danger{% else %}success{% endif %}">
+        <span>Ponto de equilíbrio</span>
+
+        {% if inteligencia_financeira.faltante_equilibrio > 0 %}
+          <strong>Faltam R$ {{ "%.2f"|format(inteligencia_financeira.faltante_equilibrio) }}</strong>
+          <small>Valor necessário para empatar o mês.</small>
+        {% else %}
+          <strong>Acima em R$ {{ "%.2f"|format(inteligencia_financeira.sobra_equilibrio) }}</strong>
+          <small>O mês passou do ponto de equilíbrio.</small>
+        {% endif %}
+      </div>
+
+      <div class="decisao-card">
+        <span>Economia potencial</span>
+        <strong>R$ {{ "%.2f"|format(inteligencia_financeira.economia_10_top3) }}</strong>
+        <small>Impacto de reduzir 10% nas 3 maiores despesas.</small>
+      </div>
+
+    </div>
+
+    <div class="row g-4 mt-1">
+
+      <div class="col-lg-6">
+        <div class="gestao-card decisao-card-lista">
+          <h5>Alertas Inteligentes</h5>
+
+          {% for alerta in inteligencia_financeira.alertas %}
+            <div class="alerta-financeiro {{ alerta.nivel }}">
+              <div>
+                <strong>{{ alerta.titulo }}</strong>
+                <p>{{ alerta.descricao }}</p>
+                <small>Ação: {{ alerta.acao }}</small>
+              </div>
+            </div>
+          {% endfor %}
+
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="gestao-card decisao-card-lista">
+          <h5>Ações Recomendadas</h5>
+
+          {% for acao in inteligencia_financeira.acoes_recomendadas %}
+            <div class="acao-recomendada">
+              <span>{{ loop.index }}</span>
+              <p>{{ acao }}</p>
+            </div>
+          {% endfor %}
+
+        </div>
+      </div>
+
+    </div>
+
+    <div class="row g-4 mt-1">
+
+      <div class="col-lg-4">
+        <div class="gestao-card decisao-card-lista">
+          <h5>Top Impactos Negativos</h5>
+
+          {% for nome, valor in inteligencia_financeira.despesas_top %}
+            <div class="impacto-item">
+              <div>
+                <strong>{{ nome }}</strong>
+                <small>
+                  {% if total_saidas > 0 %}
+                    {{ "%.2f"|format((valor / total_saidas) * 100) }}% das saídas
+                  {% else %}
+                    Sem base percentual
+                  {% endif %}
+                </small>
+              </div>
+
+              <span>R$ {{ "%.2f"|format(valor) }}</span>
+            </div>
+          {% else %}
+            <p class="text-muted p-3">Sem despesas no período.</p>
+          {% endfor %}
+
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="gestao-card decisao-card-lista">
+          <h5>Leitura do Ano</h5>
+
+          <div class="leitura-ano-item">
+            <span>Meses com movimento</span>
+            <strong>{{ inteligencia_financeira.meses_com_movimento }}</strong>
+          </div>
+
+          <div class="leitura-ano-item">
+            <span>Meses positivos</span>
+            <strong class="text-success">{{ inteligencia_financeira.meses_positivos }}</strong>
+          </div>
+
+          <div class="leitura-ano-item">
+            <span>Meses negativos</span>
+            <strong class="text-danger">{{ inteligencia_financeira.meses_negativos }}</strong>
+          </div>
+
+          <div class="leitura-ano-item">
+            <span>Média de resultado</span>
+            <strong>R$ {{ "%.2f"|format(inteligencia_financeira.media_resultado) }}</strong>
+          </div>
+
+          {% if inteligencia_financeira.melhor_mes %}
+            <div class="leitura-ano-destaque success">
+              <small>Melhor mês</small>
+              <strong>
+                {{ inteligencia_financeira.melhor_mes.nome_mes }} —
+                R$ {{ "%.2f"|format(inteligencia_financeira.melhor_mes.lucro) }}
+              </strong>
+            </div>
+          {% endif %}
+
+          {% if inteligencia_financeira.pior_mes %}
+            <div class="leitura-ano-destaque danger">
+              <small>Pior mês</small>
+              <strong>
+                {{ inteligencia_financeira.pior_mes.nome_mes }} —
+                R$ {{ "%.2f"|format(inteligencia_financeira.pior_mes.lucro) }}
+              </strong>
+            </div>
+          {% endif %}
+
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="gestao-card decisao-card-lista">
+          <h5>Projeção de Fechamento</h5>
+
+          {% if inteligencia_financeira.projecao %}
+            <div class="projecao-box">
+              <span>Base: dia {{ inteligencia_financeira.projecao.dia_atual }} de {{ inteligencia_financeira.projecao.dias_no_mes }}</span>
+
+              <div>
+                <small>Entradas projetadas</small>
+                <strong class="text-success">
+                  R$ {{ "%.2f"|format(inteligencia_financeira.projecao.entradas_projetadas) }}
+                </strong>
+              </div>
+
+              <div>
+                <small>Saídas projetadas</small>
+                <strong class="text-danger">
+                  R$ {{ "%.2f"|format(inteligencia_financeira.projecao.saidas_projetadas) }}
+                </strong>
+              </div>
+
+              <div class="projecao-resultado">
+                <small>Resultado projetado</small>
+                <strong class="{% if inteligencia_financeira.projecao.resultado_projetado < 0 %}text-danger{% else %}text-success{% endif %}">
+                  R$ {{ "%.2f"|format(inteligencia_financeira.projecao.resultado_projetado) }}
+                </strong>
+              </div>
+            </div>
+          {% else %}
+            <div class="projecao-box sem-projecao">
+              <strong>Projeção indisponível</strong>
+              <p>A projeção aparece quando o mês filtrado é o mês atual.</p>
+            </div>
+          {% endif %}
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- =======================================================
        RANKINGS
   ======================================================== -->
   <div class="row g-4 mt-4">
 
     <div class="col-md-3">
       <div class="gestao-card">
-        <h5>Ranking Despesas Assistência</h5>
+        <h5>Despesas Assistência</h5>
 
         {% for nome, valor in ranking_despesas_assistencia %}
           <div class="gestao-ranking-item">
@@ -112,7 +327,7 @@
 
     <div class="col-md-3">
       <div class="gestao-card">
-        <h5>Ranking Despesas Logística</h5>
+        <h5>Despesas Logística</h5>
 
         {% for nome, valor in ranking_despesas_logistica %}
           <div class="gestao-ranking-item">
@@ -127,7 +342,7 @@
 
     <div class="col-md-3">
       <div class="gestao-card">
-        <h5>Ranking de Receitas</h5>
+        <h5>Receitas</h5>
 
         {% for nome, valor in ranking_receitas %}
           <div class="gestao-ranking-item">
@@ -142,7 +357,7 @@
 
     <div class="col-md-3">
       <div class="gestao-card">
-        <h5>Ranking Cliente Valor</h5>
+        <h5>Clientes</h5>
 
         {% for nome, valor in ranking_clientes %}
           <div class="gestao-ranking-item">
@@ -164,42 +379,14 @@
 
     <div class="gestao-section-title">
       <div>
-        <h4>Evolução Financeira Mensal</h4>
-        <p>Visão anual dos meses de {{ ano }}, com entradas, saídas e resultado.</p>
+        <h4>Evolução Anual Enxuta</h4>
+        <p>Use essa área apenas para enxergar tendência. A decisão está na central acima.</p>
       </div>
     </div>
 
     <script type="application/json" id="dados-evolucao-financeira">
       {{ evolucao_mensal|tojson }}
     </script>
-
-    <div class="gestao-resumo-anual-grid mb-4">
-
-      <div class="gestao-resumo-anual-card success">
-        <span>Total de Entradas no Ano</span>
-        <strong>R$ {{ "%.2f"|format(evolucao_mensal.entradas|sum) }}</strong>
-        <small>Soma de todas as entradas registradas em {{ ano }}</small>
-      </div>
-
-      <div class="gestao-resumo-anual-card danger">
-        <span>Total de Saídas no Ano</span>
-        <strong>R$ {{ "%.2f"|format(evolucao_mensal.saidas|sum) }}</strong>
-        <small>Soma de todas as saídas registradas em {{ ano }}</small>
-      </div>
-
-      <div class="gestao-resumo-anual-card {% if evolucao_mensal.lucros|sum < 0 %}danger{% else %}success{% endif %}">
-        <span>Resultado Acumulado</span>
-        <strong>R$ {{ "%.2f"|format(evolucao_mensal.lucros|sum) }}</strong>
-        <small>Entradas menos saídas no ano</small>
-      </div>
-
-      <div class="gestao-resumo-anual-card">
-        <span>Mês em Visualização</span>
-        <strong>{{ "%02d"|format(mes) }}/{{ ano }}</strong>
-        <small>Use o filtro acima para analisar outro mês</small>
-      </div>
-
-    </div>
 
     <div class="row g-4">
 
@@ -224,124 +411,6 @@
       </div>
 
     </div>
-
-    <div class="gestao-card mt-4">
-      <h5>Visualização dos Meses no Ano</h5>
-
-      <div class="gestao-meses-grid">
-
-        {% for item in evolucao_mensal.tabela %}
-
-          {% set sem_movimento = item.entradas == 0 and item.saidas == 0 %}
-          {% set resultado_positivo = item.lucro >= 0 %}
-
-          <div class="gestao-mes-card
-                      {% if item.mes == mes %}ativo{% endif %}
-                      {% if sem_movimento %}sem-movimento{% endif %}
-                      {% if not sem_movimento and resultado_positivo %}positivo{% endif %}
-                      {% if not sem_movimento and not resultado_positivo %}negativo{% endif %}">
-
-            <div class="gestao-mes-card-top">
-              <strong>{{ item.nome_mes }}</strong>
-
-              {% if item.mes == mes %}
-                <span>Atual</span>
-              {% endif %}
-            </div>
-
-            {% if sem_movimento %}
-              <div class="gestao-mes-sem-movimento">
-                Sem movimento
-              </div>
-            {% else %}
-              <div class="gestao-mes-info">
-                <small>Entradas</small>
-                <strong class="text-success">
-                  R$ {{ "%.2f"|format(item.entradas) }}
-                </strong>
-              </div>
-
-              <div class="gestao-mes-info">
-                <small>Saídas</small>
-                <strong class="text-danger">
-                  R$ {{ "%.2f"|format(item.saidas) }}
-                </strong>
-              </div>
-
-              <div class="gestao-mes-resultado">
-                <small>Resultado</small>
-
-                <strong class="{% if item.lucro < 0 %}text-danger{% else %}text-success{% endif %}">
-                  R$ {{ "%.2f"|format(item.lucro) }}
-                </strong>
-              </div>
-            {% endif %}
-
-          </div>
-
-        {% endfor %}
-
-      </div>
-    </div>
-
-    <details class="gestao-detalhamento-meses mt-4">
-      <summary>
-        Ver detalhamento completo dos meses
-      </summary>
-
-      <div class="gestao-card mt-3">
-        <h5>Tabela Comparativa dos Meses</h5>
-
-        <div class="table-responsive">
-          <table class="table table-sm table-hover align-middle gestao-evolucao-table">
-            <thead>
-              <tr>
-                <th>Mês</th>
-                <th>Saldo Inicial</th>
-                <th>Entradas</th>
-                <th>Saídas</th>
-                <th>Resultado</th>
-                <th>Saldo Final</th>
-                <th>Margem</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {% for item in evolucao_mensal.tabela %}
-                <tr class="{% if item.mes == mes %}table-primary{% endif %}">
-                  <td>
-                    <strong>{{ item.nome_mes }}/{{ item.ano }}</strong>
-                  </td>
-
-                  <td>R$ {{ "%.2f"|format(item.saldo_inicial) }}</td>
-
-                  <td class="text-success">
-                    R$ {{ "%.2f"|format(item.entradas) }}
-                  </td>
-
-                  <td class="text-danger">
-                    R$ {{ "%.2f"|format(item.saidas) }}
-                  </td>
-
-                  <td class="{% if item.lucro < 0 %}text-danger{% else %}text-success{% endif %}">
-                    R$ {{ "%.2f"|format(item.lucro) }}
-                  </td>
-
-                  <td>
-                    <strong>R$ {{ "%.2f"|format(item.saldo_final) }}</strong>
-                  </td>
-
-                  <td class="{% if item.margem < 0 %}text-danger{% else %}text-success{% endif %}">
-                    {{ "%.2f"|format(item.margem) }}%
-                  </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-    </details>
 
   </div>
 

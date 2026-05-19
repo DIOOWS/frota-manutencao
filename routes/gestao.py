@@ -7,6 +7,7 @@ from models.conta_receber_importada import ContaReceberImportada
 from database import db
 from datetime import datetime
 from collections import Counter
+import calendar
 
 
 gestao_bp = Blueprint("gestao", __name__, url_prefix="/gestao")
@@ -303,61 +304,219 @@ def calcular_evolucao_mensal(ano):
     }
 
 
-def calcular_comparativo_mes_anterior(evolucao_mensal, mes):
-    tabela = evolucao_mensal.get("tabela", [])
+# =========================================================
+# INTELIGÊNCIA FINANCEIRA / TOMADA DE DECISÃO
+# =========================================================
+def calcular_inteligencia_financeira(totais, evolucao_mensal, mes, ano, saldo_inicial):
+    total_entradas = dinheiro(totais["total_entradas"])
+    total_saidas = dinheiro(totais["total_saidas"])
+    total_a_pagar = dinheiro(totais["total_a_pagar"])
+    total_a_receber = dinheiro(totais["total_a_receber"])
+    lucro_mes = dinheiro(totais["lucro_mes"])
+    saldo_final = dinheiro(totais["saldo_final"])
+    margem = dinheiro(totais["margem_operacional"])
 
-    if mes <= 1 or mes > 12:
-        return None
+    percentual_saidas = 0
+    if total_entradas > 0:
+        percentual_saidas = (total_saidas / total_entradas) * 100
 
-    if len(tabela) < mes:
-        return None
+    saldo_projetado_pos_obrigacoes = saldo_final + total_a_receber - total_a_pagar
 
-    atual = tabela[mes - 1]
-    anterior = tabela[mes - 2]
+    faltante_equilibrio = 0
+    sobra_equilibrio = 0
 
-    entradas_atual = dinheiro(atual["entradas"])
-    entradas_anterior = dinheiro(anterior["entradas"])
+    if total_saidas > total_entradas:
+        faltante_equilibrio = total_saidas - total_entradas
+    else:
+        sobra_equilibrio = total_entradas - total_saidas
 
-    saidas_atual = dinheiro(atual["saidas"])
-    saidas_anterior = dinheiro(anterior["saidas"])
+    despesas_top = totais["ranking_despesas"][:5]
+    despesas_top3 = totais["ranking_despesas"][:3]
 
-    lucro_atual = dinheiro(atual["lucro"])
-    lucro_anterior = dinheiro(anterior["lucro"])
+    total_top3 = sum(dinheiro(valor) for _, valor in despesas_top3)
+    economia_10_top3 = total_top3 * 0.10
 
-    saldo_atual = dinheiro(atual["saldo_final"])
-    saldo_anterior = dinheiro(anterior["saldo_final"])
+    maior_despesa_nome = None
+    maior_despesa_valor = 0
+    maior_despesa_percentual = 0
+
+    if despesas_top:
+        maior_despesa_nome = despesas_top[0][0]
+        maior_despesa_valor = dinheiro(despesas_top[0][1])
+
+        if total_saidas > 0:
+            maior_despesa_percentual = (maior_despesa_valor / total_saidas) * 100
+
+    meses_com_movimento = [
+        item for item in evolucao_mensal["tabela"]
+        if dinheiro(item["entradas"]) != 0 or dinheiro(item["saidas"]) != 0
+    ]
+
+    meses_positivos = [
+        item for item in meses_com_movimento
+        if dinheiro(item["lucro"]) > 0
+    ]
+
+    meses_negativos = [
+        item for item in meses_com_movimento
+        if dinheiro(item["lucro"]) < 0
+    ]
+
+    melhor_mes = None
+    pior_mes = None
+    media_resultado = 0
+
+    if meses_com_movimento:
+        melhor_mes = max(meses_com_movimento, key=lambda item: dinheiro(item["lucro"]))
+        pior_mes = min(meses_com_movimento, key=lambda item: dinheiro(item["lucro"]))
+        media_resultado = sum(dinheiro(item["lucro"]) for item in meses_com_movimento) / len(meses_com_movimento)
+
+    hoje = datetime.now()
+    projecao = None
+
+    if hoje.month == mes and hoje.year == ano and hoje.day > 0:
+        dias_no_mes = calendar.monthrange(ano, mes)[1]
+
+        entradas_projetadas = (total_entradas / hoje.day) * dias_no_mes
+        saidas_projetadas = (total_saidas / hoje.day) * dias_no_mes
+        resultado_projetado = entradas_projetadas - saidas_projetadas
+
+        projecao = {
+            "dia_atual": hoje.day,
+            "dias_no_mes": dias_no_mes,
+            "entradas_projetadas": entradas_projetadas,
+            "saidas_projetadas": saidas_projetadas,
+            "resultado_projetado": resultado_projetado,
+        }
+
+    nivel = "success"
+    titulo_situacao = "Operação saudável"
+    resumo_situacao = "O mês apresenta resultado positivo e margem operacional favorável."
+
+    if lucro_mes < 0:
+        nivel = "danger"
+        titulo_situacao = "Resultado negativo"
+        resumo_situacao = "As saídas superaram as entradas. O foco imediato deve ser reduzir custos e acelerar recebimentos."
+    elif margem < 10:
+        nivel = "warning"
+        titulo_situacao = "Margem apertada"
+        resumo_situacao = "O mês está positivo, mas com margem baixa. Qualquer aumento de custo pode comprometer o resultado."
+    elif percentual_saidas >= 80:
+        nivel = "warning"
+        titulo_situacao = "Despesas pressionando"
+        resumo_situacao = "As saídas estão consumindo uma parte alta das entradas. Vale revisar os maiores custos."
+    elif saldo_projetado_pos_obrigacoes < 0:
+        nivel = "danger"
+        titulo_situacao = "Risco de caixa"
+        resumo_situacao = "Mesmo com o saldo atual, as obrigações em aberto podem deixar o caixa negativo."
+
+    alertas = []
+
+    if total_entradas == 0 and total_saidas == 0:
+        alertas.append({
+            "nivel": "warning",
+            "titulo": "Sem movimento financeiro",
+            "descricao": "Não há entradas nem saídas registradas para o mês filtrado.",
+            "acao": "Verifique se as importações e lançamentos deste mês foram feitos corretamente."
+        })
+
+    if lucro_mes < 0:
+        alertas.append({
+            "nivel": "danger",
+            "titulo": "Prejuízo no mês",
+            "descricao": "O mês está fechando com mais saídas do que entradas.",
+            "acao": "Ataque as maiores despesas e priorize recebimentos em aberto."
+        })
+
+    if percentual_saidas >= 80 and total_entradas > 0:
+        alertas.append({
+            "nivel": "warning",
+            "titulo": "Custo consumindo receita",
+            "descricao": f"As saídas representam {percentual_saidas:.2f}% das entradas.",
+            "acao": "Busque reduzir custos variáveis ou renegociar os maiores pagamentos."
+        })
+
+    if total_a_pagar > saldo_final:
+        alertas.append({
+            "nivel": "danger",
+            "titulo": "A pagar maior que saldo final",
+            "descricao": "As obrigações em aberto são maiores que o saldo final atual.",
+            "acao": "Priorize recebimentos e evite novos compromissos antes de reforçar o caixa."
+        })
+
+    if total_a_receber > total_entradas and total_a_receber > 0:
+        alertas.append({
+            "nivel": "warning",
+            "titulo": "Recebíveis importantes em aberto",
+            "descricao": "O valor a receber é maior que o que já entrou no mês.",
+            "acao": "Acompanhe cobranças e antecipe recebimentos quando possível."
+        })
+
+    if maior_despesa_nome:
+        alertas.append({
+            "nivel": "info",
+            "titulo": "Maior impacto de despesa",
+            "descricao": f"{maior_despesa_nome} representa R$ {maior_despesa_valor:,.2f} no mês.",
+            "acao": "Analise se esse custo pode ser reduzido, renegociado ou controlado por limite."
+        })
+
+    if not alertas:
+        alertas.append({
+            "nivel": "success",
+            "titulo": "Sem alertas críticos",
+            "descricao": "Os principais indicadores do mês estão dentro de um cenário saudável.",
+            "acao": "Mantenha o acompanhamento e preserve a margem operacional."
+        })
+
+    acoes_recomendadas = []
+
+    if lucro_mes < 0:
+        acoes_recomendadas.append("Reduzir imediatamente as 3 maiores despesas do mês.")
+        acoes_recomendadas.append("Priorizar cobrança dos valores em aberto.")
+        acoes_recomendadas.append("Revisar se alguma despesa pontual distorceu o mês.")
+
+    if economia_10_top3 > 0:
+        acoes_recomendadas.append(
+            f"Reduzir 10% nas 3 maiores despesas aumentaria o resultado em aproximadamente R$ {economia_10_top3:,.2f}."
+        )
+
+    if total_a_receber > 0:
+        acoes_recomendadas.append(
+            f"Receber os valores em aberto pode reforçar o caixa em R$ {total_a_receber:,.2f}."
+        )
+
+    if total_a_pagar > 0:
+        acoes_recomendadas.append(
+            f"Planejar os pagamentos em aberto de R$ {total_a_pagar:,.2f} para não pressionar o caixa."
+        )
+
+    if not acoes_recomendadas:
+        acoes_recomendadas.append("Manter controle do orçamento e acompanhar os maiores custos semanalmente.")
 
     return {
-        "mes_atual": atual["nome_mes"],
-        "mes_anterior": anterior["nome_mes"],
-
-        "entradas": {
-            "atual": entradas_atual,
-            "anterior": entradas_anterior,
-            "diferenca": entradas_atual - entradas_anterior,
-            "percentual": calcular_variacao_percentual(entradas_atual, entradas_anterior),
-        },
-
-        "saidas": {
-            "atual": saidas_atual,
-            "anterior": saidas_anterior,
-            "diferenca": saidas_atual - saidas_anterior,
-            "percentual": calcular_variacao_percentual(saidas_atual, saidas_anterior),
-        },
-
-        "lucro": {
-            "atual": lucro_atual,
-            "anterior": lucro_anterior,
-            "diferenca": lucro_atual - lucro_anterior,
-            "percentual": calcular_variacao_percentual(lucro_atual, lucro_anterior),
-        },
-
-        "saldo": {
-            "atual": saldo_atual,
-            "anterior": saldo_anterior,
-            "diferenca": saldo_atual - saldo_anterior,
-            "percentual": calcular_variacao_percentual(saldo_atual, saldo_anterior),
-        },
+        "nivel": nivel,
+        "titulo_situacao": titulo_situacao,
+        "resumo_situacao": resumo_situacao,
+        "percentual_saidas": percentual_saidas,
+        "saldo_projetado_pos_obrigacoes": saldo_projetado_pos_obrigacoes,
+        "faltante_equilibrio": faltante_equilibrio,
+        "sobra_equilibrio": sobra_equilibrio,
+        "despesas_top": despesas_top,
+        "despesas_top3": despesas_top3,
+        "total_top3": total_top3,
+        "economia_10_top3": economia_10_top3,
+        "maior_despesa_nome": maior_despesa_nome,
+        "maior_despesa_valor": maior_despesa_valor,
+        "maior_despesa_percentual": maior_despesa_percentual,
+        "meses_com_movimento": len(meses_com_movimento),
+        "meses_positivos": len(meses_positivos),
+        "meses_negativos": len(meses_negativos),
+        "melhor_mes": melhor_mes,
+        "pior_mes": pior_mes,
+        "media_resultado": media_resultado,
+        "projecao": projecao,
+        "alertas": alertas,
+        "acoes_recomendadas": acoes_recomendadas,
     }
 
 
@@ -393,7 +552,14 @@ def dashboard():
     )
 
     evolucao_mensal = calcular_evolucao_mensal(ano)
-    comparativo_mes_anterior = calcular_comparativo_mes_anterior(evolucao_mensal, mes)
+
+    inteligencia_financeira = calcular_inteligencia_financeira(
+        totais=totais,
+        evolucao_mensal=evolucao_mensal,
+        mes=mes,
+        ano=ano,
+        saldo_inicial=saldo_inicial
+    )
 
     return render_template(
         "gestao/dashboard.html",
@@ -411,7 +577,7 @@ def dashboard():
         margem_operacional=totais["margem_operacional"],
 
         evolucao_mensal=evolucao_mensal,
-        comparativo_mes_anterior=comparativo_mes_anterior,
+        inteligencia_financeira=inteligencia_financeira,
 
         ranking_despesas=totais["ranking_despesas"],
         ranking_despesas_assistencia=totais["ranking_despesas_assistencia"],
