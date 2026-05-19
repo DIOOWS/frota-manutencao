@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, flash
+from flask import Blueprint, render_template, request, redirect, flash, jsonify
 from utils.auth import gestao_required
 from models.lancamento_financeiro import LancamentoFinanceiro
 from models.fechamento_mensal import FechamentoMensal
@@ -723,6 +723,177 @@ def dashboard():
         ranking_receitas=totais["ranking_receitas"],
         ranking_clientes=totais["ranking_clientes"]
     )
+
+
+
+# =========================================================
+# API - DETALHES DAS CONTAS POR CATEGORIA DE DESPESA
+# =========================================================
+def pegar_primeiro_valor(objeto, campos, padrao="-"):
+    for campo in campos:
+        valor = getattr(objeto, campo, None)
+
+        if valor not in [None, ""]:
+            return valor
+
+    return padrao
+
+
+def formatar_data_json(valor):
+    if not valor:
+        return "-"
+
+    try:
+        return valor.strftime("%d/%m/%Y")
+    except Exception:
+        return str(valor)
+
+
+def categoria_item_despesa(objeto):
+    categoria = getattr(objeto, "categoria", None)
+    plano_contas = getattr(objeto, "plano_contas", None)
+
+    return (categoria or plano_contas or "SEM CATEGORIA").strip().upper()
+
+
+@gestao_bp.route("/api/despesas-categoria")
+@gestao_required
+def api_despesas_categoria():
+    categoria = request.args.get("categoria", "").strip().upper()
+    mes = request.args.get("mes", type=int)
+    ano = request.args.get("ano", type=int)
+
+    if not categoria or not mes or not ano:
+        return jsonify({
+            "ok": False,
+            "mensagem": "Categoria, mês e ano são obrigatórios.",
+            "categoria": categoria,
+            "total": 0,
+            "quantidade": 0,
+            "itens": []
+        }), 400
+
+    itens = []
+    total = 0
+    total_pago = 0
+    total_aberto = 0
+
+    # =========================
+    # CONTAS A PAGAR IMPORTADAS
+    # =========================
+    contas_pagar = ContaPagarImportada.query.filter_by(
+        mes=mes,
+        ano=ano
+    ).all()
+
+    for conta in contas_pagar:
+        categoria_conta = categoria_item_despesa(conta)
+
+        if categoria_conta != categoria:
+            continue
+
+        valor = dinheiro(getattr(conta, "valor", 0))
+        pago = bool(getattr(conta, "pago", False))
+
+        total += valor
+
+        if pago:
+            total_pago += valor
+            status = "PAGO"
+        else:
+            total_aberto += valor
+            status = "EM ABERTO"
+
+        data = pegar_primeiro_valor(
+            conta,
+            ["data", "vencimento", "data_vencimento", "emissao", "data_emissao"],
+            None
+        )
+
+        descricao = pegar_primeiro_valor(
+            conta,
+            ["descricao", "historico", "fornecedor", "favorecido", "documento", "plano_contas"],
+            "Conta importada"
+        )
+
+        setor = pegar_primeiro_valor(
+            conta,
+            ["setor"],
+            "-"
+        )
+
+        itens.append({
+            "origem": "IMPORTADA",
+            "tipo": "DESPESA",
+            "data": formatar_data_json(data),
+            "descricao": str(descricao),
+            "setor": str(setor),
+            "status": status,
+            "valor": valor
+        })
+
+    # =========================
+    # LANÇAMENTOS MANUAIS
+    # =========================
+    lancamentos = LancamentoFinanceiro.query.filter_by(
+        mes=mes,
+        ano=ano
+    ).all()
+
+    for lancamento in lancamentos:
+        if status_cancelado(getattr(lancamento, "status", None)):
+            continue
+
+        tipo = normalizar_texto(getattr(lancamento, "tipo", None))
+
+        if tipo != "DESPESA":
+            continue
+
+        categoria_lancamento = (getattr(lancamento, "categoria", None) or "SEM CATEGORIA").strip().upper()
+
+        if categoria_lancamento != categoria:
+            continue
+
+        valor = dinheiro(getattr(lancamento, "valor", 0))
+        pago = status_pago(getattr(lancamento, "status", None))
+
+        total += valor
+
+        if pago:
+            total_pago += valor
+            status = getattr(lancamento, "status", None) or "PAGO"
+        else:
+            total_aberto += valor
+            status = getattr(lancamento, "status", None) or "EM ABERTO"
+
+        itens.append({
+            "origem": "MANUAL",
+            "tipo": "DESPESA",
+            "data": formatar_data_json(getattr(lancamento, "data", None)),
+            "descricao": getattr(lancamento, "descricao", None) or "Lançamento manual",
+            "setor": getattr(lancamento, "setor", None) or "-",
+            "status": status,
+            "valor": valor
+        })
+
+    itens = sorted(
+        itens,
+        key=lambda item: item["valor"],
+        reverse=True
+    )
+
+    return jsonify({
+        "ok": True,
+        "categoria": categoria,
+        "mes": mes,
+        "ano": ano,
+        "total": total,
+        "total_pago": total_pago,
+        "total_aberto": total_aberto,
+        "quantidade": len(itens),
+        "itens": itens
+    })
+
 
 
 # =========================================================

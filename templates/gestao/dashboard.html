@@ -204,9 +204,14 @@
             <strong>{{ inteligencia_financeira.prioridade_corte }}</strong>
             <p>{{ inteligencia_financeira.leitura_vazamentos }}</p>
           </div>
-
           {% for nome, valor in inteligencia_financeira.despesas_top %}
-            <div class="impacto-item impacto-item-estrategico">
+            <button
+              type="button"
+              class="impacto-item impacto-item-estrategico impacto-click js-abrir-modal-despesa"
+              data-categoria="{{ nome }}"
+              data-mes="{{ mes }}"
+              data-ano="{{ ano }}"
+            >
               <div>
                 <strong>{{ nome }}</strong>
 
@@ -226,7 +231,7 @@
               </div>
 
               <span>R$ {{ "%.2f"|format(valor) }}</span>
-            </div>
+            </button>
           {% else %}
             <p class="text-muted p-3">Sem despesas no período.</p>
           {% endfor %}
@@ -514,6 +519,79 @@
 
   </div>
 
+</div>
+
+
+
+<!-- =======================================================
+     MODAL - DETALHES DAS CONTAS POR CATEGORIA
+======================================================== -->
+<div class="modal fade" id="modalDetalheCategoriaDespesa" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content modal-despesa-categoria">
+
+      <div class="modal-header">
+        <div>
+          <small class="modal-subtitle">Detalhamento da categoria</small>
+          <h5 class="modal-title" id="modalCategoriaTitulo">Categoria</h5>
+        </div>
+
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="modal-resumo-grid">
+          <div class="modal-resumo-card danger">
+            <span>Total da categoria</span>
+            <strong id="modalCategoriaTotal">R$ 0,00</strong>
+          </div>
+
+          <div class="modal-resumo-card success">
+            <span>Total pago</span>
+            <strong id="modalCategoriaPago">R$ 0,00</strong>
+          </div>
+
+          <div class="modal-resumo-card warning">
+            <span>Total em aberto</span>
+            <strong id="modalCategoriaAberto">R$ 0,00</strong>
+          </div>
+
+          <div class="modal-resumo-card">
+            <span>Quantidade de contas</span>
+            <strong id="modalCategoriaQuantidade">0</strong>
+          </div>
+        </div>
+
+        <div id="modalCategoriaLoading" class="modal-loading">
+          Carregando contas da categoria...
+        </div>
+
+        <div id="modalCategoriaVazio" class="modal-vazio d-none">
+          Nenhuma conta encontrada para essa categoria no período filtrado.
+        </div>
+
+        <div class="table-responsive modal-tabela-wrap d-none" id="modalCategoriaTabelaWrap">
+          <table class="table table-hover align-middle modal-tabela">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Descrição</th>
+                <th>Setor</th>
+                <th>Origem</th>
+                <th>Status</th>
+                <th class="text-end">Valor</th>
+              </tr>
+            </thead>
+
+            <tbody id="modalCategoriaTabelaBody"></tbody>
+          </table>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
 </div>
 
 {% endblock %}

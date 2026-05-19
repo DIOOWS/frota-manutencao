@@ -526,4 +526,145 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+
+    // =========================================================
+  // 💰 GESTÃO - MODAL DE DESPESAS POR CATEGORIA
+  // =========================================================
+  const botoesDespesaCategoria = document.querySelectorAll(".js-abrir-modal-despesa");
+  const modalDespesaCategoriaEl = document.getElementById("modalDetalheCategoriaDespesa");
+
+  function moedaBR(valor) {
+    const numero = Number(valor || 0);
+
+    return numero.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL"
+    });
+  }
+
+  function textoSeguro(valor) {
+    if (valor === null || valor === undefined || valor === "") {
+      return "-";
+    }
+
+    return String(valor);
+  }
+
+  function classeStatusFinanceiro(status) {
+    const statusNormalizado = textoSeguro(status).toUpperCase();
+
+    if (
+      statusNormalizado.includes("PAGO") ||
+      statusNormalizado.includes("RECEBIDO") ||
+      statusNormalizado.includes("OK") ||
+      statusNormalizado.includes("QUITADO") ||
+      statusNormalizado.includes("BAIXADO")
+    ) {
+      return "status-financeiro pago";
+    }
+
+    if (
+      statusNormalizado.includes("ABERTO") ||
+      statusNormalizado.includes("PENDENTE") ||
+      statusNormalizado.includes("VENCIDO")
+    ) {
+      return "status-financeiro aberto";
+    }
+
+    return "status-financeiro neutro";
+  }
+
+  if (botoesDespesaCategoria.length && modalDespesaCategoriaEl) {
+    const modalDespesaCategoria = new bootstrap.Modal(modalDespesaCategoriaEl);
+
+    const titulo = document.getElementById("modalCategoriaTitulo");
+    const total = document.getElementById("modalCategoriaTotal");
+    const pago = document.getElementById("modalCategoriaPago");
+    const aberto = document.getElementById("modalCategoriaAberto");
+    const quantidade = document.getElementById("modalCategoriaQuantidade");
+    const loading = document.getElementById("modalCategoriaLoading");
+    const vazio = document.getElementById("modalCategoriaVazio");
+    const tabelaWrap = document.getElementById("modalCategoriaTabelaWrap");
+    const tabelaBody = document.getElementById("modalCategoriaTabelaBody");
+
+    botoesDespesaCategoria.forEach(function (botao) {
+      botao.addEventListener("click", async function () {
+        const categoria = botao.dataset.categoria;
+        const mes = botao.dataset.mes;
+        const ano = botao.dataset.ano;
+
+        titulo.textContent = categoria;
+        total.textContent = moedaBR(0);
+        pago.textContent = moedaBR(0);
+        aberto.textContent = moedaBR(0);
+        quantidade.textContent = "0";
+
+        tabelaBody.innerHTML = "";
+        loading.classList.remove("d-none");
+        vazio.classList.add("d-none");
+        tabelaWrap.classList.add("d-none");
+
+        modalDespesaCategoria.show();
+
+        try {
+          const url = `/gestao/api/despesas-categoria?categoria=${encodeURIComponent(categoria)}&mes=${encodeURIComponent(mes)}&ano=${encodeURIComponent(ano)}`;
+
+          const resposta = await fetch(url);
+          const dados = await resposta.json();
+
+          if (!resposta.ok || !dados.ok) {
+            throw new Error(dados.mensagem || "Erro ao buscar contas da categoria.");
+          }
+
+          total.textContent = moedaBR(dados.total);
+          pago.textContent = moedaBR(dados.total_pago);
+          aberto.textContent = moedaBR(dados.total_aberto);
+          quantidade.textContent = dados.quantidade;
+
+          loading.classList.add("d-none");
+
+          if (!dados.itens || dados.itens.length === 0) {
+            vazio.classList.remove("d-none");
+            return;
+          }
+
+          dados.itens.forEach(function (item) {
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
+              <td>${textoSeguro(item.data)}</td>
+              <td>
+                <strong>${textoSeguro(item.descricao)}</strong>
+              </td>
+              <td>${textoSeguro(item.setor)}</td>
+              <td>
+                <span class="origem-financeira">${textoSeguro(item.origem)}</span>
+              </td>
+              <td>
+                <span class="${classeStatusFinanceiro(item.status)}">
+                  ${textoSeguro(item.status)}
+                </span>
+              </td>
+              <td class="text-end">
+                <strong class="text-danger">${moedaBR(item.valor)}</strong>
+              </td>
+            `;
+
+            tabelaBody.appendChild(tr);
+          });
+
+          tabelaWrap.classList.remove("d-none");
+        } catch (erro) {
+          loading.classList.add("d-none");
+          vazio.classList.remove("d-none");
+          vazio.textContent = erro.message || "Não foi possível carregar as contas dessa categoria.";
+        }
+      });
+    });
+  }
+
+
+
+
+
 });
