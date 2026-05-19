@@ -27,19 +27,23 @@
   </div>
 
   <form method="GET" class="gestao-filtro">
-    <input type="number"
-           name="mes"
-           min="1"
-           max="12"
-           value="{{ mes }}"
-           class="form-control"
-           placeholder="Mês">
+    <input
+      type="number"
+      name="mes"
+      min="1"
+      max="12"
+      value="{{ mes }}"
+      class="form-control"
+      placeholder="Mês"
+    >
 
-    <input type="number"
-           name="ano"
-           value="{{ ano }}"
-           class="form-control"
-           placeholder="Ano">
+    <input
+      type="number"
+      name="ano"
+      value="{{ ano }}"
+      class="form-control"
+      placeholder="Ano"
+    >
 
     <button class="btn btn-primary">
       Filtrar
@@ -115,6 +119,7 @@
       <div class="decisao-card">
         <span>Saídas sobre entradas</span>
         <strong>{{ "%.2f"|format(inteligencia_financeira.percentual_saidas) }}%</strong>
+
         <small>
           {% if inteligencia_financeira.percentual_saidas >= 80 %}
             As despesas estão pressionando a operação.
@@ -152,10 +157,11 @@
 
     </div>
 
-    <div class="row g-4 mt-1">
+    <!-- ALERTAS + AÇÕES -->
+    <div class="row g-4 mt-3 align-items-stretch">
 
       <div class="col-lg-6">
-        <div class="gestao-card decisao-card-lista">
+        <div class="gestao-card decisao-card-lista h-100">
           <h5>Alertas Inteligentes</h5>
 
           {% for alerta in inteligencia_financeira.alertas %}
@@ -172,7 +178,7 @@
       </div>
 
       <div class="col-lg-6">
-        <div class="gestao-card decisao-card-lista">
+        <div class="gestao-card decisao-card-lista h-100">
           <h5>Ações Recomendadas</h5>
 
           {% for acao in inteligencia_financeira.acoes_recomendadas %}
@@ -187,16 +193,23 @@
 
     </div>
 
-    <div class="row g-4 mt-1">
+    <!-- VAZAMENTOS + ANO + PROJEÇÃO -->
+    <div class="row g-4 mt-3 align-items-stretch">
 
       <div class="col-lg-4">
-        <div class="gestao-card decisao-card-lista">
-          <h5>Top Impactos Negativos</h5>
+        <div class="gestao-card decisao-card-lista vazamento-card h-100">
+          <h5>Maiores Vazamentos Financeiros</h5>
+
+          <div class="diagnostico-mini {{ inteligencia_financeira.prioridade_corte_classe }}">
+            <strong>{{ inteligencia_financeira.prioridade_corte }}</strong>
+            <p>{{ inteligencia_financeira.leitura_vazamentos }}</p>
+          </div>
 
           {% for nome, valor in inteligencia_financeira.despesas_top %}
-            <div class="impacto-item">
+            <div class="impacto-item impacto-item-estrategico">
               <div>
                 <strong>{{ nome }}</strong>
+
                 <small>
                   {% if total_saidas > 0 %}
                     {{ "%.2f"|format((valor / total_saidas) * 100) }}% das saídas
@@ -204,6 +217,12 @@
                     Sem base percentual
                   {% endif %}
                 </small>
+
+                {% if total_saidas > 0 %}
+                  <div class="impacto-barra">
+                    <span style="width: {{ ((valor / total_saidas) * 100)|round(2) }}%;"></span>
+                  </div>
+                {% endif %}
               </div>
 
               <span>R$ {{ "%.2f"|format(valor) }}</span>
@@ -212,12 +231,27 @@
             <p class="text-muted p-3">Sem despesas no período.</p>
           {% endfor %}
 
+          {% if inteligencia_financeira.total_top5 > 0 %}
+            <div class="vazamento-resumo">
+              <small>Top 5 consumiu</small>
+              <strong>
+                R$ {{ "%.2f"|format(inteligencia_financeira.total_top5) }}
+                • {{ "%.2f"|format(inteligencia_financeira.percentual_top5_saidas) }}%
+              </strong>
+            </div>
+          {% endif %}
+
         </div>
       </div>
 
       <div class="col-lg-4">
-        <div class="gestao-card decisao-card-lista">
-          <h5>Leitura do Ano</h5>
+        <div class="gestao-card decisao-card-lista leitura-ano-card h-100">
+          <h5>Diagnóstico Estratégico do Ano</h5>
+
+          <div class="diagnostico-mini {{ inteligencia_financeira.tendencia_ano_classe }}">
+            <strong>{{ inteligencia_financeira.tendencia_ano }}</strong>
+            <p>{{ inteligencia_financeira.leitura_ano_resumo }}</p>
+          </div>
 
           <div class="leitura-ano-item">
             <span>Meses com movimento</span>
@@ -235,8 +269,20 @@
           </div>
 
           <div class="leitura-ano-item">
+            <span>Resultado acumulado</span>
+            <strong class="{% if inteligencia_financeira.resultado_acumulado_ano < 0 %}text-danger{% else %}text-success{% endif %}">
+              R$ {{ "%.2f"|format(inteligencia_financeira.resultado_acumulado_ano) }}
+            </strong>
+          </div>
+
+          <div class="leitura-ano-item">
             <span>Média de resultado</span>
             <strong>R$ {{ "%.2f"|format(inteligencia_financeira.media_resultado) }}</strong>
+          </div>
+
+          <div class="leitura-ano-item">
+            <span>Aproveitamento</span>
+            <strong>{{ "%.2f"|format(inteligencia_financeira.aproveitamento_ano) }}%</strong>
           </div>
 
           {% if inteligencia_financeira.melhor_mes %}
@@ -259,16 +305,39 @@
             </div>
           {% endif %}
 
+          <div class="diagnostico-lista">
+            {% for item in inteligencia_financeira.diagnostico_ano %}
+              <p>{{ item }}</p>
+            {% endfor %}
+          </div>
+
         </div>
       </div>
 
       <div class="col-lg-4">
-        <div class="gestao-card decisao-card-lista">
+        <div class="gestao-card decisao-card-lista projecao-card h-100">
           <h5>Projeção de Fechamento</h5>
 
           {% if inteligencia_financeira.projecao %}
+            <div class="projecao-status {{ inteligencia_financeira.projecao.risco_classe }}">
+              <small>Risco de fechamento</small>
+              <strong>{{ inteligencia_financeira.projecao.risco }}</strong>
+              <p>{{ inteligencia_financeira.projecao.leitura }}</p>
+            </div>
+
             <div class="projecao-box">
-              <span>Base: dia {{ inteligencia_financeira.projecao.dia_atual }} de {{ inteligencia_financeira.projecao.dias_no_mes }}</span>
+              <span>
+                Base: dia {{ inteligencia_financeira.projecao.dia_atual }}
+                de {{ inteligencia_financeira.projecao.dias_no_mes }}
+                • Restam {{ inteligencia_financeira.projecao.dias_restantes }} dia(s)
+              </span>
+
+              <div>
+                <small>Média diária de resultado</small>
+                <strong class="{% if inteligencia_financeira.projecao.media_diaria_resultado < 0 %}text-danger{% else %}text-success{% endif %}">
+                  R$ {{ "%.2f"|format(inteligencia_financeira.projecao.media_diaria_resultado) }}
+                </strong>
+              </div>
 
               <div>
                 <small>Entradas projetadas</small>
@@ -290,11 +359,38 @@
                   R$ {{ "%.2f"|format(inteligencia_financeira.projecao.resultado_projetado) }}
                 </strong>
               </div>
+
+              <div class="projecao-resultado">
+                <small>Caixa projetado após obrigações</small>
+                <strong class="{% if inteligencia_financeira.projecao.caixa_projetado_pos_obrigacoes < 0 %}text-danger{% else %}text-success{% endif %}">
+                  R$ {{ "%.2f"|format(inteligencia_financeira.projecao.caixa_projetado_pos_obrigacoes) }}
+                </strong>
+              </div>
+
+              {% if inteligencia_financeira.projecao.necessario_equilibrio_projetado > 0 %}
+                <div class="projecao-chamada">
+                  <small>Para fechar no zero</small>
+                  <strong>
+                    Precisa melhorar R$ {{ "%.2f"|format(inteligencia_financeira.projecao.necessario_equilibrio_projetado) }}
+                  </strong>
+                </div>
+              {% endif %}
             </div>
           {% else %}
             <div class="projecao-box sem-projecao">
-              <strong>Projeção indisponível</strong>
-              <p>A projeção aparece quando o mês filtrado é o mês atual.</p>
+              <strong>Mês encerrado ou fora do mês atual</strong>
+              <p>
+                Para meses já encerrados, use o resultado final do fechamento.
+                A projeção automática aparece somente no mês em andamento.
+              </p>
+            </div>
+
+            <div class="projecao-historica">
+              <small>Resultado real do período</small>
+              <strong class="{% if lucro_mes < 0 %}text-danger{% else %}text-success{% endif %}">
+                R$ {{ "%.2f"|format(lucro_mes) }}
+              </strong>
+              <p>Esse valor já é a base correta para análise, comparação e tomada de decisão.</p>
             </div>
           {% endif %}
 
@@ -322,6 +418,7 @@
         {% else %}
           <p class="text-muted p-3">Sem despesas de assistência no período.</p>
         {% endfor %}
+
       </div>
     </div>
 
@@ -337,6 +434,7 @@
         {% else %}
           <p class="text-muted p-3">Sem despesas de logística no período.</p>
         {% endfor %}
+
       </div>
     </div>
 
@@ -352,6 +450,7 @@
         {% else %}
           <p class="text-muted p-3">Sem receitas no período.</p>
         {% endfor %}
+
       </div>
     </div>
 
@@ -367,6 +466,7 @@
         {% else %}
           <p class="text-muted p-3">Sem clientes no período.</p>
         {% endfor %}
+
       </div>
     </div>
 

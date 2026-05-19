@@ -5814,3 +5814,669 @@ body {
   }
 }
 
+
+
+
+/* =========================================================
+   💰 GESTÃO - DECISÃO FINANCEIRA REVOLUCIONÁRIA
+   Complemento visual para vazamentos, diagnóstico anual e projeção
+========================================================= */
+
+.diagnostico-mini {
+  border: 1px solid #dbe3ef;
+  border-left: 5px solid #64748b;
+  border-radius: 14px;
+  padding: 12px;
+  background: #f8fafc;
+  margin-bottom: 12px;
+}
+
+.diagnostico-mini strong {
+  display: block;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 950;
+  margin-bottom: 4px;
+}
+
+.diagnostico-mini p {
+  margin: 0;
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 650;
+}
+
+.diagnostico-mini.success {
+  border-left-color: #10b981;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.10), #ffffff);
+}
+
+.diagnostico-mini.warning {
+  border-left-color: #f59e0b;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), #ffffff);
+}
+
+.diagnostico-mini.danger {
+  border-left-color: #ef4444;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), #ffffff);
+}
+
+.diagnostico-mini.neutral {
+  border-left-color: #64748b;
+}
+
+.impacto-item-estrategico {
+  align-items: flex-start;
+}
+
+.impacto-item-estrategico > div {
+  width: 100%;
+  min-width: 0;
+}
+
+.impacto-barra {
+  width: 100%;
+  height: 7px;
+  margin-top: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e2e8f0;
+}
+
+.impacto-barra span {
+  display: block;
+  height: 100%;
+  min-width: 3%;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ef4444, #f97316);
+}
+
+.vazamento-resumo,
+.projecao-historica,
+.projecao-chamada {
+  border-radius: 14px;
+  padding: 12px;
+  background: #0f172a;
+  color: #ffffff;
+  margin-top: 12px;
+}
+
+.vazamento-resumo small,
+.projecao-historica small,
+.projecao-chamada small {
+  display: block;
+  color: rgba(255,255,255,0.72);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.vazamento-resumo strong,
+.projecao-historica strong,
+.projecao-chamada strong {
+  display: block;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.projecao-historica p {
+  margin: 6px 0 0;
+  color: rgba(255,255,255,0.78);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.projecao-status {
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 12px;
+  border: 1px solid #dbe3ef;
+  background: #f8fafc;
+  border-left: 5px solid #2563eb;
+}
+
+.projecao-status.success {
+  border-left-color: #10b981;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), #ffffff);
+}
+
+.projecao-status.warning {
+  border-left-color: #f59e0b;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.13), #ffffff);
+}
+
+.projecao-status.danger {
+  border-left-color: #ef4444;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.13), #ffffff);
+}
+
+.projecao-status small {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.projecao-status strong {
+  display: block;
+  color: #0f172a;
+  font-size: 24px;
+  font-weight: 950;
+  margin-top: 2px;
+}
+
+.projecao-status p {
+  margin: 5px 0 0;
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 650;
+}
+
+.projecao-chamada {
+  background: linear-gradient(135deg, #7f1d1d, #ef4444);
+}
+
+.diagnostico-lista {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.diagnostico-lista p {
+  margin: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 650;
+}
+
+
+
+
+/* =========================================================
+   🔥 GESTÃO FINANCEIRA - REFINAMENTO VISUAL PREMIUM
+========================================================= */
+
+.gestao-page {
+  padding: 18px;
+}
+
+/* Cards principais da central */
+.decisao-financeira .gestao-card,
+.decisao-financeira .decisao-card-lista {
+  border: none;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 14px 35px rgba(15, 23, 42, 0.08);
+}
+
+/* Header dos cards */
+.decisao-financeira .gestao-card h5,
+.decisao-card-lista h5 {
+  margin: 0;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+}
+
+/* Remove aparência de tabelão */
+.alerta-financeiro,
+.acao-recomendada,
+.impacto-item,
+.leitura-ano-item {
+  border: none !important;
+}
+
+/* =========================================================
+   ALERTAS INTELIGENTES
+========================================================= */
+
+.alerta-financeiro {
+  margin: 12px 14px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border-left: 5px solid #64748b !important;
+  box-shadow: inset 0 0 0 1px #e2e8f0;
+}
+
+.alerta-financeiro strong {
+  display: block;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 900;
+  margin-bottom: 5px;
+}
+
+.alerta-financeiro p {
+  margin: 0 0 6px;
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.alerta-financeiro small {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.alerta-financeiro.danger {
+  border-left-color: #ef4444 !important;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.10), #ffffff);
+}
+
+.alerta-financeiro.warning {
+  border-left-color: #f59e0b !important;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), #ffffff);
+}
+
+.alerta-financeiro.success {
+  border-left-color: #10b981 !important;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.10), #ffffff);
+}
+
+.alerta-financeiro.info {
+  border-left-color: #2563eb !important;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.10), #ffffff);
+}
+
+/* =========================================================
+   AÇÕES RECOMENDADAS
+========================================================= */
+
+.acao-recomendada {
+  margin: 12px 14px;
+  padding: 13px 14px;
+  border-radius: 14px;
+  background: #f8fafc;
+  box-shadow: inset 0 0 0 1px #e2e8f0;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.acao-recomendada span {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #020024, #0052e0);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.acao-recomendada p {
+  margin: 0;
+  color: #1e293b;
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 700;
+}
+
+/* =========================================================
+   MAIORES VAZAMENTOS FINANCEIROS
+========================================================= */
+
+.diagnostico-mini {
+  margin: 14px;
+  padding: 14px;
+  border-radius: 16px;
+  border: none;
+  border-left: 5px solid #64748b;
+  background: #f8fafc;
+  box-shadow: inset 0 0 0 1px #e2e8f0;
+}
+
+.diagnostico-mini strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 950;
+  color: #0f172a;
+  margin-bottom: 5px;
+}
+
+.diagnostico-mini p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #475569;
+  font-weight: 650;
+}
+
+.diagnostico-mini.danger {
+  border-left-color: #ef4444;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.10), #ffffff);
+}
+
+.diagnostico-mini.warning {
+  border-left-color: #f59e0b;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), #ffffff);
+}
+
+.diagnostico-mini.success {
+  border-left-color: #10b981;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.10), #ffffff);
+}
+
+.impacto-item-estrategico {
+  margin: 0 14px 12px;
+  padding: 12px;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px #e2e8f0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.impacto-item-estrategico strong {
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.impacto-item-estrategico small {
+  display: block;
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.impacto-item-estrategico > span {
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.impacto-barra {
+  width: 100%;
+  height: 8px;
+  margin-top: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e2e8f0;
+}
+
+.impacto-barra span {
+  display: block;
+  height: 100%;
+  min-width: 4%;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ef4444, #f97316);
+}
+
+.vazamento-resumo {
+  margin: 14px;
+  padding: 16px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #020024, #0f172a);
+  color: #ffffff;
+}
+
+.vazamento-resumo small {
+  display: block;
+  font-size: 11px;
+  font-weight: 900;
+  color: rgba(255,255,255,0.72);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.vazamento-resumo strong {
+  display: block;
+  font-size: 17px;
+  font-weight: 950;
+}
+
+/* =========================================================
+   DIAGNÓSTICO DO ANO
+========================================================= */
+
+.leitura-ano-item {
+  margin: 0 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e2e8f0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.leitura-ano-item span {
+  color: #475569;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.leitura-ano-item strong {
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.leitura-ano-destaque {
+  margin: 14px;
+  padding: 14px;
+  border-radius: 16px;
+  background: #f8fafc;
+  border-left: 5px solid #64748b;
+}
+
+.leitura-ano-destaque small {
+  display: block;
+  font-size: 10px;
+  font-weight: 950;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.leitura-ano-destaque strong {
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.leitura-ano-destaque.success {
+  border-left-color: #10b981;
+}
+
+.leitura-ano-destaque.danger {
+  border-left-color: #ef4444;
+}
+
+.diagnostico-lista {
+  margin: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.diagnostico-lista p {
+  margin: 0;
+  padding: 12px;
+  border-radius: 14px;
+  background: #f8fafc;
+  box-shadow: inset 0 0 0 1px #e2e8f0;
+  color: #334155;
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 650;
+}
+
+/* =========================================================
+   PROJEÇÃO DE FECHAMENTO
+========================================================= */
+
+.projecao-status {
+  margin: 14px;
+  padding: 16px;
+  border-radius: 18px;
+  border: none;
+  border-left: 6px solid #2563eb;
+  background: #f8fafc;
+  box-shadow: inset 0 0 0 1px #e2e8f0;
+}
+
+.projecao-status small {
+  display: block;
+  font-size: 10px;
+  font-weight: 950;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.projecao-status strong {
+  display: block;
+  margin: 4px 0;
+  color: #0f172a;
+  font-size: 26px;
+  font-weight: 950;
+}
+
+.projecao-status p {
+  margin: 0;
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 650;
+}
+
+.projecao-status.danger {
+  border-left-color: #ef4444;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.10), #ffffff);
+}
+
+.projecao-status.warning {
+  border-left-color: #f59e0b;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), #ffffff);
+}
+
+.projecao-status.success {
+  border-left-color: #10b981;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.10), #ffffff);
+}
+
+.projecao-box {
+  margin: 14px;
+  padding: 0;
+  background: transparent;
+}
+
+.projecao-box > span {
+  display: block;
+  margin-bottom: 12px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.projecao-box > div:not(.projecao-chamada) {
+  padding: 12px 0;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.projecao-box small {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.projecao-box strong {
+  font-size: 13px;
+  font-weight: 950;
+  color: #0f172a;
+  text-align: right;
+}
+
+.projecao-chamada {
+  margin-top: 14px;
+  padding: 16px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #991b1b, #ef4444);
+  color: #ffffff;
+}
+
+.projecao-chamada small,
+.projecao-chamada strong {
+  color: #ffffff;
+}
+
+.projecao-historica {
+  margin: 14px;
+  padding: 16px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #020024, #0f172a);
+  color: #ffffff;
+}
+
+.projecao-historica small {
+  display: block;
+  color: rgba(255,255,255,0.72);
+  font-size: 10px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.projecao-historica strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 20px;
+  font-weight: 950;
+}
+
+.projecao-historica p {
+  margin: 8px 0 0;
+  color: rgba(255,255,255,0.78);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+/* =========================================================
+   AJUSTE RESPONSIVO
+========================================================= */
+
+@media (max-width: 991px) {
+  .decisao-financeira .row.g-4 {
+    row-gap: 18px;
+  }
+
+  .impacto-item-estrategico {
+    grid-template-columns: 1fr;
+  }
+
+  .impacto-item-estrategico > span {
+    text-align: left;
+  }
+}

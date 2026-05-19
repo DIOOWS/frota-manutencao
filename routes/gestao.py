@@ -333,8 +333,13 @@ def calcular_inteligencia_financeira(totais, evolucao_mensal, mes, ano, saldo_in
     despesas_top = totais["ranking_despesas"][:5]
     despesas_top3 = totais["ranking_despesas"][:3]
 
+    total_top5 = sum(dinheiro(valor) for _, valor in despesas_top)
     total_top3 = sum(dinheiro(valor) for _, valor in despesas_top3)
     economia_10_top3 = total_top3 * 0.10
+
+    percentual_top5_saidas = 0
+    if total_saidas > 0:
+        percentual_top5_saidas = (total_top5 / total_saidas) * 100
 
     maior_despesa_nome = None
     maior_despesa_valor = 0
@@ -347,46 +352,165 @@ def calcular_inteligencia_financeira(totais, evolucao_mensal, mes, ano, saldo_in
         if total_saidas > 0:
             maior_despesa_percentual = (maior_despesa_valor / total_saidas) * 100
 
-    meses_com_movimento = [
+    meses_com_movimento_lista = [
         item for item in evolucao_mensal["tabela"]
         if dinheiro(item["entradas"]) != 0 or dinheiro(item["saidas"]) != 0
     ]
 
-    meses_positivos = [
-        item for item in meses_com_movimento
+    meses_positivos_lista = [
+        item for item in meses_com_movimento_lista
         if dinheiro(item["lucro"]) > 0
     ]
 
-    meses_negativos = [
-        item for item in meses_com_movimento
+    meses_negativos_lista = [
+        item for item in meses_com_movimento_lista
         if dinheiro(item["lucro"]) < 0
     ]
 
     melhor_mes = None
     pior_mes = None
     media_resultado = 0
+    resultado_acumulado_ano = 0
+    entradas_acumuladas_ano = 0
+    saidas_acumuladas_ano = 0
+    margem_media_ano = 0
 
-    if meses_com_movimento:
-        melhor_mes = max(meses_com_movimento, key=lambda item: dinheiro(item["lucro"]))
-        pior_mes = min(meses_com_movimento, key=lambda item: dinheiro(item["lucro"]))
-        media_resultado = sum(dinheiro(item["lucro"]) for item in meses_com_movimento) / len(meses_com_movimento)
+    if meses_com_movimento_lista:
+        melhor_mes = max(meses_com_movimento_lista, key=lambda item: dinheiro(item["lucro"]))
+        pior_mes = min(meses_com_movimento_lista, key=lambda item: dinheiro(item["lucro"]))
+        resultado_acumulado_ano = sum(dinheiro(item["lucro"]) for item in meses_com_movimento_lista)
+        entradas_acumuladas_ano = sum(dinheiro(item["entradas"]) for item in meses_com_movimento_lista)
+        saidas_acumuladas_ano = sum(dinheiro(item["saidas"]) for item in meses_com_movimento_lista)
+        media_resultado = resultado_acumulado_ano / len(meses_com_movimento_lista)
+
+        if entradas_acumuladas_ano > 0:
+            margem_media_ano = (resultado_acumulado_ano / entradas_acumuladas_ano) * 100
+
+    aproveitamento_ano = 0
+    if meses_com_movimento_lista:
+        aproveitamento_ano = (len(meses_positivos_lista) / len(meses_com_movimento_lista)) * 100
+
+    tendencia_ano = "Sem base suficiente"
+    tendencia_ano_classe = "neutral"
+    leitura_ano_resumo = "Ainda não há movimento suficiente para leitura estratégica do ano."
+
+    if meses_com_movimento_lista:
+        if len(meses_positivos_lista) == 0 and len(meses_negativos_lista) > 0:
+            tendencia_ano = "Ano em zona crítica"
+            tendencia_ano_classe = "danger"
+            leitura_ano_resumo = "Todos os meses com movimento fecharam negativos. A prioridade é recuperar margem e cortar vazamentos recorrentes."
+        elif resultado_acumulado_ano < 0:
+            tendencia_ano = "Ano pressionado"
+            tendencia_ano_classe = "warning"
+            leitura_ano_resumo = "O ano ainda está negativo. Existem meses bons, mas eles não compensaram os meses ruins."
+        elif margem_media_ano < 10:
+            tendencia_ano = "Ano positivo, mas apertado"
+            tendencia_ano_classe = "warning"
+            leitura_ano_resumo = "O ano está positivo, porém com margem baixa. Qualquer despesa fora do padrão pode virar prejuízo."
+        else:
+            tendencia_ano = "Ano saudável"
+            tendencia_ano_classe = "success"
+            leitura_ano_resumo = "A operação acumulada do ano está positiva e com margem operacional favorável."
+
+    diagnostico_ano = []
+
+    if meses_com_movimento_lista:
+        diagnostico_ano.append(
+            f"Foram analisados {len(meses_com_movimento_lista)} mês(es) com movimento: {len(meses_positivos_lista)} positivo(s) e {len(meses_negativos_lista)} negativo(s)."
+        )
+
+        diagnostico_ano.append(
+            f"O resultado acumulado do ano está em R$ {resultado_acumulado_ano:,.2f}, com média mensal de R$ {media_resultado:,.2f}."
+        )
+
+        if len(meses_positivos_lista) == 0 and len(meses_negativos_lista) > 0:
+            diagnostico_ano.append(
+                "Nenhum mês analisado fechou positivo. Isso indica que o negócio ainda não encontrou ponto de equilíbrio no ano."
+            )
+        elif aproveitamento_ano < 50:
+            diagnostico_ano.append(
+                "Menos da metade dos meses fechou positivo. O foco deve ser padronizar receita e controlar despesas recorrentes."
+            )
+        else:
+            diagnostico_ano.append(
+                "A maior parte dos meses analisados fechou positiva. O foco agora é proteger margem e caixa."
+            )
+    else:
+        diagnostico_ano.append(
+            "Sem meses com movimento financeiro suficiente para montar diagnóstico anual."
+        )
+
+    leitura_vazamentos = "Sem despesas suficientes para leitura dos vazamentos."
+    prioridade_corte = "Sem prioridade definida"
+    prioridade_corte_classe = "neutral"
+
+    if despesas_top:
+        leitura_vazamentos = (
+            f"Os 5 maiores grupos consumiram {percentual_top5_saidas:.2f}% das saídas. "
+            f"O maior vazamento é {maior_despesa_nome}, com {maior_despesa_percentual:.2f}% do total de saídas."
+        )
+
+        if percentual_top5_saidas >= 60 or maior_despesa_percentual >= 25:
+            prioridade_corte = "Prioridade alta"
+            prioridade_corte_classe = "danger"
+        elif percentual_top5_saidas >= 35 or maior_despesa_percentual >= 15:
+            prioridade_corte = "Prioridade média"
+            prioridade_corte_classe = "warning"
+        else:
+            prioridade_corte = "Prioridade controlada"
+            prioridade_corte_classe = "success"
 
     hoje = datetime.now()
     projecao = None
+    mes_atual = hoje.month == mes and hoje.year == ano
 
-    if hoje.month == mes and hoje.year == ano and hoje.day > 0:
+    if mes_atual and hoje.day > 0:
         dias_no_mes = calendar.monthrange(ano, mes)[1]
+        dias_restantes = max(dias_no_mes - hoje.day, 0)
 
         entradas_projetadas = (total_entradas / hoje.day) * dias_no_mes
         saidas_projetadas = (total_saidas / hoje.day) * dias_no_mes
         resultado_projetado = entradas_projetadas - saidas_projetadas
+        saldo_final_projetado = dinheiro(saldo_inicial) + resultado_projetado
+        caixa_projetado_pos_obrigacoes = saldo_final_projetado + total_a_receber - total_a_pagar
+
+        media_diaria_entradas = total_entradas / hoje.day
+        media_diaria_saidas = total_saidas / hoje.day
+        media_diaria_resultado = lucro_mes / hoje.day
+
+        necessario_equilibrio_projetado = 0
+        if resultado_projetado < 0:
+            necessario_equilibrio_projetado = abs(resultado_projetado)
+
+        risco = "Baixo"
+        risco_classe = "success"
+        leitura = "Mantendo o ritmo atual, o mês tende a fechar positivo."
+
+        if resultado_projetado < 0:
+            risco = "Alto"
+            risco_classe = "danger"
+            leitura = "Mantendo o ritmo atual, o mês tende a fechar negativo. É preciso reduzir saídas ou antecipar recebimentos."
+        elif margem < 10:
+            risco = "Médio"
+            risco_classe = "warning"
+            leitura = "O mês tende a fechar positivo, mas com margem apertada. Controle novas despesas."
 
         projecao = {
             "dia_atual": hoje.day,
             "dias_no_mes": dias_no_mes,
+            "dias_restantes": dias_restantes,
             "entradas_projetadas": entradas_projetadas,
             "saidas_projetadas": saidas_projetadas,
             "resultado_projetado": resultado_projetado,
+            "saldo_final_projetado": saldo_final_projetado,
+            "caixa_projetado_pos_obrigacoes": caixa_projetado_pos_obrigacoes,
+            "media_diaria_entradas": media_diaria_entradas,
+            "media_diaria_saidas": media_diaria_saidas,
+            "media_diaria_resultado": media_diaria_resultado,
+            "necessario_equilibrio_projetado": necessario_equilibrio_projetado,
+            "risco": risco,
+            "risco_classe": risco_classe,
+            "leitura": leitura,
         }
 
     nivel = "success"
@@ -455,8 +579,8 @@ def calcular_inteligencia_financeira(totais, evolucao_mensal, mes, ano, saldo_in
     if maior_despesa_nome:
         alertas.append({
             "nivel": "info",
-            "titulo": "Maior impacto de despesa",
-            "descricao": f"{maior_despesa_nome} representa R$ {maior_despesa_valor:,.2f} no mês.",
+            "titulo": "Maior vazamento financeiro",
+            "descricao": f"{maior_despesa_nome} representa R$ {maior_despesa_valor:,.2f} e {maior_despesa_percentual:.2f}% das saídas.",
             "acao": "Analise se esse custo pode ser reduzido, renegociado ou controlado por limite."
         })
 
@@ -490,6 +614,11 @@ def calcular_inteligencia_financeira(totais, evolucao_mensal, mes, ano, saldo_in
             f"Planejar os pagamentos em aberto de R$ {total_a_pagar:,.2f} para não pressionar o caixa."
         )
 
+    if mes_atual and projecao and projecao["resultado_projetado"] < 0:
+        acoes_recomendadas.append(
+            f"Para o mês atual não fechar negativo, será necessário melhorar aproximadamente R$ {projecao['necessario_equilibrio_projetado']:,.2f} até o fim do mês."
+        )
+
     if not acoes_recomendadas:
         acoes_recomendadas.append("Manter controle do orçamento e acompanhar os maiores custos semanalmente.")
 
@@ -504,26 +633,35 @@ def calcular_inteligencia_financeira(totais, evolucao_mensal, mes, ano, saldo_in
         "despesas_top": despesas_top,
         "despesas_top3": despesas_top3,
         "total_top3": total_top3,
+        "total_top5": total_top5,
+        "percentual_top5_saidas": percentual_top5_saidas,
         "economia_10_top3": economia_10_top3,
         "maior_despesa_nome": maior_despesa_nome,
         "maior_despesa_valor": maior_despesa_valor,
         "maior_despesa_percentual": maior_despesa_percentual,
-        "meses_com_movimento": len(meses_com_movimento),
-        "meses_positivos": len(meses_positivos),
-        "meses_negativos": len(meses_negativos),
+        "leitura_vazamentos": leitura_vazamentos,
+        "prioridade_corte": prioridade_corte,
+        "prioridade_corte_classe": prioridade_corte_classe,
+        "meses_com_movimento": len(meses_com_movimento_lista),
+        "meses_positivos": len(meses_positivos_lista),
+        "meses_negativos": len(meses_negativos_lista),
         "melhor_mes": melhor_mes,
         "pior_mes": pior_mes,
         "media_resultado": media_resultado,
+        "resultado_acumulado_ano": resultado_acumulado_ano,
+        "entradas_acumuladas_ano": entradas_acumuladas_ano,
+        "saidas_acumuladas_ano": saidas_acumuladas_ano,
+        "margem_media_ano": margem_media_ano,
+        "aproveitamento_ano": aproveitamento_ano,
+        "tendencia_ano": tendencia_ano,
+        "tendencia_ano_classe": tendencia_ano_classe,
+        "leitura_ano_resumo": leitura_ano_resumo,
+        "diagnostico_ano": diagnostico_ano,
+        "mes_atual": mes_atual,
         "projecao": projecao,
         "alertas": alertas,
         "acoes_recomendadas": acoes_recomendadas,
     }
-
-
-@gestao_bp.route("/")
-@gestao_required
-def index():
-    return redirect("/gestao/dashboard")
 
 
 # =========================================================
