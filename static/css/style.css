@@ -6663,6 +6663,28 @@ body {
   color: #1d4ed8;
 }
 
+.modal-descricao-conta {
+  display: block;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+  max-width: 360px;
+  white-space: normal;
+  line-height: 1.35;
+}
+
+.modal-conta-nome {
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.modal-tabela tbody td:nth-child(2) strong {
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 950;
+}
+
 @media (max-width: 991px) {
   .modal-resumo-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -6677,4 +6699,4 @@ body {
   .modal-despesa-categoria .modal-title {
     font-size: 18px;
   }
-}
+}}

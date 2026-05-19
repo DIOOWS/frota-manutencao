@@ -526,8 +526,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-
-    // =========================================================
+  // =========================================================
   // 💰 GESTÃO - MODAL DE DESPESAS POR CATEGORIA
   // =========================================================
   const botoesDespesaCategoria = document.querySelectorAll(".js-abrir-modal-despesa");
@@ -574,97 +573,142 @@ document.addEventListener("DOMContentLoaded", function () {
     return "status-financeiro neutro";
   }
 
-  if (botoesDespesaCategoria.length && modalDespesaCategoriaEl) {
-    const modalDespesaCategoria = new bootstrap.Modal(modalDespesaCategoriaEl);
+  function criarCelulaTexto(texto, classe) {
+    const td = document.createElement("td");
 
-    const titulo = document.getElementById("modalCategoriaTitulo");
-    const total = document.getElementById("modalCategoriaTotal");
-    const pago = document.getElementById("modalCategoriaPago");
-    const aberto = document.getElementById("modalCategoriaAberto");
-    const quantidade = document.getElementById("modalCategoriaQuantidade");
-    const loading = document.getElementById("modalCategoriaLoading");
-    const vazio = document.getElementById("modalCategoriaVazio");
-    const tabelaWrap = document.getElementById("modalCategoriaTabelaWrap");
-    const tabelaBody = document.getElementById("modalCategoriaTabelaBody");
+    if (classe) {
+      td.className = classe;
+    }
 
-    botoesDespesaCategoria.forEach(function (botao) {
-      botao.addEventListener("click", async function () {
-        const categoria = botao.dataset.categoria;
-        const mes = botao.dataset.mes;
-        const ano = botao.dataset.ano;
-
-        titulo.textContent = categoria;
-        total.textContent = moedaBR(0);
-        pago.textContent = moedaBR(0);
-        aberto.textContent = moedaBR(0);
-        quantidade.textContent = "0";
-
-        tabelaBody.innerHTML = "";
-        loading.classList.remove("d-none");
-        vazio.classList.add("d-none");
-        tabelaWrap.classList.add("d-none");
-
-        modalDespesaCategoria.show();
-
-        try {
-          const url = `/gestao/api/despesas-categoria?categoria=${encodeURIComponent(categoria)}&mes=${encodeURIComponent(mes)}&ano=${encodeURIComponent(ano)}`;
-
-          const resposta = await fetch(url);
-          const dados = await resposta.json();
-
-          if (!resposta.ok || !dados.ok) {
-            throw new Error(dados.mensagem || "Erro ao buscar contas da categoria.");
-          }
-
-          total.textContent = moedaBR(dados.total);
-          pago.textContent = moedaBR(dados.total_pago);
-          aberto.textContent = moedaBR(dados.total_aberto);
-          quantidade.textContent = dados.quantidade;
-
-          loading.classList.add("d-none");
-
-          if (!dados.itens || dados.itens.length === 0) {
-            vazio.classList.remove("d-none");
-            return;
-          }
-
-          dados.itens.forEach(function (item) {
-            const tr = document.createElement("tr");
-
-            tr.innerHTML = `
-              <td>${textoSeguro(item.data)}</td>
-              <td>
-                <strong>${textoSeguro(item.descricao)}</strong>
-              </td>
-              <td>${textoSeguro(item.setor)}</td>
-              <td>
-                <span class="origem-financeira">${textoSeguro(item.origem)}</span>
-              </td>
-              <td>
-                <span class="${classeStatusFinanceiro(item.status)}">
-                  ${textoSeguro(item.status)}
-                </span>
-              </td>
-              <td class="text-end">
-                <strong class="text-danger">${moedaBR(item.valor)}</strong>
-              </td>
-            `;
-
-            tabelaBody.appendChild(tr);
-          });
-
-          tabelaWrap.classList.remove("d-none");
-        } catch (erro) {
-          loading.classList.add("d-none");
-          vazio.classList.remove("d-none");
-          vazio.textContent = erro.message || "Não foi possível carregar as contas dessa categoria.";
-        }
-      });
-    });
+    td.textContent = textoSeguro(texto);
+    return td;
   }
 
+  function criarBadge(texto, classe) {
+    const span = document.createElement("span");
+    span.className = classe;
+    span.textContent = textoSeguro(texto);
+    return span;
+  }
 
+  function resetarModalCategoria(elementos) {
+    elementos.total.textContent = moedaBR(0);
+    elementos.pago.textContent = moedaBR(0);
+    elementos.aberto.textContent = moedaBR(0);
+    elementos.quantidade.textContent = "0";
+    elementos.tabelaBody.innerHTML = "";
+    elementos.loading.classList.remove("d-none");
+    elementos.vazio.classList.add("d-none");
+    elementos.tabelaWrap.classList.add("d-none");
+    elementos.vazio.textContent = "Nenhuma conta encontrada para essa categoria no período filtrado.";
+  }
 
+  if (botoesDespesaCategoria.length && modalDespesaCategoriaEl && typeof bootstrap !== "undefined") {
+    const modalDespesaCategoria = new bootstrap.Modal(modalDespesaCategoriaEl);
 
+    const elementos = {
+      titulo: document.getElementById("modalCategoriaTitulo"),
+      total: document.getElementById("modalCategoriaTotal"),
+      pago: document.getElementById("modalCategoriaPago"),
+      aberto: document.getElementById("modalCategoriaAberto"),
+      quantidade: document.getElementById("modalCategoriaQuantidade"),
+      loading: document.getElementById("modalCategoriaLoading"),
+      vazio: document.getElementById("modalCategoriaVazio"),
+      tabelaWrap: document.getElementById("modalCategoriaTabelaWrap"),
+      tabelaBody: document.getElementById("modalCategoriaTabelaBody")
+    };
+
+    const modalCompleto = Object.values(elementos).every(Boolean);
+
+    if (modalCompleto) {
+      botoesDespesaCategoria.forEach(function (botao) {
+        botao.addEventListener("click", async function () {
+          const categoria = botao.dataset.categoria || "";
+          const mes = botao.dataset.mes || "";
+          const ano = botao.dataset.ano || "";
+
+          elementos.titulo.textContent = categoria || "Categoria";
+          resetarModalCategoria(elementos);
+
+          modalDespesaCategoria.show();
+
+          try {
+            const params = new URLSearchParams({
+              categoria: categoria,
+              mes: mes,
+              ano: ano
+            });
+
+            const resposta = await fetch(`/gestao/api/despesas-categoria?${params.toString()}`);
+            const dados = await resposta.json();
+
+            if (!resposta.ok || !dados.ok) {
+              throw new Error(dados.mensagem || "Erro ao buscar contas da categoria.");
+            }
+
+            elementos.total.textContent = moedaBR(dados.total);
+            elementos.pago.textContent = moedaBR(dados.total_pago);
+            elementos.aberto.textContent = moedaBR(dados.total_aberto);
+            elementos.quantidade.textContent = String(dados.quantidade || 0);
+
+            elementos.loading.classList.add("d-none");
+
+            if (!dados.itens || dados.itens.length === 0) {
+              elementos.vazio.classList.remove("d-none");
+              return;
+            }
+
+            dados.itens.forEach(function (item) {
+              const tr = document.createElement("tr");
+
+              tr.appendChild(criarCelulaTexto(item.data));
+
+              const tdConta = document.createElement("td");
+              const conta = document.createElement("strong");
+              conta.className = "modal-conta-nome";
+              conta.textContent = textoSeguro(item.conta);
+              tdConta.appendChild(conta);
+              tr.appendChild(tdConta);
+
+              const tdDescricao = document.createElement("td");
+              const descricao = document.createElement("span");
+              descricao.className = "modal-descricao-conta";
+              descricao.textContent = textoSeguro(item.descricao);
+              tdDescricao.appendChild(descricao);
+              tr.appendChild(tdDescricao);
+
+              tr.appendChild(criarCelulaTexto(item.setor));
+
+              const tdOrigem = document.createElement("td");
+              tdOrigem.appendChild(criarBadge(item.origem, "origem-financeira"));
+              tr.appendChild(tdOrigem);
+
+              const tdStatus = document.createElement("td");
+              tdStatus.appendChild(criarBadge(item.status, classeStatusFinanceiro(item.status)));
+              tr.appendChild(tdStatus);
+
+              const tdValor = document.createElement("td");
+              tdValor.className = "text-end";
+
+              const valor = document.createElement("strong");
+              valor.className = "text-danger";
+              valor.textContent = moedaBR(item.valor);
+
+              tdValor.appendChild(valor);
+              tr.appendChild(tdValor);
+
+              elementos.tabelaBody.appendChild(tr);
+            });
+
+            elementos.tabelaWrap.classList.remove("d-none");
+          } catch (erro) {
+            elementos.loading.classList.add("d-none");
+            elementos.vazio.classList.remove("d-none");
+            elementos.vazio.textContent = erro.message || "Não foi possível carregar as contas dessa categoria.";
+          }
+        });
+      });
+    }
+  }
 
 });

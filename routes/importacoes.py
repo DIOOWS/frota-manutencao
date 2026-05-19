@@ -7,6 +7,7 @@ from datetime import datetime, date
 from decimal import Decimal
 from io import BytesIO, StringIO
 import openpyxl
+import unicodedata
 
 try:
     import pandas as pd
@@ -43,6 +44,22 @@ def texto(valor):
         pass
 
     return str(valor).strip()
+
+
+def normalizar_nome_coluna(valor):
+    valor = texto(valor).lower()
+
+    valor = unicodedata.normalize("NFKD", valor)
+    valor = "".join(
+        caractere for caractere in valor
+        if not unicodedata.combining(caractere)
+    )
+
+    valor = valor.replace("\n", " ")
+    valor = valor.replace("\r", " ")
+    valor = " ".join(valor.split())
+
+    return valor
 
 
 def extensao_arquivo(filename):
@@ -184,7 +201,37 @@ def limpar_categoria(plano_contas):
 
 
 def valor_por_coluna(row_dict, nome):
-    return row_dict.get(nome, "")
+    """
+    Busca valor da coluna de forma flexível:
+    - ignora acentos
+    - ignora maiúsculas/minúsculas
+    - ignora espaços extras
+    - aceita pequenas variações de cabeçalho
+    """
+    if not row_dict:
+        return ""
+
+    nome_normalizado = normalizar_nome_coluna(nome)
+
+    for chave, valor in row_dict.items():
+        if normalizar_nome_coluna(chave) == nome_normalizado:
+            return valor
+
+    return ""
+
+
+def valor_por_colunas(row_dict, nomes):
+    """
+    Tenta várias possibilidades de nomes para a mesma informação.
+    Exemplo: Observações, Observacoes, Obs, Observação.
+    """
+    for nome in nomes:
+        valor = valor_por_coluna(row_dict, nome)
+
+        if texto(valor) != "":
+            return valor
+
+    return ""
 
 
 # =========================================================
@@ -569,6 +616,24 @@ def importar_contas_pagar():
 
             pago = normalizar_bool(valor_por_coluna(linha, "Pg?"))
 
+            observacoes = texto(
+                valor_por_colunas(
+                    linha,
+                    [
+                        "Observações",
+                        "Observacoes",
+                        "Observação",
+                        "Observacao",
+                        "Obs",
+                        "OBS",
+                        "Histórico",
+                        "Historico",
+                        "Descrição",
+                        "Descricao"
+                    ]
+                )
+            )
+
             conta = ContaPagarImportada(
                 numero_fatura=texto(valor_por_coluna(linha, "Nº Fatura")),
                 fornecedor_funcionario=texto(valor_por_coluna(linha, "Fornecedor/Funcionário")),
@@ -588,7 +653,7 @@ def importar_contas_pagar():
                 pago=pago,
                 status="PAGO" if pago else "PENDENTE",
 
-                observacoes=texto(valor_por_coluna(linha, "Observações")),
+                observacoes=observacoes,
 
                 mes=mes_importacao,
                 ano=ano_importacao,
@@ -663,6 +728,24 @@ def importar_contas_receber():
             if total == Decimal("0.00"):
                 total = valor + juros
 
+            observacoes = texto(
+                valor_por_colunas(
+                    linha,
+                    [
+                        "Observações",
+                        "Observacoes",
+                        "Observação",
+                        "Observacao",
+                        "Obs",
+                        "OBS",
+                        "Histórico",
+                        "Historico",
+                        "Descrição",
+                        "Descricao"
+                    ]
+                )
+            )
+
             conta = ContaReceberImportada(
                 numero_fatura=texto(valor_por_coluna(linha, "Nº Fatura")),
                 cliente=texto(valor_por_coluna(linha, "Cliente")),
@@ -686,7 +769,7 @@ def importar_contas_receber():
                 pago=pago,
                 status="RECEBIDO" if pago else "PENDENTE",
 
-                observacoes=texto(valor_por_coluna(linha, "Observações")),
+                observacoes=observacoes,
 
                 mes=mes_importacao,
                 ano=ano_importacao,

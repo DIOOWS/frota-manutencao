@@ -725,7 +725,6 @@ def dashboard():
     )
 
 
-
 # =========================================================
 # API - DETALHES DAS CONTAS POR CATEGORIA DE DESPESA
 # =========================================================
@@ -769,6 +768,8 @@ def api_despesas_categoria():
             "mensagem": "Categoria, mês e ano são obrigatórios.",
             "categoria": categoria,
             "total": 0,
+            "total_pago": 0,
+            "total_aberto": 0,
             "quantidade": 0,
             "itens": []
         }), 400
@@ -806,14 +807,49 @@ def api_despesas_categoria():
 
         data = pegar_primeiro_valor(
             conta,
-            ["data", "vencimento", "data_vencimento", "emissao", "data_emissao"],
+            [
+                "data",
+                "vencimento",
+                "data_vencimento",
+                "emissao",
+                "data_emissao"
+            ],
             None
         )
 
-        descricao = pegar_primeiro_valor(
+        conta_nome = pegar_primeiro_valor(
             conta,
-            ["descricao", "historico", "fornecedor", "favorecido", "documento", "plano_contas"],
-            "Conta importada"
+            [
+                "conta",
+                "nome_conta",
+                "subconta",
+                "subcategoria",
+                "plano_contas",
+                "categoria"
+            ],
+            categoria
+        )
+
+        observacao = pegar_primeiro_valor(
+            conta,
+            [
+                "observacoes",
+                "observações",
+                "observacao",
+                "observação",
+                "obs",
+                "historico",
+                "histórico",
+                "descricao",
+                "descrição",
+                "detalhe",
+                "detalhes",
+                "complemento",
+                "documento",
+                "fornecedor",
+                "favorecido"
+            ],
+            "-"
         )
 
         setor = pegar_primeiro_valor(
@@ -826,7 +862,8 @@ def api_despesas_categoria():
             "origem": "IMPORTADA",
             "tipo": "DESPESA",
             "data": formatar_data_json(data),
-            "descricao": str(descricao),
+            "conta": str(conta_nome),
+            "observacao": str(observacao),
             "setor": str(setor),
             "status": status,
             "valor": valor
@@ -849,7 +886,9 @@ def api_despesas_categoria():
         if tipo != "DESPESA":
             continue
 
-        categoria_lancamento = (getattr(lancamento, "categoria", None) or "SEM CATEGORIA").strip().upper()
+        categoria_lancamento = (
+            getattr(lancamento, "categoria", None) or "SEM CATEGORIA"
+        ).strip().upper()
 
         if categoria_lancamento != categoria:
             continue
@@ -866,11 +905,39 @@ def api_despesas_categoria():
             total_aberto += valor
             status = getattr(lancamento, "status", None) or "EM ABERTO"
 
+        conta_nome = pegar_primeiro_valor(
+            lancamento,
+            [
+                "subcategoria",
+                "conta",
+                "subconta",
+                "categoria"
+            ],
+            categoria_lancamento
+        )
+
+        observacao = pegar_primeiro_valor(
+            lancamento,
+            [
+                "observacoes",
+                "observações",
+                "observacao",
+                "observação",
+                "obs",
+                "descricao",
+                "descrição",
+                "historico",
+                "histórico"
+            ],
+            "-"
+        )
+
         itens.append({
             "origem": "MANUAL",
             "tipo": "DESPESA",
             "data": formatar_data_json(getattr(lancamento, "data", None)),
-            "descricao": getattr(lancamento, "descricao", None) or "Lançamento manual",
+            "conta": str(conta_nome),
+            "observacao": str(observacao),
             "setor": getattr(lancamento, "setor", None) or "-",
             "status": status,
             "valor": valor
@@ -893,7 +960,6 @@ def api_despesas_categoria():
         "quantidade": len(itens),
         "itens": itens
     })
-
 
 
 # =========================================================
