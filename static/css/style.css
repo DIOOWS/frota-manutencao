@@ -6700,3 +6700,26 @@ body {
     font-size: 18px;
   }
 }}
+
+
+
+
+.modal-fornecedor-conta {
+  display: block;
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 850;
+  max-width: 260px;
+  white-space: normal;
+  line-height: 1.35;
+}
+
+.modal-observacao-conta {
+  display: block;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+  max-width: 360px;
+  white-space: normal;
+  line-height: 1.35;
+}

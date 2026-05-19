@@ -670,12 +670,19 @@ document.addEventListener("DOMContentLoaded", function () {
               tdConta.appendChild(conta);
               tr.appendChild(tdConta);
 
-              const tdDescricao = document.createElement("td");
-              const descricao = document.createElement("span");
-              descricao.className = "modal-descricao-conta";
-              descricao.textContent = textoSeguro(item.descricao);
-              tdDescricao.appendChild(descricao);
-              tr.appendChild(tdDescricao);
+              const tdFornecedor = document.createElement("td");
+              const fornecedor = document.createElement("span");
+              fornecedor.className = "modal-fornecedor-conta";
+              fornecedor.textContent = textoSeguro(item.fornecedor_funcionario);
+              tdFornecedor.appendChild(fornecedor);
+              tr.appendChild(tdFornecedor);
+
+              const tdObservacao = document.createElement("td");
+              const observacao = document.createElement("span");
+              observacao.className = "modal-observacao-conta";
+              observacao.textContent = textoSeguro(item.observacao);
+              tdObservacao.appendChild(observacao);
+              tr.appendChild(tdObservacao);
 
               tr.appendChild(criarCelulaTexto(item.setor));
 

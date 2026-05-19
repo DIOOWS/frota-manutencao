@@ -24,7 +24,7 @@ def normalizar_texto(valor):
     if not valor:
         return None
 
-    return valor.strip().upper()
+    return str(valor).strip().upper()
 
 
 def parse_data(data_str):
@@ -805,64 +805,25 @@ def api_despesas_categoria():
             total_aberto += valor
             status = "EM ABERTO"
 
-        data = pegar_primeiro_valor(
-            conta,
-            [
-                "data",
-                "vencimento",
-                "data_vencimento",
-                "emissao",
-                "data_emissao"
-            ],
-            None
+        data = getattr(conta, "data_vencimento", None) or getattr(conta, "data_documento", None)
+
+        conta_nome = (
+            getattr(conta, "plano_contas", None)
+            or getattr(conta, "categoria", None)
+            or categoria
         )
 
-        conta_nome = pegar_primeiro_valor(
-            conta,
-            [
-                "conta",
-                "nome_conta",
-                "subconta",
-                "subcategoria",
-                "plano_contas",
-                "categoria"
-            ],
-            categoria
-        )
+        observacao = getattr(conta, "observacoes", None) or "-"
 
-        observacao = pegar_primeiro_valor(
-            conta,
-            [
-                "observacoes",
-                "observações",
-                "observacao",
-                "observação",
-                "obs",
-                "historico",
-                "histórico",
-                "descricao",
-                "descrição",
-                "detalhe",
-                "detalhes",
-                "complemento",
-                "documento",
-                "fornecedor",
-                "favorecido"
-            ],
-            "-"
-        )
-
-        setor = pegar_primeiro_valor(
-            conta,
-            ["setor"],
-            "-"
-        )
+        setor = getattr(conta, "setor", None) or "-"
 
         itens.append({
             "origem": "IMPORTADA",
             "tipo": "DESPESA",
             "data": formatar_data_json(data),
             "conta": str(conta_nome),
+            "fornecedor_funcionario": str(getattr(conta, "fornecedor_funcionario", None) or "-"),
+            "numero_fatura": str(getattr(conta, "numero_fatura", None) or "-"),
             "observacao": str(observacao),
             "setor": str(setor),
             "status": status,
@@ -905,31 +866,17 @@ def api_despesas_categoria():
             total_aberto += valor
             status = getattr(lancamento, "status", None) or "EM ABERTO"
 
-        conta_nome = pegar_primeiro_valor(
-            lancamento,
-            [
-                "subcategoria",
-                "conta",
-                "subconta",
-                "categoria"
-            ],
-            categoria_lancamento
+        conta_nome = (
+            getattr(lancamento, "subcategoria", None)
+            or getattr(lancamento, "categoria", None)
+            or categoria_lancamento
         )
 
-        observacao = pegar_primeiro_valor(
-            lancamento,
-            [
-                "observacoes",
-                "observações",
-                "observacao",
-                "observação",
-                "obs",
-                "descricao",
-                "descrição",
-                "historico",
-                "histórico"
-            ],
-            "-"
+        observacao = (
+            getattr(lancamento, "observacoes", None)
+            or getattr(lancamento, "observacao", None)
+            or getattr(lancamento, "descricao", None)
+            or "-"
         )
 
         itens.append({
@@ -937,6 +884,8 @@ def api_despesas_categoria():
             "tipo": "DESPESA",
             "data": formatar_data_json(getattr(lancamento, "data", None)),
             "conta": str(conta_nome),
+            "fornecedor_funcionario": getattr(lancamento, "cliente", None) or "-",
+            "numero_fatura": "-",
             "observacao": str(observacao),
             "setor": getattr(lancamento, "setor", None) or "-",
             "status": status,
