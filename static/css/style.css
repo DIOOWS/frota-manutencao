@@ -6960,3 +6960,502 @@ body {
     transform: translateY(0) scale(1);
   }
 }
+
+
+
+
+/* =========================
+   💳 RADAR DE PAGAMENTOS
+========================= */
+
+.radar-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.radar-hero {
+  background:
+    linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  border-radius: 24px;
+  padding: 26px;
+  display: flex;
+  justify-content: space-between;
+  gap: 22px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+}
+
+.radar-eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.8;
+  margin-bottom: 8px;
+}
+
+.radar-hero h1 {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 900;
+}
+
+.radar-hero p {
+  max-width: 680px;
+  margin: 8px 0 0;
+  color: rgba(255,255,255,0.82);
+  font-size: 15px;
+}
+
+.radar-risk {
+  min-width: 260px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 20px;
+  padding: 18px;
+  backdrop-filter: blur(10px);
+}
+
+.radar-risk span {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  opacity: 0.78;
+  text-transform: uppercase;
+}
+
+.radar-risk strong {
+  display: block;
+  font-size: 28px;
+  font-weight: 900;
+  margin: 4px 0;
+}
+
+.radar-risk small {
+  display: block;
+  color: rgba(255,255,255,0.82);
+  line-height: 1.4;
+}
+
+.radar-risk-danger {
+  border-left: 5px solid #ef4444;
+}
+
+.radar-risk-warning {
+  border-left: 5px solid #f59e0b;
+}
+
+.radar-risk-info {
+  border-left: 5px solid #38bdf8;
+}
+
+.radar-risk-success {
+  border-left: 5px solid #10b981;
+}
+
+/* FILTRO */
+.radar-filter {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 20px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 120px 120px 180px 180px auto;
+  gap: 12px;
+  align-items: end;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+.radar-filter label {
+  font-size: 12px;
+  font-weight: 900;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.radar-filter-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-radar-primary,
+.btn-radar-light {
+  min-height: 38px;
+  border: none;
+  border-radius: 12px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn-radar-primary {
+  background: linear-gradient(135deg, #020024, #0052e0);
+  color: #ffffff;
+}
+
+.btn-radar-light {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* KPIS */
+.radar-kpis {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+}
+
+.radar-kpi {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 20px;
+  padding: 18px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+.radar-kpi span {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.radar-kpi strong {
+  display: block;
+  color: #0f172a;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.radar-kpi small {
+  color: #64748b;
+  font-weight: 700;
+}
+
+.radar-kpi.danger {
+  border-left: 5px solid #ef4444;
+}
+
+.radar-kpi.warning {
+  border-left: 5px solid #f59e0b;
+}
+
+.radar-kpi.info {
+  border-left: 5px solid #38bdf8;
+}
+
+.radar-kpi.neutral {
+  border-left: 5px solid #64748b;
+}
+
+.radar-kpi.success {
+  border-left: 5px solid #10b981;
+}
+
+/* BOARD */
+.radar-board {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(260px, 1fr));
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.radar-column {
+  background: #f8fafc;
+  border: 1px solid #dbe3ef;
+  border-radius: 22px;
+  min-height: 420px;
+  overflow: hidden;
+}
+
+.radar-column-header {
+  padding: 16px;
+  background: #ffffff;
+  border-bottom: 1px solid #dbe3ef;
+}
+
+.radar-column-header h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.radar-column-header span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.radar-column-body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.radar-card {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+}
+
+.radar-card-atrasada {
+  border-left: 5px solid #ef4444;
+}
+
+.radar-card-vence_hoje {
+  border-left: 5px solid #f59e0b;
+}
+
+.radar-card-proxima {
+  border-left: 5px solid #38bdf8;
+}
+
+.radar-card-futura {
+  border-left: 5px solid #64748b;
+}
+
+.radar-card-pago {
+  border-left: 5px solid #10b981;
+}
+
+.radar-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.radar-card-top strong {
+  display: block;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.radar-card-top span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.radar-status {
+  height: fit-content;
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  white-space: nowrap;
+}
+
+.radar-status-atrasada {
+  background: #fee2e2;
+  color: #b91c1c !important;
+}
+
+.radar-status-vence_hoje {
+  background: #fef3c7;
+  color: #92400e !important;
+}
+
+.radar-status-proxima {
+  background: #e0f2fe;
+  color: #075985 !important;
+}
+
+.radar-status-futura {
+  background: #f1f5f9;
+  color: #334155 !important;
+}
+
+.radar-status-pago {
+  background: #dcfce7;
+  color: #166534 !important;
+}
+
+.radar-card-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.radar-card-info div {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.radar-card-info small {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.radar-card-info strong {
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.radar-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.radar-card-meta span {
+  background: #eef2ff;
+  color: #334155;
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.radar-observacao {
+  margin-top: 10px;
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.4;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.radar-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.btn-radar-card {
+  min-height: 34px;
+  border: none;
+  border-radius: 999px;
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.btn-radar-card.primary {
+  background: linear-gradient(135deg, #020024, #0052e0);
+  color: #ffffff;
+}
+
+.btn-radar-card.light {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.radar-pago-info {
+  color: #166534;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+/* EMPTY */
+.radar-empty {
+  padding: 20px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 16px;
+  text-align: center;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+/* MODAL */
+.radar-modal {
+  border: none;
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+.radar-modal .modal-header {
+  background: linear-gradient(135deg, #020024, #0052e0);
+  color: #ffffff;
+  border: none;
+}
+
+.radar-modal .modal-header small {
+  display: block;
+  opacity: 0.8;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.radar-modal .modal-title {
+  color: #ffffff;
+  font-weight: 900;
+}
+
+.radar-modal-value {
+  background: #f8fafc;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  padding: 14px;
+  font-size: 24px;
+  font-weight: 900;
+  color: #0f172a;
+  margin-bottom: 16px;
+}
+
+/* RESPONSIVO */
+@media (max-width: 1200px) {
+  .radar-kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .radar-board {
+    grid-template-columns: repeat(5, 280px);
+  }
+}
+
+@media (max-width: 768px) {
+  .radar-hero {
+    flex-direction: column;
+    padding: 20px;
+  }
+
+  .radar-hero h1 {
+    font-size: 26px;
+  }
+
+  .radar-risk {
+    min-width: 0;
+  }
+
+  .radar-filter {
+    grid-template-columns: 1fr;
+  }
+
+  .radar-filter-actions {
+    flex-direction: column;
+  }
+
+  .radar-kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .radar-board {
+    grid-template-columns: repeat(5, 280px);
+  }
+}
