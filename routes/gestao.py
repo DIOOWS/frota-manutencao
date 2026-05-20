@@ -1422,7 +1422,11 @@ def radar_adiar_pagamento(id):
 
     flash("Pagamento adiado com sucesso!", "success")
 
-    return redirect(request.referrer or "/gestao/radar-pagamentos")# =========================================================
+    return redirect(request.referrer or "/gestao/radar-pagamentos")
+
+
+
+# =========================================================
 # FLUXO DIÁRIO FINANCEIRO
 # =========================================================
 
@@ -1441,12 +1445,12 @@ def data_para_date(valor):
 
 def data_movimento_conta(objeto):
     """
-    Define a data que será usada no fluxo diário.
+    Define a data usada no fluxo diário.
     Prioridade:
-    1. data_pagamento, se existir
-    2. data_vencimento, se existir
-    3. data_documento, se existir
-    4. data, se existir
+    1. data_pagamento
+    2. data_vencimento
+    3. data_documento
+    4. data
     """
     campos = [
         "data_pagamento",
@@ -1479,6 +1483,44 @@ def nome_dia_semana(data_ref):
     return dias.get(data_ref.weekday(), "")
 
 
+def somar_fluxo_periodo(contas_pagar, contas_receber, mes_limite, ano):
+    total_despesas = 0
+    total_receitas = 0
+
+    for conta in contas_pagar:
+        data_mov = data_movimento_conta(conta)
+
+        if not data_mov:
+            continue
+
+        if data_mov.year != ano:
+            continue
+
+        if data_mov.month > mes_limite:
+            continue
+
+        total_despesas += dinheiro(getattr(conta, "valor", 0))
+
+    for conta in contas_receber:
+        data_mov = data_movimento_conta(conta)
+
+        if not data_mov:
+            continue
+
+        if data_mov.year != ano:
+            continue
+
+        if data_mov.month > mes_limite:
+            continue
+
+        total_receitas += dinheiro(
+            getattr(conta, "total", None)
+            or getattr(conta, "valor", 0)
+        )
+
+    return total_despesas, total_receitas
+
+
 @gestao_bp.route("/fluxo-diario")
 @gestao_required
 def fluxo_diario():
@@ -1487,34 +1529,40 @@ def fluxo_diario():
 
     mes = request.args.get("mes", type=int) or hoje.month
     ano = request.args.get("ano", type=int) or hoje.year
+    visao = request.args.get("visao") or "mes_ano"
 
-    saldo_inicial = obter_saldo_inicial_mes(mes, ano)
+    if visao not in ["mes", "ano", "mes_ano"]:
+        visao = "mes_ano"
+
+    saldo_inicial_mes = obter_saldo_inicial_mes(mes, ano)
 
     primeiro_dia = date(ano, mes, 1)
     ultimo_dia_numero = calendar.monthrange(ano, mes)[1]
-    ultimo_dia = date(ano, mes, ultimo_dia_numero)
 
-    contas_pagar = ContaPagarImportada.query.filter_by(
+    contas_pagar_mes = ContaPagarImportada.query.filter_by(
         mes=mes,
         ano=ano
     ).all()
 
-    contas_receber = ContaReceberImportada.query.filter_by(
+    contas_receber_mes = ContaReceberImportada.query.filter_by(
         mes=mes,
         ano=ano
+    ).all()
+
+    contas_pagar_ano = ContaPagarImportada.query.filter(
+        ContaPagarImportada.ano == ano,
+        ContaPagarImportada.mes <= mes
+    ).all()
+
+    contas_receber_ano = ContaReceberImportada.query.filter(
+        ContaReceberImportada.ano == ano,
+        ContaReceberImportada.mes <= mes
     ).all()
 
     despesas_por_dia = {}
     receitas_por_dia = {}
 
-    detalhes_despesas = {}
-    detalhes_receitas = {}
-
-    # =========================
-    # DESPESAS
-    # =========================
-    for conta in contas_pagar:
-
+    for conta in contas_pagar_mes:
         data_mov = data_movimento_conta(conta)
 
         if not data_mov:
@@ -1527,18 +1575,7 @@ def fluxo_diario():
 
         despesas_por_dia[data_mov] = despesas_por_dia.get(data_mov, 0) + valor
 
-        detalhes_despesas.setdefault(data_mov, []).append({
-            "conta": conta.plano_contas or conta.categoria or "SEM CONTA",
-            "fornecedor": conta.fornecedor_funcionario or "-",
-            "valor": valor,
-            "status": "PAGO" if conta.pago else (conta.status or "PENDENTE")
-        })
-
-    # =========================
-    # RECEITAS
-    # =========================
-    for conta in contas_receber:
-
+    for conta in contas_receber_mes:
         data_mov = data_movimento_conta(conta)
 
         if not data_mov:
@@ -1554,35 +1591,20 @@ def fluxo_diario():
 
         receitas_por_dia[data_mov] = receitas_por_dia.get(data_mov, 0) + valor
 
-        detalhes_receitas.setdefault(data_mov, []).append({
-            "conta": (
-                getattr(conta, "cliente", None)
-                or getattr(conta, "plano_contas", None)
-                or getattr(conta, "categoria", None)
-                or "SEM RECEITA"
-            ),
-            "fornecedor": getattr(conta, "cliente", None) or "-",
-            "valor": valor,
-            "status": "RECEBIDO" if getattr(conta, "pago", False) else (getattr(conta, "status", None) or "PENDENTE")
-        })
-
     linhas = []
-    acumulado = dinheiro(saldo_inicial)
+    acumulado_mes = dinheiro(saldo_inicial_mes)
 
-    total_despesas = 0
-    total_receitas = 0
+    total_despesas_mes = 0
+    total_receitas_mes = 0
 
-    # Linha transporte anterior
     linhas.append({
         "tipo": "transporte",
         "dia": "** TRANSPORTE MESES ANTERIORES **",
         "data": None,
         "despesas": 0,
         "receitas": 0,
-        "saldo": dinheiro(saldo_inicial),
-        "acumulado": dinheiro(saldo_inicial),
-        "detalhes_despesas": [],
-        "detalhes_receitas": []
+        "saldo": dinheiro(saldo_inicial_mes),
+        "acumulado": dinheiro(saldo_inicial_mes)
     })
 
     for dia in range(1, ultimo_dia_numero + 1):
@@ -1593,10 +1615,10 @@ def fluxo_diario():
         receitas = dinheiro(receitas_por_dia.get(data_ref, 0))
         saldo_dia = receitas - despesas
 
-        acumulado += saldo_dia
+        acumulado_mes += saldo_dia
 
-        total_despesas += despesas
-        total_receitas += receitas
+        total_despesas_mes += despesas
+        total_receitas_mes += receitas
 
         linhas.append({
             "tipo": "dia",
@@ -1605,22 +1627,37 @@ def fluxo_diario():
             "despesas": despesas,
             "receitas": receitas,
             "saldo": saldo_dia,
-            "acumulado": acumulado,
-            "detalhes_despesas": detalhes_despesas.get(data_ref, []),
-            "detalhes_receitas": detalhes_receitas.get(data_ref, [])
+            "acumulado": acumulado_mes
         })
 
-    saldo_final = dinheiro(saldo_inicial) + total_receitas - total_despesas
+    saldo_final_mes = dinheiro(saldo_inicial_mes) + total_receitas_mes - total_despesas_mes
+
+    total_despesas_ano, total_receitas_ano = somar_fluxo_periodo(
+        contas_pagar=contas_pagar_ano,
+        contas_receber=contas_receber_ano,
+        mes_limite=mes,
+        ano=ano
+    )
+
+    saldo_inicial_ano = obter_saldo_inicial_mes(1, ano)
+    saldo_final_ano = dinheiro(saldo_inicial_ano) + total_receitas_ano - total_despesas_ano
 
     return render_template(
         "gestao/fluxo_diario.html",
         mes=mes,
         ano=ano,
+        visao=visao,
         linhas=linhas,
-        saldo_inicial=saldo_inicial,
-        total_despesas=total_despesas,
-        total_receitas=total_receitas,
-        saldo_final=saldo_final
+
+        saldo_inicial_mes=saldo_inicial_mes,
+        total_despesas_mes=total_despesas_mes,
+        total_receitas_mes=total_receitas_mes,
+        saldo_final_mes=saldo_final_mes,
+
+        saldo_inicial_ano=saldo_inicial_ano,
+        total_despesas_ano=total_despesas_ano,
+        total_receitas_ano=total_receitas_ano,
+        saldo_final_ano=saldo_final_ano
     )
 
 

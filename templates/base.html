@@ -17,6 +17,11 @@
 
 <body>
 
+{% set role = session.get("user_role") %}
+{% set pode_operacao = role in ["admin", "gestao", "gestor"] %}
+{% set pode_admin = role in ["admin", "gestao", "gestor"] %}
+{% set pode_gestao = role in ["gestao", "gestor"] %}
+
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
     <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999">
@@ -32,91 +37,184 @@
   {% endif %}
 {% endwith %}
 
-<nav class="top-menu-skew">
+<!-- ========================= -->
+<!-- NAVBAR PREMIUM -->
+<!-- ========================= -->
+<header class="easy-navbar">
 
-  <!-- LOGO -->
-  <div class="top-logo">
-    <img src="{{ url_for('static', filename='css/img/logo.png') }}" alt="Logo">
+  <div class="easy-navbar-inner">
+
+    <!-- LOGO -->
+    <a href="{{ url_for('dashboard.dashboard') }}" class="easy-brand">
+      <img src="{{ url_for('static', filename='css/img/logo.png') }}" alt="Logo">
+    </a>
+
+    <!-- BOTÃO MOBILE -->
+    <button type="button"
+            class="easy-mobile-toggle"
+            id="mobileMenuToggle"
+            aria-label="Abrir menu"
+            aria-expanded="false">
+      <i class="bi bi-list"></i>
+    </button>
+
+    <!-- LINKS -->
+    <nav class="easy-nav-links" id="topLinks">
+
+      <!-- DASHBOARD -->
+      <a href="{{ url_for('dashboard.dashboard') }}" class="easy-nav-link">
+        Dashboard
+      </a>
+
+      <!-- OPERAÇÃO -->
+      <div class="easy-nav-dropdown">
+
+        <button type="button" class="easy-nav-link easy-dropdown-button">
+          Operação
+          <i class="bi bi-chevron-down"></i>
+        </button>
+
+        <div class="easy-dropdown-menu">
+
+          <a href="{{ url_for('manutencao.lista') }}">
+            <i class="bi bi-tools"></i>
+            <span>Manutenções</span>
+          </a>
+
+          <a href="/frotas">
+            <i class="bi bi-truck"></i>
+            <span>Frotas</span>
+          </a>
+
+          {% if pode_operacao %}
+            <a href="{{ url_for('manutencao.nova') }}">
+              <i class="bi bi-plus-circle"></i>
+              <span>Nova manutenção</span>
+            </a>
+
+            <a href="/clientes/">
+              <i class="bi bi-people"></i>
+              <span>Clientes</span>
+            </a>
+          {% endif %}
+
+        </div>
+
+      </div>
+
+      <!-- FINANCEIRO -->
+      {% if pode_gestao %}
+        <div class="easy-nav-dropdown">
+
+          <button type="button" class="easy-nav-link easy-dropdown-button">
+            Financeiro
+            <i class="bi bi-chevron-down"></i>
+          </button>
+
+          <div class="easy-dropdown-menu">
+
+            <a href="/gestao/dashboard">
+              <i class="bi bi-speedometer2"></i>
+              <span>Dashboard Gestão</span>
+            </a>
+
+            <a href="/gestao/radar-pagamentos">
+              <i class="bi bi-broadcast-pin"></i>
+              <span>Radar de Pagamentos</span>
+            </a>
+
+            <a href="/gestao/fluxo-diario">
+              <i class="bi bi-calendar-week"></i>
+              <span>Fluxo Diário</span>
+            </a>
+
+            <a href="/gestao/importacoes/">
+              <i class="bi bi-cloud-arrow-up"></i>
+              <span>Importações</span>
+            </a>
+
+            <a href="/gestao/fechamento">
+              <i class="bi bi-lock-fill"></i>
+              <span>Fechamento</span>
+            </a>
+
+            <a href="/gestao/lancamentos">
+              <i class="bi bi-journal-plus"></i>
+              <span>Lançamentos</span>
+            </a>
+
+          </div>
+
+        </div>
+      {% endif %}
+
+      <!-- ADMINISTRAÇÃO -->
+      {% if pode_admin %}
+        <div class="easy-nav-dropdown">
+
+          <button type="button" class="easy-nav-link easy-dropdown-button">
+            Administração
+            <i class="bi bi-chevron-down"></i>
+          </button>
+
+          <div class="easy-dropdown-menu">
+
+            <a href="{{ url_for('admin.dashboard_admin') }}">
+              <i class="bi bi-shield-lock"></i>
+              <span>Painel Admin</span>
+            </a>
+
+            <a href="/clientes/">
+              <i class="bi bi-building"></i>
+              <span>Gerenciar Clientes</span>
+            </a>
+
+          </div>
+
+        </div>
+      {% endif %}
+
+      <!-- ASSISTENTE -->
+      <a href="/assistente" class="easy-nav-link">
+        Assistente
+      </a>
+
+    </nav>
+
+    <!-- USUÁRIO -->
+    <div class="easy-user-menu">
+
+      <button type="button" class="easy-user-button">
+        {% if session.get("user_foto") %}
+          <img src="{{ session.get('user_foto') }}" class="easy-user-img">
+        {% else %}
+          <div class="easy-user-img easy-user-placeholder">
+            <i class="bi bi-person-fill"></i>
+          </div>
+        {% endif %}
+
+        <i class="bi bi-chevron-down easy-user-arrow"></i>
+      </button>
+
+      <div class="easy-user-dropdown">
+
+        <div class="easy-user-info">
+          <strong>{{ session.get("user_nome") or session.get("user_name") or "Usuário" }}</strong>
+          <small>{{ role or "cliente" }}</small>
+        </div>
+
+        <a href="/logout" class="easy-user-logout">
+          <i class="bi bi-box-arrow-right"></i>
+          <span>Sair</span>
+        </a>
+
+      </div>
+
+    </div>
+
   </div>
 
-  <!-- BOTÃO MOBILE -->
-  <button type="button"
-          class="mobile-menu-toggle"
-          id="mobileMenuToggle"
-          aria-label="Abrir menu"
-          aria-expanded="false">
-    <i class="bi bi-list"></i>
-  </button>
-
-  <!-- MENU CENTRAL -->
-  <div class="top-links" id="topLinks">
-
-    <a href="{{ url_for('dashboard.dashboard') }}" class="skew-item">
-      <span>Dashboard</span>
-    </a>
-
-    <a href="{{ url_for('manutencao.lista') }}" class="skew-item">
-      <span>Manutenções</span>
-    </a>
-
-    <a href="/frotas" class="skew-item">
-      <span>Frotas</span>
-    </a>
-
-    <a href="/assistente" class="skew-item">
-      <span>Assistente</span>
-    </a>
-
-    <!-- Admin, Gestão e Gestor acessam a parte operacional -->
-    {% if session.get("user_role") in ["admin", "gestao", "gestor"] %}
-      <a href="{{ url_for('manutencao.nova') }}" class="skew-item">
-        <span>Nova</span>
-      </a>
-
-      <a href="/clientes/" class="skew-item">
-        <span>Clientes</span>
-      </a>
-
-      <a href="{{ url_for('admin.dashboard_admin') }}" class="skew-item">
-        <span>Admin</span>
-      </a>
-    {% endif %}
-
-    <!-- Somente Gestão/Gestor acessa financeiro interno EASY -->
-    {% if session.get("user_role") in ["gestao", "gestor"] %}
-      <a href="/gestao/dashboard" class="skew-item">
-        <span>Gestão</span>
-      </a>
-
-      <a href="/gestao/radar-pagamentos" class="skew-item">
-          <span>Radar</span>
-      </a>
-
-      <a href="/gestao/fluxo-diario" class="skew-item">
-          <span>Fluxo Diário</span>
-      </a>
-
-      <a href="/gestao/importacoes/" class="skew-item">
-        <span>Importações</span>
-      </a>
-    {% endif %}
-
-    <a href="/logout" class="skew-item sair">
-      <span>Sair</span>
-    </a>
-
-  </div>
-
-  <!-- USUÁRIO DIREITA -->
-  <div class="top-user">
-    {% if session.get("user_foto") %}
-      <img src="{{ session.get('user_foto') }}" class="user-img">
-    {% else %}
-      <div class="user-img">👤</div>
-    {% endif %}
-  </div>
-
-</nav>
+</header>
 
 <div class="content-top p-4">
   {% block content %}{% endblock %}

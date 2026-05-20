@@ -37,6 +37,20 @@
              class="fluxo-ano"
              value="{{ ano }}">
 
+      <select name="visao" class="fluxo-visao">
+        <option value="mes" {% if visao == "mes" %}selected{% endif %}>
+          Acumulado do mês
+        </option>
+
+        <option value="ano" {% if visao == "ano" %}selected{% endif %}>
+          Acumulado do ano
+        </option>
+
+        <option value="mes_ano" {% if visao == "mes_ano" %}selected{% endif %}>
+          Mês + Ano
+        </option>
+      </select>
+
       <button type="submit" class="fluxo-btn-atualizar">
         Atualizar
       </button>
@@ -44,6 +58,49 @@
     </form>
 
   </div>
+
+  <!-- RESUMOS -->
+  {% if visao in ["mes", "mes_ano"] %}
+    <div class="fluxo-resumo-grid">
+
+      <div class="fluxo-resumo-card receita">
+        <span>Receitas do mês</span>
+        <strong>{{ moeda(total_receitas_mes) }}</strong>
+      </div>
+
+      <div class="fluxo-resumo-card despesa">
+        <span>Despesas do mês</span>
+        <strong>{{ moeda(total_despesas_mes) }}</strong>
+      </div>
+
+      <div class="fluxo-resumo-card saldo">
+        <span>Saldo do mês</span>
+        <strong>{{ moeda(saldo_final_mes) }}</strong>
+      </div>
+
+    </div>
+  {% endif %}
+
+  {% if visao in ["ano", "mes_ano"] %}
+    <div class="fluxo-resumo-grid fluxo-resumo-ano">
+
+      <div class="fluxo-resumo-card receita">
+        <span>Receitas acumuladas no ano</span>
+        <strong>{{ moeda(total_receitas_ano) }}</strong>
+      </div>
+
+      <div class="fluxo-resumo-card despesa">
+        <span>Despesas acumuladas no ano</span>
+        <strong>{{ moeda(total_despesas_ano) }}</strong>
+      </div>
+
+      <div class="fluxo-resumo-card saldo">
+        <span>Saldo acumulado no ano</span>
+        <strong>{{ moeda(saldo_final_ano) }}</strong>
+      </div>
+
+    </div>
+  {% endif %}
 
   <!-- TABELA -->
   <div class="fluxo-premium-table-card">
@@ -93,26 +150,6 @@
       </tbody>
 
     </table>
-
-  </div>
-
-  <!-- TOTAL FINAL -->
-  <div class="fluxo-premium-footer">
-
-    <div class="fluxo-footer-item receita">
-      <span>Receitas</span>
-      <strong>{{ moeda(total_receitas) }}</strong>
-    </div>
-
-    <div class="fluxo-footer-item despesa">
-      <span>Despesas</span>
-      <strong>{{ moeda(total_despesas) }}</strong>
-    </div>
-
-    <div class="fluxo-footer-item saldo">
-      <span>Saldo</span>
-      <strong>{{ moeda(saldo_final) }}</strong>
-    </div>
 
   </div>
 
