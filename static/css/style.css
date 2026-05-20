@@ -7459,3 +7459,280 @@ body {
     grid-template-columns: repeat(5, 280px);
   }
 }
+
+
+/* =========================
+   💰 FLUXO DIÁRIO PREMIUM
+========================= */
+
+.fluxo-premium-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #eef2f7;
+}
+
+/* TOPO */
+.fluxo-premium-toolbar {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  padding: 12px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+
+.fluxo-premium-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.fluxo-premium-form label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.fluxo-select,
+.fluxo-ano {
+  height: 36px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 0 10px;
+  outline: none;
+}
+
+.fluxo-select {
+  min-width: 135px;
+}
+
+.fluxo-ano {
+  width: 92px;
+}
+
+.fluxo-select:focus,
+.fluxo-ano:focus {
+  border-color: #0052e0;
+  box-shadow: 0 0 0 3px rgba(0, 82, 224, 0.12);
+}
+
+.fluxo-separador {
+  color: #64748b;
+  font-weight: 900;
+}
+
+.fluxo-btn-atualizar {
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  padding: 0 16px;
+  background: linear-gradient(135deg, #020024, #0052e0);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+  transition: 0.2s ease;
+}
+
+.fluxo-btn-atualizar:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+/* CARD TABELA */
+.fluxo-premium-table-card {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  overflow-x: auto;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+/* TABELA */
+.fluxo-premium-table {
+  width: 100%;
+  min-width: 780px;
+  border-collapse: collapse;
+  font-size: 13px;
+  color: #0f172a;
+}
+
+.fluxo-premium-table thead th {
+  background: linear-gradient(135deg, #020024, #0052e0);
+  color: #ffffff;
+  padding: 8px 10px;
+  border-right: 1px solid rgba(255, 255, 255, 0.16);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.fluxo-premium-table thead th:first-child {
+  text-align: left;
+}
+
+.fluxo-premium-table tbody td {
+  padding: 5px 10px;
+  border-bottom: 1px solid #edf2f7;
+  border-right: 1px solid #edf2f7;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.fluxo-premium-table tbody tr:hover td {
+  background: #f8fbff;
+}
+
+.fluxo-premium-table tbody tr:nth-child(even) td {
+  background: #fbfdff;
+}
+
+.fluxo-dia {
+  width: 320px;
+  color: #0f172a;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.fluxo-valor {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* TRANSPORTE */
+.fluxo-linha-transporte td {
+  background: #f1f5ff !important;
+  color: #020617;
+  font-weight: 900;
+  border-bottom: 2px solid #c7d2fe;
+}
+
+/* CORES */
+.fluxo-despesa {
+  color: #b91c1c;
+}
+
+.fluxo-receita {
+  color: #0052e0;
+}
+
+.fluxo-negativo {
+  color: #dc2626;
+}
+
+.fluxo-positivo {
+  color: #008000;
+}
+
+/* FOOTER TOTAL */
+.fluxo-premium-footer {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  padding: 14px 16px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+.fluxo-footer-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.fluxo-footer-item span {
+  font-weight: 900;
+}
+
+.fluxo-footer-item strong {
+  font-weight: 900;
+}
+
+.fluxo-footer-item.receita {
+  color: #003db5;
+}
+
+.fluxo-footer-item.despesa {
+  color: #cc0000;
+}
+
+.fluxo-footer-item.saldo {
+  color: #008000;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+
+  .fluxo-premium-toolbar {
+    padding: 10px;
+  }
+
+  .fluxo-premium-form {
+    display: grid;
+    grid-template-columns: 1fr 74px;
+    gap: 8px;
+  }
+
+  .fluxo-premium-form label {
+    grid-column: 1 / -1;
+  }
+
+  .fluxo-select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .fluxo-ano {
+    width: 100%;
+  }
+
+  .fluxo-separador {
+    display: none;
+  }
+
+  .fluxo-btn-atualizar {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .fluxo-premium-table {
+    min-width: 760px;
+    font-size: 12px;
+  }
+
+  .fluxo-premium-table thead th {
+    padding: 7px 8px;
+    font-size: 11px;
+  }
+
+  .fluxo-premium-table tbody td {
+    padding: 5px 8px;
+  }
+
+  .fluxo-dia {
+    width: 240px;
+  }
+
+  .fluxo-premium-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .fluxo-footer-item {
+    font-size: 15px;
+  }
+}
+

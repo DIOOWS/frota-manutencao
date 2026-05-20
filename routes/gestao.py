@@ -1422,4 +1422,207 @@ def radar_adiar_pagamento(id):
 
     flash("Pagamento adiado com sucesso!", "success")
 
-    return redirect(request.referrer or "/gestao/radar-pagamentos")
+    return redirect(request.referrer or "/gestao/radar-pagamentos")# =========================================================
+# FLUXO DIÁRIO FINANCEIRO
+# =========================================================
+
+def data_para_date(valor):
+    if not valor:
+        return None
+
+    if isinstance(valor, datetime):
+        return valor.date()
+
+    if isinstance(valor, date):
+        return valor
+
+    return None
+
+
+def data_movimento_conta(objeto):
+    """
+    Define a data que será usada no fluxo diário.
+    Prioridade:
+    1. data_pagamento, se existir
+    2. data_vencimento, se existir
+    3. data_documento, se existir
+    4. data, se existir
+    """
+    campos = [
+        "data_pagamento",
+        "data_vencimento",
+        "data_documento",
+        "data"
+    ]
+
+    for campo in campos:
+        valor = getattr(objeto, campo, None)
+        data_convertida = data_para_date(valor)
+
+        if data_convertida:
+            return data_convertida
+
+    return None
+
+
+def nome_dia_semana(data_ref):
+    dias = {
+        0: "segunda-feira",
+        1: "terça-feira",
+        2: "quarta-feira",
+        3: "quinta-feira",
+        4: "sexta-feira",
+        5: "sábado",
+        6: "domingo",
+    }
+
+    return dias.get(data_ref.weekday(), "")
+
+
+@gestao_bp.route("/fluxo-diario")
+@gestao_required
+def fluxo_diario():
+
+    hoje = datetime.now()
+
+    mes = request.args.get("mes", type=int) or hoje.month
+    ano = request.args.get("ano", type=int) or hoje.year
+
+    saldo_inicial = obter_saldo_inicial_mes(mes, ano)
+
+    primeiro_dia = date(ano, mes, 1)
+    ultimo_dia_numero = calendar.monthrange(ano, mes)[1]
+    ultimo_dia = date(ano, mes, ultimo_dia_numero)
+
+    contas_pagar = ContaPagarImportada.query.filter_by(
+        mes=mes,
+        ano=ano
+    ).all()
+
+    contas_receber = ContaReceberImportada.query.filter_by(
+        mes=mes,
+        ano=ano
+    ).all()
+
+    despesas_por_dia = {}
+    receitas_por_dia = {}
+
+    detalhes_despesas = {}
+    detalhes_receitas = {}
+
+    # =========================
+    # DESPESAS
+    # =========================
+    for conta in contas_pagar:
+
+        data_mov = data_movimento_conta(conta)
+
+        if not data_mov:
+            continue
+
+        if data_mov.month != mes or data_mov.year != ano:
+            continue
+
+        valor = dinheiro(getattr(conta, "valor", 0))
+
+        despesas_por_dia[data_mov] = despesas_por_dia.get(data_mov, 0) + valor
+
+        detalhes_despesas.setdefault(data_mov, []).append({
+            "conta": conta.plano_contas or conta.categoria or "SEM CONTA",
+            "fornecedor": conta.fornecedor_funcionario or "-",
+            "valor": valor,
+            "status": "PAGO" if conta.pago else (conta.status or "PENDENTE")
+        })
+
+    # =========================
+    # RECEITAS
+    # =========================
+    for conta in contas_receber:
+
+        data_mov = data_movimento_conta(conta)
+
+        if not data_mov:
+            continue
+
+        if data_mov.month != mes or data_mov.year != ano:
+            continue
+
+        valor = dinheiro(
+            getattr(conta, "total", None)
+            or getattr(conta, "valor", 0)
+        )
+
+        receitas_por_dia[data_mov] = receitas_por_dia.get(data_mov, 0) + valor
+
+        detalhes_receitas.setdefault(data_mov, []).append({
+            "conta": (
+                getattr(conta, "cliente", None)
+                or getattr(conta, "plano_contas", None)
+                or getattr(conta, "categoria", None)
+                or "SEM RECEITA"
+            ),
+            "fornecedor": getattr(conta, "cliente", None) or "-",
+            "valor": valor,
+            "status": "RECEBIDO" if getattr(conta, "pago", False) else (getattr(conta, "status", None) or "PENDENTE")
+        })
+
+    linhas = []
+    acumulado = dinheiro(saldo_inicial)
+
+    total_despesas = 0
+    total_receitas = 0
+
+    # Linha transporte anterior
+    linhas.append({
+        "tipo": "transporte",
+        "dia": "** TRANSPORTE MESES ANTERIORES **",
+        "data": None,
+        "despesas": 0,
+        "receitas": 0,
+        "saldo": dinheiro(saldo_inicial),
+        "acumulado": dinheiro(saldo_inicial),
+        "detalhes_despesas": [],
+        "detalhes_receitas": []
+    })
+
+    for dia in range(1, ultimo_dia_numero + 1):
+
+        data_ref = date(ano, mes, dia)
+
+        despesas = dinheiro(despesas_por_dia.get(data_ref, 0))
+        receitas = dinheiro(receitas_por_dia.get(data_ref, 0))
+        saldo_dia = receitas - despesas
+
+        acumulado += saldo_dia
+
+        total_despesas += despesas
+        total_receitas += receitas
+
+        linhas.append({
+            "tipo": "dia",
+            "dia": f"{dia:02d}/{mes:02d} - {nome_dia_semana(data_ref)}",
+            "data": data_ref,
+            "despesas": despesas,
+            "receitas": receitas,
+            "saldo": saldo_dia,
+            "acumulado": acumulado,
+            "detalhes_despesas": detalhes_despesas.get(data_ref, []),
+            "detalhes_receitas": detalhes_receitas.get(data_ref, [])
+        })
+
+    saldo_final = dinheiro(saldo_inicial) + total_receitas - total_despesas
+
+    return render_template(
+        "gestao/fluxo_diario.html",
+        mes=mes,
+        ano=ano,
+        linhas=linhas,
+        saldo_inicial=saldo_inicial,
+        total_despesas=total_despesas,
+        total_receitas=total_receitas,
+        saldo_final=saldo_final
+    )
+
+
+
+

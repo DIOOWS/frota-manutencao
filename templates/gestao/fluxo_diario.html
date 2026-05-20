@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Fluxo Diário{% endblock %}
+
+{% block content %}
+
+{% macro moeda(valor) %}
+  R$ {{ "{:,.2f}".format(valor or 0).replace(",", "X").replace(".", ",").replace("X", ".") }}
+{% endmacro %}
+
+<div class="fluxo-premium-page">
+
+  <!-- TOPO -->
+  <div class="fluxo-premium-toolbar">
+
+    <form method="GET" class="fluxo-premium-form">
+
+      <label>Exibir contas do mês:</label>
+
+      {% set nomes_meses = [
+        "", "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+        "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"
+      ] %}
+
+      <select name="mes" class="fluxo-select">
+        {% for m in range(1, 13) %}
+          <option value="{{ m }}" {% if mes == m %}selected{% endif %}>
+            {{ nomes_meses[m] }}
+          </option>
+        {% endfor %}
+      </select>
+
+      <span class="fluxo-separador">/</span>
+
+      <input type="number"
+             name="ano"
+             class="fluxo-ano"
+             value="{{ ano }}">
+
+      <button type="submit" class="fluxo-btn-atualizar">
+        Atualizar
+      </button>
+
+    </form>
+
+  </div>
+
+  <!-- TABELA -->
+  <div class="fluxo-premium-table-card">
+
+    <table class="fluxo-premium-table">
+
+      <thead>
+        <tr>
+          <th>Dia</th>
+          <th>Despesas</th>
+          <th>Receitas</th>
+          <th>Saldo</th>
+          <th>Acumulado do mês</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        {% for linha in linhas %}
+
+          <tr class="{% if linha.tipo == 'transporte' %}fluxo-linha-transporte{% endif %}">
+
+            <td class="fluxo-dia">
+              {{ linha.dia }}
+            </td>
+
+            <td class="fluxo-valor fluxo-despesa">
+              {{ moeda(linha.despesas) }}
+            </td>
+
+            <td class="fluxo-valor fluxo-receita">
+              {{ moeda(linha.receitas) }}
+            </td>
+
+            <td class="fluxo-valor {% if linha.saldo < 0 %}fluxo-negativo{% else %}fluxo-positivo{% endif %}">
+              {{ moeda(linha.saldo) }}
+            </td>
+
+            <td class="fluxo-valor {% if linha.acumulado < 0 %}fluxo-negativo{% else %}fluxo-positivo{% endif %}">
+              {{ moeda(linha.acumulado) }}
+            </td>
+
+          </tr>
+
+        {% endfor %}
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+  <!-- TOTAL FINAL -->
+  <div class="fluxo-premium-footer">
+
+    <div class="fluxo-footer-item receita">
+      <span>Receitas</span>
+      <strong>{{ moeda(total_receitas) }}</strong>
+    </div>
+
+    <div class="fluxo-footer-item despesa">
+      <span>Despesas</span>
+      <strong>{{ moeda(total_despesas) }}</strong>
+    </div>
+
+    <div class="fluxo-footer-item saldo">
+      <span>Saldo</span>
+      <strong>{{ moeda(saldo_final) }}</strong>
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}
