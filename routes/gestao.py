@@ -1143,293 +1143,7 @@ def excluir_lancamento(id):
     return redirect("/gestao/lancamentos")
 
 # =========================================================
-# RADAR DE PAGAMENTOS - CONTAS A PAGAR
-# =========================================================
-
-def data_base_radar():
-    return date.today()
-
-
-def converter_data_date(valor):
-    if not valor:
-        return None
-
-    if isinstance(valor, datetime):
-        return valor.date()
-
-    if isinstance(valor, date):
-        return valor
-
-    return None
-
-
-def status_visual_conta(conta, hoje):
-    data_vencimento = converter_data_date(conta.data_vencimento)
-
-    if conta.pago:
-        return {
-            "label": "PAGO",
-            "classe": "pago",
-            "grupo": "pagas"
-        }
-
-    if not data_vencimento:
-        return {
-            "label": "SEM DATA",
-            "classe": "neutro",
-            "grupo": "sem_data"
-        }
-
-    if data_vencimento < hoje:
-        return {
-            "label": "ATRASADA",
-            "classe": "atrasada",
-            "grupo": "atrasadas"
-        }
-
-    if data_vencimento == hoje:
-        return {
-            "label": "VENCE HOJE",
-            "classe": "vence_hoje",
-            "grupo": "vence_hoje"
-        }
-
-    if data_vencimento <= hoje + timedelta(days=7):
-        return {
-            "label": "PRÓXIMOS 7 DIAS",
-            "classe": "proxima",
-            "grupo": "proximas"
-        }
-
-    return {
-        "label": "FUTURA",
-        "classe": "futura",
-        "grupo": "futuras"
-    }
-
-
-def montar_item_radar(conta, hoje):
-    status_info = status_visual_conta(conta, hoje)
-
-    data_vencimento = converter_data_date(conta.data_vencimento)
-    data_pagamento = converter_data_date(conta.data_pagamento)
-
-    dias = None
-
-    if data_vencimento and not conta.pago:
-        dias = (data_vencimento - hoje).days
-
-    return {
-        "id": conta.id,
-        "numero_fatura": conta.numero_fatura or "-",
-        "fornecedor_funcionario": conta.fornecedor_funcionario or "-",
-        "plano_contas": conta.plano_contas or "-",
-        "categoria": conta.categoria or "-",
-        "setor": conta.setor or "-",
-        "data_vencimento": data_vencimento,
-        "data_pagamento": data_pagamento,
-        "valor": dinheiro(conta.valor),
-        "pago": bool(conta.pago),
-        "status": conta.status or "-",
-        "observacoes": conta.observacoes or "-",
-        "status_label": status_info["label"],
-        "status_classe": status_info["classe"],
-        "grupo": status_info["grupo"],
-        "dias": dias
-    }
-
-
-def somar_valor_itens(itens):
-    return sum(dinheiro(item.get("valor")) for item in itens)
-
-
-@gestao_bp.route("/radar-pagamentos")
-@gestao_required
-def radar_pagamentos():
-    hoje = data_base_radar()
-
-    mes = request.args.get("mes", type=int) or hoje.month
-    ano = request.args.get("ano", type=int) or hoje.year
-    setor = request.args.get("setor", "").strip().upper()
-    status_filtro = request.args.get("status", "").strip().upper()
-
-    query = ContaPagarImportada.query.filter_by(
-        mes=mes,
-        ano=ano
-    )
-
-    if setor:
-        query = query.filter(
-            ContaPagarImportada.setor.ilike(f"%{setor}%")
-        )
-
-    contas = query.order_by(
-        ContaPagarImportada.data_vencimento.asc().nullslast(),
-        ContaPagarImportada.id.desc()
-    ).all()
-
-    itens = [
-        montar_item_radar(conta, hoje)
-        for conta in contas
-    ]
-
-    if status_filtro:
-        itens = [
-            item for item in itens
-            if item["status_label"] == status_filtro
-            or item["grupo"].upper() == status_filtro
-        ]
-
-    atrasadas = [item for item in itens if item["grupo"] == "atrasadas"]
-    vence_hoje = [item for item in itens if item["grupo"] == "vence_hoje"]
-    proximas = [item for item in itens if item["grupo"] == "proximas"]
-    futuras = [item for item in itens if item["grupo"] == "futuras"]
-    pagas = [item for item in itens if item["grupo"] == "pagas"]
-    sem_data = [item for item in itens if item["grupo"] == "sem_data"]
-
-    total_aberto = somar_valor_itens([
-        item for item in itens
-        if not item["pago"]
-    ])
-
-    total_atrasado = somar_valor_itens(atrasadas)
-    total_vence_hoje = somar_valor_itens(vence_hoje)
-    total_proximas = somar_valor_itens(proximas)
-    total_futuras = somar_valor_itens(futuras)
-    total_pago = somar_valor_itens(pagas)
-
-    total_critico = total_atrasado + total_vence_hoje + total_proximas
-
-    risco = "Baixo"
-    risco_classe = "success"
-    leitura = "As obrigações próximas estão controladas."
-
-    if total_atrasado > 0:
-        risco = "Alto"
-        risco_classe = "danger"
-        leitura = "Existem contas atrasadas. A prioridade deve ser regularizar pagamentos vencidos."
-    elif total_vence_hoje > 0:
-        risco = "Médio"
-        risco_classe = "warning"
-        leitura = "Existem contas vencendo hoje. Vale decidir o pagamento ainda no dia."
-    elif total_proximas > 0:
-        risco = "Atenção"
-        risco_classe = "info"
-        leitura = "Existem contas vencendo nos próximos 7 dias. Planeje o caixa antes do vencimento."
-
-    return render_template(
-        "gestao/radar_pagamentos.html",
-        hoje=hoje,
-        mes=mes,
-        ano=ano,
-        setor=setor,
-        status_filtro=status_filtro,
-
-        itens=itens,
-        atrasadas=atrasadas,
-        vence_hoje=vence_hoje,
-        proximas=proximas,
-        futuras=futuras,
-        pagas=pagas,
-        sem_data=sem_data,
-
-        total_aberto=total_aberto,
-        total_atrasado=total_atrasado,
-        total_vence_hoje=total_vence_hoje,
-        total_proximas=total_proximas,
-        total_futuras=total_futuras,
-        total_pago=total_pago,
-        total_critico=total_critico,
-
-        risco=risco,
-        risco_classe=risco_classe,
-        leitura=leitura
-    )
-
-
-@gestao_bp.route("/radar-pagamentos/pagar/<int:id>", methods=["POST"])
-@gestao_required
-def radar_marcar_pago(id):
-    conta = ContaPagarImportada.query.get_or_404(id)
-
-    data_pagamento_str = request.form.get("data_pagamento")
-    observacao_extra = request.form.get("observacao", "").strip()
-
-    data_pagamento = parse_data(data_pagamento_str)
-
-    if not data_pagamento:
-        data_pagamento = date.today()
-
-    conta.pago = True
-    conta.status = "PAGO"
-    conta.data_pagamento = datetime.combine(
-        data_pagamento,
-        datetime.min.time()
-    )
-
-    if observacao_extra:
-        observacao_antiga = conta.observacoes or ""
-        conta.observacoes = f"{observacao_antiga}\nPagamento: {observacao_extra}".strip()
-
-    db.session.commit()
-
-    flash("Conta marcada como paga com sucesso!", "success")
-
-    return redirect(request.referrer or "/gestao/radar-pagamentos")
-
-
-@gestao_bp.route("/radar-pagamentos/adiar/<int:id>", methods=["POST"])
-@gestao_required
-def radar_adiar_pagamento(id):
-    conta = ContaPagarImportada.query.get_or_404(id)
-
-    nova_data_str = request.form.get("nova_data_vencimento")
-    motivo = request.form.get("motivo", "").strip()
-
-    nova_data = parse_data(nova_data_str)
-
-    if not nova_data:
-        flash("Informe uma nova data válida.", "danger")
-        return redirect(request.referrer or "/gestao/radar-pagamentos")
-
-    data_antiga = converter_data_date(conta.data_vencimento)
-
-    conta.data_vencimento = datetime.combine(
-        nova_data,
-        datetime.min.time()
-    )
-
-    conta.mes = nova_data.month
-    conta.ano = nova_data.year
-
-    if not conta.pago:
-        conta.status = "ADIADO"
-
-    observacao_antiga = conta.observacoes or ""
-
-    texto_adiamento = (
-        f"Adiamento: vencimento alterado de "
-        f"{data_antiga.strftime('%d/%m/%Y') if data_antiga else '-'} "
-        f"para {nova_data.strftime('%d/%m/%Y')}."
-    )
-
-    if motivo:
-        texto_adiamento += f" Motivo: {motivo}"
-
-    conta.observacoes = f"{observacao_antiga}\n{texto_adiamento}".strip()
-
-    db.session.commit()
-
-    flash("Pagamento adiado com sucesso!", "success")
-
-    return redirect(request.referrer or "/gestao/radar-pagamentos")
-
-
-
-# =========================================================
-# FLUXO DIÁRIO FINANCEIRO
-# SOMENTE PAGO / RECEBIDO
-# MODELO: RECEITAS - DESPESAS = SALDO
+# HELPERS - FLUXO / RADAR
 # =========================================================
 
 def data_para_date(valor):
@@ -1503,17 +1217,10 @@ def data_movimento_fluxo(conta):
     return None
 
 
-def valor_conta_receber(conta):
-    return dinheiro(
-        getattr(conta, "total", None)
-        or getattr(conta, "valor", 0)
-    )
-
-
 def ajustar_data_para_mes(data_mov, mes, ano):
     """
-    Se a conta pertence ao mês/ano filtrado, mas a data de movimento
-    está vazia ou fora do mês, entra no dia 1 para não sumir do total.
+    Se a conta pertence ao mês/ano filtrado, mas a data caiu fora do mês
+    ou está vazia, entra no dia 1 para não sumir do total do fluxo.
     """
 
     if not data_mov:
@@ -1525,11 +1232,17 @@ def ajustar_data_para_mes(data_mov, mes, ano):
     return data_mov
 
 
+def valor_conta_receber(conta):
+    return dinheiro(
+        getattr(conta, "total", None)
+        or getattr(conta, "valor", 0)
+    )
+
+
 def calcular_totais_reais_intervalo(ano, mes_inicio, mes_fim):
     """
-    Calcula receitas e despesas pagas/recebidas entre meses.
-    Exemplo:
-    jan até abril => mes_inicio=1, mes_fim=4
+    Calcula somente realizado:
+    despesas pagas + receitas recebidas.
     """
 
     total_despesas = 0
@@ -1565,6 +1278,11 @@ def calcular_totais_reais_intervalo(ano, mes_inicio, mes_fim):
     return total_despesas, total_receitas
 
 
+# =========================================================
+# FLUXO DIÁRIO FINANCEIRO
+# SOMENTE MOVIMENTAÇÃO REALIZADA
+# =========================================================
+
 @gestao_bp.route("/fluxo-diario")
 @gestao_required
 def fluxo_diario():
@@ -1582,7 +1300,7 @@ def fluxo_diario():
 
     # =====================================================
     # TRANSPORTE DOS MESES ANTERIORES
-    # Janeiro até mês anterior
+    # janeiro até mês anterior
     # =====================================================
     despesas_transporte, receitas_transporte = calcular_totais_reais_intervalo(
         ano=ano,
@@ -1613,7 +1331,7 @@ def fluxo_diario():
 
     # =====================================================
     # DESPESAS DO MÊS
-    # Só entra se estiver paga
+    # só entra se estiver paga
     # =====================================================
     for conta in contas_pagar_mes:
 
@@ -1630,7 +1348,7 @@ def fluxo_diario():
 
     # =====================================================
     # RECEITAS DO MÊS
-    # Só entra se estiver recebida/paga
+    # só entra se estiver recebida/paga
     # =====================================================
     for conta in contas_receber_mes:
 
@@ -1646,7 +1364,7 @@ def fluxo_diario():
         receitas_por_dia[data_mov] = receitas_por_dia.get(data_mov, 0) + valor
 
     # =====================================================
-    # SALDOS DO MÊS E DO ANO
+    # SALDOS
     # =====================================================
     saldo_mes = dinheiro(total_receitas_mes) - dinheiro(total_despesas_mes)
 
@@ -1656,7 +1374,7 @@ def fluxo_diario():
 
     # =====================================================
     # TABELA DIÁRIA
-    # Acumulado começa no transporte anterior
+    # acumulado começa com transporte anterior
     # =====================================================
     linhas = []
     acumulado = dinheiro(saldo_transporte)
@@ -1698,18 +1416,274 @@ def fluxo_diario():
         visao=visao,
         linhas=linhas,
 
-        # MÊS
         total_despesas_mes=total_despesas_mes,
         total_receitas_mes=total_receitas_mes,
         saldo_mes=saldo_mes,
 
-        # TRANSPORTE
         despesas_transporte=despesas_transporte,
         receitas_transporte=receitas_transporte,
         saldo_transporte=saldo_transporte,
 
-        # ANO ATÉ O MÊS FILTRADO
         total_despesas_ano=total_despesas_ano,
         total_receitas_ano=total_receitas_ano,
         saldo_ano=saldo_ano
     )
+
+
+# =========================================================
+# RADAR DE PAGAMENTOS
+# SOMENTE DESPESAS - PAGAS E PENDENTES
+# =========================================================
+
+def status_visual_conta_pagar(conta, hoje):
+    data_vencimento = data_para_date(conta.data_vencimento)
+
+    if conta_esta_paga(conta):
+        return {
+            "label": "PAGO",
+            "classe": "pago",
+            "grupo": "pagas"
+        }
+
+    if not data_vencimento:
+        return {
+            "label": "SEM DATA",
+            "classe": "sem-data",
+            "grupo": "sem_data"
+        }
+
+    if data_vencimento < hoje:
+        return {
+            "label": "ATRASADA",
+            "classe": "atrasada",
+            "grupo": "atrasadas"
+        }
+
+    if data_vencimento == hoje:
+        return {
+            "label": "VENCE HOJE",
+            "classe": "vence-hoje",
+            "grupo": "vence_hoje"
+        }
+
+    if data_vencimento <= hoje + timedelta(days=7):
+        return {
+            "label": "PRÓXIMOS 7 DIAS",
+            "classe": "proxima",
+            "grupo": "proximas"
+        }
+
+    return {
+        "label": "FUTURA",
+        "classe": "futura",
+        "grupo": "futuras"
+    }
+
+
+def montar_item_radar_pagar(conta, hoje):
+    status_info = status_visual_conta_pagar(conta, hoje)
+
+    data_vencimento = data_para_date(conta.data_vencimento)
+    data_pagamento = data_para_date(conta.data_pagamento)
+
+    dias = None
+
+    if data_vencimento and not conta_esta_paga(conta):
+        dias = (data_vencimento - hoje).days
+
+    return {
+        "id": conta.id,
+        "numero_fatura": conta.numero_fatura or "-",
+        "fornecedor_funcionario": conta.fornecedor_funcionario or "-",
+        "plano_contas": conta.plano_contas or "-",
+        "categoria": conta.categoria or "-",
+        "setor": conta.setor or "-",
+        "data_vencimento": data_vencimento,
+        "data_pagamento": data_pagamento,
+        "valor": dinheiro(conta.valor),
+        "pago": bool(conta_esta_paga(conta)),
+        "status": conta.status or "-",
+        "observacoes": conta.observacoes or "-",
+        "status_label": status_info["label"],
+        "status_classe": status_info["classe"],
+        "grupo": status_info["grupo"],
+        "dias": dias
+    }
+
+
+def somar_itens_radar(lista):
+    return sum(dinheiro(item.get("valor")) for item in lista)
+
+
+@gestao_bp.route("/radar-pagamentos")
+@gestao_required
+def radar_pagamentos():
+
+    hoje = date.today()
+
+    mes = request.args.get("mes", type=int) or hoje.month
+    ano = request.args.get("ano", type=int) or hoje.year
+    setor = request.args.get("setor", "").strip().upper()
+    filtro = request.args.get("filtro", "todos").strip().lower()
+
+    query = ContaPagarImportada.query.filter_by(
+        mes=mes,
+        ano=ano
+    )
+
+    if setor:
+        query = query.filter(
+            ContaPagarImportada.setor.ilike(f"%{setor}%")
+        )
+
+    contas = query.order_by(
+        ContaPagarImportada.data_vencimento.asc().nullslast(),
+        ContaPagarImportada.id.desc()
+    ).all()
+
+    itens = [
+        montar_item_radar_pagar(conta, hoje)
+        for conta in contas
+    ]
+
+    atrasadas = [item for item in itens if item["grupo"] == "atrasadas"]
+    vence_hoje = [item for item in itens if item["grupo"] == "vence_hoje"]
+    proximas = [item for item in itens if item["grupo"] == "proximas"]
+    futuras = [item for item in itens if item["grupo"] == "futuras"]
+    pagas = [item for item in itens if item["grupo"] == "pagas"]
+    sem_data = [item for item in itens if item["grupo"] == "sem_data"]
+    abertas = [item for item in itens if not item["pago"]]
+
+    if filtro == "pagas":
+        itens_filtrados = pagas
+    elif filtro == "abertas":
+        itens_filtrados = abertas
+    elif filtro == "atrasadas":
+        itens_filtrados = atrasadas
+    elif filtro == "hoje":
+        itens_filtrados = vence_hoje
+    elif filtro == "proximas":
+        itens_filtrados = proximas
+    elif filtro == "futuras":
+        itens_filtrados = futuras
+    elif filtro == "sem_data":
+        itens_filtrados = sem_data
+    else:
+        itens_filtrados = itens
+
+    total_geral = somar_itens_radar(itens)
+    total_pagas = somar_itens_radar(pagas)
+    total_abertas = somar_itens_radar(abertas)
+    total_atrasadas = somar_itens_radar(atrasadas)
+    total_hoje = somar_itens_radar(vence_hoje)
+    total_proximas = somar_itens_radar(proximas)
+    total_futuras = somar_itens_radar(futuras)
+
+    return render_template(
+        "gestao/radar_pagamentos.html",
+        hoje=hoje,
+        mes=mes,
+        ano=ano,
+        setor=setor,
+        filtro=filtro,
+
+        itens=itens,
+        itens_filtrados=itens_filtrados,
+
+        atrasadas=atrasadas,
+        vence_hoje=vence_hoje,
+        proximas=proximas,
+        futuras=futuras,
+        pagas=pagas,
+        abertas=abertas,
+        sem_data=sem_data,
+
+        total_geral=total_geral,
+        total_pagas=total_pagas,
+        total_abertas=total_abertas,
+        total_atrasadas=total_atrasadas,
+        total_hoje=total_hoje,
+        total_proximas=total_proximas,
+        total_futuras=total_futuras
+    )
+
+
+@gestao_bp.route("/radar-pagamentos/pagar/<int:id>", methods=["POST"])
+@gestao_required
+def radar_marcar_pago(id):
+
+    conta = ContaPagarImportada.query.get_or_404(id)
+
+    data_pagamento_str = request.form.get("data_pagamento")
+    observacao_extra = request.form.get("observacao", "").strip()
+
+    data_pagamento = parse_data(data_pagamento_str)
+
+    if not data_pagamento:
+        data_pagamento = date.today()
+
+    conta.pago = True
+    conta.status = "PAGO"
+    conta.data_pagamento = datetime.combine(
+        data_pagamento,
+        datetime.min.time()
+    )
+
+    if observacao_extra:
+        observacao_antiga = conta.observacoes or ""
+        conta.observacoes = f"{observacao_antiga}\nPagamento: {observacao_extra}".strip()
+
+    db.session.commit()
+
+    flash("Conta marcada como paga com sucesso!", "success")
+
+    return redirect(request.referrer or "/gestao/radar-pagamentos")
+
+
+@gestao_bp.route("/radar-pagamentos/adiar/<int:id>", methods=["POST"])
+@gestao_required
+def radar_adiar_pagamento(id):
+
+    conta = ContaPagarImportada.query.get_or_404(id)
+
+    nova_data_str = request.form.get("nova_data_vencimento")
+    motivo = request.form.get("motivo", "").strip()
+
+    nova_data = parse_data(nova_data_str)
+
+    if not nova_data:
+        flash("Informe uma nova data válida.", "danger")
+        return redirect(request.referrer or "/gestao/radar-pagamentos")
+
+    data_antiga = data_para_date(conta.data_vencimento)
+
+    conta.data_vencimento = datetime.combine(
+        nova_data,
+        datetime.min.time()
+    )
+
+    conta.mes = nova_data.month
+    conta.ano = nova_data.year
+
+    if not conta_esta_paga(conta):
+        conta.status = "ADIADO"
+
+    observacao_antiga = conta.observacoes or ""
+
+    texto_adiamento = (
+        f"Adiamento: vencimento alterado de "
+        f"{data_antiga.strftime('%d/%m/%Y') if data_antiga else '-'} "
+        f"para {nova_data.strftime('%d/%m/%Y')}."
+    )
+
+    if motivo:
+        texto_adiamento += f" Motivo: {motivo}"
+
+    conta.observacoes = f"{observacao_antiga}\n{texto_adiamento}".strip()
+
+    db.session.commit()
+
+    flash("Pagamento adiado com sucesso!", "success")
+
+    return redirect(request.referrer or "/gestao/radar-pagamentos")
+

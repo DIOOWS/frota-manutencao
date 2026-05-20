@@ -4,9 +4,12 @@
 
 {% block content %}
 
+{% macro moeda(valor) %}
+  R$ {{ "{:,.2f}".format(valor or 0).replace(",", "X").replace(".", ",").replace("X", ".") }}
+{% endmacro %}
+
 <div class="radar-page">
 
-  <!-- HEADER -->
   <div class="radar-hero">
 
     <div>
@@ -15,19 +18,21 @@
       <h1>Radar de Pagamentos</h1>
 
       <p>
-        Visualize vencimentos, atrasos e próximas obrigações de forma simples para decidir o que pagar agora.
+        Visualize todas as despesas do mês: pagas, abertas, atrasadas,
+        vencendo hoje, próximas e futuras.
       </p>
     </div>
 
-    <div class="radar-risk radar-risk-{{ risco_classe }}">
-      <span>Risco atual</span>
-      <strong>{{ risco }}</strong>
-      <small>{{ leitura }}</small>
+    <div class="radar-risk">
+      <span>Total em aberto</span>
+      <strong>{{ moeda(total_abertas) }}</strong>
+      <small>
+        Valor que ainda precisa ser pago no mês filtrado.
+      </small>
     </div>
 
   </div>
 
-  <!-- FILTROS -->
   <form method="GET" class="radar-filter">
 
     <div>
@@ -59,13 +64,16 @@
     </div>
 
     <div>
-      <label>Status</label>
-      <select name="status" class="form-select">
-        <option value="">Todos</option>
-        <option value="ATRASADA" {% if status_filtro == "ATRASADA" %}selected{% endif %}>Atrasadas</option>
-        <option value="VENCE HOJE" {% if status_filtro == "VENCE HOJE" %}selected{% endif %}>Vence hoje</option>
-        <option value="PROXIMAS" {% if status_filtro == "PROXIMAS" %}selected{% endif %}>Próximos 7 dias</option>
-        <option value="PAGO" {% if status_filtro == "PAGO" %}selected{% endif %}>Pagas</option>
+      <label>Filtro</label>
+      <select name="filtro" class="form-select">
+        <option value="todos" {% if filtro == "todos" %}selected{% endif %}>Todos</option>
+        <option value="pagas" {% if filtro == "pagas" %}selected{% endif %}>Pagas</option>
+        <option value="abertas" {% if filtro == "abertas" %}selected{% endif %}>Em aberto</option>
+        <option value="atrasadas" {% if filtro == "atrasadas" %}selected{% endif %}>Atrasadas</option>
+        <option value="hoje" {% if filtro == "hoje" %}selected{% endif %}>Vence hoje</option>
+        <option value="proximas" {% if filtro == "proximas" %}selected{% endif %}>Próximos 7 dias</option>
+        <option value="futuras" {% if filtro == "futuras" %}selected{% endif %}>Futuras</option>
+        <option value="sem_data" {% if filtro == "sem_data" %}selected{% endif %}>Sem data</option>
       </select>
     </div>
 
@@ -81,279 +89,275 @@
 
   </form>
 
-  <!-- KPIS -->
   <div class="radar-kpis">
 
-    <div class="radar-kpi danger">
-      <span>Atrasadas</span>
-      <strong>R$ {{ "%.2f"|format(total_atrasado) }}</strong>
-      <small>{{ atrasadas|length }} conta(s)</small>
-    </div>
+    <a class="radar-kpi neutral" href="/gestao/radar-pagamentos?mes={{ mes }}&ano={{ ano }}&filtro=todos">
+      <span>Total de despesas</span>
+      <strong>{{ moeda(total_geral) }}</strong>
+      <small>{{ itens|length }} conta(s)</small>
+    </a>
 
-    <div class="radar-kpi warning">
-      <span>Vencem hoje</span>
-      <strong>R$ {{ "%.2f"|format(total_vence_hoje) }}</strong>
-      <small>{{ vence_hoje|length }} conta(s)</small>
-    </div>
-
-    <div class="radar-kpi info">
-      <span>Próximos 7 dias</span>
-      <strong>R$ {{ "%.2f"|format(total_proximas) }}</strong>
-      <small>{{ proximas|length }} conta(s)</small>
-    </div>
-
-    <div class="radar-kpi neutral">
-      <span>Total em aberto</span>
-      <strong>R$ {{ "%.2f"|format(total_aberto) }}</strong>
-      <small>Não pagas</small>
-    </div>
-
-    <div class="radar-kpi success">
-      <span>Pagas no mês</span>
-      <strong>R$ {{ "%.2f"|format(total_pago) }}</strong>
+    <a class="radar-kpi success" href="/gestao/radar-pagamentos?mes={{ mes }}&ano={{ ano }}&filtro=pagas">
+      <span>Pagas</span>
+      <strong>{{ moeda(total_pagas) }}</strong>
       <small>{{ pagas|length }} conta(s)</small>
-    </div>
+    </a>
+
+    <a class="radar-kpi warning" href="/gestao/radar-pagamentos?mes={{ mes }}&ano={{ ano }}&filtro=abertas">
+      <span>Em aberto</span>
+      <strong>{{ moeda(total_abertas) }}</strong>
+      <small>{{ abertas|length }} conta(s)</small>
+    </a>
+
+    <a class="radar-kpi danger" href="/gestao/radar-pagamentos?mes={{ mes }}&ano={{ ano }}&filtro=atrasadas">
+      <span>Atrasadas</span>
+      <strong>{{ moeda(total_atrasadas) }}</strong>
+      <small>{{ atrasadas|length }} conta(s)</small>
+    </a>
+
+    <a class="radar-kpi info" href="/gestao/radar-pagamentos?mes={{ mes }}&ano={{ ano }}&filtro=proximas">
+      <span>Próximos 7 dias</span>
+      <strong>{{ moeda(total_proximas) }}</strong>
+      <small>{{ proximas|length }} conta(s)</small>
+    </a>
 
   </div>
 
-  <!-- VISÃO OPERACIONAL -->
-  <div class="radar-board">
+  <div class="radar-table-card">
 
-    {% set grupos = [
-      ("ATRASADAS", atrasadas, "danger"),
-      ("VENCEM HOJE", vence_hoje, "warning"),
-      ("PRÓXIMOS 7 DIAS", proximas, "info"),
-      ("FUTURAS", futuras, "neutral"),
-      ("PAGAS", pagas, "success")
-    ] %}
+    <div class="radar-table-header">
+      <div>
+        <h3>Contas do Radar</h3>
+        <span>{{ itens_filtrados|length }} registro(s) encontrado(s)</span>
+      </div>
+    </div>
 
-    {% for titulo, lista, classe in grupos %}
+    <div class="table-responsive">
 
-      <section class="radar-column radar-column-{{ classe }}">
+      <table class="table radar-table align-middle mb-0">
 
-        <div class="radar-column-header">
-          <div>
-            <h3>{{ titulo }}</h3>
-            <span>{{ lista|length }} conta(s)</span>
-          </div>
-        </div>
+        <thead>
+          <tr>
+            <th>Vencimento</th>
+            <th>Conta</th>
+            <th>Fornecedor</th>
+            <th>Setor</th>
+            <th>Status</th>
+            <th class="text-end">Valor</th>
+            <th class="text-center">Ações</th>
+          </tr>
+        </thead>
 
-        <div class="radar-column-body">
+        <tbody>
 
-          {% if lista %}
+          {% for item in itens_filtrados %}
 
-            {% for item in lista %}
+            <tr>
 
-              <article class="radar-card radar-card-{{ item.status_classe }}">
-
-                <div class="radar-card-top">
-
-                  <div>
-                    <strong>{{ item.plano_contas }}</strong>
-                    <span>{{ item.fornecedor_funcionario }}</span>
-                  </div>
-
-                  <span class="radar-status radar-status-{{ item.status_classe }}">
-                    {{ item.status_label }}
-                  </span>
-
-                </div>
-
-                <div class="radar-card-info">
-
-                  <div>
-                    <small>Vencimento</small>
-                    <strong>
-                      {% if item.data_vencimento %}
-                        {{ item.data_vencimento.strftime("%d/%m/%Y") }}
-                      {% else %}
-                        -
-                      {% endif %}
-                    </strong>
-                  </div>
-
-                  <div>
-                    <small>Valor</small>
-                    <strong>R$ {{ "%.2f"|format(item.valor) }}</strong>
-                  </div>
-
-                </div>
-
-                <div class="radar-card-meta">
-
-                  <span>{{ item.categoria }}</span>
-                  <span>{{ item.setor }}</span>
-
-                  {% if item.dias is not none and not item.pago %}
-                    {% if item.dias < 0 %}
-                      <span>{{ item.dias|abs }} dia(s) atrasada</span>
-                    {% elif item.dias == 0 %}
-                      <span>vence hoje</span>
-                    {% else %}
-                      <span>faltam {{ item.dias }} dia(s)</span>
-                    {% endif %}
-                  {% endif %}
-
-                </div>
-
-                {% if item.observacoes and item.observacoes != "-" %}
-                  <div class="radar-observacao">
-                    {{ item.observacoes }}
-                  </div>
+              <td>
+                {% if item.data_vencimento %}
+                  {{ item.data_vencimento.strftime("%d/%m/%Y") }}
+                {% else %}
+                  -
                 {% endif %}
 
-                <div class="radar-card-actions">
+                {% if item.dias is not none and not item.pago %}
+                  <small class="radar-dias">
+                    {% if item.dias < 0 %}
+                      {{ item.dias|abs }} dia(s) atrasada
+                    {% elif item.dias == 0 %}
+                      vence hoje
+                    {% else %}
+                      faltam {{ item.dias }} dia(s)
+                    {% endif %}
+                  </small>
+                {% endif %}
+              </td>
 
-                  {% if not item.pago %}
+              <td>
+                <strong>{{ item.plano_contas }}</strong>
+                <small>{{ item.categoria }}</small>
+              </td>
+
+              <td>{{ item.fornecedor_funcionario }}</td>
+
+              <td>
+                <span class="radar-tag">
+                  {{ item.setor }}
+                </span>
+              </td>
+
+              <td>
+                <span class="radar-status radar-status-{{ item.status_classe }}">
+                  {{ item.status_label }}
+                </span>
+              </td>
+
+              <td class="text-end">
+                <strong>{{ moeda(item.valor) }}</strong>
+              </td>
+
+              <td class="text-center">
+
+                {% if not item.pago %}
+
+                  <div class="radar-actions">
 
                     <button type="button"
-                            class="btn-radar-card primary"
+                            class="btn-radar-mini primary"
                             data-bs-toggle="modal"
                             data-bs-target="#modalPagar{{ item.id }}">
-                      Marcar como paga
+                      Pagar
                     </button>
 
                     <button type="button"
-                            class="btn-radar-card light"
+                            class="btn-radar-mini light"
                             data-bs-toggle="modal"
                             data-bs-target="#modalAdiar{{ item.id }}">
                       Adiar
                     </button>
 
-                  {% else %}
-
-                    <span class="radar-pago-info">
-                      Pago em
-                      {% if item.data_pagamento %}
-                        {{ item.data_pagamento.strftime("%d/%m/%Y") }}
-                      {% else %}
-                        -
-                      {% endif %}
-                    </span>
-
-                  {% endif %}
-
-                </div>
-
-              </article>
-
-              <!-- MODAL PAGAR -->
-              <div class="modal fade" id="modalPagar{{ item.id }}" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                  <div class="modal-content radar-modal">
-
-                    <form method="POST" action="/gestao/radar-pagamentos/pagar/{{ item.id }}">
-
-                      <div class="modal-header">
-                        <div>
-                          <small>Confirmar pagamento</small>
-                          <h5 class="modal-title">{{ item.plano_contas }}</h5>
-                        </div>
-
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                      </div>
-
-                      <div class="modal-body">
-
-                        <div class="radar-modal-value">
-                          R$ {{ "%.2f"|format(item.valor) }}
-                        </div>
-
-                        <label class="form-label">Data do pagamento</label>
-                        <input type="date"
-                               name="data_pagamento"
-                               class="form-control"
-                               value="{{ hoje.strftime('%Y-%m-%d') }}">
-
-                        <label class="form-label mt-3">Observação</label>
-                        <textarea name="observacao"
-                                  class="form-control"
-                                  rows="3"
-                                  placeholder="Ex: pago via pix, banco, comprovante..."></textarea>
-
-                      </div>
-
-                      <div class="modal-footer">
-                        <button type="button" class="btn-radar-light" data-bs-dismiss="modal">
-                          Cancelar
-                        </button>
-
-                        <button class="btn-radar-primary">
-                          Confirmar pagamento
-                        </button>
-                      </div>
-
-                    </form>
-
                   </div>
-                </div>
-              </div>
 
-              <!-- MODAL ADIAR -->
-              <div class="modal fade" id="modalAdiar{{ item.id }}" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                  <div class="modal-content radar-modal">
+                {% else %}
 
-                    <form method="POST" action="/gestao/radar-pagamentos/adiar/{{ item.id }}">
+                  <span class="radar-pago-info">
+                    {% if item.data_pagamento %}
+                      Pago em {{ item.data_pagamento.strftime("%d/%m/%Y") }}
+                    {% else %}
+                      Pago
+                    {% endif %}
+                  </span>
 
-                      <div class="modal-header">
-                        <div>
-                          <small>Adiar pagamento</small>
-                          <h5 class="modal-title">{{ item.plano_contas }}</h5>
-                        </div>
+                {% endif %}
 
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                      </div>
+              </td>
 
-                      <div class="modal-body">
-
-                        <label class="form-label">Nova data de vencimento</label>
-                        <input type="date"
-                               name="nova_data_vencimento"
-                               class="form-control"
-                               required>
-
-                        <label class="form-label mt-3">Motivo</label>
-                        <textarea name="motivo"
-                                  class="form-control"
-                                  rows="3"
-                                  placeholder="Ex: aguardando caixa, combinado com fornecedor..."></textarea>
-
-                      </div>
-
-                      <div class="modal-footer">
-                        <button type="button" class="btn-radar-light" data-bs-dismiss="modal">
-                          Cancelar
-                        </button>
-
-                        <button class="btn-radar-primary">
-                          Salvar adiamento
-                        </button>
-                      </div>
-
-                    </form>
-
-                  </div>
-                </div>
-              </div>
-
-            {% endfor %}
+            </tr>
 
           {% else %}
 
-            <div class="radar-empty">
-              Nenhuma conta nesta faixa.
-            </div>
+            <tr>
+              <td colspan="7" class="text-center text-muted py-4">
+                Nenhuma conta encontrada para este filtro.
+              </td>
+            </tr>
 
-          {% endif %}
+          {% endfor %}
 
-        </div>
+        </tbody>
 
-      </section>
+      </table>
 
-    {% endfor %}
+    </div>
 
   </div>
+
+  {% for item in itens_filtrados %}
+
+    {% if not item.pago %}
+
+      <div class="modal fade" id="modalPagar{{ item.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content radar-modal">
+
+            <form method="POST" action="/gestao/radar-pagamentos/pagar/{{ item.id }}">
+
+              <div class="modal-header">
+                <div>
+                  <small>Confirmar pagamento</small>
+                  <h5 class="modal-title">{{ item.plano_contas }}</h5>
+                </div>
+
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+              </div>
+
+              <div class="modal-body">
+
+                <div class="radar-modal-value">
+                  {{ moeda(item.valor) }}
+                </div>
+
+                <label class="form-label">Data do pagamento</label>
+                <input type="date"
+                       name="data_pagamento"
+                       class="form-control"
+                       value="{{ hoje.strftime('%Y-%m-%d') }}">
+
+                <label class="form-label mt-3">Observação</label>
+                <textarea name="observacao"
+                          class="form-control"
+                          rows="3"
+                          placeholder="Ex: pago via pix, banco, comprovante..."></textarea>
+
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" class="btn-radar-light" data-bs-dismiss="modal">
+                  Cancelar
+                </button>
+
+                <button class="btn-radar-primary">
+                  Confirmar pagamento
+                </button>
+              </div>
+
+            </form>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="modalAdiar{{ item.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content radar-modal">
+
+            <form method="POST" action="/gestao/radar-pagamentos/adiar/{{ item.id }}">
+
+              <div class="modal-header">
+                <div>
+                  <small>Adiar pagamento</small>
+                  <h5 class="modal-title">{{ item.plano_contas }}</h5>
+                </div>
+
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+              </div>
+
+              <div class="modal-body">
+
+                <label class="form-label">Nova data de vencimento</label>
+                <input type="date"
+                       name="nova_data_vencimento"
+                       class="form-control"
+                       required>
+
+                <label class="form-label mt-3">Motivo</label>
+                <textarea name="motivo"
+                          class="form-control"
+                          rows="3"
+                          placeholder="Ex: aguardando caixa, combinado com fornecedor..."></textarea>
+
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" class="btn-radar-light" data-bs-dismiss="modal">
+                  Cancelar
+                </button>
+
+                <button class="btn-radar-primary">
+                  Salvar adiamento
+                </button>
+              </div>
+
+            </form>
+
+          </div>
+        </div>
+      </div>
+
+    {% endif %}
+
+  {% endfor %}
 
 </div>
 

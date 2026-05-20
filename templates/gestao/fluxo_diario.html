@@ -10,7 +10,6 @@
 
 <div class="fluxo-premium-page">
 
-  <!-- TOPO / FILTROS -->
   <div class="fluxo-premium-toolbar">
 
     <form method="GET" class="fluxo-premium-form">
@@ -61,7 +60,6 @@
 
   </div>
 
-  <!-- RESUMO DO MÊS -->
   {% if visao in ["mes", "mes_ano"] %}
 
     <div class="fluxo-resumo-grid">
@@ -85,7 +83,6 @@
 
   {% endif %}
 
-  <!-- RESUMO DO ANO -->
   {% if visao in ["ano", "mes_ano"] %}
 
     <div class="fluxo-resumo-grid fluxo-resumo-ano">
@@ -109,7 +106,6 @@
 
   {% endif %}
 
-  <!-- TABELA -->
   <div class="fluxo-premium-table-card">
 
     <table class="fluxo-premium-table">
@@ -120,7 +116,7 @@
           <th>Despesas</th>
           <th>Receitas</th>
           <th>Saldo</th>
-          <th>Acumulado do mês</th>
+          <th>Acumulado</th>
         </tr>
       </thead>
 
@@ -157,6 +153,46 @@
       </tbody>
 
     </table>
+
+  </div>
+
+  <div class="fluxo-premium-footer">
+
+    {% if visao == "ano" %}
+
+      <div class="fluxo-footer-item receita">
+        <span>Receitas Ano</span>
+        <strong>{{ moeda(total_receitas_ano) }}</strong>
+      </div>
+
+      <div class="fluxo-footer-item despesa">
+        <span>Despesas Ano</span>
+        <strong>{{ moeda(total_despesas_ano) }}</strong>
+      </div>
+
+      <div class="fluxo-footer-item saldo">
+        <span>Saldo Ano</span>
+        <strong>{{ moeda(saldo_ano) }}</strong>
+      </div>
+
+    {% else %}
+
+      <div class="fluxo-footer-item receita">
+        <span>Receitas</span>
+        <strong>{{ moeda(total_receitas_mes) }}</strong>
+      </div>
+
+      <div class="fluxo-footer-item despesa">
+        <span>Despesas</span>
+        <strong>{{ moeda(total_despesas_mes) }}</strong>
+      </div>
+
+      <div class="fluxo-footer-item saldo">
+        <span>Saldo</span>
+        <strong>{{ moeda(saldo_mes) }}</strong>
+      </div>
+
+    {% endif %}
 
   </div>
 

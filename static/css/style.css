@@ -8432,3 +8432,589 @@ body {
   }
 }
 
+
+
+
+/* =========================
+   💰 FLUXO DIÁRIO PREMIUM
+========================= */
+
+.fluxo-premium-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #eef2f7;
+}
+
+.fluxo-premium-toolbar,
+.fluxo-premium-table-card,
+.fluxo-premium-footer,
+.fluxo-resumo-card,
+.radar-table-card {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+
+.fluxo-premium-toolbar {
+  padding: 12px;
+}
+
+.fluxo-premium-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.fluxo-premium-form label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.fluxo-select,
+.fluxo-ano,
+.fluxo-visao {
+  height: 36px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 0 10px;
+  outline: none;
+}
+
+.fluxo-select {
+  min-width: 135px;
+}
+
+.fluxo-ano {
+  width: 92px;
+}
+
+.fluxo-visao {
+  min-width: 190px;
+}
+
+.fluxo-btn-atualizar,
+.btn-radar-primary {
+  height: 38px;
+  border: none;
+  border-radius: 11px;
+  padding: 0 16px;
+  background: linear-gradient(135deg, #020024, #0052e0);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-radar-light {
+  height: 38px;
+  border: none;
+  border-radius: 11px;
+  padding: 0 16px;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 900;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fluxo-resumo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.fluxo-resumo-card {
+  padding: 16px;
+}
+
+.fluxo-resumo-card span {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.fluxo-resumo-card strong {
+  display: block;
+  color: #0f172a;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.fluxo-resumo-card.receita {
+  border-left: 5px solid #0052e0;
+}
+
+.fluxo-resumo-card.despesa {
+  border-left: 5px solid #dc2626;
+}
+
+.fluxo-resumo-card.saldo {
+  border-left: 5px solid #16a34a;
+}
+
+.fluxo-premium-table-card {
+  overflow-x: auto;
+}
+
+.fluxo-premium-table {
+  width: 100%;
+  min-width: 780px;
+  border-collapse: collapse;
+  font-size: 13px;
+  color: #0f172a;
+}
+
+.fluxo-premium-table thead th {
+  background: linear-gradient(135deg, #020024, #0052e0);
+  color: #ffffff;
+  padding: 8px 10px;
+  border-right: 1px solid rgba(255, 255, 255, 0.16);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.fluxo-premium-table thead th:first-child {
+  text-align: left;
+}
+
+.fluxo-premium-table tbody td {
+  padding: 5px 10px;
+  border-bottom: 1px solid #edf2f7;
+  border-right: 1px solid #edf2f7;
+  font-weight: 800;
+}
+
+.fluxo-dia {
+  width: 320px;
+  color: #0f172a;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.fluxo-valor {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.fluxo-linha-transporte td {
+  background: #f1f5ff !important;
+  color: #020617;
+  font-weight: 900;
+  border-bottom: 2px solid #c7d2fe;
+}
+
+.fluxo-despesa,
+.fluxo-negativo {
+  color: #dc2626;
+}
+
+.fluxo-receita {
+  color: #0052e0;
+}
+
+.fluxo-positivo {
+  color: #008000;
+}
+
+.fluxo-premium-footer {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 14px 16px;
+}
+
+.fluxo-footer-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.fluxo-footer-item.receita {
+  color: #003db5;
+}
+
+.fluxo-footer-item.despesa {
+  color: #cc0000;
+}
+
+.fluxo-footer-item.saldo {
+  color: #008000;
+}
+
+/* =========================
+   💳 RADAR DE PAGAMENTOS
+========================= */
+
+.radar-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.radar-hero {
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  border-radius: 24px;
+  padding: 26px;
+  display: flex;
+  justify-content: space-between;
+  gap: 22px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+}
+
+.radar-eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.8;
+  margin-bottom: 8px;
+}
+
+.radar-hero h1 {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 900;
+}
+
+.radar-hero p {
+  max-width: 680px;
+  margin: 8px 0 0;
+  color: rgba(255,255,255,0.82);
+  font-size: 15px;
+}
+
+.radar-risk {
+  min-width: 260px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 20px;
+  padding: 18px;
+}
+
+.radar-risk span {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  opacity: 0.78;
+  text-transform: uppercase;
+}
+
+.radar-risk strong {
+  display: block;
+  font-size: 26px;
+  font-weight: 900;
+}
+
+.radar-risk small {
+  color: rgba(255,255,255,0.82);
+}
+
+.radar-filter {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 20px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 120px 120px 180px 180px auto;
+  gap: 12px;
+  align-items: end;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+.radar-filter label {
+  font-size: 12px;
+  font-weight: 900;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.radar-filter-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.radar-kpis {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+}
+
+.radar-kpi {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 20px;
+  padding: 18px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+  text-decoration: none;
+}
+
+.radar-kpi span {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.radar-kpi strong {
+  display: block;
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.radar-kpi small {
+  color: #64748b;
+  font-weight: 700;
+}
+
+.radar-kpi.danger {
+  border-left: 5px solid #ef4444;
+}
+
+.radar-kpi.warning {
+  border-left: 5px solid #f59e0b;
+}
+
+.radar-kpi.info {
+  border-left: 5px solid #38bdf8;
+}
+
+.radar-kpi.neutral {
+  border-left: 5px solid #64748b;
+}
+
+.radar-kpi.success {
+  border-left: 5px solid #10b981;
+}
+
+.radar-table-card {
+  overflow: hidden;
+}
+
+.radar-table-header {
+  padding: 16px;
+  border-bottom: 1px solid #dbe3ef;
+}
+
+.radar-table-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.radar-table-header span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.radar-table thead th {
+  background: #f8fafc;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.radar-table td strong {
+  display: block;
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.radar-table td small {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+}
+
+.radar-dias {
+  margin-top: 2px;
+  font-weight: 800;
+}
+
+.radar-tag {
+  background: #eef2ff;
+  color: #334155;
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.radar-status {
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 10px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.radar-status-atrasada {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.radar-status-vence-hoje {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.radar-status-proxima {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.radar-status-futura {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.radar-status-pago {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.radar-status-sem-data {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.radar-actions {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-radar-mini {
+  min-height: 30px;
+  border: none;
+  border-radius: 999px;
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.btn-radar-mini.primary {
+  background: linear-gradient(135deg, #020024, #0052e0);
+  color: #ffffff;
+}
+
+.btn-radar-mini.light {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.radar-pago-info {
+  color: #166534;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.radar-modal {
+  border: none;
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+.radar-modal .modal-header {
+  background: linear-gradient(135deg, #020024, #0052e0);
+  color: #ffffff;
+  border: none;
+}
+
+.radar-modal .modal-title {
+  color: #ffffff;
+  font-weight: 900;
+}
+
+.radar-modal .modal-header small {
+  display: block;
+  opacity: 0.8;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.radar-modal-value {
+  background: #f8fafc;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  padding: 14px;
+  font-size: 24px;
+  font-weight: 900;
+  color: #0f172a;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 1200px) {
+  .radar-kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .radar-filter {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .radar-filter-actions {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .fluxo-premium-form,
+  .radar-filter {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .fluxo-resumo-grid,
+  .radar-kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .fluxo-premium-table {
+    min-width: 760px;
+  }
+
+  .fluxo-premium-footer,
+  .radar-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .radar-risk {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
