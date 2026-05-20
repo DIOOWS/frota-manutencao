@@ -1429,6 +1429,7 @@ def radar_adiar_pagamento(id):
 # =========================================================
 # FLUXO DIÁRIO FINANCEIRO
 # SOMENTE PAGO / RECEBIDO
+# MODELO: RECEITAS - DESPESAS = SALDO
 # =========================================================
 
 def data_para_date(valor):
@@ -1475,7 +1476,7 @@ def conta_esta_paga(conta):
 
 def data_movimento_fluxo(conta):
     """
-    Data usada apenas para distribuir na tabela diária.
+    Data usada para distribuir na tabela diária.
     A conta só chega aqui se já estiver paga/recebida.
 
     Prioridade:
@@ -1484,6 +1485,7 @@ def data_movimento_fluxo(conta):
     3. data_documento
     4. data
     """
+
     campos = [
         "data_pagamento",
         "data_vencimento",
@@ -1511,8 +1513,9 @@ def valor_conta_receber(conta):
 def ajustar_data_para_mes(data_mov, mes, ano):
     """
     Se a conta pertence ao mês/ano filtrado, mas a data de movimento
-    está vazia ou fora do mês, ela entra no dia 1 para não sumir do total.
+    está vazia ou fora do mês, entra no dia 1 para não sumir do total.
     """
+
     if not data_mov:
         return date(ano, mes, 1)
 
@@ -1522,27 +1525,42 @@ def ajustar_data_para_mes(data_mov, mes, ano):
     return data_mov
 
 
-def somar_fluxo_real_ano(mes_limite, ano):
-    contas_pagar = ContaPagarImportada.query.filter(
-        ContaPagarImportada.ano == ano,
-        ContaPagarImportada.mes <= mes_limite
-    ).all()
-
-    contas_receber = ContaReceberImportada.query.filter(
-        ContaReceberImportada.ano == ano,
-        ContaReceberImportada.mes <= mes_limite
-    ).all()
+def calcular_totais_reais_intervalo(ano, mes_inicio, mes_fim):
+    """
+    Calcula receitas e despesas pagas/recebidas entre meses.
+    Exemplo:
+    jan até abril => mes_inicio=1, mes_fim=4
+    """
 
     total_despesas = 0
     total_receitas = 0
 
+    if mes_fim < mes_inicio:
+        return total_despesas, total_receitas
+
+    contas_pagar = ContaPagarImportada.query.filter(
+        ContaPagarImportada.ano == ano,
+        ContaPagarImportada.mes >= mes_inicio,
+        ContaPagarImportada.mes <= mes_fim
+    ).all()
+
+    contas_receber = ContaReceberImportada.query.filter(
+        ContaReceberImportada.ano == ano,
+        ContaReceberImportada.mes >= mes_inicio,
+        ContaReceberImportada.mes <= mes_fim
+    ).all()
+
     for conta in contas_pagar:
-        if conta_esta_paga(conta):
-            total_despesas += dinheiro(getattr(conta, "valor", 0))
+        if not conta_esta_paga(conta):
+            continue
+
+        total_despesas += dinheiro(getattr(conta, "valor", 0))
 
     for conta in contas_receber:
-        if conta_esta_paga(conta):
-            total_receitas += valor_conta_receber(conta)
+        if not conta_esta_paga(conta):
+            continue
+
+        total_receitas += valor_conta_receber(conta)
 
     return total_despesas, total_receitas
 
@@ -1560,10 +1578,23 @@ def fluxo_diario():
     if visao not in ["mes", "ano", "mes_ano"]:
         visao = "mes_ano"
 
-    saldo_inicial_mes = obter_saldo_inicial_mes(mes, ano)
-
     ultimo_dia_numero = calendar.monthrange(ano, mes)[1]
 
+    # =====================================================
+    # TRANSPORTE DOS MESES ANTERIORES
+    # Janeiro até mês anterior
+    # =====================================================
+    despesas_transporte, receitas_transporte = calcular_totais_reais_intervalo(
+        ano=ano,
+        mes_inicio=1,
+        mes_fim=mes - 1
+    )
+
+    saldo_transporte = dinheiro(receitas_transporte) - dinheiro(despesas_transporte)
+
+    # =====================================================
+    # CONTAS DO MÊS FILTRADO
+    # =====================================================
     contas_pagar_mes = ContaPagarImportada.query.filter_by(
         mes=mes,
         ano=ano
@@ -1580,11 +1611,10 @@ def fluxo_diario():
     total_despesas_mes = 0
     total_receitas_mes = 0
 
-    # =========================
+    # =====================================================
     # DESPESAS DO MÊS
     # Só entra se estiver paga
-    # Total bate com importações do mês
-    # =========================
+    # =====================================================
     for conta in contas_pagar_mes:
 
         if not conta_esta_paga(conta):
@@ -1598,11 +1628,10 @@ def fluxo_diario():
 
         despesas_por_dia[data_mov] = despesas_por_dia.get(data_mov, 0) + valor
 
-    # =========================
+    # =====================================================
     # RECEITAS DO MÊS
     # Só entra se estiver recebida/paga
-    # Total bate com importações do mês
-    # =========================
+    # =====================================================
     for conta in contas_receber_mes:
 
         if not conta_esta_paga(conta):
@@ -1616,17 +1645,30 @@ def fluxo_diario():
 
         receitas_por_dia[data_mov] = receitas_por_dia.get(data_mov, 0) + valor
 
+    # =====================================================
+    # SALDOS DO MÊS E DO ANO
+    # =====================================================
+    saldo_mes = dinheiro(total_receitas_mes) - dinheiro(total_despesas_mes)
+
+    total_receitas_ano = dinheiro(receitas_transporte) + dinheiro(total_receitas_mes)
+    total_despesas_ano = dinheiro(despesas_transporte) + dinheiro(total_despesas_mes)
+    saldo_ano = dinheiro(total_receitas_ano) - dinheiro(total_despesas_ano)
+
+    # =====================================================
+    # TABELA DIÁRIA
+    # Acumulado começa no transporte anterior
+    # =====================================================
     linhas = []
-    acumulado_mes = dinheiro(saldo_inicial_mes)
+    acumulado = dinheiro(saldo_transporte)
 
     linhas.append({
         "tipo": "transporte",
         "dia": "** TRANSPORTE MESES ANTERIORES **",
         "data": None,
-        "despesas": 0,
-        "receitas": 0,
-        "saldo": dinheiro(saldo_inicial_mes),
-        "acumulado": dinheiro(saldo_inicial_mes)
+        "despesas": dinheiro(despesas_transporte),
+        "receitas": dinheiro(receitas_transporte),
+        "saldo": dinheiro(saldo_transporte),
+        "acumulado": dinheiro(saldo_transporte)
     })
 
     for dia in range(1, ultimo_dia_numero + 1):
@@ -1635,9 +1677,9 @@ def fluxo_diario():
 
         despesas = dinheiro(despesas_por_dia.get(data_ref, 0))
         receitas = dinheiro(receitas_por_dia.get(data_ref, 0))
-        saldo_dia = receitas - despesas
+        saldo_dia = dinheiro(receitas) - dinheiro(despesas)
 
-        acumulado_mes += saldo_dia
+        acumulado += saldo_dia
 
         linhas.append({
             "tipo": "dia",
@@ -1646,18 +1688,8 @@ def fluxo_diario():
             "despesas": despesas,
             "receitas": receitas,
             "saldo": saldo_dia,
-            "acumulado": acumulado_mes
+            "acumulado": acumulado
         })
-
-    saldo_final_mes = dinheiro(saldo_inicial_mes) + total_receitas_mes - total_despesas_mes
-
-    total_despesas_ano, total_receitas_ano = somar_fluxo_real_ano(
-        mes_limite=mes,
-        ano=ano
-    )
-
-    saldo_inicial_ano = obter_saldo_inicial_mes(1, ano)
-    saldo_final_ano = dinheiro(saldo_inicial_ano) + total_receitas_ano - total_despesas_ano
 
     return render_template(
         "gestao/fluxo_diario.html",
@@ -1666,16 +1698,18 @@ def fluxo_diario():
         visao=visao,
         linhas=linhas,
 
-        saldo_inicial_mes=saldo_inicial_mes,
+        # MÊS
         total_despesas_mes=total_despesas_mes,
         total_receitas_mes=total_receitas_mes,
-        saldo_final_mes=saldo_final_mes,
+        saldo_mes=saldo_mes,
 
-        saldo_inicial_ano=saldo_inicial_ano,
+        # TRANSPORTE
+        despesas_transporte=despesas_transporte,
+        receitas_transporte=receitas_transporte,
+        saldo_transporte=saldo_transporte,
+
+        # ANO ATÉ O MÊS FILTRADO
         total_despesas_ano=total_despesas_ano,
         total_receitas_ano=total_receitas_ano,
-        saldo_final_ano=saldo_final_ano
+        saldo_ano=saldo_ano
     )
-
-
-
