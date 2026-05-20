@@ -277,7 +277,7 @@ td:nth-child(10) {
 }
 
 .chart-container canvas {
-  min-width: 100%;
+  min-width: 1200px;
 }
 
 
@@ -405,6 +405,15 @@ td:nth-child(10) {
   height: 300px;
   position: relative;
 }
+
+canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+
+
+
 
 /*kpi*/
 
@@ -701,6 +710,12 @@ td:nth-child(10) {
   position: relative;
   width: 100%;
 }
+
+canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
 
 .grafico-pequeno {
   height: 260px; /* 🔥 tamanho ideal */
@@ -2060,63 +2075,32 @@ td:nth-child(10) {
 
 
 /* =========================
-   🔥 COLUNA AÇÕES - BOTÕES PREMIUM
+   🚚 DETALHE FROTA - COLUNA AÇÕES COMPACTA
 ========================= */
 
 .table th:last-child,
 .table td:last-child {
-  width: auto;
-  min-width: 170px;
-  max-width: none;
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
   text-align: center;
   white-space: nowrap;
 }
 
 .table td:last-child .d-flex {
   justify-content: center;
-  align-items: center;
-  gap: 8px !important;
-  flex-wrap: nowrap;
+  gap: 4px !important;
 }
 
 .table td:last-child .btn {
-  width: auto;
-  min-width: 30px;
-  height: 24px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  font-size: 12px;
-  border-radius: 7px;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-/* EDITAR */
-.table td:last-child .btn-outline-primary {
-  color: #0052e0;
-  border-color: #0052e0;
-  background: #ffffff;
-}
-
-.table td:last-child .btn-outline-primary:hover {
-  color: #ffffff;
-  background: linear-gradient(135deg, #020024, #0052e0);
-  border-color: #0052e0;
-}
-
-/* EXCLUIR */
-.table td:last-child .btn-outline-danger {
-  color: #dc2626;
-  border-color: #dc2626;
-  background: #ffffff;
-}
-
-.table td:last-child .btn-outline-danger:hover {
-  color: #ffffff;
-  background: linear-gradient(135deg, #7f1d1d, #ef4444);
-  border-color: #ef4444;
+  font-size: 13px;
+  border-radius: 6px;
 }
 
 
@@ -6742,51 +6726,3 @@ body {
 
 
 
-
-
-/* =========================================================
-   📊 FIX FINAL - GRÁFICOS DASHBOARD / CHART.JS
-   Mantém o canvas controlado SOMENTE dentro dos gráficos
-========================================================= */
-.grafico-box {
-  position: relative;
-  width: 100%;
-  height: 300px;
-  min-height: 300px;
-  overflow: hidden;
-}
-
-.grafico-box canvas {
-  width: 100% !important;
-  height: 100% !important;
-  display: block;
-}
-
-.grafico-pequeno {
-  height: 260px;
-  min-height: 260px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.grafico-pequeno canvas {
-  max-width: 280px !important;
-  max-height: 280px !important;
-}
-
-.chart-container {
-  width: 100%;
-  overflow-x: auto;
-}
-
-.chart-container canvas {
-  min-width: 100%;
-}
-
-@media (max-width: 768px) {
-  .grafico-box {
-    height: 240px;
-    min-height: 240px;
-  }
-}

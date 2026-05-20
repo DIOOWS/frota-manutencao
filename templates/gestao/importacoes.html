@@ -215,7 +215,7 @@
 
                 <td>
                   {% if c.pago %}
-                    <span class="badge bg-success">PAGO</span>
+                    <span class="badge bg-success">PAGO</span
                   {% else %}
                     <span class="badge bg-warning text-dark">PENDENTE</span>
                   {% endif %}
@@ -231,7 +231,7 @@
                             class="btn btn-sm btn-outline-primary js-salvar-scroll"
                             data-bs-toggle="modal"
                             data-bs-target="#modalEditarPagar{{ c.id }}">
-                      Editar
+                       ✏️
                     </button>
 
                     <form method="POST"
@@ -241,7 +241,7 @@
                       <input type="hidden" name="mes_redirect" value="{{ mes }}">
                       <input type="hidden" name="ano_redirect" value="{{ ano }}">
                       <button class="btn btn-sm btn-outline-danger">
-                        Excluir
+                        🗑️
                       </button>
                     </form>
                   </div>
@@ -521,7 +521,7 @@
                             class="btn btn-sm btn-outline-primary js-salvar-scroll"
                             data-bs-toggle="modal"
                             data-bs-target="#modalEditarReceber{{ c.id }}">
-                      Editar
+                      ✏️
                     </button>
 
                     <form method="POST"
@@ -530,7 +530,7 @@
                           onsubmit="return confirm('Tem certeza que deseja excluir este registro?');">
                       <input type="hidden" name="mes_redirect" value="{{ mes }}">
                       <input type="hidden" name="ano_redirect" value="{{ ano }}">
-                      <button class="btn btn-sm btn-outline-danger">Excluir</button>
+                      <button class="btn btn-sm btn-outline-danger">🗑️</button>
                     </form>
                   </div>
                 </td>

@@ -1,0 +1,804 @@
+/* Arquivo gerado a partir de style.css — módulo: 06-login.css
+   Mantém as classes originais para não alterar HTML/JS. */
+
+/* =========================
+   🔐 LOGIN NEON - EASY CONTROL
+========================= */
+
+.neon-login-body {
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at top, rgba(0, 212, 255, 0.18), transparent 35%),
+    radial-gradient(circle at bottom, rgba(255, 0, 102, 0.18), transparent 35%),
+    linear-gradient(135deg, #0a0b16, #141421, #090a12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.neon-login-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.neon-login-box {
+  width: 390px;
+  min-height: 430px;
+  position: relative;
+  background: #1b1c2b;
+  border-radius: 28px;
+  padding: 18px;
+  box-shadow:
+    0 0 35px rgba(0, 0, 0, 0.65),
+    inset 0 0 18px rgba(255, 255, 255, 0.03);
+  animation: neonBoxEntrance 0.7s ease;
+}
+
+.neon-login-box::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border-radius: 20px;
+  background: #242536;
+  box-shadow:
+    inset 0 0 18px rgba(0, 0, 0, 0.45),
+    0 0 20px rgba(0, 212, 255, 0.05);
+  z-index: 1;
+}
+
+.neon-login-inner {
+  position: relative;
+  z-index: 3;
+  padding: 44px 34px 34px;
+}
+
+.neon-login-glow {
+  position: absolute;
+  z-index: 4;
+  border-radius: 20px;
+  pointer-events: none;
+}
+
+.neon-glow-top {
+  top: 0;
+  left: 44px;
+  width: 155px;
+  height: 5px;
+  background: #ff005d;
+  box-shadow: 0 0 14px #ff005d, 0 0 28px rgba(255, 0, 93, 0.65);
+  animation: neonPulsePink 2s infinite alternate;
+}
+
+.neon-glow-right {
+  top: 42px;
+  right: 0;
+  width: 5px;
+  height: 170px;
+  background: #21f5e5;
+  box-shadow: 0 0 14px #21f5e5, 0 0 28px rgba(33, 245, 229, 0.65);
+  animation: neonPulseCyan 2s infinite alternate;
+}
+
+.neon-glow-bottom {
+  bottom: 0;
+  right: 50px;
+  width: 150px;
+  height: 5px;
+  background: #ff005d;
+  box-shadow: 0 0 14px #ff005d, 0 0 28px rgba(255, 0, 93, 0.65);
+  animation: neonPulsePink 2s infinite alternate;
+}
+
+.neon-glow-left {
+  bottom: 44px;
+  left: 0;
+  width: 5px;
+  height: 155px;
+  background: #21f5e5;
+  box-shadow: 0 0 14px #21f5e5, 0 0 28px rgba(33, 245, 229, 0.65);
+  animation: neonPulseCyan 2s infinite alternate;
+}
+
+.neon-login-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.neon-login-title span {
+  width: 22px;
+  height: 13px;
+  background: #ff005d;
+  border-radius: 50%;
+  filter: blur(1px);
+  box-shadow: 0 0 12px #ff005d;
+}
+
+.neon-login-title h4 {
+  margin: 0;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 21px;
+  letter-spacing: 6px;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.35);
+}
+
+.neon-login-brand {
+  text-align: center;
+  color: #21f5e5;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  margin-bottom: 28px;
+  opacity: 0.9;
+}
+
+.neon-login-alert {
+  border-radius: 12px;
+  padding: 8px 10px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.neon-input-group {
+  height: 48px;
+  border: 2px solid rgba(255, 255, 255, 0.68);
+  border-radius: 999px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+  background: rgba(12, 13, 24, 0.38);
+  box-shadow:
+    inset 0 0 10px rgba(255, 255, 255, 0.03),
+    0 0 10px rgba(255, 255, 255, 0.03);
+  transition: 0.25s ease;
+}
+
+.neon-input-group:focus-within {
+  border-color: #21f5e5;
+  box-shadow:
+    0 0 14px rgba(33, 245, 229, 0.35),
+    inset 0 0 12px rgba(33, 245, 229, 0.05);
+}
+
+.neon-input-group i {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 16px;
+  margin-right: 10px;
+}
+
+.neon-input-group input {
+  flex: 1;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.neon-input-group input::placeholder {
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.neon-password-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.neon-password-btn i {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+  transition: 0.2s;
+}
+
+.neon-password-btn:hover i {
+  color: #21f5e5;
+}
+
+.neon-login-btn {
+  width: 100%;
+  height: 48px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #21f5e5, #00d4ff);
+  color: #13202a;
+  font-weight: 800;
+  font-size: 15px;
+  margin-top: 4px;
+  box-shadow:
+    0 0 16px rgba(33, 245, 229, 0.65),
+    0 10px 22px rgba(0, 0, 0, 0.25);
+  transition: 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.neon-login-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+
+.neon-login-btn:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.neon-login-btn .spinner-border {
+  width: 1rem;
+  height: 1rem;
+  display: none;
+}
+
+@keyframes neonPulsePink {
+  from {
+    opacity: 0.7;
+    box-shadow: 0 0 8px #ff005d, 0 0 18px rgba(255, 0, 93, 0.45);
+  }
+
+  to {
+    opacity: 1;
+    box-shadow: 0 0 16px #ff005d, 0 0 34px rgba(255, 0, 93, 0.85);
+  }
+}
+
+@keyframes neonPulseCyan {
+  from {
+    opacity: 0.7;
+    box-shadow: 0 0 8px #21f5e5, 0 0 18px rgba(33, 245, 229, 0.45);
+  }
+
+  to {
+    opacity: 1;
+    box-shadow: 0 0 16px #21f5e5, 0 0 34px rgba(33, 245, 229, 0.85);
+  }
+}
+
+@keyframes neonBoxEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 480px) {
+  .neon-login-box {
+    width: 100%;
+    max-width: 360px;
+    min-height: auto;
+  }
+
+  .neon-login-inner {
+    padding: 40px 22px 28px;
+  }
+
+  .neon-login-title h4 {
+    font-size: 18px;
+    letter-spacing: 5px;
+  }
+}
+
+
+/* =========================
+   🔐 LOGIN NEON COM BACKGROUND CAMINHÃO
+========================= */
+
+.login-truck-bg {
+  background-image: url("/static/img/login-bg-caminhao.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+.neon-login-overlay {
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(2, 0, 36, 0.88),
+      rgba(9, 9, 121, 0.58),
+      rgba(0, 0, 0, 0.82)
+    );
+  z-index: 1;
+}
+
+.neon-login-body {
+  min-height: 100vh;
+  margin: 0;
+  overflow: hidden;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.neon-login-wrapper {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  min-height: 100vh;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.neon-login-box {
+  width: 390px;
+  min-height: 430px;
+  position: relative;
+  background: rgba(20, 21, 34, 0.92);
+  border-radius: 28px;
+  padding: 18px;
+  box-shadow:
+    0 0 45px rgba(0, 0, 0, 0.85),
+    inset 0 0 18px rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+  animation: neonBoxEntrance 0.7s ease;
+  backdrop-filter: blur(8px);
+}
+
+.neon-login-box::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border-radius: 20px;
+  background: rgba(36, 37, 54, 0.92);
+  box-shadow:
+    inset 0 0 18px rgba(0, 0, 0, 0.55),
+    0 0 20px rgba(0, 212, 255, 0.08);
+  z-index: 2;
+}
+
+.neon-rotating-border {
+  position: absolute;
+  inset: -45%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 55deg,
+    #21f5e5 75deg,
+    transparent 100deg,
+    transparent 170deg,
+    #ff005d 200deg,
+    transparent 230deg,
+    transparent 360deg
+  );
+  animation: neonRotate 4s linear infinite;
+  z-index: 1;
+  opacity: 0.9;
+  filter: blur(1px);
+}
+
+.neon-login-inner {
+  position: relative;
+  z-index: 4;
+  padding: 44px 34px 34px;
+}
+
+.neon-login-glow {
+  position: absolute;
+  z-index: 5;
+  border-radius: 20px;
+  pointer-events: none;
+}
+
+.neon-glow-top {
+  top: 0;
+  left: 44px;
+  width: 155px;
+  height: 5px;
+  background: #ff005d;
+  box-shadow: 0 0 14px #ff005d, 0 0 28px rgba(255, 0, 93, 0.65);
+  animation: neonPulsePink 2s infinite alternate;
+}
+
+.neon-glow-right {
+  top: 42px;
+  right: 0;
+  width: 5px;
+  height: 170px;
+  background: #21f5e5;
+  box-shadow: 0 0 14px #21f5e5, 0 0 28px rgba(33, 245, 229, 0.65);
+  animation: neonPulseCyan 2s infinite alternate;
+}
+
+.neon-glow-bottom {
+  bottom: 0;
+  right: 50px;
+  width: 150px;
+  height: 5px;
+  background: #ff005d;
+  box-shadow: 0 0 14px #ff005d, 0 0 28px rgba(255, 0, 93, 0.65);
+  animation: neonPulsePink 2s infinite alternate;
+}
+
+.neon-glow-left {
+  bottom: 44px;
+  left: 0;
+  width: 5px;
+  height: 155px;
+  background: #21f5e5;
+  box-shadow: 0 0 14px #21f5e5, 0 0 28px rgba(33, 245, 229, 0.65);
+  animation: neonPulseCyan 2s infinite alternate;
+}
+
+.neon-login-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.neon-login-title span {
+  width: 22px;
+  height: 13px;
+  background: #ff005d;
+  border-radius: 50%;
+  filter: blur(1px);
+  box-shadow: 0 0 12px #ff005d;
+}
+
+.neon-login-title h4 {
+  margin: 0;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 21px;
+  letter-spacing: 6px;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.35);
+}
+
+.neon-login-brand {
+  text-align: center;
+  color: #21f5e5;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  margin-bottom: 28px;
+  opacity: 0.9;
+}
+
+.neon-login-alert {
+  border-radius: 12px;
+  padding: 8px 10px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.neon-input-group {
+  height: 48px;
+  border: 2px solid rgba(255, 255, 255, 0.68);
+  border-radius: 999px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+  background: rgba(12, 13, 24, 0.45);
+  box-shadow:
+    inset 0 0 10px rgba(255, 255, 255, 0.03),
+    0 0 10px rgba(255, 255, 255, 0.03);
+  transition: 0.25s ease;
+}
+
+.neon-input-group:focus-within {
+  border-color: #21f5e5;
+  box-shadow:
+    0 0 14px rgba(33, 245, 229, 0.35),
+    inset 0 0 12px rgba(33, 245, 229, 0.05);
+}
+
+.neon-input-group i {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 16px;
+  margin-right: 10px;
+}
+
+.neon-input-group input {
+  flex: 1;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.neon-input-group input::placeholder {
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.neon-password-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.neon-password-btn i {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+  transition: 0.2s;
+}
+
+.neon-password-btn:hover i {
+  color: #21f5e5;
+}
+
+.neon-login-btn {
+  width: 100%;
+  height: 48px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #21f5e5, #00d4ff);
+  color: #13202a;
+  font-weight: 800;
+  font-size: 15px;
+  margin-top: 4px;
+  box-shadow:
+    0 0 16px rgba(33, 245, 229, 0.65),
+    0 10px 22px rgba(0, 0, 0, 0.25);
+  transition: 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.neon-login-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+
+.neon-login-btn:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.neon-login-btn .spinner-border {
+  width: 1rem;
+  height: 1rem;
+  display: none;
+}
+
+@keyframes neonRotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes neonPulsePink {
+  from {
+    opacity: 0.7;
+    box-shadow: 0 0 8px #ff005d, 0 0 18px rgba(255, 0, 93, 0.45);
+  }
+
+  to {
+    opacity: 1;
+    box-shadow: 0 0 16px #ff005d, 0 0 34px rgba(255, 0, 93, 0.85);
+  }
+}
+
+@keyframes neonPulseCyan {
+  from {
+    opacity: 0.7;
+    box-shadow: 0 0 8px #21f5e5, 0 0 18px rgba(33, 245, 229, 0.45);
+  }
+
+  to {
+    opacity: 1;
+    box-shadow: 0 0 16px #21f5e5, 0 0 34px rgba(33, 245, 229, 0.85);
+  }
+}
+
+@keyframes neonBoxEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 480px) {
+  .neon-login-box {
+    width: 100%;
+    max-width: 360px;
+    min-height: auto;
+  }
+
+  .neon-login-inner {
+    padding: 40px 22px 28px;
+  }
+
+  .neon-login-title h4 {
+    font-size: 18px;
+    letter-spacing: 5px;
+  }
+}
+
+
+/* =========================
+   🔐 AJUSTE LOGIN - NEON AZUL FORTE
+========================= */
+
+/* troca os pontos vermelhos do LOGIN para azul */
+.neon-login-title span {
+  background: #0052ff;
+  box-shadow:
+    0 0 12px #0052ff,
+    0 0 25px rgba(0, 82, 255, 0.85);
+}
+
+/* linha superior azul forte */
+.neon-glow-top {
+  background: #0052ff;
+  box-shadow:
+    0 0 14px #0052ff,
+    0 0 28px rgba(0, 82, 255, 0.75);
+  animation: neonPulseBlue 2s infinite alternate;
+}
+
+/* linha inferior azul forte */
+.neon-glow-bottom {
+  background: #0052ff;
+  box-shadow:
+    0 0 14px #0052ff,
+    0 0 28px rgba(0, 82, 255, 0.75);
+  animation: neonPulseBlue 2s infinite alternate;
+}
+
+/* borda girando sem vermelho */
+.neon-rotating-border {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 45deg,
+    #21f5e5 75deg,
+    transparent 110deg,
+    transparent 165deg,
+    #0052ff 200deg,
+    transparent 240deg,
+    transparent 360deg
+  );
+}
+
+/* overlay mais azul e menos roxo/vermelho */
+.neon-login-overlay {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(2, 0, 36, 0.88),
+      rgba(0, 45, 140, 0.62),
+      rgba(0, 0, 0, 0.78)
+    );
+}
+
+/* card com brilho azul/ciano */
+.neon-login-box {
+  box-shadow:
+    0 0 45px rgba(0, 0, 0, 0.85),
+    0 0 28px rgba(0, 82, 255, 0.22),
+    inset 0 0 18px rgba(255, 255, 255, 0.04);
+}
+
+/* animação azul */
+@keyframes neonPulseBlue {
+  from {
+    opacity: 0.7;
+    box-shadow:
+      0 0 8px #0052ff,
+      0 0 18px rgba(0, 82, 255, 0.45);
+  }
+
+  to {
+    opacity: 1;
+    box-shadow:
+      0 0 16px #0052ff,
+      0 0 34px rgba(0, 82, 255, 0.9);
+  }
+}
+
+
+/* =========================
+   🔐 AJUSTE LOGIN - FUNDO SEM AZULADO
+========================= */
+
+.neon-login-overlay {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.45),
+      rgba(0, 0, 0, 0.25),
+      rgba(0, 0, 0, 0.55)
+    ) !important;
+}
+
+.login-truck-bg {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+
+/* =========================
+   🔐 LOGIN - EASY CONTROL EM CIMA / LOGIN EMBAIXO
+========================= */
+
+/* remove as bolinhas laterais */
+.neon-login-title span {
+  display: none !important;
+}
+
+/* EASY CONTROL grande em cima */
+.neon-login-title h4 {
+  color: #ffffff !important;
+  font-size: 21px !important;
+  font-weight: 800 !important;
+  letter-spacing: 5px !important;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.45) !important;
+  margin-bottom: 6px !important;
+}
+
+/* LOGIN pequeno embaixo */
+.neon-login-brand {
+  display: block !important;
+  text-align: center;
+  color: #21f5e5 !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  letter-spacing: 4px !important;
+  text-shadow: 0 0 8px rgba(33, 245, 229, 0.45) !important;
+  margin-bottom: 28px !important;
+  opacity: 1 !important;
+}
+
+
+/* =========================
+   🔐 LOGIN - REMOVER LED GIRANDO
+========================= */
+
+.neon-rotating-border {
+  display: none !important;
+}
+
+.neon-login-box {
+  border: 1px solid rgba(33, 245, 229, 0.35);
+  box-shadow:
+    0 0 45px rgba(0, 0, 0, 0.85),
+    0 0 22px rgba(33, 245, 229, 0.18),
+    inset 0 0 18px rgba(255, 255, 255, 0.04);
+}

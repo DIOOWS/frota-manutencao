@@ -1,0 +1,29 @@
+/* Arquivo gerado a partir de style.css — módulo: 00-base.css
+   Mantém as classes originais para não alterar HTML/JS. */
+
+/* =========================
+   🎨 VARIÁVEIS (IDENTIDADE)
+========================= */
+:root {
+  --gradient-start: #020024;
+  --gradient-mid: #090979;
+  --gradient-end: #00d4ff;
+
+  --primary: #1e3a8a;
+  --secondary: #3b82f6;
+  --bg: #eef2f7;
+  --card: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --border: #d1d5db;
+}
+
+
+/* =========================
+   🌍 BASE
+========================= */
+body {
+  background: var(--bg);
+  font-family: 'Segoe UI', sans-serif;
+  color: var(--text);
+}

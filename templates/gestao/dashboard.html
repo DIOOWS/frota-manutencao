@@ -411,71 +411,122 @@
   ======================================================== -->
   <div class="row g-4 mt-4">
 
-    <div class="col-md-3">
-      <div class="gestao-card">
-        <h5>Despesas Assistência</h5>
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="gestao-card ranking-card">
+      <h5>Despesas Assistência</h5>
+
+      <div class="ranking-scroll">
 
         {% for nome, valor in ranking_despesas_assistencia %}
           <div class="gestao-ranking-item">
-            <span>{{ nome }}</span>
-            <strong>R$ {{ "%.2f"|format(valor) }}</strong>
+
+            <span class="ranking-nome">
+              {{ nome }}
+            </span>
+
+            <strong class="ranking-valor">
+              R$ {{ "%.2f"|format(valor) }}
+            </strong>
+
           </div>
         {% else %}
-          <p class="text-muted p-3">Sem despesas de assistência no período.</p>
+          <p class="text-muted p-3">
+            Sem despesas de assistência no período.
+          </p>
         {% endfor %}
 
       </div>
     </div>
+  </div>
 
-    <div class="col-md-3">
-      <div class="gestao-card">
-        <h5>Despesas Logística</h5>
+
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="gestao-card ranking-card">
+      <h5>Despesas Logística</h5>
+
+      <div class="ranking-scroll">
 
         {% for nome, valor in ranking_despesas_logistica %}
           <div class="gestao-ranking-item">
-            <span>{{ nome }}</span>
-            <strong>R$ {{ "%.2f"|format(valor) }}</strong>
+
+            <span class="ranking-nome">
+              {{ nome }}
+            </span>
+
+            <strong class="ranking-valor">
+              R$ {{ "%.2f"|format(valor) }}
+            </strong>
+
           </div>
         {% else %}
-          <p class="text-muted p-3">Sem despesas de logística no período.</p>
+          <p class="text-muted p-3">
+            Sem despesas de logística no período.
+          </p>
         {% endfor %}
 
       </div>
     </div>
+  </div>
 
-    <div class="col-md-3">
-      <div class="gestao-card">
-        <h5>Receitas</h5>
+
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="gestao-card ranking-card">
+      <h5>Receitas</h5>
+
+      <div class="ranking-scroll">
 
         {% for nome, valor in ranking_receitas %}
           <div class="gestao-ranking-item">
-            <span>{{ nome }}</span>
-            <strong>R$ {{ "%.2f"|format(valor) }}</strong>
+
+            <span class="ranking-nome">
+              {{ nome }}
+            </span>
+
+            <strong class="ranking-valor">
+              R$ {{ "%.2f"|format(valor) }}
+            </strong>
+
           </div>
         {% else %}
-          <p class="text-muted p-3">Sem receitas no período.</p>
+          <p class="text-muted p-3">
+            Sem receitas no período.
+          </p>
         {% endfor %}
 
       </div>
     </div>
+  </div>
 
-    <div class="col-md-3">
-      <div class="gestao-card">
-        <h5>Clientes</h5>
+
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="gestao-card ranking-card">
+      <h5>Clientes</h5>
+
+      <div class="ranking-scroll">
 
         {% for nome, valor in ranking_clientes %}
           <div class="gestao-ranking-item">
-            <span>{{ nome }}</span>
-            <strong>R$ {{ "%.2f"|format(valor) }}</strong>
+
+            <span class="ranking-nome">
+              {{ nome }}
+            </span>
+
+            <strong class="ranking-valor">
+              R$ {{ "%.2f"|format(valor) }}
+            </strong>
+
           </div>
         {% else %}
-          <p class="text-muted p-3">Sem clientes no período.</p>
+          <p class="text-muted p-3">
+            Sem clientes no período.
+          </p>
         {% endfor %}
 
       </div>
     </div>
-
   </div>
+
+</div>
 
   <!-- =======================================================
        EVOLUÇÃO FINANCEIRA MENSAL
@@ -523,77 +574,195 @@
 
 
 
-<!-- =======================================================
-     MODAL - DETALHES DAS CONTAS POR CATEGORIA
-======================================================== -->
-<div class="modal fade" id="modalDetalheCategoriaDespesa" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content modal-despesa-categoria">
+<!-- =========================================
+     🔥 MODAL DETALHE CATEGORIA
+========================================= -->
+<div
+    class="modal fade"
+    id="modalDetalheCategoriaDespesa"
+    tabindex="-1"
+    aria-hidden="true"
+>
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
 
-      <div class="modal-header">
-        <div>
-          <small class="modal-subtitle">Detalhamento da categoria</small>
-          <h5 class="modal-title" id="modalCategoriaTitulo">Categoria</h5>
+        <!-- =====================================
+             🔥 CONTENT
+        ====================================== -->
+        <div class="modal-content modal-despesa-categoria">
+
+            <!-- =====================================
+                 🔥 HEADER
+            ====================================== -->
+            <div class="modal-header border-0">
+
+                <div>
+
+                    <div class="modal-subtitle">
+                        DETALHAMENTO DA CATEGORIA
+                    </div>
+
+                    <h2
+                        class="modal-title"
+                        id="modalCategoriaTitulo"
+                    >
+                        Categoria
+                    </h2>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="btn-close btn-close-white"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                ></button>
+
+            </div>
+
+            <!-- =====================================
+                 🔥 BODY
+            ====================================== -->
+            <div class="modal-body">
+
+                <!-- =================================
+                     🔥 RESUMOS
+                ================================== -->
+                <div class="modal-resumo-grid">
+
+                    <!-- TOTAL -->
+                    <div class="modal-resumo-card">
+
+                        <span>Total</span>
+
+                        <strong id="modalCategoriaTotal">
+                            R$ 0,00
+                        </strong>
+
+                    </div>
+
+                    <!-- PAGO -->
+                    <div class="modal-resumo-card success">
+
+                        <span>Pago</span>
+
+                        <strong id="modalCategoriaPago">
+                            R$ 0,00
+                        </strong>
+
+                    </div>
+
+                    <!-- ABERTO -->
+                    <div class="modal-resumo-card danger">
+
+                        <span>Em aberto</span>
+
+                        <strong id="modalCategoriaAberto">
+                            R$ 0,00
+                        </strong>
+
+                    </div>
+
+                    <!-- QUANTIDADE -->
+                    <div class="modal-resumo-card warning">
+
+                        <span>Quantidade</span>
+
+                        <strong id="modalCategoriaQuantidade">
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+                <!-- =================================
+                     🔥 LOADING
+                ================================== -->
+                <div
+                    id="modalCategoriaLoading"
+                    class="text-center py-5"
+                >
+
+                    <div
+                        class="spinner-border text-primary mb-3"
+                        role="status"
+                    ></div>
+
+                    <div class="fw-bold">
+                        Carregando dados...
+                    </div>
+
+                </div>
+
+                <!-- =================================
+                     🔥 VAZIO
+                ================================== -->
+                <div
+                    id="modalCategoriaVazio"
+                    class="alert alert-light border d-none"
+                >
+
+                    Nenhuma conta encontrada.
+
+                </div>
+
+                <!-- =================================
+                     🔥 TABELA
+                ================================== -->
+                <div
+                    id="modalCategoriaTabelaWrap"
+                    class="table-responsive d-none"
+                >
+
+                    <table
+                        class="table modal-tabela align-middle"
+                    >
+
+                        <!-- HEADER -->
+                        <thead>
+
+                            <tr>
+
+                                <th>Data</th>
+
+                                <th>Conta</th>
+
+                                <th>
+                                    Fornecedor /
+                                    Funcionário
+                                </th>
+
+                                <th>Observações</th>
+
+                                <th>Setor</th>
+
+                                <th>Origem</th>
+
+                                <th>Status</th>
+
+                                <th class="text-end">
+                                    Valor
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <!-- BODY -->
+                        <tbody
+                            id="modalCategoriaTabelaBody"
+                        ></tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
         </div>
-
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
-      </div>
-
-      <div class="modal-body">
-
-        <div class="modal-resumo-grid">
-          <div class="modal-resumo-card danger">
-            <span>Total da categoria</span>
-            <strong id="modalCategoriaTotal">R$ 0,00</strong>
-          </div>
-
-          <div class="modal-resumo-card success">
-            <span>Total pago</span>
-            <strong id="modalCategoriaPago">R$ 0,00</strong>
-          </div>
-
-          <div class="modal-resumo-card warning">
-            <span>Total em aberto</span>
-            <strong id="modalCategoriaAberto">R$ 0,00</strong>
-          </div>
-
-          <div class="modal-resumo-card">
-            <span>Quantidade de contas</span>
-            <strong id="modalCategoriaQuantidade">0</strong>
-          </div>
-        </div>
-
-        <div id="modalCategoriaLoading" class="modal-loading">
-          Carregando contas da categoria...
-        </div>
-
-        <div id="modalCategoriaVazio" class="modal-vazio d-none">
-          Nenhuma conta encontrada para essa categoria no período filtrado.
-        </div>
-
-        <div class="table-responsive modal-tabela-wrap d-none" id="modalCategoriaTabelaWrap">
-          <table class="table table-hover align-middle modal-tabela">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Conta</th>
-                <th>Fornecedor / Funcionário</th>
-                <th>Observações</th>
-                <th>Setor</th>
-                <th>Origem</th>
-                <th>Status</th>
-                <th class="text-end">Valor</th>
-              </tr>
-            </thead>
-
-            <tbody id="modalCategoriaTabelaBody"></tbody>
-          </table>
-        </div>
-
-      </div>
 
     </div>
-  </div>
+
 </div>
 
 {% endblock %}
