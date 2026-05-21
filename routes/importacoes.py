@@ -265,10 +265,6 @@ def valor_por_coluna(row_dict, nome):
 
 
 def valor_por_colunas(row_dict, nomes):
-    """
-    Tenta várias possibilidades de nomes para a mesma informação.
-    Exemplo: Observações, Observacoes, Obs, Observação.
-    """
     for nome in nomes:
         valor = valor_por_coluna(row_dict, nome)
 
@@ -285,6 +281,19 @@ def redirect_importacoes(mes, ano, extra=""):
         url += extra
 
     return redirect(url)
+
+
+def validar_mes_ano(mes, ano):
+    if not mes or not ano:
+        return False
+
+    if mes < 1 or mes > 12:
+        return False
+
+    if ano < 2000:
+        return False
+
+    return True
 
 
 # =========================================================
@@ -562,10 +571,6 @@ def montar_linhas_pandas_html(conteudo, primeira_coluna):
 
 
 def montar_linhas_pandas_tentativas(conteudo, extensao, primeira_coluna):
-    """
-    Fallback para arquivos .xls antigos/exportados.
-    Tenta ler como XLS real e depois como HTML/XML.
-    """
     erros = []
 
     try:
@@ -601,15 +606,12 @@ def ler_linhas_upload(file_storage, primeira_coluna="Nº Fatura"):
 
     tipo_real = detectar_tipo_real_excel(conteudo)
 
-    # XLS antigo real
     if tipo_real == "xls_antigo":
         return montar_linhas_pandas_excel(conteudo, "xls", primeira_coluna)
 
-    # HTML/XML salvo como XLS
     if tipo_real in ["html_excel", "xml_excel"]:
         return montar_linhas_pandas_html(conteudo, primeira_coluna)
 
-    # XLSX / XLSM / XLSB moderno
     if tipo_real == "zip_excel":
 
         if extensao == "xlsb":
@@ -635,7 +637,6 @@ def ler_linhas_upload(file_storage, primeira_coluna="Nº Fatura"):
 
         return montar_linhas_openpyxl(sheet, header_row)
 
-    # Fallback para .xls problemático
     if extensao == "xls":
         return montar_linhas_pandas_tentativas(conteudo, extensao, primeira_coluna)
 
@@ -643,19 +644,6 @@ def ler_linhas_upload(file_storage, primeira_coluna="Nº Fatura"):
         "O arquivo enviado não parece ser uma planilha Excel válida. "
         "Abra o arquivo no Excel e salve novamente como 'Pasta de Trabalho do Excel (*.xlsx)'."
     )
-
-
-def validar_mes_ano(mes, ano):
-    if not mes or not ano:
-        return False
-
-    if mes < 1 or mes > 12:
-        return False
-
-    if ano < 2000:
-        return False
-
-    return True
 
 
 # =========================================================
@@ -679,9 +667,14 @@ def index():
     busca_receber = texto(request.args.get("busca_receber"))
     status_receber = texto(request.args.get("status_receber")).upper()
 
+    # Agora a tela trabalha com o cenário novo:
+    # 1. Contas Pagas = saídas já realizadas
+    # 2. Contas a Receber = entradas/recebíveis importados
     contas_pagar_query = ContaPagarImportada.query.filter_by(
         mes=mes,
         ano=ano
+    ).filter(
+        ContaPagarImportada.origem_importacao == "PAGAMENTO"
     )
 
     if busca_pagar:
@@ -711,13 +704,18 @@ def index():
         )
 
     contas_pagar = contas_pagar_query.order_by(
-        ContaPagarImportada.data_vencimento.asc(),
+        ContaPagarImportada.data_pagamento.asc(),
         ContaPagarImportada.id.asc()
     ).all()
 
     contas_receber_query = ContaReceberImportada.query.filter_by(
         mes=mes,
         ano=ano
+    ).filter(
+        or_(
+            ContaReceberImportada.origem_importacao.is_(None),
+            ContaReceberImportada.origem_importacao != "MANUAL"
+        )
     )
 
     if busca_receber:
@@ -803,23 +801,24 @@ def index():
 
 
 # =========================================================
-# IMPORTAR CONTAS A PAGAR
+# IMPORTAR CONTAS PAGAS
+# Relatório de pagamentos realizados
 # =========================================================
 
-@importacoes_bp.route("/contas-a-pagar", methods=["POST"])
+@importacoes_bp.route("/contas-pagas", methods=["POST"])
 @gestao_required
-def importar_contas_pagar():
+def importar_contas_pagas():
 
-    arquivo = request.files.get("arquivo_pagar")
-    mes_importacao = request.form.get("mes_pagar", type=int)
-    ano_importacao = request.form.get("ano_pagar", type=int)
+    arquivo = request.files.get("arquivo_pagas")
+    mes_importacao = request.form.get("mes_pagas", type=int)
+    ano_importacao = request.form.get("ano_pagas", type=int)
 
     if not validar_mes_ano(mes_importacao, ano_importacao):
-        flash("Informe mês e ano válidos para Contas a Pagar.", "danger")
+        flash("Informe mês e ano válidos para Contas Pagas.", "danger")
         return redirect("/gestao/importacoes/")
 
     if not arquivo or not arquivo.filename:
-        flash("Selecione uma planilha de Contas a Pagar.", "danger")
+        flash("Selecione uma planilha de Contas Pagas.", "danger")
         return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
 
     if not arquivo_excel_valido(arquivo.filename):
@@ -834,6 +833,7 @@ def importar_contas_pagar():
 
         total_criado = 0
         total_atualizado = 0
+        total_ignorado = 0
         total_linhas = 0
 
         for linha in linhas:
@@ -849,7 +849,10 @@ def importar_contas_pagar():
             data_documento = normalizar_data(valor_por_coluna(linha, "Dt. Docto"))
 
             valor = normalizar_decimal(valor_por_coluna(linha, "Valor"))
-            pago = normalizar_bool(valor_por_coluna(linha, "Pg?"))
+
+            if not data_pagamento:
+                total_ignorado += 1
+                continue
 
             observacoes = texto(
                 valor_por_colunas(
@@ -904,16 +907,12 @@ def importar_contas_pagar():
 
             conta.data_documento = data_documento
             conta.data_vencimento = data_vencimento
-
-            if data_pagamento:
-                conta.data_pagamento = data_pagamento
-            elif not pago:
-                conta.data_pagamento = None
+            conta.data_pagamento = data_pagamento
 
             conta.valor = valor
 
-            conta.pago = pago
-            conta.status = "PAGO" if pago else "PENDENTE"
+            conta.pago = True
+            conta.status = "PAGO"
 
             conta.observacoes = observacoes
 
@@ -921,7 +920,7 @@ def importar_contas_pagar():
             conta.ano = ano_importacao
 
             conta.chave_conciliacao = chave_conciliacao
-            conta.origem_importacao = "VENCIMENTO"
+            conta.origem_importacao = "PAGAMENTO"
 
             total_linhas += 1
 
@@ -929,99 +928,20 @@ def importar_contas_pagar():
 
         flash(
             (
-                f"Contas a Pagar de {mes_importacao:02d}/{ano_importacao} importadas com sucesso! "
+                f"Contas Pagas de {mes_importacao:02d}/{ano_importacao} importadas com sucesso! "
                 f"{total_linhas} linha(s). "
                 f"Criadas: {total_criado}. "
-                f"Atualizadas: {total_atualizado}."
+                f"Atualizadas: {total_atualizado}. "
+                f"Ignoradas sem Dt. Pgto: {total_ignorado}."
             ),
             "success"
         )
 
     except Exception as e:
         db.session.rollback()
-        flash(f"Erro ao importar Contas a Pagar: {str(e)}", "danger")
+        flash(f"Erro ao importar Contas Pagas: {str(e)}", "danger")
 
     return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
-
-
-# =========================================================
-# EDITAR / EXCLUIR CONTAS A PAGAR IMPORTADAS
-# =========================================================
-
-@importacoes_bp.route("/contas-a-pagar/editar/<int:id>", methods=["POST"])
-@gestao_required
-def editar_conta_pagar(id):
-
-    conta = ContaPagarImportada.query.get_or_404(id)
-
-    mes_redirect = request.form.get("mes_redirect", type=int) or conta.mes
-    ano_redirect = request.form.get("ano_redirect", type=int) or conta.ano
-
-    try:
-        plano_contas = texto(request.form.get("plano_contas"))
-
-        conta.numero_fatura = texto(request.form.get("numero_fatura"))
-        conta.fornecedor_funcionario = texto(request.form.get("fornecedor_funcionario"))
-        conta.telefone = texto(request.form.get("telefone"))
-        conta.email = texto(request.form.get("email"))
-
-        conta.plano_contas = plano_contas
-        conta.categoria = limpar_categoria(plano_contas)
-        conta.setor = texto(request.form.get("setor")) or identificar_setor(plano_contas, receita=False)
-
-        conta.data_documento = normalizar_data(request.form.get("data_documento"))
-        conta.data_vencimento = normalizar_data(request.form.get("data_vencimento"))
-        conta.data_pagamento = normalizar_data(request.form.get("data_pagamento"))
-
-        conta.valor = normalizar_decimal(request.form.get("valor"))
-
-        conta.pago = True if request.form.get("pago") == "on" else False
-        conta.status = "PAGO" if conta.pago else "PENDENTE"
-
-        conta.observacoes = texto(request.form.get("observacoes"))
-
-        conta.chave_conciliacao = gerar_chave_conta_pagar(
-            numero_fatura=conta.numero_fatura,
-            fornecedor_funcionario=conta.fornecedor_funcionario,
-            valor=conta.valor,
-            data_vencimento=conta.data_vencimento,
-            plano_contas=conta.plano_contas
-        )
-
-        if not conta.origem_importacao:
-            conta.origem_importacao = "MANUAL"
-
-        db.session.commit()
-
-        flash("Conta a pagar atualizada com sucesso!", "success")
-
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Erro ao editar conta a pagar: {str(e)}", "danger")
-
-    return redirect_importacoes(mes_redirect, ano_redirect)
-
-
-@importacoes_bp.route("/contas-a-pagar/excluir/<int:id>", methods=["POST"])
-@gestao_required
-def excluir_conta_pagar(id):
-
-    conta = ContaPagarImportada.query.get_or_404(id)
-
-    mes_redirect = request.form.get("mes_redirect", type=int) or conta.mes
-    ano_redirect = request.form.get("ano_redirect", type=int) or conta.ano
-
-    try:
-        db.session.delete(conta)
-        db.session.commit()
-
-        flash("Conta a pagar excluída com sucesso!", "success")
-
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Erro ao excluir conta a pagar: {str(e)}", "danger")
-
-    return redirect_importacoes(mes_redirect, ano_redirect)
 
 
 # =========================================================
@@ -1156,7 +1076,7 @@ def importar_contas_receber():
             conta.ano = ano_importacao
 
             conta.chave_conciliacao = chave_conciliacao
-            conta.origem_importacao = "VENCIMENTO"
+            conta.origem_importacao = "RECEBIMENTO"
 
             total_linhas += 1
 
@@ -1180,152 +1100,83 @@ def importar_contas_receber():
 
 
 # =========================================================
-# IMPORTAR CONTAS PAGAS
-# Relatório complementar de pagamentos realizados
+# EDITAR / EXCLUIR CONTAS PAGAS
 # =========================================================
 
-@importacoes_bp.route("/contas-pagas", methods=["POST"])
+@importacoes_bp.route("/contas-pagas/editar/<int:id>", methods=["POST"])
 @gestao_required
-def importar_contas_pagas():
+def editar_conta_paga(id):
 
-    arquivo = request.files.get("arquivo_pagas")
-    mes_importacao = request.form.get("mes_pagas", type=int)
-    ano_importacao = request.form.get("ano_pagas", type=int)
+    conta = ContaPagarImportada.query.get_or_404(id)
 
-    if not validar_mes_ano(mes_importacao, ano_importacao):
-        flash("Informe mês e ano válidos para Contas Pagas.", "danger")
-        return redirect("/gestao/importacoes/")
-
-    if not arquivo or not arquivo.filename:
-        flash("Selecione uma planilha de Contas Pagas.", "danger")
-        return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
-
-    if not arquivo_excel_valido(arquivo.filename):
-        flash(
-            "Formato não aceito. Envie uma planilha Excel nos formatos .xlsx, .xlsm, .xls ou .xlsb.",
-            "danger"
-        )
-        return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
+    mes_redirect = request.form.get("mes_redirect", type=int) or conta.mes
+    ano_redirect = request.form.get("ano_redirect", type=int) or conta.ano
 
     try:
-        linhas = ler_linhas_upload(arquivo, "Nº Fatura")
+        plano_contas = texto(request.form.get("plano_contas"))
 
-        total_criado = 0
-        total_atualizado = 0
-        total_ignorado = 0
-        total_linhas = 0
+        conta.numero_fatura = texto(request.form.get("numero_fatura"))
+        conta.fornecedor_funcionario = texto(request.form.get("fornecedor_funcionario"))
+        conta.telefone = texto(request.form.get("telefone"))
+        conta.email = texto(request.form.get("email"))
 
-        for linha in linhas:
-            plano_contas = texto(valor_por_coluna(linha, "Pl. Contas"))
+        conta.plano_contas = plano_contas
+        conta.categoria = limpar_categoria(plano_contas)
+        conta.setor = texto(request.form.get("setor")) or identificar_setor(plano_contas, receita=False)
 
-            numero_fatura = texto(valor_por_coluna(linha, "Nº Fatura"))
-            fornecedor_funcionario = texto(valor_por_coluna(linha, "Fornecedor/Funcionário"))
-            telefone = texto(valor_por_coluna(linha, "Telefone"))
-            email = texto(valor_por_coluna(linha, "Email"))
+        conta.data_documento = normalizar_data(request.form.get("data_documento"))
+        conta.data_vencimento = normalizar_data(request.form.get("data_vencimento"))
+        conta.data_pagamento = normalizar_data(request.form.get("data_pagamento"))
 
-            data_pagamento = normalizar_data(valor_por_coluna(linha, "Dt. Pgto"))
-            data_vencimento = normalizar_data(valor_por_coluna(linha, "Dt. Vencto"))
-            data_documento = normalizar_data(valor_por_coluna(linha, "Dt. Docto"))
+        conta.valor = normalizar_decimal(request.form.get("valor"))
 
-            valor = normalizar_decimal(valor_por_coluna(linha, "Valor"))
+        conta.pago = True
+        conta.status = "PAGO"
 
-            # Relatório de contas pagas: se não tiver data de pagamento,
-            # não entra no fluxo, então não faz sentido importar como paga.
-            if not data_pagamento:
-                total_ignorado += 1
-                continue
+        conta.observacoes = texto(request.form.get("observacoes"))
 
-            observacoes = texto(
-                valor_por_colunas(
-                    linha,
-                    [
-                        "Observações",
-                        "Observacoes",
-                        "Observação",
-                        "Observacao",
-                        "Obs",
-                        "OBS",
-                        "Histórico",
-                        "Historico",
-                        "Descrição",
-                        "Descricao"
-                    ]
-                )
-            )
+        conta.chave_conciliacao = gerar_chave_conta_pagar(
+            numero_fatura=conta.numero_fatura,
+            fornecedor_funcionario=conta.fornecedor_funcionario,
+            valor=conta.valor,
+            data_vencimento=conta.data_vencimento,
+            plano_contas=conta.plano_contas
+        )
 
-            chave_conciliacao = gerar_chave_conta_pagar(
-                numero_fatura=numero_fatura,
-                fornecedor_funcionario=fornecedor_funcionario,
-                valor=valor,
-                data_vencimento=data_vencimento,
-                plano_contas=plano_contas
-            )
-
-            conta = buscar_conta_pagar_existente(
-                chave_conciliacao=chave_conciliacao,
-                numero_fatura=numero_fatura,
-                fornecedor_funcionario=fornecedor_funcionario,
-                valor=valor,
-                data_vencimento=data_vencimento,
-                plano_contas=plano_contas
-            )
-
-            if conta:
-                total_atualizado += 1
-            else:
-                conta = ContaPagarImportada()
-                db.session.add(conta)
-                total_criado += 1
-
-            conta.numero_fatura = numero_fatura
-            conta.fornecedor_funcionario = fornecedor_funcionario
-            conta.telefone = telefone
-            conta.email = email
-
-            conta.plano_contas = plano_contas
-            conta.categoria = limpar_categoria(plano_contas)
-            conta.setor = identificar_setor(plano_contas, receita=False)
-
-            conta.data_documento = data_documento
-            conta.data_vencimento = data_vencimento
-            conta.data_pagamento = data_pagamento
-
-            conta.valor = valor
-
-            conta.pago = True
-            conta.status = "PAGO"
-
-            conta.observacoes = observacoes
-
-            # Aqui o mês/ano da importação representa o mês do relatório importado,
-            # mas as telas financeiras usam data_pagamento e data_vencimento.
-            conta.mes = mes_importacao
-            conta.ano = ano_importacao
-
-            conta.chave_conciliacao = chave_conciliacao
+        if not conta.origem_importacao:
             conta.origem_importacao = "PAGAMENTO"
-
-            total_linhas += 1
 
         db.session.commit()
 
-        flash(
-            (
-                f"Contas Pagas de {mes_importacao:02d}/{ano_importacao} importadas com sucesso! "
-                f"{total_linhas} linha(s). "
-                f"Criadas: {total_criado}. "
-                f"Atualizadas: {total_atualizado}. "
-                f"Ignoradas sem Dt. Pgto: {total_ignorado}."
-            ),
-            "success"
-        )
+        flash("Conta paga atualizada com sucesso!", "success")
 
     except Exception as e:
         db.session.rollback()
-        flash(f"Erro ao importar Contas Pagas: {str(e)}", "danger")
+        flash(f"Erro ao editar conta paga: {str(e)}", "danger")
 
-    return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
+    return redirect_importacoes(mes_redirect, ano_redirect)
 
+
+@importacoes_bp.route("/contas-pagas/excluir/<int:id>", methods=["POST"])
+@gestao_required
+def excluir_conta_paga(id):
+
+    conta = ContaPagarImportada.query.get_or_404(id)
+
+    mes_redirect = request.form.get("mes_redirect", type=int) or conta.mes
+    ano_redirect = request.form.get("ano_redirect", type=int) or conta.ano
+
+    try:
+        db.session.delete(conta)
+        db.session.commit()
+
+        flash("Conta paga excluída com sucesso!", "success")
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao excluir conta paga: {str(e)}", "danger")
+
+    return redirect_importacoes(mes_redirect, ano_redirect)
 
 
 # =========================================================
@@ -1382,7 +1233,7 @@ def editar_conta_receber(id):
         )
 
         if not conta.origem_importacao:
-            conta.origem_importacao = "MANUAL"
+            conta.origem_importacao = "RECEBIMENTO"
 
         db.session.commit()
 
@@ -1415,3 +1266,118 @@ def excluir_conta_receber(id):
         flash(f"Erro ao excluir conta a receber: {str(e)}", "danger")
 
     return redirect_importacoes(mes_redirect, ano_redirect)
+
+
+# =========================================================
+# LIMPAR IMPORTAÇÕES DO MÊS
+# =========================================================
+
+@importacoes_bp.route("/contas-pagas/limpar", methods=["POST"])
+@gestao_required
+def limpar_contas_pagas_mes():
+
+    mes = request.form.get("mes", type=int)
+    ano = request.form.get("ano", type=int)
+
+    if not validar_mes_ano(mes, ano):
+        flash("Informe mês e ano válidos para limpar Contas Pagas.", "danger")
+        return redirect("/gestao/importacoes/")
+
+    try:
+        registros = ContaPagarImportada.query.filter(
+            ContaPagarImportada.mes == mes,
+            ContaPagarImportada.ano == ano,
+            ContaPagarImportada.origem_importacao == "PAGAMENTO"
+        ).all()
+
+        total_removido = len(registros)
+
+        for registro in registros:
+            db.session.delete(registro)
+
+        db.session.commit()
+
+        flash(
+            f"Importação de Contas Pagas de {mes:02d}/{ano} limpa com sucesso. "
+            f"{total_removido} registro(s) importado(s) removido(s).",
+            "success"
+        )
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao limpar importação de Contas Pagas: {str(e)}", "danger")
+
+    return redirect_importacoes(mes, ano)
+
+
+@importacoes_bp.route("/contas-a-receber/limpar", methods=["POST"])
+@gestao_required
+def limpar_contas_receber_mes():
+
+    mes = request.form.get("mes", type=int)
+    ano = request.form.get("ano", type=int)
+
+    if not validar_mes_ano(mes, ano):
+        flash("Informe mês e ano válidos para limpar Contas a Receber.", "danger")
+        return redirect("/gestao/importacoes/")
+
+    try:
+        registros = ContaReceberImportada.query.filter(
+            ContaReceberImportada.mes == mes,
+            ContaReceberImportada.ano == ano,
+            or_(
+                ContaReceberImportada.origem_importacao.is_(None),
+                ContaReceberImportada.origem_importacao != "MANUAL"
+            )
+        ).all()
+
+        total_removido = len(registros)
+
+        for registro in registros:
+            db.session.delete(registro)
+
+        db.session.commit()
+
+        flash(
+            f"Importação de Contas a Receber de {mes:02d}/{ano} limpa com sucesso. "
+            f"{total_removido} registro(s) importado(s) removido(s).",
+            "success"
+        )
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao limpar importação de Contas a Receber: {str(e)}", "danger")
+
+    return redirect_importacoes(mes, ano)
+
+
+# =========================================================
+# ROTAS ANTIGAS MANTIDAS PARA NÃO QUEBRAR LINKS EXISTENTES
+# =========================================================
+
+@importacoes_bp.route("/contas-a-pagar", methods=["POST"])
+@gestao_required
+def importar_contas_pagar():
+    """
+    Rota antiga mantida por segurança.
+    No novo cenário, a tela usa /contas-pagas.
+    """
+    return importar_contas_pagas()
+
+
+@importacoes_bp.route("/contas-a-pagar/editar/<int:id>", methods=["POST"])
+@gestao_required
+def editar_conta_pagar(id):
+    """
+    Rota antiga mantida por segurança.
+    """
+    return editar_conta_paga(id)
+
+
+@importacoes_bp.route("/contas-a-pagar/excluir/<int:id>", methods=["POST"])
+@gestao_required
+def excluir_conta_pagar(id):
+    """
+    Rota antiga mantida por segurança.
+    """
+    return excluir_conta_paga(id)

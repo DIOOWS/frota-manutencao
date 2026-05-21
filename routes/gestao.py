@@ -215,6 +215,7 @@ def calcular_totais_financeiros(mes, ano, saldo_inicial=0):
     # =====================================================
     contas_pagar_pagas = ContaPagarImportada.query.filter(
         ContaPagarImportada.pago == True,
+        ContaPagarImportada.origem_importacao == "PAGAMENTO",
         ContaPagarImportada.data_pagamento >= inicio_dt,
         ContaPagarImportada.data_pagamento <= fim_dt
     ).all()
@@ -240,6 +241,7 @@ def calcular_totais_financeiros(mes, ano, saldo_inicial=0):
     # =====================================================
     contas_pagar_abertas = ContaPagarImportada.query.filter(
         ContaPagarImportada.pago == False,
+        ContaPagarImportada.origem_importacao == "PAGAMENTO",
         ContaPagarImportada.data_vencimento <= fim_dt
     ).all()
 
@@ -253,6 +255,7 @@ def calcular_totais_financeiros(mes, ano, saldo_inicial=0):
     # =====================================================
     contas_receber_recebidas = ContaReceberImportada.query.filter(
         ContaReceberImportada.pago == True,
+        ContaReceberImportada.origem_importacao == "RECEBIMENTO",
         ContaReceberImportada.data_pagamento >= inicio_dt,
         ContaReceberImportada.data_pagamento <= fim_dt
     ).all()
@@ -274,6 +277,7 @@ def calcular_totais_financeiros(mes, ano, saldo_inicial=0):
     # =====================================================
     contas_receber_abertas = ContaReceberImportada.query.filter(
         ContaReceberImportada.pago == False,
+        ContaReceberImportada.origem_importacao == "RECEBIMENTO",
         ContaReceberImportada.data_vencimento <= fim_dt
     ).all()
 
@@ -899,11 +903,13 @@ def api_despesas_categoria():
         or_(
             and_(
                 ContaPagarImportada.pago == True,
+                ContaPagarImportada.origem_importacao == "PAGAMENTO",
                 ContaPagarImportada.data_pagamento >= inicio_dt,
                 ContaPagarImportada.data_pagamento <= fim_dt
             ),
             and_(
                 ContaPagarImportada.pago == False,
+                ContaPagarImportada.origem_importacao == "PAGAMENTO",
                 ContaPagarImportada.data_vencimento <= fim_dt
             )
         )
@@ -1277,12 +1283,14 @@ def calcular_totais_reais_periodo(data_inicio, data_fim):
 
     contas_pagar = ContaPagarImportada.query.filter(
         ContaPagarImportada.pago == True,
+        ContaPagarImportada.origem_importacao == "PAGAMENTO",
         ContaPagarImportada.data_pagamento >= inicio_dt,
         ContaPagarImportada.data_pagamento <= fim_dt
     ).all()
 
     contas_receber = ContaReceberImportada.query.filter(
         ContaReceberImportada.pago == True,
+        ContaReceberImportada.origem_importacao == "RECEBIMENTO",
         ContaReceberImportada.data_pagamento >= inicio_dt,
         ContaReceberImportada.data_pagamento <= fim_dt
     ).all()
@@ -1361,12 +1369,14 @@ def fluxo_diario():
     # =====================================================
     contas_pagar_mes = ContaPagarImportada.query.filter(
         ContaPagarImportada.pago == True,
+        ContaPagarImportada.origem_importacao == "PAGAMENTO",
         ContaPagarImportada.data_pagamento >= inicio_dt,
         ContaPagarImportada.data_pagamento <= fim_dt
     ).all()
 
     contas_receber_mes = ContaReceberImportada.query.filter(
         ContaReceberImportada.pago == True,
+        ContaReceberImportada.origem_importacao == "RECEBIMENTO",
         ContaReceberImportada.data_pagamento >= inicio_dt,
         ContaReceberImportada.data_pagamento <= fim_dt
     ).all()
@@ -1600,6 +1610,7 @@ def radar_pagamentos():
             ),
             and_(
                 ContaPagarImportada.pago == False,
+                ContaPagarImportada.origem_importacao == "PAGAMENTO",
                 ContaPagarImportada.data_vencimento <= fim_dt
             ),
             and_(

@@ -8,10 +8,13 @@
   <div class="gestao-header">
     <div>
       <h2>Importações Financeiras</h2>
-      <p>Importe as planilhas internas da EASY e espelhe os dados por mês/ano</p>
+      <p>
+        Importe somente os dados realizados e usados no financeiro:
+        Contas Pagas e Contas a Receber.
+      </p>
     </div>
 
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 flex-wrap">
       <a href="/gestao/dashboard?mes={{ mes }}&ano={{ ano }}" class="btn btn-dark">
         Dashboard
       </a>
@@ -22,7 +25,7 @@
     </div>
   </div>
 
-  <form method="GET" action="/gestao/importacoes/" class="gestao-filtro mb-4 js-form-filtro-importacoes">
+  <form method="GET" action="/gestao/importacoes/" class="gestao-filtro mb-4">
     <input type="number"
            name="mes"
            min="1"
@@ -37,178 +40,56 @@
            class="form-control"
            placeholder="Ano">
 
-    <input type="hidden" name="scroll_y" class="js-scroll-y" value="{{ scroll_y or 0 }}">
-
     <button class="btn btn-primary">
       Visualizar mês
     </button>
   </form>
 
-  <div class="gestao-card mb-4" id="contas-pagar">
+  <div class="alert alert-info mb-4">
+    <strong>Novo fluxo financeiro:</strong>
+    o Dashboard e o Fluxo usam apenas movimentações que já aconteceram.
+    As saídas vêm de <b>Contas Pagas</b> e as entradas vêm de
+    <b>Contas a Receber</b>. O Radar Financeiro agora é manual/editável e não depende mais dessa tela.
+  </div>
 
-    <h5>Contas a Pagar • {{ "%02d"|format(mes) }}/{{ ano }}</h5>
-
-    <div class="importacao-box">
-
-      <form method="POST"
-            action="/gestao/importacoes/contas-a-pagar"
-            enctype="multipart/form-data"
-            class="importacao-form js-form-preservar-scroll">
-
-        <div class="importacao-form-info">
-          <strong>Importar planilha de despesas</strong>
-          <small>
-            Pl. Contas com <b>T</b> no final = Logística. Sem <b>T</b> = Assistência.
-            A importação cria ou atualiza as contas por conciliação, sem duplicar registros.
-          </small>
-        </div>
-
-        <div class="importacao-field">
-          <label>Mês</label>
-          <input type="number"
-                 name="mes_pagar"
-                 min="1"
-                 max="12"
-                 value="{{ mes }}"
-                 class="form-control"
-                 required>
-        </div>
-
-        <div class="importacao-field">
-          <label>Ano</label>
-          <input type="number"
-                 name="ano_pagar"
-                 value="{{ ano }}"
-                 class="form-control"
-                 required>
-        </div>
-
-        <div class="importacao-field importacao-file">
-          <label>Arquivo Excel</label>
-          <input type="file"
-                 name="arquivo_pagar"
-                 accept=".xlsx,.xls,.xlsm,.xlsb"
-                 class="form-control"
-                 required>
-        </div>
-
-        <button class="btn-importacao">
-          📥 Importar despesas
-        </button>
-      </form>
-
-      <div class="importacao-resumo-grid">
-        <div class="importacao-resumo-card">
-          <span>Registros filtrados</span>
-          <strong>{{ contas_pagar|length }}</strong>
-        </div>
-
-        <div class="importacao-resumo-card danger">
-          <span>Total</span>
-          <strong>R$ {{ "%.2f"|format(total_pagar) }}</strong>
-        </div>
-
-        <div class="importacao-resumo-card success">
-          <span>Pago</span>
-          <strong>R$ {{ "%.2f"|format(total_pagar_pago) }}</strong>
-        </div>
-
-        <div class="importacao-resumo-card warning">
-          <span>Pendente</span>
-          <strong>R$ {{ "%.2f"|format(total_pagar_pendente) }}</strong>
-        </div>
-
-        <div class="importacao-resumo-card">
-          <span>Assistência</span>
-          <strong>R$ {{ "%.2f"|format(total_pagar_assistencia) }}</strong>
-        </div>
-
-        <div class="importacao-resumo-card">
-          <span>Logística</span>
-          <strong>R$ {{ "%.2f"|format(total_pagar_logistica) }}</strong>
-        </div>
-      </div>
-
-      <form method="GET" action="/gestao/importacoes/" class="row g-2 mb-3 js-form-filtro-importacoes">
-        <input type="hidden" name="mes" value="{{ mes }}">
-        <input type="hidden" name="ano" value="{{ ano }}">
-        <input type="hidden" name="scroll_y" class="js-scroll-y" value="{{ scroll_y or 0 }}">
-
-        <div class="col-lg-5">
-          <input type="text"
-                 name="busca_pagar"
-                 value="{{ busca_pagar or '' }}"
-                 class="form-control"
-                 placeholder="Buscar em fatura, fornecedor, plano, categoria, observações...">
-        </div>
-
-        <div class="col-lg-2">
-          <select name="status_pagar" class="form-control">
-            <option value="">Status</option>
-            <option value="PAGO" {% if status_pagar == "PAGO" %}selected{% endif %}>Pago</option>
-            <option value="PENDENTE" {% if status_pagar == "PENDENTE" %}selected{% endif %}>Pendente</option>
-          </select>
-        </div>
-
-        <div class="col-lg-2">
-          <select name="setor_pagar" class="form-control">
-            <option value="">Setor</option>
-            <option value="ASSISTÊNCIA" {% if setor_pagar == "ASSISTÊNCIA" %}selected{% endif %}>Assistência</option>
-            <option value="LOGÍSTICA" {% if setor_pagar == "LOGÍSTICA" %}selected{% endif %}>Logística</option>
-          </select>
-        </div>
-
-        <div class="col-lg-3 d-flex gap-2">
-          <button class="btn btn-primary w-100">
-            Filtrar
-          </button>
-
-          <a href="/gestao/importacoes/?mes={{ mes }}&ano={{ ano }}" class="btn btn-outline-secondary w-100 js-preservar-scroll-url">
-            Limpar
-          </a>
-        </div>
-      </form>
-
-      <div class="table-responsive importacao-table-wrap">
-        <table class="table table-striped table-sm align-middle mb-0">
-          <thead>
-            <tr>
-              <th>Nº Fatura</th>
-              <th>Fornecedor/Funcionário</th>
-              <th>Telefone</th>
-              <th>Email</th>
-              <th>Pl. Contas</th>
-              <th>Categoria</th>
-              <th>Setor</th>
-              <th>Dt. Docto</th>
-              <th>Dt. Vencto</th>
-              <th>Valor</th>
-              <th>Pg?</th>
-              <th>Observações</th>
-              <th>Dt. Pgto</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-
-          <tbody>
+  <!-- ===================================================== -->
+  <!-- CONTAS PAGAS -->
+  <!-- ===================================================== -->
 
   <div class="gestao-card mb-4" id="contas-pagas">
 
-    <h5>Contas Pagas • {{ "%02d"|format(mes) }}/{{ ano }}</h5>
+    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+      <div>
+        <h5 class="mb-1">Contas Pagas • {{ "%02d"|format(mes) }}/{{ ano }}</h5>
+        <p class="text-muted mb-0">
+          Importe aqui somente o relatório de pagamentos realizados.
+        </p>
+      </div>
+
+      <form method="POST"
+            action="/gestao/importacoes/contas-pagas/limpar"
+            onsubmit="return confirmarLimpezaContasPagas();">
+        <input type="hidden" name="mes" value="{{ mes }}">
+        <input type="hidden" name="ano" value="{{ ano }}">
+
+        <button type="submit" class="btn btn-outline-danger">
+          Limpar importação de Contas Pagas do mês
+        </button>
+      </form>
+    </div>
 
     <div class="importacao-box">
 
       <form method="POST"
             action="/gestao/importacoes/contas-pagas"
             enctype="multipart/form-data"
-            class="importacao-form js-form-preservar-scroll">
+            class="importacao-form">
 
         <div class="importacao-form-info">
-          <strong>Importar relatório de contas pagas</strong>
+          <strong>Importar Contas Pagas</strong>
           <small>
-            Use aqui o relatório de pagamentos realizados. Esse arquivo atualiza o caixa pelo campo
-            <b>Dt. Pgto</b> e resolve contas vencidas em meses anteriores, mas pagas no mês atual.
-            A conciliação impede duplicidade quando a conta já existe no relatório de vencimentos.
+            Esse arquivo alimenta as saídas realizadas do Fluxo e do Dashboard.
+            O sistema usa a <b>Dt. Pgto</b> para considerar o dinheiro que realmente saiu.
           </small>
         </div>
 
@@ -242,22 +123,99 @@
         </div>
 
         <button class="btn-importacao">
-          📥 Importar contas pagas
+          📥 Importar Contas Pagas
         </button>
       </form>
 
-      <div class="alert alert-info mb-0">
-        <strong>Como usar:</strong>
-        primeiro importe <b>Contas a Pagar / Vencimentos</b>.
-        Depois importe aqui o relatório de <b>Contas Pagas</b>.
-        O sistema vai procurar a mesma conta pela chave de conciliação e atualizar para
-        <b>PAGO</b> com a <b>Dt. Pgto</b>, sem lançar o valor duas vezes.
+      <div class="importacao-resumo-grid">
+        <div class="importacao-resumo-card">
+          <span>Registros filtrados</span>
+          <strong>{{ contas_pagar|length }}</strong>
+        </div>
+
+        <div class="importacao-resumo-card danger">
+          <span>Total pago</span>
+          <strong>R$ {{ "%.2f"|format(total_pagar) }}</strong>
+        </div>
+
+        <div class="importacao-resumo-card success">
+          <span>Confirmado</span>
+          <strong>R$ {{ "%.2f"|format(total_pagar_pago) }}</strong>
+        </div>
+
+        <div class="importacao-resumo-card">
+          <span>Assistência</span>
+          <strong>R$ {{ "%.2f"|format(total_pagar_assistencia) }}</strong>
+        </div>
+
+        <div class="importacao-resumo-card">
+          <span>Logística</span>
+          <strong>R$ {{ "%.2f"|format(total_pagar_logistica) }}</strong>
+        </div>
       </div>
 
-    </div>
-  </div>
+      <form method="GET" action="/gestao/importacoes/" class="row g-2 mb-3">
+        <input type="hidden" name="mes" value="{{ mes }}">
+        <input type="hidden" name="ano" value="{{ ano }}">
 
-  {% for c in contas_pagar %}
+        <div class="col-lg-5">
+          <input type="text"
+                 name="busca_pagar"
+                 value="{{ busca_pagar or '' }}"
+                 class="form-control"
+                 placeholder="Buscar em fatura, fornecedor, plano, categoria, observações...">
+        </div>
+
+        <div class="col-lg-2">
+          <select name="status_pagar" class="form-control">
+            <option value="">Status</option>
+            <option value="PAGO" {% if status_pagar == "PAGO" %}selected{% endif %}>Pago</option>
+            <option value="PENDENTE" {% if status_pagar == "PENDENTE" %}selected{% endif %}>Pendente</option>
+          </select>
+        </div>
+
+        <div class="col-lg-2">
+          <select name="setor_pagar" class="form-control">
+            <option value="">Setor</option>
+            <option value="ASSISTÊNCIA" {% if setor_pagar == "ASSISTÊNCIA" %}selected{% endif %}>Assistência</option>
+            <option value="LOGÍSTICA" {% if setor_pagar == "LOGÍSTICA" %}selected{% endif %}>Logística</option>
+          </select>
+        </div>
+
+        <div class="col-lg-3 d-flex gap-2">
+          <button class="btn btn-primary w-100">
+            Filtrar
+          </button>
+
+          <a href="/gestao/importacoes/?mes={{ mes }}&ano={{ ano }}" class="btn btn-outline-secondary w-100">
+            Limpar
+          </a>
+        </div>
+      </form>
+
+      <div class="table-responsive importacao-table-wrap">
+        <table class="table table-striped table-sm align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Nº Fatura</th>
+              <th>Fornecedor/Funcionário</th>
+              <th>Telefone</th>
+              <th>Email</th>
+              <th>Pl. Contas</th>
+              <th>Categoria</th>
+              <th>Setor</th>
+              <th>Dt. Docto</th>
+              <th>Dt. Vencto</th>
+              <th>Dt. Pgto</th>
+              <th>Valor</th>
+              <th>Status</th>
+              <th>Observações</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for c in contas_pagar %}
               <tr>
                 <td>{{ c.numero_fatura or '-' }}</td>
                 <td>{{ c.fornecedor_funcionario or '-' }}</td>
@@ -274,10 +232,11 @@
                   {% endif %}
                 </td>
 
-                <td>{{ c.data_documento.strftime('%d/%m/%Y %H:%M:%S') if c.data_documento else '-' }}</td>
-                <td>{{ c.data_vencimento.strftime('%d/%m/%Y %H:%M:%S') if c.data_vencimento else '-' }}</td>
+                <td>{{ c.data_documento.strftime('%d/%m/%Y') if c.data_documento else '-' }}</td>
+                <td>{{ c.data_vencimento.strftime('%d/%m/%Y') if c.data_vencimento else '-' }}</td>
+                <td>{{ c.data_pagamento.strftime('%d/%m/%Y') if c.data_pagamento else '-' }}</td>
 
-                <td><strong>R$ {{ "%.2f"|format(c.valor) }}</strong></td>
+                <td><strong>R$ {{ "%.2f"|format(c.valor or 0) }}</strong></td>
 
                 <td>
                   {% if c.pago %}
@@ -289,21 +248,18 @@
 
                 <td class="importacao-obs">{{ c.observacoes or '-' }}</td>
 
-                <td>{{ c.data_pagamento.strftime('%d/%m/%Y %H:%M:%S') if c.data_pagamento else '-' }}</td>
-
                 <td>
                   <div class="d-flex gap-1">
                     <button type="button"
-                            class="btn btn-sm btn-outline-primary js-salvar-scroll"
+                            class="btn btn-sm btn-outline-primary"
                             data-bs-toggle="modal"
-                            data-bs-target="#modalEditarPagar{{ c.id }}">
-                       ✏️
+                            data-bs-target="#modalEditarPaga{{ c.id }}">
+                      ✏️
                     </button>
 
                     <form method="POST"
-                          action="/gestao/importacoes/contas-a-pagar/excluir/{{ c.id }}"
-                          class="js-form-preservar-scroll"
-                          onsubmit="return confirm('Tem certeza que deseja excluir este registro?');">
+                          action="/gestao/importacoes/contas-pagas/excluir/{{ c.id }}"
+                          onsubmit="return confirm('Tem certeza que deseja excluir este registro de Conta Paga?');">
                       <input type="hidden" name="mes_redirect" value="{{ mes }}">
                       <input type="hidden" name="ano_redirect" value="{{ ano }}">
                       <button class="btn btn-sm btn-outline-danger">
@@ -316,31 +272,33 @@
             {% else %}
               <tr>
                 <td colspan="14" class="text-center text-muted py-4">
-                  Nenhuma planilha de Contas a Pagar encontrada para este filtro.
+                  Nenhuma importação de Contas Pagas encontrada para este mês/filtro.
                 </td>
               </tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
+
     </div>
   </div>
 
   {% for c in contas_pagar %}
-    <div class="modal fade" id="modalEditarPagar{{ c.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="modalEditarPaga{{ c.id }}" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
-          <form method="POST" action="/gestao/importacoes/contas-a-pagar/editar/{{ c.id }}" class="js-form-preservar-scroll">
+          <form method="POST" action="/gestao/importacoes/contas-pagas/editar/{{ c.id }}">
             <input type="hidden" name="mes_redirect" value="{{ mes }}">
             <input type="hidden" name="ano_redirect" value="{{ ano }}">
 
             <div class="modal-header">
-              <h5 class="modal-title">Editar Conta a Pagar #{{ c.id }}</h5>
+              <h5 class="modal-title">Editar Conta Paga #{{ c.id }}</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
 
             <div class="modal-body">
               <div class="row g-3">
+
                 <div class="col-md-3">
                   <label class="form-label">Nº Fatura</label>
                   <input type="text" name="numero_fatura" value="{{ c.numero_fatura or '' }}" class="form-control">
@@ -379,13 +337,6 @@
                   <input type="text" name="valor" value="{{ c.valor or '0.00' }}" class="form-control">
                 </div>
 
-                <div class="col-md-2 d-flex align-items-end">
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="pago" id="pagoPagar{{ c.id }}" {% if c.pago %}checked{% endif %}>
-                    <label class="form-check-label" for="pagoPagar{{ c.id }}">Pago</label>
-                  </div>
-                </div>
-
                 <div class="col-md-4">
                   <label class="form-label">Data Documento</label>
                   <input type="date" name="data_documento" value="{{ data_para_input(c.data_documento) }}" class="form-control">
@@ -405,6 +356,7 @@
                   <label class="form-label">Observações</label>
                   <textarea name="observacoes" rows="3" class="form-control">{{ c.observacoes or '' }}</textarea>
                 </div>
+
               </div>
             </div>
 
@@ -412,28 +364,51 @@
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
               <button class="btn btn-primary">Salvar alterações</button>
             </div>
+
           </form>
         </div>
       </div>
     </div>
   {% endfor %}
 
+  <!-- ===================================================== -->
+  <!-- CONTAS A RECEBER -->
+  <!-- ===================================================== -->
+
   <div class="gestao-card mb-4" id="contas-receber">
 
-    <h5>Contas a Receber • {{ "%02d"|format(mes) }}/{{ ano }}</h5>
+    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+      <div>
+        <h5 class="mb-1">Contas a Receber • {{ "%02d"|format(mes) }}/{{ ano }}</h5>
+        <p class="text-muted mb-0">
+          Importe aqui o relatório de receitas, recebidas ou pendentes.
+        </p>
+      </div>
+
+      <form method="POST"
+            action="/gestao/importacoes/contas-a-receber/limpar"
+            onsubmit="return confirmarLimpezaContasReceber();">
+        <input type="hidden" name="mes" value="{{ mes }}">
+        <input type="hidden" name="ano" value="{{ ano }}">
+
+        <button type="submit" class="btn btn-outline-danger">
+          Limpar importação de Contas a Receber do mês
+        </button>
+      </form>
+    </div>
 
     <div class="importacao-box">
 
       <form method="POST"
             action="/gestao/importacoes/contas-a-receber"
             enctype="multipart/form-data"
-            class="importacao-form js-form-preservar-scroll">
+            class="importacao-form">
 
         <div class="importacao-form-info">
-          <strong>Importar planilha de receitas</strong>
+          <strong>Importar Contas a Receber</strong>
           <small>
-            A planilha será espelhada e usada para entradas, ranking de receitas
-            e ranking de clientes. A importação cria ou atualiza as contas por conciliação, sem duplicar registros.
+            Esse arquivo alimenta as entradas, recebíveis, ranking de receitas e clientes.
+            Quando estiver recebido, o sistema usa a <b>Dt. Pgto</b> para considerar entrada realizada.
           </small>
         </div>
 
@@ -466,7 +441,9 @@
                  required>
         </div>
 
-        <button class="btn-importacao">📥 Importar receitas</button>
+        <button class="btn-importacao">
+          📥 Importar Contas a Receber
+        </button>
       </form>
 
       <div class="importacao-resumo-grid">
@@ -491,10 +468,9 @@
         </div>
       </div>
 
-      <form method="GET" action="/gestao/importacoes/" class="row g-2 mb-3 js-form-filtro-importacoes">
+      <form method="GET" action="/gestao/importacoes/" class="row g-2 mb-3">
         <input type="hidden" name="mes" value="{{ mes }}">
         <input type="hidden" name="ano" value="{{ ano }}">
-        <input type="hidden" name="scroll_y" class="js-scroll-y" value="{{ scroll_y or 0 }}">
 
         <div class="col-lg-6">
           <input type="text"
@@ -515,7 +491,7 @@
         <div class="col-lg-3 d-flex gap-2">
           <button class="btn btn-primary w-100">Filtrar</button>
 
-          <a href="/gestao/importacoes/?mes={{ mes }}&ano={{ ano }}" class="btn btn-outline-secondary w-100 js-preservar-scroll-url">
+          <a href="/gestao/importacoes/?mes={{ mes }}&ano={{ ano }}" class="btn btn-outline-secondary w-100">
             Limpar
           </a>
         </div>
@@ -535,12 +511,12 @@
               <th>Cobrança</th>
               <th>Dt. Docto</th>
               <th>Dt. Vencto</th>
+              <th>Dt. Pgto</th>
               <th>Valor</th>
-              <th>Pg?</th>
-              <th>Observações</th>
               <th>Juros</th>
               <th>Total</th>
-              <th>Dt. Pgto</th>
+              <th>Status</th>
+              <th>Observações</th>
               <th>Ações</th>
             </tr>
           </thead>
@@ -558,15 +534,21 @@
                 <td>
                   {% if c.setor == "LOGÍSTICA" %}
                     <span class="badge bg-primary">LOGÍSTICA</span>
+                  {% elif c.setor == "ASSISTÊNCIA" %}
+                    <span class="badge bg-info text-dark">ASSISTÊNCIA</span>
                   {% else %}
                     <span class="badge bg-success">GERAL</span>
                   {% endif %}
                 </td>
 
                 <td>{{ c.cobranca or '-' }}</td>
-                <td>{{ c.data_documento.strftime('%d/%m/%Y %H:%M:%S') if c.data_documento else '-' }}</td>
-                <td>{{ c.data_vencimento.strftime('%d/%m/%Y %H:%M:%S') if c.data_vencimento else '-' }}</td>
-                <td><strong>R$ {{ "%.2f"|format(c.valor) }}</strong></td>
+                <td>{{ c.data_documento.strftime('%d/%m/%Y') if c.data_documento else '-' }}</td>
+                <td>{{ c.data_vencimento.strftime('%d/%m/%Y') if c.data_vencimento else '-' }}</td>
+                <td>{{ c.data_pagamento.strftime('%d/%m/%Y') if c.data_pagamento else '-' }}</td>
+
+                <td><strong>R$ {{ "%.2f"|format(c.valor or 0) }}</strong></td>
+                <td>R$ {{ "%.2f"|format(c.juros or 0) }}</td>
+                <td><strong>R$ {{ "%.2f"|format(c.total or c.valor or 0) }}</strong></td>
 
                 <td>
                   {% if c.pago %}
@@ -577,14 +559,11 @@
                 </td>
 
                 <td class="importacao-obs">{{ c.observacoes or '-' }}</td>
-                <td>R$ {{ "%.2f"|format(c.juros) }}</td>
-                <td><strong>R$ {{ "%.2f"|format(c.total) }}</strong></td>
-                <td>{{ c.data_pagamento.strftime('%d/%m/%Y %H:%M:%S') if c.data_pagamento else '-' }}</td>
 
                 <td>
                   <div class="d-flex gap-1">
                     <button type="button"
-                            class="btn btn-sm btn-outline-primary js-salvar-scroll"
+                            class="btn btn-sm btn-outline-primary"
                             data-bs-toggle="modal"
                             data-bs-target="#modalEditarReceber{{ c.id }}">
                       ✏️
@@ -592,11 +571,12 @@
 
                     <form method="POST"
                           action="/gestao/importacoes/contas-a-receber/excluir/{{ c.id }}"
-                          class="js-form-preservar-scroll"
-                          onsubmit="return confirm('Tem certeza que deseja excluir este registro?');">
+                          onsubmit="return confirm('Tem certeza que deseja excluir este registro de Conta a Receber?');">
                       <input type="hidden" name="mes_redirect" value="{{ mes }}">
                       <input type="hidden" name="ano_redirect" value="{{ ano }}">
-                      <button class="btn btn-sm btn-outline-danger">🗑️</button>
+                      <button class="btn btn-sm btn-outline-danger">
+                        🗑️
+                      </button>
                     </form>
                   </div>
                 </td>
@@ -604,13 +584,14 @@
             {% else %}
               <tr>
                 <td colspan="17" class="text-center text-muted py-4">
-                  Nenhuma planilha de Contas a Receber encontrada para este filtro.
+                  Nenhuma importação de Contas a Receber encontrada para este mês/filtro.
                 </td>
               </tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
+
     </div>
   </div>
 
@@ -618,7 +599,7 @@
     <div class="modal fade" id="modalEditarReceber{{ c.id }}" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
-          <form method="POST" action="/gestao/importacoes/contas-a-receber/editar/{{ c.id }}" class="js-form-preservar-scroll">
+          <form method="POST" action="/gestao/importacoes/contas-a-receber/editar/{{ c.id }}">
             <input type="hidden" name="mes_redirect" value="{{ mes }}">
             <input type="hidden" name="ano_redirect" value="{{ ano }}">
 
@@ -629,6 +610,7 @@
 
             <div class="modal-body">
               <div class="row g-3">
+
                 <div class="col-md-3">
                   <label class="form-label">Nº Fatura</label>
                   <input type="text" name="numero_fatura" value="{{ c.numero_fatura or '' }}" class="form-control">
@@ -656,7 +638,11 @@
 
                 <div class="col-md-3">
                   <label class="form-label">Setor</label>
-                  <input type="text" name="setor" value="{{ c.setor or 'GERAL' }}" class="form-control">
+                  <select name="setor" class="form-control">
+                    <option value="GERAL" {% if c.setor == "GERAL" %}selected{% endif %}>GERAL</option>
+                    <option value="ASSISTÊNCIA" {% if c.setor == "ASSISTÊNCIA" %}selected{% endif %}>ASSISTÊNCIA</option>
+                    <option value="LOGÍSTICA" {% if c.setor == "LOGÍSTICA" %}selected{% endif %}>LOGÍSTICA</option>
+                  </select>
                 </div>
 
                 <div class="col-md-3">
@@ -666,24 +652,15 @@
 
                 <div class="col-md-2 d-flex align-items-end">
                   <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="pago" id="pagoReceber{{ c.id }}" {% if c.pago %}checked{% endif %}>
-                    <label class="form-check-label" for="pagoReceber{{ c.id }}">Recebido</label>
+                    <input class="form-check-input"
+                           type="checkbox"
+                           name="pago"
+                           id="pagoReceber{{ c.id }}"
+                           {% if c.pago %}checked{% endif %}>
+                    <label class="form-check-label" for="pagoReceber{{ c.id }}">
+                      Recebido
+                    </label>
                   </div>
-                </div>
-
-                <div class="col-md-4">
-                  <label class="form-label">Data Documento</label>
-                  <input type="date" name="data_documento" value="{{ data_para_input(c.data_documento) }}" class="form-control">
-                </div>
-
-                <div class="col-md-4">
-                  <label class="form-label">Data Vencimento</label>
-                  <input type="date" name="data_vencimento" value="{{ data_para_input(c.data_vencimento) }}" class="form-control">
-                </div>
-
-                <div class="col-md-4">
-                  <label class="form-label">Data Pagamento</label>
-                  <input type="date" name="data_pagamento" value="{{ data_para_input(c.data_pagamento) }}" class="form-control">
                 </div>
 
                 <div class="col-md-4">
@@ -701,10 +678,26 @@
                   <input type="text" name="total" value="{{ c.total or '0.00' }}" class="form-control">
                 </div>
 
+                <div class="col-md-4">
+                  <label class="form-label">Data Documento</label>
+                  <input type="date" name="data_documento" value="{{ data_para_input(c.data_documento) }}" class="form-control">
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label">Data Vencimento</label>
+                  <input type="date" name="data_vencimento" value="{{ data_para_input(c.data_vencimento) }}" class="form-control">
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label">Data Pagamento</label>
+                  <input type="date" name="data_pagamento" value="{{ data_para_input(c.data_pagamento) }}" class="form-control">
+                </div>
+
                 <div class="col-md-12">
                   <label class="form-label">Observações</label>
                   <textarea name="observacoes" rows="3" class="form-control">{{ c.observacoes or '' }}</textarea>
                 </div>
+
               </div>
             </div>
 
@@ -712,106 +705,37 @@
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
               <button class="btn btn-primary">Salvar alterações</button>
             </div>
+
           </form>
         </div>
       </div>
     </div>
   {% endfor %}
+
 </div>
 
+
+
 <script>
-  (function () {
-    const chaveScroll = "gestao_importacoes_scroll_y";
+  function confirmarLimpezaContasPagas() {
+    return confirm(
+      "ATENÇÃO!\n\n" +
+      "Você tem certeza que deseja limpar a importação de Contas Pagas deste mês?\n\n" +
+      "Isso vai remover apenas os dados importados do mês atual.\n" +
+      "Lançamentos manuais não serão removidos.\n\n" +
+      "Essa ação não pode ser desfeita."
+    );
+  }
 
-    if ("scrollRestoration" in history) {
-      history.scrollRestoration = "manual";
-    }
-
-    function getScrollAtual() {
-      return window.scrollY || document.documentElement.scrollTop || 0;
-    }
-
-    function salvarScroll() {
-      const posicao = String(getScrollAtual());
-      sessionStorage.setItem(chaveScroll, posicao);
-      document.querySelectorAll(".js-scroll-y").forEach(function (input) {
-        input.value = posicao;
-      });
-      return posicao;
-    }
-
-    function restaurarScroll(posicao) {
-      if (!posicao || Number.isNaN(Number(posicao))) {
-        return;
-      }
-
-      const y = Number(posicao);
-      window.scrollTo(0, y);
-      setTimeout(function () { window.scrollTo(0, y); }, 80);
-      setTimeout(function () { window.scrollTo(0, y); }, 250);
-      setTimeout(function () { window.scrollTo(0, y); }, 500);
-    }
-
-    function scrollDaUrl() {
-      return Number("{{ scroll_y or 0 }}");
-    }
-
-    function prepararLinkComScroll(link) {
-      const href = link.getAttribute("href") || "";
-      if (!href || href.startsWith("#") || href.startsWith("javascript:")) {
-        return;
-      }
-
-      const posicao = salvarScroll();
-      const url = new URL(href, window.location.origin);
-
-      if (url.pathname.includes("/gestao/importacoes")) {
-        url.searchParams.set("scroll_y", posicao);
-        link.setAttribute("href", url.pathname + url.search);
-      }
-    }
-
-    window.salvarScrollImportacoes = salvarScroll;
-
-    document.addEventListener("DOMContentLoaded", function () {
-      const scrollServidor = scrollDaUrl();
-      const scrollSessao = Number(sessionStorage.getItem(chaveScroll) || 0);
-
-      if (scrollServidor) {
-        restaurarScroll(scrollServidor);
-      } else if (scrollSessao) {
-        restaurarScroll(scrollSessao);
-      }
-
-      setTimeout(function () {
-        sessionStorage.removeItem(chaveScroll);
-      }, 900);
-
-      document.querySelectorAll(".js-form-filtro-importacoes").forEach(function (form) {
-        form.addEventListener("submit", function () {
-          salvarScroll();
-        });
-      });
-
-      document.querySelectorAll(".js-form-preservar-scroll").forEach(function (form) {
-        form.addEventListener("submit", function () {
-          salvarScroll();
-        });
-      });
-
-      document.querySelectorAll(".js-preservar-scroll-url").forEach(function (link) {
-        link.addEventListener("click", function () {
-          prepararLinkComScroll(link);
-        });
-      });
-
-      document.querySelectorAll(".js-salvar-scroll").forEach(function (botao) {
-        botao.addEventListener("click", function () {
-          salvarScroll();
-        });
-      });
-    });
-  })();
+  function confirmarLimpezaContasReceber() {
+    return confirm(
+      "ATENÇÃO!\n\n" +
+      "Você tem certeza que deseja limpar a importação de Contas a Receber deste mês?\n\n" +
+      "Isso vai remover apenas os dados importados do mês atual.\n" +
+      "Lançamentos manuais não serão removidos.\n\n" +
+      "Essa ação não pode ser desfeita."
+    );
+  }
 </script>
 
 {% endblock %}

@@ -11369,3 +11369,654 @@ body {
         min-height: auto;
     }
 }
+
+
+
+
+/* =========================================================
+   IMPORTAÇÕES FINANCEIRAS - PADRÃO VISUAL EASY CONTROL
+   Mesmo padrão dos cards do dashboard/funil
+========================================================= */
+
+.importacoes-page {
+  padding-bottom: 42px;
+}
+
+/* =========================
+   TOPO DA PÁGINA
+========================= */
+
+.importacoes-page .gestao-header {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 20px;
+  padding: 22px 24px;
+  margin-bottom: 18px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.importacoes-page .gestao-header h2 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 900;
+  color: #020024;
+  letter-spacing: -0.4px;
+}
+
+.importacoes-page .gestao-header p {
+  margin: 5px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.importacoes-page .gestao-header .btn {
+  height: 40px;
+  min-width: 128px;
+  border-radius: 12px;
+  font-weight: 900;
+  font-size: 13px;
+  border: none;
+}
+
+.importacoes-page .gestao-header .btn-dark {
+  background: linear-gradient(135deg, #020024, #090979);
+  color: #ffffff;
+}
+
+.importacoes-page .gestao-header .btn-primary {
+  background: linear-gradient(135deg, #090979, #0052e0, #00d4ff);
+  color: #ffffff;
+}
+
+/* =========================
+   COMPETÊNCIA / VISUALIZAR MÊS
+========================= */
+
+.importacoes-page .gestao-filtro {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 20px;
+  padding: 18px 20px;
+  margin-bottom: 26px !important;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+  display: flex;
+  align-items: end;
+  gap: 14px;
+  flex-wrap: wrap;
+  position: relative;
+}
+
+.importacoes-page .gestao-filtro::before {
+  content: "Competência financeira";
+  width: 100%;
+  display: block;
+  font-size: 18px;
+  font-weight: 900;
+  color: #020024;
+  margin-bottom: -2px;
+}
+
+.importacoes-page .gestao-filtro::after {
+  content: "Selecione o mês e o ano para visualizar as importações";
+  width: 100%;
+  display: block;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 700;
+  margin-top: -8px;
+  margin-bottom: 4px;
+}
+
+.importacoes-page .gestao-filtro input {
+  height: 42px;
+  width: 120px;
+  max-width: 120px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.importacoes-page .gestao-filtro input:focus {
+  border-color: #0052e0;
+  box-shadow: 0 0 0 4px rgba(0, 82, 224, 0.12);
+}
+
+.importacoes-page .gestao-filtro .btn-primary {
+  height: 42px;
+  min-width: 190px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 900;
+  box-shadow: 0 8px 18px rgba(9, 9, 121, 0.22);
+}
+
+.importacoes-page .gestao-filtro .btn-primary:hover {
+  filter: brightness(1.07);
+  transform: translateY(-1px);
+}
+
+/* =========================
+   ALERTA INFORMATIVO
+========================= */
+
+.importacoes-page .alert-info {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-left: 5px solid #0052e0;
+  border-radius: 16px;
+  color: #1e3a8a;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+/* =========================
+   CARD PRINCIPAL IGUAL DASHBOARD
+========================= */
+
+.importacoes-page .gestao-card {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+  padding: 0;
+  margin-bottom: 26px !important;
+}
+
+.importacoes-page .gestao-card > .d-flex:first-child {
+  margin: 0 !important;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  border-bottom: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.importacoes-page .gestao-card h5 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 21px;
+  font-weight: 900;
+  letter-spacing: -0.2px;
+}
+
+.importacoes-page .gestao-card h5::before {
+  content: "";
+}
+
+.importacoes-page .gestao-card .text-muted {
+  color: rgba(255, 255, 255, 0.86) !important;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* =========================
+   BOTÃO LIMPAR NO HEADER
+========================= */
+
+.importacoes-page form[action*="/limpar"] .btn-outline-danger {
+  height: 38px;
+  border-radius: 999px;
+  padding: 0 16px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 900;
+  box-shadow: none;
+}
+
+.importacoes-page form[action*="/limpar"] .btn-outline-danger::before {
+  content: "🧹 ";
+}
+
+.importacoes-page form[action*="/limpar"] .btn-outline-danger:hover {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #b91c1c;
+}
+
+/* =========================
+   CORPO DO CARD
+========================= */
+
+.importacao-box {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* =========================
+   FORM DE IMPORTAÇÃO
+========================= */
+
+.importacao-form {
+  background: #f8fafc;
+  border: 1px solid #dce5f2;
+  border-radius: 16px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: minmax(310px, 1.5fr) 100px 120px minmax(260px, 1fr) 210px;
+  gap: 14px;
+  align-items: end;
+}
+
+.importacao-form-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.importacao-form-info strong {
+  color: #020024;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.importacao-form-info small {
+  color: #64748b;
+  font-size: 12.5px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+.importacao-field label {
+  display: block;
+  margin-bottom: 6px;
+  color: #334155;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.importacao-field .form-control {
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.importacao-field .form-control:focus {
+  border-color: #0052e0;
+  box-shadow: 0 0 0 4px rgba(0, 82, 224, 0.12);
+}
+
+.importacao-file .form-control {
+  padding-top: 8px;
+}
+
+/* =========================
+   BOTÃO IMPORTAR
+========================= */
+
+.btn-importacao {
+  height: 40px;
+  min-width: 200px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  box-shadow: 0 8px 18px rgba(9, 9, 121, 0.2);
+}
+
+.btn-importacao:hover {
+  filter: brightness(1.07);
+  transform: translateY(-1px);
+}
+
+#contas-pagas .btn-importacao {
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+}
+
+#contas-receber .btn-importacao {
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+}
+
+/* =========================
+   RESUMOS
+========================= */
+
+.importacao-resumo-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.importacao-resumo-card {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 16px;
+  padding: 15px 16px;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.importacao-resumo-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+}
+
+.importacao-resumo-card span {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 8px;
+}
+
+.importacao-resumo-card strong {
+  color: #020024;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.importacao-resumo-card.success strong {
+  color: #047857;
+}
+
+.importacao-resumo-card.warning strong {
+  color: #b45309;
+}
+
+.importacao-resumo-card.danger strong {
+  color: #b91c1c;
+}
+
+/* =========================
+   FILTROS DA TABELA
+========================= */
+
+.importacoes-page .importacao-box > form.row {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 0 !important;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04);
+}
+
+.importacoes-page .importacao-box > form.row .form-control {
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.importacoes-page .importacao-box > form.row .btn {
+  height: 38px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.importacoes-page .importacao-box > form.row .btn-primary {
+  border: none;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+}
+
+.importacoes-page .importacao-box > form.row .btn-outline-secondary {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+}
+
+/* =========================
+   TABELA
+========================= */
+
+.importacao-table-wrap {
+  border: 1px solid #dce5f2;
+  border-radius: 16px;
+  background: #ffffff;
+  overflow-x: auto;
+  overflow-y: visible;
+  max-height: none;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+}
+
+.importacao-table-wrap table {
+  min-width: 1600px;
+  margin-bottom: 0;
+}
+
+.importacao-table-wrap thead th {
+  background: #020024;
+  color: #ffffff;
+  border-bottom: 3px solid #00d4ff;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 10px 9px;
+}
+
+.importacao-table-wrap tbody td {
+  font-size: 12px;
+  color: #334155;
+  vertical-align: middle;
+  white-space: nowrap;
+  padding: 9px;
+}
+
+.importacao-table-wrap tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.importacao-table-wrap tbody tr:hover {
+  background: #eef6ff;
+}
+
+.importacao-obs {
+  min-width: 230px;
+  max-width: 280px;
+  white-space: normal !important;
+  color: #64748b;
+}
+
+/* =========================
+   BADGES
+========================= */
+
+.importacoes-page .badge {
+  border-radius: 999px;
+  font-size: 10px;
+  padding: 5px 8px;
+  font-weight: 900;
+}
+
+/* =========================
+   AÇÕES DA TABELA
+========================= */
+
+.importacoes-page .table td:last-child,
+.importacoes-page .table th:last-child {
+  min-width: 105px;
+  width: 105px;
+  text-align: center;
+}
+
+.importacoes-page .table td:last-child .d-flex {
+  justify-content: center;
+  gap: 7px !important;
+}
+
+.importacoes-page .table td:last-child .btn {
+  width: 30px;
+  min-width: 30px;
+  height: 26px;
+  border-radius: 8px;
+  font-size: 11px;
+  padding: 0;
+}
+
+.importacoes-page .table td:last-child .btn-outline-primary {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #0052e0;
+}
+
+.importacoes-page .table td:last-child .btn-outline-primary:hover {
+  background: #0052e0;
+  color: #ffffff;
+}
+
+.importacoes-page .table td:last-child .btn-outline-danger {
+  background: #fff7f7;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.importacoes-page .table td:last-child .btn-outline-danger:hover {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+/* =========================
+   MODAIS
+========================= */
+
+.importacoes-page .modal-content {
+  border-radius: 18px;
+  border: 1px solid #dce5f2;
+  overflow: hidden;
+}
+
+.importacoes-page .modal-header {
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  border-bottom: none;
+}
+
+.importacoes-page .modal-title {
+  font-weight: 900;
+}
+
+.importacoes-page .modal-header .btn-close {
+  filter: invert(1);
+}
+
+.importacoes-page .modal-footer .btn {
+  border-radius: 10px;
+  font-weight: 900;
+}
+
+/* =========================
+   RESPONSIVO
+========================= */
+
+@media (max-width: 1300px) {
+  .importacao-form {
+    grid-template-columns: 1fr 100px 120px;
+  }
+
+  .btn-importacao {
+    width: 100%;
+  }
+
+  .importacao-resumo-grid {
+    grid-template-columns: repeat(3, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 992px) {
+  .importacoes-page .gestao-header {
+    align-items: stretch;
+  }
+
+  .importacoes-page .gestao-header .d-flex {
+    width: 100%;
+  }
+
+  .importacoes-page .gestao-header .btn {
+    flex: 1;
+  }
+
+  .importacao-form {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .importacao-resumo-grid {
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .importacoes-page .gestao-header {
+    padding: 18px;
+  }
+
+  .importacoes-page .gestao-header h2 {
+    font-size: 22px;
+  }
+
+  .importacoes-page .gestao-filtro {
+    align-items: stretch;
+  }
+
+  .importacoes-page .gestao-filtro input,
+  .importacoes-page .gestao-filtro .btn-primary {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .importacoes-page .gestao-card > .d-flex:first-child {
+    padding: 18px;
+  }
+
+  .importacoes-page form[action*="/limpar"] {
+    width: 100%;
+  }
+
+  .importacoes-page form[action*="/limpar"] .btn-outline-danger {
+    width: 100%;
+  }
+
+  .importacao-box {
+    padding: 18px;
+  }
+
+  .importacao-form {
+    grid-template-columns: 1fr;
+  }
+
+  .importacao-resumo-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

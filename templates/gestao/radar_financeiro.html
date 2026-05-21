@@ -9,17 +9,10 @@
         <div class="radar-topo-info">
             <span class="radar-label">GESTÃO FINANCEIRA</span>
             <h1>Radar Financeiro</h1>
-            <p>
-                Controle manual das obrigações, parcelas, vencimentos e contas transportadas.
-            </p>
+            <p>Controle manual das obrigações, parcelas, vencimentos e contas transportadas.</p>
         </div>
 
         <div class="radar-topo-actions">
-            <a href="/gestao/dashboard?mes={{ mes }}&ano={{ ano }}"
-               class="radar-btn radar-btn-dark">
-                Dashboard
-            </a>
-
             <button type="button"
                     class="radar-btn radar-btn-primary"
                     data-bs-toggle="modal"
@@ -30,35 +23,24 @@
     </section>
 
     <section class="radar-filtros">
-        <form method="GET"
-              action="/gestao/radar-financeiro/"
-              class="radar-filtros-grid">
+        <form method="GET" action="/gestao/radar-financeiro/" class="radar-filtros-grid">
 
             <div class="radar-field">
                 <label>Mês</label>
-
                 <select name="mes" class="form-control">
                     {% for m in range(1,13) %}
-                        <option value="{{ m }}"
-                            {% if mes == m %}selected{% endif %}>
-                            {{ m }}
-                        </option>
+                        <option value="{{ m }}" {% if mes == m %}selected{% endif %}>{{ m }}</option>
                     {% endfor %}
                 </select>
             </div>
 
             <div class="radar-field">
                 <label>Ano</label>
-
-                <input type="number"
-                       name="ano"
-                       value="{{ ano }}"
-                       class="form-control">
+                <input type="number" name="ano" value="{{ ano }}" class="form-control">
             </div>
 
             <div class="radar-field radar-busca">
                 <label>Busca</label>
-
                 <input type="text"
                        name="busca"
                        value="{{ busca or '' }}"
@@ -68,24 +50,11 @@
 
             <div class="radar-field">
                 <label>Setor</label>
-
                 <select name="setor" class="form-control">
                     <option value="">Todos</option>
-
-                    <option value="ASSISTÊNCIA"
-                        {% if setor == "ASSISTÊNCIA" %}selected{% endif %}>
-                        Assistência
-                    </option>
-
-                    <option value="LOGÍSTICA"
-                        {% if setor == "LOGÍSTICA" %}selected{% endif %}>
-                        Logística
-                    </option>
-
-                    <option value="GERAL"
-                        {% if setor == "GERAL" %}selected{% endif %}>
-                        Geral
-                    </option>
+                    <option value="ASSISTÊNCIA" {% if setor == "ASSISTÊNCIA" %}selected{% endif %}>Assistência</option>
+                    <option value="LOGÍSTICA" {% if setor == "LOGÍSTICA" %}selected{% endif %}>Logística</option>
+                    <option value="GERAL" {% if setor == "GERAL" %}selected{% endif %}>Geral</option>
                 </select>
             </div>
 
@@ -102,7 +71,6 @@
 
         <div class="radar-kpi warning">
             <div class="radar-kpi-icon">⏰</div>
-
             <div>
                 <span>EM ABERTO</span>
                 <strong>R$ {{ "%.2f"|format(total_aberto) }}</strong>
@@ -111,7 +79,6 @@
 
         <div class="radar-kpi danger">
             <div class="radar-kpi-icon">⚠️</div>
-
             <div>
                 <span>ATRASADAS</span>
                 <strong>R$ {{ "%.2f"|format(total_atrasado) }}</strong>
@@ -120,7 +87,6 @@
 
         <div class="radar-kpi primary">
             <div class="radar-kpi-icon">📅</div>
-
             <div>
                 <span>VENCE HOJE</span>
                 <strong>R$ {{ "%.2f"|format(total_hoje) }}</strong>
@@ -129,7 +95,6 @@
 
         <div class="radar-kpi purple">
             <div class="radar-kpi-icon">📌</div>
-
             <div>
                 <span>PRÓXIMOS 7 DIAS</span>
                 <strong>R$ {{ "%.2f"|format(total_proximas) }}</strong>
@@ -138,7 +103,6 @@
 
         <div class="radar-kpi dark">
             <div class="radar-kpi-icon">🧾</div>
-
             <div>
                 <span>FUTURAS</span>
                 <strong>R$ {{ "%.2f"|format(total_futuras) }}</strong>
@@ -147,7 +111,6 @@
 
         <div class="radar-kpi success">
             <div class="radar-kpi-icon">✅</div>
-
             <div>
                 <span>PAGAS</span>
                 <strong>R$ {{ "%.2f"|format(total_pagas) }}</strong>
@@ -173,16 +136,12 @@
 
                 <div class="radar-coluna-header {{ cor }}">
                     <strong>{{ titulo }}</strong>
-
-                    <span>
-                        {{ lista|length }}
-                    </span>
+                    <span>{{ lista|length }}</span>
                 </div>
 
                 <div class="radar-coluna-body">
 
                     {% for item in lista %}
-
                         {% set c = item.conta %}
 
                         <article class="radar-card">
@@ -190,34 +149,25 @@
                             <div class="radar-card-header">
 
                                 <div class="radar-card-title">
-                                    <strong>
-                                        {{ c.descricao }}
-                                    </strong>
-
-                                    <small>
-                                        {{ c.fornecedor or '-' }}
-                                    </small>
+                                    <strong>{{ c.descricao }}</strong>
+                                    <small>{{ c.fornecedor or '-' }}</small>
                                 </div>
 
                                 <div class="dropdown">
-
                                     <button class="radar-menu-btn"
                                             type="button"
                                             data-bs-toggle="dropdown">
-
                                         ⋮
                                     </button>
 
                                     <ul class="dropdown-menu dropdown-menu-end">
 
                                         {% if c.status not in ["PAGO", "CANCELADO", "TRANSPORTADO"] %}
-
                                             <li>
                                                 <button type="button"
                                                         class="dropdown-item"
                                                         data-bs-toggle="modal"
                                                         data-bs-target="#modalPagar{{ c.id }}">
-
                                                     Pagar
                                                 </button>
                                             </li>
@@ -227,11 +177,9 @@
                                                         class="dropdown-item"
                                                         data-bs-toggle="modal"
                                                         data-bs-target="#modalTransportar{{ c.id }}">
-
                                                     Transportar
                                                 </button>
                                             </li>
-
                                         {% endif %}
 
                                         <li>
@@ -239,7 +187,6 @@
                                                     class="dropdown-item"
                                                     data-bs-toggle="modal"
                                                     data-bs-target="#modalEditar{{ c.id }}">
-
                                                 Editar
                                             </button>
                                         </li>
@@ -247,29 +194,26 @@
                                         {% if c.status != "CANCELADO" %}
                                             <li>
                                                 <form method="POST"
-                                                      action="/gestao/radar-financeiro/cancelar/{{ c.id }}">
-
-                                                    <button class="dropdown-item">
+                                                      action="/gestao/radar-financeiro/cancelar/{{ c.id }}"
+                                                      onsubmit="return confirm('Cancelar esta conta?');">
+                                                    <button class="dropdown-item" type="submit">
                                                         Cancelar
                                                     </button>
-
                                                 </form>
                                             </li>
                                         {% endif %}
 
                                         <li>
                                             <form method="POST"
-                                                  action="/gestao/radar-financeiro/excluir/{{ c.id }}">
-
-                                                <button class="dropdown-item text-danger">
+                                                  action="/gestao/radar-financeiro/excluir/{{ c.id }}"
+                                                  onsubmit="return confirm('Excluir definitivamente esta conta?');">
+                                                <button class="dropdown-item text-danger" type="submit">
                                                     Excluir
                                                 </button>
-
                                             </form>
                                         </li>
 
                                     </ul>
-
                                 </div>
 
                             </div>
@@ -282,34 +226,22 @@
 
                                 <div class="radar-info-box">
                                     <span>Valor</span>
-
-                                    <strong>
-                                        R$ {{ "%.2f"|format(c.valor) }}
-                                    </strong>
+                                    <strong>R$ {{ "%.2f"|format(c.valor) }}</strong>
                                 </div>
 
                                 <div class="radar-info-box">
                                     <span>Vencimento</span>
-
-                                    <strong>
-                                        {{ c.data_vencimento.strftime('%d/%m/%Y') if c.data_vencimento else '-' }}
-                                    </strong>
+                                    <strong>{{ c.data_vencimento.strftime('%d/%m/%Y') if c.data_vencimento else '-' }}</strong>
                                 </div>
 
                                 <div class="radar-info-box">
                                     <span>Parcela</span>
-
-                                    <strong>
-                                        {{ c.nome_parcela() }}
-                                    </strong>
+                                    <strong>{{ c.nome_parcela() }}</strong>
                                 </div>
 
                                 <div class="radar-info-box">
                                     <span>Setor</span>
-
-                                    <strong>
-                                        {{ c.setor or '-' }}
-                                    </strong>
+                                    <strong>{{ c.setor or '-' }}</strong>
                                 </div>
 
                             </div>
@@ -323,11 +255,9 @@
                         </article>
 
                     {% else %}
-
                         <div class="radar-coluna-vazia">
                             Sem contas
                         </div>
-
                     {% endfor %}
 
                 </div>
@@ -339,5 +269,304 @@
     </section>
 
 </div>
+
+<div class="modal fade" id="modalNovaConta" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <form method="POST" action="/gestao/radar-financeiro/novo">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Nova conta no Radar Financeiro</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row g-3">
+
+                        <div class="col-md-5">
+                            <label class="form-label">Descrição</label>
+                            <input type="text" name="descricao" class="form-control" required>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Fornecedor</label>
+                            <input type="text" name="fornecedor" class="form-control">
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Categoria</label>
+                            <input type="text" name="categoria" class="form-control">
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Setor</label>
+                            <select name="setor" class="form-control">
+                                <option value="ASSISTÊNCIA">ASSISTÊNCIA</option>
+                                <option value="LOGÍSTICA">LOGÍSTICA</option>
+                                <option value="GERAL">GERAL</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Valor</label>
+                            <input type="text" name="valor" class="form-control" required>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Data Vencimento</label>
+                            <input type="date" name="data_vencimento" class="form-control" required>
+                        </div>
+
+                        <div class="col-md-1">
+                            <label class="form-label">Parc.</label>
+                            <input type="number" name="parcela_atual" class="form-control">
+                        </div>
+
+                        <div class="col-md-1">
+                            <label class="form-label">Total</label>
+                            <input type="number" name="total_parcelas" class="form-control">
+                        </div>
+
+                        <div class="col-md-1 d-flex align-items-end">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="recorrente" id="recorrenteNovo">
+                                <label class="form-check-label" for="recorrenteNovo">Rec.</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label">Observações</label>
+                            <textarea name="observacoes" rows="3" class="form-control"></textarea>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button class="btn btn-success">
+                        Cadastrar conta
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+{% for item in itens %}
+    {% set c = item.conta %}
+
+    <div class="modal fade" id="modalEditar{{ c.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <form method="POST" action="/gestao/radar-financeiro/editar/{{ c.id }}">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title">Editar conta #{{ c.id }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="row g-3">
+
+                            <div class="col-md-5">
+                                <label class="form-label">Descrição</label>
+                                <input type="text" name="descricao" value="{{ c.descricao or '' }}" class="form-control" required>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Fornecedor</label>
+                                <input type="text" name="fornecedor" value="{{ c.fornecedor or '' }}" class="form-control">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">Categoria</label>
+                                <input type="text" name="categoria" value="{{ c.categoria or '' }}" class="form-control">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">Setor</label>
+                                <select name="setor" class="form-control">
+                                    <option value="ASSISTÊNCIA" {% if c.setor == "ASSISTÊNCIA" %}selected{% endif %}>ASSISTÊNCIA</option>
+                                    <option value="LOGÍSTICA" {% if c.setor == "LOGÍSTICA" %}selected{% endif %}>LOGÍSTICA</option>
+                                    <option value="GERAL" {% if c.setor == "GERAL" %}selected{% endif %}>GERAL</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">Status</label>
+                                <select name="status" class="form-control">
+                                    <option value="PENDENTE" {% if c.status == "PENDENTE" %}selected{% endif %}>PENDENTE</option>
+                                    <option value="ADIADO" {% if c.status == "ADIADO" %}selected{% endif %}>ADIADO</option>
+                                    <option value="PAGO" {% if c.status == "PAGO" %}selected{% endif %}>PAGO</option>
+                                    <option value="TRANSPORTADO" {% if c.status == "TRANSPORTADO" %}selected{% endif %}>TRANSPORTADO</option>
+                                    <option value="CANCELADO" {% if c.status == "CANCELADO" %}selected{% endif %}>CANCELADO</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">Valor</label>
+                                <input type="text" name="valor" value="{{ c.valor or '0.00' }}" class="form-control" required>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">Data Vencimento</label>
+                                <input type="date" name="data_vencimento" value="{{ data_para_input(c.data_vencimento) }}" class="form-control">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">Data Pagamento</label>
+                                <input type="date" name="data_pagamento" value="{{ data_para_input(c.data_pagamento) }}" class="form-control">
+                            </div>
+
+                            <div class="col-md-2">
+                                <label class="form-label">Parcela atual</label>
+                                <input type="number" name="parcela_atual" value="{{ c.parcela_atual or '' }}" class="form-control">
+                            </div>
+
+                            <div class="col-md-2">
+                                <label class="form-label">Total parcelas</label>
+                                <input type="number" name="total_parcelas" value="{{ c.total_parcelas or '' }}" class="form-control">
+                            </div>
+
+                            <div class="col-md-2 d-flex align-items-end">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="recorrente" id="recorrente{{ c.id }}" {% if c.recorrente %}checked{% endif %}>
+                                    <label class="form-check-label" for="recorrente{{ c.id }}">Recorrente</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label">Observações</label>
+                                <textarea name="observacoes" rows="3" class="form-control">{{ c.observacoes or '' }}</textarea>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button"
+                                class="btn btn-secondary"
+                                data-bs-dismiss="modal">
+                            Cancelar
+                        </button>
+
+                        <button class="btn btn-primary">
+                            Salvar alterações
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalPagar{{ c.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content">
+                <form method="POST" action="/gestao/radar-financeiro/pagar/{{ c.id }}">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title">Marcar como pago</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <p class="mb-2">
+                            <strong>{{ c.descricao }}</strong>
+                        </p>
+
+                        <label class="form-label">Data de pagamento</label>
+                        <input type="date"
+                               name="data_pagamento"
+                               value="{{ hoje.strftime('%Y-%m-%d') }}"
+                               class="form-control"
+                               required>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button"
+                                class="btn btn-secondary"
+                                data-bs-dismiss="modal">
+                            Cancelar
+                        </button>
+
+                        <button class="btn btn-success">
+                            Confirmar pagamento
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalTransportar{{ c.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <form method="POST" action="/gestao/radar-financeiro/transportar/{{ c.id }}">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title">Transportar conta</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <p class="mb-2">
+                            <strong>{{ c.descricao }}</strong>
+                        </p>
+
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+                                <label class="form-label">Nova data de vencimento</label>
+                                <input type="date"
+                                       name="nova_data_vencimento"
+                                       class="form-control">
+                                <small class="text-muted">
+                                    Se deixar vazio, o sistema joga automaticamente para o próximo mês.
+                                </small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Valor</label>
+                                <input type="text"
+                                       name="valor"
+                                       value="{{ c.valor or '0.00' }}"
+                                       class="form-control">
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label">Observações da nova conta</label>
+                                <textarea name="observacoes" rows="3" class="form-control">{{ c.observacoes or '' }}</textarea>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button"
+                                class="btn btn-secondary"
+                                data-bs-dismiss="modal">
+                            Cancelar
+                        </button>
+
+                        <button class="btn btn-warning">
+                            Transportar
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+{% endfor %}
 
 {% endblock %}
