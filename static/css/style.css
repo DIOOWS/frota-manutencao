@@ -12020,3 +12020,412 @@ body {
   }
 }
 
+
+
+/* =========================================================
+   IMPORTAÇÕES FINANCEIRAS - AJUSTE FINAL PADRÃO SISTEMA
+========================================================= */
+
+/* Topo sem botões e mais limpo */
+.importacoes-page .gestao-header {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 20px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+.importacoes-page .gestao-header h2 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 900;
+  color: #020024;
+  letter-spacing: -0.6px;
+}
+
+.importacoes-page .gestao-header p {
+  margin: 6px 0 0;
+  color: #53627a;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* Remove o card antigo de competência, caso ainda exista */
+.importacoes-page > .gestao-filtro {
+  display: none !important;
+}
+
+/* Competência agora integrada antes de Contas Pagas */
+.importacoes-competencia-inline {
+  margin-bottom: 18px;
+}
+
+.competencia-inline-form {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 18px;
+  padding: 16px 18px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.competencia-inline-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.competencia-inline-text strong {
+  font-size: 18px;
+  font-weight: 900;
+  color: #020024;
+}
+
+.competencia-inline-text small {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.competencia-inline-fields {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.competencia-inline-fields .form-control {
+  width: 105px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #020024;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.btn-visualizar-mes {
+  height: 38px;
+  min-width: 150px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+  box-shadow: 0 8px 16px rgba(9, 9, 121, 0.18);
+}
+
+.btn-visualizar-mes:hover {
+  filter: brightness(1.07);
+  transform: translateY(-1px);
+}
+
+/* Card no padrão do dashboard */
+.importacoes-page .gestao-card {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+  padding: 0 !important;
+  margin-bottom: 26px !important;
+}
+
+/* Header azul do card */
+.importacoes-page .gestao-card > .d-flex:first-child {
+  margin: 0 !important;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  border-bottom: none;
+}
+
+/* Remove fundo quadrado antigo que estava atrás do título */
+.importacoes-page .gestao-card h5,
+.importacoes-page .gestao-card > h5,
+.importacoes-page .x-card h5 {
+  background: transparent !important;
+  color: #ffffff !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.importacoes-page .gestao-card h5 {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -0.4px;
+}
+
+.importacoes-page .gestao-card h5::before {
+  content: none !important;
+}
+
+.importacoes-page .gestao-card .text-muted {
+  color: rgba(255, 255, 255, 0.86) !important;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Botão limpar mais discreto */
+.importacoes-page form[action*="/limpar"] .btn-outline-danger {
+  height: 38px;
+  border-radius: 999px;
+  padding: 0 16px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 900;
+  box-shadow: none;
+}
+
+.importacoes-page form[action*="/limpar"] .btn-outline-danger:hover {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #b91c1c;
+}
+
+/* Corpo do card */
+.importacao-box {
+  padding: 20px 24px 24px;
+}
+
+/* Form de importação mais compacto */
+.importacao-form {
+  background: #f8fafc;
+  border: 1px solid #dce5f2;
+  border-radius: 16px;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: minmax(300px, 1.4fr) 90px 110px minmax(240px, 1fr) 190px;
+  gap: 12px;
+  align-items: end;
+}
+
+.importacao-form-info strong {
+  color: #020024;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.importacao-form-info small {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+.importacao-field label {
+  font-size: 11px;
+  font-weight: 900;
+  color: #334155;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.importacao-field .form-control {
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Botão importar */
+.btn-importacao {
+  height: 38px;
+  min-width: 180px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+/* Resumos mais compactos */
+.importacao-resumo-grid {
+  grid-template-columns: repeat(5, minmax(135px, 1fr));
+  gap: 10px;
+}
+
+.importacao-resumo-card {
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.importacao-resumo-card span {
+  font-size: 10px;
+  margin-bottom: 6px;
+}
+
+.importacao-resumo-card strong {
+  font-size: 17px;
+}
+
+/* Filtros da tabela compactos */
+.importacoes-page .importacao-box > form.row {
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.importacoes-page .importacao-box > form.row .form-control,
+.importacoes-page .importacao-box > form.row .btn {
+  height: 34px;
+  font-size: 12px;
+  border-radius: 9px;
+}
+
+/* Tabela menor em altura */
+.importacao-table-wrap {
+  border: 1px solid #dce5f2;
+  border-radius: 16px;
+  background: #ffffff;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 360px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+}
+
+.importacao-table-wrap table {
+  min-width: 1350px;
+  margin-bottom: 0;
+}
+
+.importacao-table-wrap thead th {
+  background: #020024;
+  color: #ffffff;
+  border-bottom: 3px solid #00d4ff;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 7px 8px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.importacao-table-wrap tbody td {
+  font-size: 11px;
+  color: #334155;
+  vertical-align: middle;
+  white-space: nowrap;
+  padding: 6px 8px;
+  line-height: 1.2;
+}
+
+.importacao-table-wrap tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.importacao-table-wrap tbody tr:hover {
+  background: #eef6ff;
+}
+
+/* Oculta Telefone e Email em Contas Pagas */
+/* Colunas: 1 Fatura, 2 Fornecedor, 3 Telefone, 4 Email */
+#contas-pagas .importacao-table-wrap th:nth-child(3),
+#contas-pagas .importacao-table-wrap td:nth-child(3),
+#contas-pagas .importacao-table-wrap th:nth-child(4),
+#contas-pagas .importacao-table-wrap td:nth-child(4) {
+  display: none;
+}
+
+/* Oculta Telefone e Email em Contas a Receber */
+/* Colunas: 1 Fatura, 2 Cliente, 3 Telefone, 4 Email */
+#contas-receber .importacao-table-wrap th:nth-child(3),
+#contas-receber .importacao-table-wrap td:nth-child(3),
+#contas-receber .importacao-table-wrap th:nth-child(4),
+#contas-receber .importacao-table-wrap td:nth-child(4) {
+  display: none;
+}
+
+/* Ajusta observação para não estourar altura */
+.importacao-obs {
+  min-width: 180px;
+  max-width: 230px;
+  white-space: nowrap !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Botões de ação menores */
+.importacoes-page .table td:last-child,
+.importacoes-page .table th:last-child {
+  min-width: 90px;
+  width: 90px;
+  text-align: center;
+}
+
+.importacoes-page .table td:last-child .d-flex {
+  justify-content: center;
+  gap: 6px !important;
+}
+
+.importacoes-page .table td:last-child .btn {
+  width: 27px;
+  min-width: 27px;
+  height: 23px;
+  border-radius: 7px;
+  font-size: 10px;
+  padding: 0;
+}
+
+/* Responsivo */
+@media (max-width: 992px) {
+  .competencia-inline-form {
+    align-items: stretch;
+  }
+
+  .competencia-inline-fields {
+    width: 100%;
+  }
+
+  .competencia-inline-fields .form-control,
+  .btn-visualizar-mes {
+    flex: 1;
+  }
+
+  .importacao-form {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .importacao-resumo-grid {
+    grid-template-columns: repeat(2, minmax(135px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .competencia-inline-fields {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .competencia-inline-fields .form-control,
+  .btn-visualizar-mes {
+    width: 100%;
+  }
+
+  .importacao-form {
+    grid-template-columns: 1fr;
+  }
+
+  .importacao-resumo-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .importacao-table-wrap {
+    max-height: 420px;
+  }
+}
+

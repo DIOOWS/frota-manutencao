@@ -13,43 +13,42 @@
         Contas Pagas e Contas a Receber.
       </p>
     </div>
-
-    <div class="d-flex gap-2 flex-wrap">
-      <a href="/gestao/dashboard?mes={{ mes }}&ano={{ ano }}" class="btn btn-dark">
-        Dashboard
-      </a>
-
-      <a href="/gestao/fechamento?mes={{ mes }}&ano={{ ano }}" class="btn btn-primary">
-        Fechamento
-      </a>
-    </div>
   </div>
-
-  <form method="GET" action="/gestao/importacoes/" class="gestao-filtro mb-4">
-    <input type="number"
-           name="mes"
-           min="1"
-           max="12"
-           value="{{ mes }}"
-           class="form-control"
-           placeholder="Mês">
-
-    <input type="number"
-           name="ano"
-           value="{{ ano }}"
-           class="form-control"
-           placeholder="Ano">
-
-    <button class="btn btn-primary">
-      Visualizar mês
-    </button>
-  </form>
 
   <div class="alert alert-info mb-4">
     <strong>Novo fluxo financeiro:</strong>
     o Dashboard e o Fluxo usam apenas movimentações que já aconteceram.
     As saídas vêm de <b>Contas Pagas</b> e as entradas vêm de
     <b>Contas a Receber</b>. O Radar Financeiro agora é manual/editável e não depende mais dessa tela.
+  </div>
+
+  <div class="importacoes-competencia-inline">
+    <form method="GET" action="/gestao/importacoes/" class="competencia-inline-form">
+      <div class="competencia-inline-text">
+        <strong>Competência financeira</strong>
+        <small>Selecione o mês e ano para visualizar as importações</small>
+      </div>
+
+      <div class="competencia-inline-fields">
+        <input type="number"
+               name="mes"
+               min="1"
+               max="12"
+               value="{{ mes }}"
+               class="form-control"
+               placeholder="Mês">
+
+        <input type="number"
+               name="ano"
+               value="{{ ano }}"
+               class="form-control"
+               placeholder="Ano">
+
+        <button class="btn-visualizar-mes">
+          Visualizar mês
+        </button>
+      </div>
+    </form>
   </div>
 
   <!-- ===================================================== -->
@@ -68,7 +67,7 @@
 
       <form method="POST"
             action="/gestao/importacoes/contas-pagas/limpar"
-            onsubmit="return confirmarLimpezaContasPagas();">
+            onsubmit="return confirm('ATENÇÃO!\n\nVocê tem certeza que deseja limpar a importação de Contas Pagas deste mês?\n\nIsso vai remover apenas os dados importados do mês atual.\nLançamentos manuais não serão removidos.\n\nEssa ação não pode ser desfeita.');">
         <input type="hidden" name="mes" value="{{ mes }}">
         <input type="hidden" name="ano" value="{{ ano }}">
 
@@ -199,8 +198,6 @@
             <tr>
               <th>Nº Fatura</th>
               <th>Fornecedor/Funcionário</th>
-              <th>Telefone</th>
-              <th>Email</th>
               <th>Pl. Contas</th>
               <th>Categoria</th>
               <th>Setor</th>
@@ -219,8 +216,6 @@
               <tr>
                 <td>{{ c.numero_fatura or '-' }}</td>
                 <td>{{ c.fornecedor_funcionario or '-' }}</td>
-                <td>{{ c.telefone or '-' }}</td>
-                <td>{{ c.email or '-' }}</td>
                 <td>{{ c.plano_contas or '-' }}</td>
                 <td>{{ c.categoria or '-' }}</td>
 
@@ -271,7 +266,7 @@
               </tr>
             {% else %}
               <tr>
-                <td colspan="14" class="text-center text-muted py-4">
+                <td colspan="12" class="text-center text-muted py-4">
                   Nenhuma importação de Contas Pagas encontrada para este mês/filtro.
                 </td>
               </tr>
@@ -387,7 +382,7 @@
 
       <form method="POST"
             action="/gestao/importacoes/contas-a-receber/limpar"
-            onsubmit="return confirmarLimpezaContasReceber();">
+            onsubmit="return confirm('ATENÇÃO!\n\nVocê tem certeza que deseja limpar a importação de Contas a Receber deste mês?\n\nIsso vai remover apenas os dados importados do mês atual.\nLançamentos manuais não serão removidos.\n\nEssa ação não pode ser desfeita.');">
         <input type="hidden" name="mes" value="{{ mes }}">
         <input type="hidden" name="ano" value="{{ ano }}">
 
@@ -503,8 +498,6 @@
             <tr>
               <th>Nº Fatura</th>
               <th>Cliente</th>
-              <th>Telefone</th>
-              <th>Email</th>
               <th>Pl. Contas</th>
               <th>Categoria</th>
               <th>Setor</th>
@@ -526,8 +519,6 @@
               <tr>
                 <td>{{ c.numero_fatura or '-' }}</td>
                 <td>{{ c.cliente or '-' }}</td>
-                <td>{{ c.telefone or '-' }}</td>
-                <td>{{ c.email or '-' }}</td>
                 <td>{{ c.plano_contas or '-' }}</td>
                 <td>{{ c.categoria or '-' }}</td>
 
@@ -583,7 +574,7 @@
               </tr>
             {% else %}
               <tr>
-                <td colspan="17" class="text-center text-muted py-4">
+                <td colspan="15" class="text-center text-muted py-4">
                   Nenhuma importação de Contas a Receber encontrada para este mês/filtro.
                 </td>
               </tr>
@@ -713,29 +704,5 @@
   {% endfor %}
 
 </div>
-
-
-
-<script>
-  function confirmarLimpezaContasPagas() {
-    return confirm(
-      "ATENÇÃO!\n\n" +
-      "Você tem certeza que deseja limpar a importação de Contas Pagas deste mês?\n\n" +
-      "Isso vai remover apenas os dados importados do mês atual.\n" +
-      "Lançamentos manuais não serão removidos.\n\n" +
-      "Essa ação não pode ser desfeita."
-    );
-  }
-
-  function confirmarLimpezaContasReceber() {
-    return confirm(
-      "ATENÇÃO!\n\n" +
-      "Você tem certeza que deseja limpar a importação de Contas a Receber deste mês?\n\n" +
-      "Isso vai remover apenas os dados importados do mês atual.\n" +
-      "Lançamentos manuais não serão removidos.\n\n" +
-      "Essa ação não pode ser desfeita."
-    );
-  }
-</script>
 
 {% endblock %}
