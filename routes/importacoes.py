@@ -63,6 +63,39 @@ def normalizar_nome_coluna(valor):
     return valor
 
 
+def normalizar_texto_chave(valor):
+    valor = texto(valor).upper()
+
+    valor = unicodedata.normalize("NFKD", valor)
+    valor = "".join(
+        caractere for caractere in valor
+        if not unicodedata.combining(caractere)
+    )
+
+    valor = valor.replace("\n", " ")
+    valor = valor.replace("\r", " ")
+    valor = " ".join(valor.split())
+
+    return valor
+
+
+def normalizar_data_chave(valor):
+    if not valor:
+        return ""
+
+    try:
+        return valor.strftime("%Y-%m-%d")
+    except Exception:
+        return texto(valor)
+
+
+def normalizar_decimal_chave(valor):
+    try:
+        return f"{Decimal(valor or 0).quantize(Decimal('0.01'))}"
+    except Exception:
+        return "0.00"
+
+
 def extensao_arquivo(filename):
     if not filename or "." not in filename:
         return ""
@@ -252,6 +285,118 @@ def redirect_importacoes(mes, ano, extra=""):
         url += extra
 
     return redirect(url)
+
+
+# =========================================================
+# HELPERS DE CONCILIAÇÃO
+# =========================================================
+
+def gerar_chave_conta_pagar(
+    numero_fatura,
+    fornecedor_funcionario,
+    valor,
+    data_vencimento,
+    plano_contas
+):
+    partes = [
+        normalizar_texto_chave(numero_fatura),
+        normalizar_texto_chave(fornecedor_funcionario),
+        normalizar_decimal_chave(valor),
+        normalizar_data_chave(data_vencimento),
+        normalizar_texto_chave(plano_contas),
+    ]
+
+    return "|".join(partes)
+
+
+def gerar_chave_conta_receber(
+    numero_fatura,
+    cliente,
+    valor,
+    data_vencimento,
+    plano_contas
+):
+    partes = [
+        normalizar_texto_chave(numero_fatura),
+        normalizar_texto_chave(cliente),
+        normalizar_decimal_chave(valor),
+        normalizar_data_chave(data_vencimento),
+        normalizar_texto_chave(plano_contas),
+    ]
+
+    return "|".join(partes)
+
+
+def buscar_conta_pagar_existente(
+    chave_conciliacao,
+    numero_fatura,
+    fornecedor_funcionario,
+    valor,
+    data_vencimento,
+    plano_contas
+):
+    conta = None
+
+    if chave_conciliacao:
+        conta = ContaPagarImportada.query.filter_by(
+            chave_conciliacao=chave_conciliacao
+        ).first()
+
+    if conta:
+        return conta
+
+    query = ContaPagarImportada.query.filter(
+        ContaPagarImportada.numero_fatura == numero_fatura,
+        ContaPagarImportada.fornecedor_funcionario == fornecedor_funcionario,
+        ContaPagarImportada.valor == valor,
+        ContaPagarImportada.plano_contas == plano_contas
+    )
+
+    if data_vencimento:
+        query = query.filter(
+            ContaPagarImportada.data_vencimento == data_vencimento
+        )
+
+    return query.first()
+
+
+def buscar_conta_receber_existente(
+    chave_conciliacao,
+    numero_fatura,
+    cliente,
+    valor,
+    data_vencimento,
+    plano_contas
+):
+    conta = None
+
+    if chave_conciliacao:
+        conta = ContaReceberImportada.query.filter_by(
+            chave_conciliacao=chave_conciliacao
+        ).first()
+
+    if conta:
+        return conta
+
+    query = ContaReceberImportada.query.filter(
+        ContaReceberImportada.numero_fatura == numero_fatura,
+        ContaReceberImportada.cliente == cliente,
+        ContaReceberImportada.plano_contas == plano_contas
+    )
+
+    if data_vencimento:
+        query = query.filter(
+            ContaReceberImportada.data_vencimento == data_vencimento
+        )
+
+    query = query.filter(
+        or_(
+            ContaReceberImportada.total == valor,
+            ContaReceberImportada.valor == valor
+        )
+    )
+
+    return query.first()
 
 
 # =========================================================
@@ -687,20 +832,23 @@ def importar_contas_pagar():
     try:
         linhas = ler_linhas_upload(arquivo, "Nº Fatura")
 
-        ContaPagarImportada.query.filter_by(
-            mes=mes_importacao,
-            ano=ano_importacao
-        ).delete()
-
-        total_importado = 0
+        total_criado = 0
+        total_atualizado = 0
+        total_linhas = 0
 
         for linha in linhas:
             plano_contas = texto(valor_por_coluna(linha, "Pl. Contas"))
+
+            numero_fatura = texto(valor_por_coluna(linha, "Nº Fatura"))
+            fornecedor_funcionario = texto(valor_por_coluna(linha, "Fornecedor/Funcionário"))
+            telefone = texto(valor_por_coluna(linha, "Telefone"))
+            email = texto(valor_por_coluna(linha, "Email"))
 
             data_pagamento = normalizar_data(valor_por_coluna(linha, "Dt. Pgto"))
             data_vencimento = normalizar_data(valor_por_coluna(linha, "Dt. Vencto"))
             data_documento = normalizar_data(valor_por_coluna(linha, "Dt. Docto"))
 
+            valor = normalizar_decimal(valor_por_coluna(linha, "Valor"))
             pago = normalizar_bool(valor_por_coluna(linha, "Pg?"))
 
             observacoes = texto(
@@ -721,38 +869,71 @@ def importar_contas_pagar():
                 )
             )
 
-            conta = ContaPagarImportada(
-                numero_fatura=texto(valor_por_coluna(linha, "Nº Fatura")),
-                fornecedor_funcionario=texto(valor_por_coluna(linha, "Fornecedor/Funcionário")),
-                telefone=texto(valor_por_coluna(linha, "Telefone")),
-                email=texto(valor_por_coluna(linha, "Email")),
-
-                plano_contas=plano_contas,
-                categoria=limpar_categoria(plano_contas),
-                setor=identificar_setor(plano_contas, receita=False),
-
-                data_documento=data_documento,
+            chave_conciliacao = gerar_chave_conta_pagar(
+                numero_fatura=numero_fatura,
+                fornecedor_funcionario=fornecedor_funcionario,
+                valor=valor,
                 data_vencimento=data_vencimento,
-                data_pagamento=data_pagamento,
-
-                valor=normalizar_decimal(valor_por_coluna(linha, "Valor")),
-
-                pago=pago,
-                status="PAGO" if pago else "PENDENTE",
-
-                observacoes=observacoes,
-
-                mes=mes_importacao,
-                ano=ano_importacao,
+                plano_contas=plano_contas
             )
 
-            db.session.add(conta)
-            total_importado += 1
+            conta = buscar_conta_pagar_existente(
+                chave_conciliacao=chave_conciliacao,
+                numero_fatura=numero_fatura,
+                fornecedor_funcionario=fornecedor_funcionario,
+                valor=valor,
+                data_vencimento=data_vencimento,
+                plano_contas=plano_contas
+            )
+
+            if conta:
+                total_atualizado += 1
+            else:
+                conta = ContaPagarImportada()
+                db.session.add(conta)
+                total_criado += 1
+
+            conta.numero_fatura = numero_fatura
+            conta.fornecedor_funcionario = fornecedor_funcionario
+            conta.telefone = telefone
+            conta.email = email
+
+            conta.plano_contas = plano_contas
+            conta.categoria = limpar_categoria(plano_contas)
+            conta.setor = identificar_setor(plano_contas, receita=False)
+
+            conta.data_documento = data_documento
+            conta.data_vencimento = data_vencimento
+
+            if data_pagamento:
+                conta.data_pagamento = data_pagamento
+            elif not pago:
+                conta.data_pagamento = None
+
+            conta.valor = valor
+
+            conta.pago = pago
+            conta.status = "PAGO" if pago else "PENDENTE"
+
+            conta.observacoes = observacoes
+
+            conta.mes = mes_importacao
+            conta.ano = ano_importacao
+
+            conta.chave_conciliacao = chave_conciliacao
+            conta.origem_importacao = "VENCIMENTO"
+
+            total_linhas += 1
 
         db.session.commit()
 
         flash(
-            f"Contas a Pagar de {mes_importacao:02d}/{ano_importacao} importadas com sucesso! {total_importado} linha(s).",
+            (
+                f"Contas a Pagar de {mes_importacao:02d}/{ano_importacao} importadas com sucesso! "
+                f"{total_linhas} linha(s). "
+                f"Criadas: {total_criado}. "
+                f"Atualizadas: {total_atualizado}."
+            ),
             "success"
         )
 
@@ -798,6 +979,17 @@ def editar_conta_pagar(id):
         conta.status = "PAGO" if conta.pago else "PENDENTE"
 
         conta.observacoes = texto(request.form.get("observacoes"))
+
+        conta.chave_conciliacao = gerar_chave_conta_pagar(
+            numero_fatura=conta.numero_fatura,
+            fornecedor_funcionario=conta.fornecedor_funcionario,
+            valor=conta.valor,
+            data_vencimento=conta.data_vencimento,
+            plano_contas=conta.plano_contas
+        )
+
+        if not conta.origem_importacao:
+            conta.origem_importacao = "MANUAL"
 
         db.session.commit()
 
@@ -862,15 +1054,17 @@ def importar_contas_receber():
     try:
         linhas = ler_linhas_upload(arquivo, "Nº Fatura")
 
-        ContaReceberImportada.query.filter_by(
-            mes=mes_importacao,
-            ano=ano_importacao
-        ).delete()
-
-        total_importado = 0
+        total_criado = 0
+        total_atualizado = 0
+        total_linhas = 0
 
         for linha in linhas:
             plano_contas = texto(valor_por_coluna(linha, "Pl. Contas"))
+
+            numero_fatura = texto(valor_por_coluna(linha, "Nº Fatura"))
+            cliente = texto(valor_por_coluna(linha, "Cliente"))
+            telefone = texto(valor_por_coluna(linha, "Telefone"))
+            email = texto(valor_por_coluna(linha, "Email"))
 
             data_pagamento = normalizar_data(valor_por_coluna(linha, "Dt. Pgto"))
             data_vencimento = normalizar_data(valor_por_coluna(linha, "Dt. Vencto"))
@@ -883,6 +1077,8 @@ def importar_contas_receber():
 
             if total == Decimal("0.00"):
                 total = valor + juros
+
+            cobranca = texto(valor_por_coluna(linha, "Cobrança"))
 
             observacoes = texto(
                 valor_por_colunas(
@@ -902,42 +1098,77 @@ def importar_contas_receber():
                 )
             )
 
-            conta = ContaReceberImportada(
-                numero_fatura=texto(valor_por_coluna(linha, "Nº Fatura")),
-                cliente=texto(valor_por_coluna(linha, "Cliente")),
-                telefone=texto(valor_por_coluna(linha, "Telefone")),
-                email=texto(valor_por_coluna(linha, "Email")),
+            valor_chave = total if total != Decimal("0.00") else valor
 
-                plano_contas=plano_contas,
-                categoria=limpar_categoria(plano_contas),
-                setor=identificar_setor(plano_contas, receita=True),
-
-                cobranca=texto(valor_por_coluna(linha, "Cobrança")),
-
-                data_documento=data_documento,
+            chave_conciliacao = gerar_chave_conta_receber(
+                numero_fatura=numero_fatura,
+                cliente=cliente,
+                valor=valor_chave,
                 data_vencimento=data_vencimento,
-                data_pagamento=data_pagamento,
-
-                valor=valor,
-                juros=juros,
-                total=total,
-
-                pago=pago,
-                status="RECEBIDO" if pago else "PENDENTE",
-
-                observacoes=observacoes,
-
-                mes=mes_importacao,
-                ano=ano_importacao,
+                plano_contas=plano_contas
             )
 
-            db.session.add(conta)
-            total_importado += 1
+            conta = buscar_conta_receber_existente(
+                chave_conciliacao=chave_conciliacao,
+                numero_fatura=numero_fatura,
+                cliente=cliente,
+                valor=valor_chave,
+                data_vencimento=data_vencimento,
+                plano_contas=plano_contas
+            )
+
+            if conta:
+                total_atualizado += 1
+            else:
+                conta = ContaReceberImportada()
+                db.session.add(conta)
+                total_criado += 1
+
+            conta.numero_fatura = numero_fatura
+            conta.cliente = cliente
+            conta.telefone = telefone
+            conta.email = email
+
+            conta.plano_contas = plano_contas
+            conta.categoria = limpar_categoria(plano_contas)
+            conta.setor = identificar_setor(plano_contas, receita=True)
+
+            conta.cobranca = cobranca
+
+            conta.data_documento = data_documento
+            conta.data_vencimento = data_vencimento
+
+            if data_pagamento:
+                conta.data_pagamento = data_pagamento
+            elif not pago:
+                conta.data_pagamento = None
+
+            conta.valor = valor
+            conta.juros = juros
+            conta.total = total
+
+            conta.pago = pago
+            conta.status = "RECEBIDO" if pago else "PENDENTE"
+
+            conta.observacoes = observacoes
+
+            conta.mes = mes_importacao
+            conta.ano = ano_importacao
+
+            conta.chave_conciliacao = chave_conciliacao
+            conta.origem_importacao = "VENCIMENTO"
+
+            total_linhas += 1
 
         db.session.commit()
 
         flash(
-            f"Contas a Receber de {mes_importacao:02d}/{ano_importacao} importadas com sucesso! {total_importado} linha(s).",
+            (
+                f"Contas a Receber de {mes_importacao:02d}/{ano_importacao} importadas com sucesso! "
+                f"{total_linhas} linha(s). "
+                f"Criadas: {total_criado}. "
+                f"Atualizadas: {total_atualizado}."
+            ),
             "success"
         )
 
@@ -946,6 +1177,155 @@ def importar_contas_receber():
         flash(f"Erro ao importar Contas a Receber: {str(e)}", "danger")
 
     return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
+
+
+# =========================================================
+# IMPORTAR CONTAS PAGAS
+# Relatório complementar de pagamentos realizados
+# =========================================================
+
+@importacoes_bp.route("/contas-pagas", methods=["POST"])
+@gestao_required
+def importar_contas_pagas():
+
+    arquivo = request.files.get("arquivo_pagas")
+    mes_importacao = request.form.get("mes_pagas", type=int)
+    ano_importacao = request.form.get("ano_pagas", type=int)
+
+    if not validar_mes_ano(mes_importacao, ano_importacao):
+        flash("Informe mês e ano válidos para Contas Pagas.", "danger")
+        return redirect("/gestao/importacoes/")
+
+    if not arquivo or not arquivo.filename:
+        flash("Selecione uma planilha de Contas Pagas.", "danger")
+        return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
+
+    if not arquivo_excel_valido(arquivo.filename):
+        flash(
+            "Formato não aceito. Envie uma planilha Excel nos formatos .xlsx, .xlsm, .xls ou .xlsb.",
+            "danger"
+        )
+        return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
+
+    try:
+        linhas = ler_linhas_upload(arquivo, "Nº Fatura")
+
+        total_criado = 0
+        total_atualizado = 0
+        total_ignorado = 0
+        total_linhas = 0
+
+        for linha in linhas:
+            plano_contas = texto(valor_por_coluna(linha, "Pl. Contas"))
+
+            numero_fatura = texto(valor_por_coluna(linha, "Nº Fatura"))
+            fornecedor_funcionario = texto(valor_por_coluna(linha, "Fornecedor/Funcionário"))
+            telefone = texto(valor_por_coluna(linha, "Telefone"))
+            email = texto(valor_por_coluna(linha, "Email"))
+
+            data_pagamento = normalizar_data(valor_por_coluna(linha, "Dt. Pgto"))
+            data_vencimento = normalizar_data(valor_por_coluna(linha, "Dt. Vencto"))
+            data_documento = normalizar_data(valor_por_coluna(linha, "Dt. Docto"))
+
+            valor = normalizar_decimal(valor_por_coluna(linha, "Valor"))
+
+            # Relatório de contas pagas: se não tiver data de pagamento,
+            # não entra no fluxo, então não faz sentido importar como paga.
+            if not data_pagamento:
+                total_ignorado += 1
+                continue
+
+            observacoes = texto(
+                valor_por_colunas(
+                    linha,
+                    [
+                        "Observações",
+                        "Observacoes",
+                        "Observação",
+                        "Observacao",
+                        "Obs",
+                        "OBS",
+                        "Histórico",
+                        "Historico",
+                        "Descrição",
+                        "Descricao"
+                    ]
+                )
+            )
+
+            chave_conciliacao = gerar_chave_conta_pagar(
+                numero_fatura=numero_fatura,
+                fornecedor_funcionario=fornecedor_funcionario,
+                valor=valor,
+                data_vencimento=data_vencimento,
+                plano_contas=plano_contas
+            )
+
+            conta = buscar_conta_pagar_existente(
+                chave_conciliacao=chave_conciliacao,
+                numero_fatura=numero_fatura,
+                fornecedor_funcionario=fornecedor_funcionario,
+                valor=valor,
+                data_vencimento=data_vencimento,
+                plano_contas=plano_contas
+            )
+
+            if conta:
+                total_atualizado += 1
+            else:
+                conta = ContaPagarImportada()
+                db.session.add(conta)
+                total_criado += 1
+
+            conta.numero_fatura = numero_fatura
+            conta.fornecedor_funcionario = fornecedor_funcionario
+            conta.telefone = telefone
+            conta.email = email
+
+            conta.plano_contas = plano_contas
+            conta.categoria = limpar_categoria(plano_contas)
+            conta.setor = identificar_setor(plano_contas, receita=False)
+
+            conta.data_documento = data_documento
+            conta.data_vencimento = data_vencimento
+            conta.data_pagamento = data_pagamento
+
+            conta.valor = valor
+
+            conta.pago = True
+            conta.status = "PAGO"
+
+            conta.observacoes = observacoes
+
+            # Aqui o mês/ano da importação representa o mês do relatório importado,
+            # mas as telas financeiras usam data_pagamento e data_vencimento.
+            conta.mes = mes_importacao
+            conta.ano = ano_importacao
+
+            conta.chave_conciliacao = chave_conciliacao
+            conta.origem_importacao = "PAGAMENTO"
+
+            total_linhas += 1
+
+        db.session.commit()
+
+        flash(
+            (
+                f"Contas Pagas de {mes_importacao:02d}/{ano_importacao} importadas com sucesso! "
+                f"{total_linhas} linha(s). "
+                f"Criadas: {total_criado}. "
+                f"Atualizadas: {total_atualizado}. "
+                f"Ignoradas sem Dt. Pgto: {total_ignorado}."
+            ),
+            "success"
+        )
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao importar Contas Pagas: {str(e)}", "danger")
+
+    return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
+
 
 
 # =========================================================
@@ -990,6 +1370,19 @@ def editar_conta_receber(id):
         conta.status = "RECEBIDO" if conta.pago else "PENDENTE"
 
         conta.observacoes = texto(request.form.get("observacoes"))
+
+        valor_chave = conta.total if conta.total != Decimal("0.00") else conta.valor
+
+        conta.chave_conciliacao = gerar_chave_conta_receber(
+            numero_fatura=conta.numero_fatura,
+            cliente=conta.cliente,
+            valor=valor_chave,
+            data_vencimento=conta.data_vencimento,
+            plano_contas=conta.plano_contas
+        )
+
+        if not conta.origem_importacao:
+            conta.origem_importacao = "MANUAL"
 
         db.session.commit()
 

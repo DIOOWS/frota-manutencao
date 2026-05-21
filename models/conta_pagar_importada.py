@@ -31,4 +31,14 @@ class ContaPagarImportada(db.Model):
     mes = db.Column(db.Integer)
     ano = db.Column(db.Integer)
 
+    # =====================================================
+    # CONCILIAÇÃO / CONTROLE DE IMPORTAÇÃO
+    # =====================================================
+    # Usado para impedir duplicidade entre relatório de vencimento
+    # e relatório de pagamento.
+    chave_conciliacao = db.Column(db.String(255), index=True)
+
+    # Exemplo: VENCIMENTO, PAGAMENTO, MANUAL, IMPORTACAO
+    origem_importacao = db.Column(db.String(50), default="VENCIMENTO")
+
     importado_em = db.Column(db.DateTime, default=datetime.utcnow)

@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+{% block title %}Radar Financeiro{% endblock %}
+
+{% block content %}
+
+<div class="gestao-page radar-financeiro-page">
+
+    <section class="radar-topo">
+        <div class="radar-topo-info">
+            <span class="radar-label">GESTÃO FINANCEIRA</span>
+            <h1>Radar Financeiro</h1>
+            <p>
+                Controle manual das obrigações, parcelas, vencimentos e contas transportadas.
+            </p>
+        </div>
+
+        <div class="radar-topo-actions">
+            <a href="/gestao/dashboard?mes={{ mes }}&ano={{ ano }}"
+               class="radar-btn radar-btn-dark">
+                Dashboard
+            </a>
+
+            <button type="button"
+                    class="radar-btn radar-btn-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalNovaConta">
+                + Nova conta
+            </button>
+        </div>
+    </section>
+
+    <section class="radar-filtros">
+        <form method="GET"
+              action="/gestao/radar-financeiro/"
+              class="radar-filtros-grid">
+
+            <div class="radar-field">
+                <label>Mês</label>
+
+                <select name="mes" class="form-control">
+                    {% for m in range(1,13) %}
+                        <option value="{{ m }}"
+                            {% if mes == m %}selected{% endif %}>
+                            {{ m }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="radar-field">
+                <label>Ano</label>
+
+                <input type="number"
+                       name="ano"
+                       value="{{ ano }}"
+                       class="form-control">
+            </div>
+
+            <div class="radar-field radar-busca">
+                <label>Busca</label>
+
+                <input type="text"
+                       name="busca"
+                       value="{{ busca or '' }}"
+                       placeholder="Descrição, fornecedor, categoria..."
+                       class="form-control">
+            </div>
+
+            <div class="radar-field">
+                <label>Setor</label>
+
+                <select name="setor" class="form-control">
+                    <option value="">Todos</option>
+
+                    <option value="ASSISTÊNCIA"
+                        {% if setor == "ASSISTÊNCIA" %}selected{% endif %}>
+                        Assistência
+                    </option>
+
+                    <option value="LOGÍSTICA"
+                        {% if setor == "LOGÍSTICA" %}selected{% endif %}>
+                        Logística
+                    </option>
+
+                    <option value="GERAL"
+                        {% if setor == "GERAL" %}selected{% endif %}>
+                        Geral
+                    </option>
+                </select>
+            </div>
+
+            <div class="radar-submit">
+                <button class="radar-btn radar-btn-primary">
+                    Filtrar
+                </button>
+            </div>
+
+        </form>
+    </section>
+
+    <section class="radar-kpis">
+
+        <div class="radar-kpi warning">
+            <div class="radar-kpi-icon">⏰</div>
+
+            <div>
+                <span>EM ABERTO</span>
+                <strong>R$ {{ "%.2f"|format(total_aberto) }}</strong>
+            </div>
+        </div>
+
+        <div class="radar-kpi danger">
+            <div class="radar-kpi-icon">⚠️</div>
+
+            <div>
+                <span>ATRASADAS</span>
+                <strong>R$ {{ "%.2f"|format(total_atrasado) }}</strong>
+            </div>
+        </div>
+
+        <div class="radar-kpi primary">
+            <div class="radar-kpi-icon">📅</div>
+
+            <div>
+                <span>VENCE HOJE</span>
+                <strong>R$ {{ "%.2f"|format(total_hoje) }}</strong>
+            </div>
+        </div>
+
+        <div class="radar-kpi purple">
+            <div class="radar-kpi-icon">📌</div>
+
+            <div>
+                <span>PRÓXIMOS 7 DIAS</span>
+                <strong>R$ {{ "%.2f"|format(total_proximas) }}</strong>
+            </div>
+        </div>
+
+        <div class="radar-kpi dark">
+            <div class="radar-kpi-icon">🧾</div>
+
+            <div>
+                <span>FUTURAS</span>
+                <strong>R$ {{ "%.2f"|format(total_futuras) }}</strong>
+            </div>
+        </div>
+
+        <div class="radar-kpi success">
+            <div class="radar-kpi-icon">✅</div>
+
+            <div>
+                <span>PAGAS</span>
+                <strong>R$ {{ "%.2f"|format(total_pagas) }}</strong>
+            </div>
+        </div>
+
+    </section>
+
+    <section class="radar-kanban-grid">
+
+        {% set colunas = [
+            ("Atrasadas", atrasadas, "danger"),
+            ("Vence hoje", vence_hoje, "warning"),
+            ("Próximos 7 dias", proximas, "primary"),
+            ("Futuras", futuras, "dark"),
+            ("Pagas", pagas, "success"),
+            ("Transportadas", transportadas, "cyan")
+        ] %}
+
+        {% for titulo, lista, cor in colunas %}
+
+            <div class="radar-coluna">
+
+                <div class="radar-coluna-header {{ cor }}">
+                    <strong>{{ titulo }}</strong>
+
+                    <span>
+                        {{ lista|length }}
+                    </span>
+                </div>
+
+                <div class="radar-coluna-body">
+
+                    {% for item in lista %}
+
+                        {% set c = item.conta %}
+
+                        <article class="radar-card">
+
+                            <div class="radar-card-header">
+
+                                <div class="radar-card-title">
+                                    <strong>
+                                        {{ c.descricao }}
+                                    </strong>
+
+                                    <small>
+                                        {{ c.fornecedor or '-' }}
+                                    </small>
+                                </div>
+
+                                <div class="dropdown">
+
+                                    <button class="radar-menu-btn"
+                                            type="button"
+                                            data-bs-toggle="dropdown">
+
+                                        ⋮
+                                    </button>
+
+                                    <ul class="dropdown-menu dropdown-menu-end">
+
+                                        {% if c.status not in ["PAGO", "CANCELADO", "TRANSPORTADO"] %}
+
+                                            <li>
+                                                <button type="button"
+                                                        class="dropdown-item"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#modalPagar{{ c.id }}">
+
+                                                    Pagar
+                                                </button>
+                                            </li>
+
+                                            <li>
+                                                <button type="button"
+                                                        class="dropdown-item"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#modalTransportar{{ c.id }}">
+
+                                                    Transportar
+                                                </button>
+                                            </li>
+
+                                        {% endif %}
+
+                                        <li>
+                                            <button type="button"
+                                                    class="dropdown-item"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#modalEditar{{ c.id }}">
+
+                                                Editar
+                                            </button>
+                                        </li>
+
+                                        {% if c.status != "CANCELADO" %}
+                                            <li>
+                                                <form method="POST"
+                                                      action="/gestao/radar-financeiro/cancelar/{{ c.id }}">
+
+                                                    <button class="dropdown-item">
+                                                        Cancelar
+                                                    </button>
+
+                                                </form>
+                                            </li>
+                                        {% endif %}
+
+                                        <li>
+                                            <form method="POST"
+                                                  action="/gestao/radar-financeiro/excluir/{{ c.id }}">
+
+                                                <button class="dropdown-item text-danger">
+                                                    Excluir
+                                                </button>
+
+                                            </form>
+                                        </li>
+
+                                    </ul>
+
+                                </div>
+
+                            </div>
+
+                            <div class="radar-card-status">
+                                {{ item.status_label }}
+                            </div>
+
+                            <div class="radar-card-grid">
+
+                                <div class="radar-info-box">
+                                    <span>Valor</span>
+
+                                    <strong>
+                                        R$ {{ "%.2f"|format(c.valor) }}
+                                    </strong>
+                                </div>
+
+                                <div class="radar-info-box">
+                                    <span>Vencimento</span>
+
+                                    <strong>
+                                        {{ c.data_vencimento.strftime('%d/%m/%Y') if c.data_vencimento else '-' }}
+                                    </strong>
+                                </div>
+
+                                <div class="radar-info-box">
+                                    <span>Parcela</span>
+
+                                    <strong>
+                                        {{ c.nome_parcela() }}
+                                    </strong>
+                                </div>
+
+                                <div class="radar-info-box">
+                                    <span>Setor</span>
+
+                                    <strong>
+                                        {{ c.setor or '-' }}
+                                    </strong>
+                                </div>
+
+                            </div>
+
+                            {% if c.observacoes %}
+                                <div class="radar-card-obs">
+                                    {{ c.observacoes }}
+                                </div>
+                            {% endif %}
+
+                        </article>
+
+                    {% else %}
+
+                        <div class="radar-coluna-vazia">
+                            Sem contas
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    </section>
+
+</div>
+
+{% endblock %}

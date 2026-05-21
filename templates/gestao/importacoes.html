@@ -59,7 +59,7 @@
           <strong>Importar planilha de despesas</strong>
           <small>
             Pl. Contas com <b>T</b> no final = Logística. Sem <b>T</b> = Assistência.
-            A importação sobrescreve somente o mês/ano informado.
+            A importação cria ou atualiza as contas por conciliação, sem duplicar registros.
           </small>
         </div>
 
@@ -191,7 +191,73 @@
           </thead>
 
           <tbody>
-            {% for c in contas_pagar %}
+
+  <div class="gestao-card mb-4" id="contas-pagas">
+
+    <h5>Contas Pagas • {{ "%02d"|format(mes) }}/{{ ano }}</h5>
+
+    <div class="importacao-box">
+
+      <form method="POST"
+            action="/gestao/importacoes/contas-pagas"
+            enctype="multipart/form-data"
+            class="importacao-form js-form-preservar-scroll">
+
+        <div class="importacao-form-info">
+          <strong>Importar relatório de contas pagas</strong>
+          <small>
+            Use aqui o relatório de pagamentos realizados. Esse arquivo atualiza o caixa pelo campo
+            <b>Dt. Pgto</b> e resolve contas vencidas em meses anteriores, mas pagas no mês atual.
+            A conciliação impede duplicidade quando a conta já existe no relatório de vencimentos.
+          </small>
+        </div>
+
+        <div class="importacao-field">
+          <label>Mês</label>
+          <input type="number"
+                 name="mes_pagas"
+                 min="1"
+                 max="12"
+                 value="{{ mes }}"
+                 class="form-control"
+                 required>
+        </div>
+
+        <div class="importacao-field">
+          <label>Ano</label>
+          <input type="number"
+                 name="ano_pagas"
+                 value="{{ ano }}"
+                 class="form-control"
+                 required>
+        </div>
+
+        <div class="importacao-field importacao-file">
+          <label>Arquivo Excel</label>
+          <input type="file"
+                 name="arquivo_pagas"
+                 accept=".xlsx,.xls,.xlsm,.xlsb"
+                 class="form-control"
+                 required>
+        </div>
+
+        <button class="btn-importacao">
+          📥 Importar contas pagas
+        </button>
+      </form>
+
+      <div class="alert alert-info mb-0">
+        <strong>Como usar:</strong>
+        primeiro importe <b>Contas a Pagar / Vencimentos</b>.
+        Depois importe aqui o relatório de <b>Contas Pagas</b>.
+        O sistema vai procurar a mesma conta pela chave de conciliação e atualizar para
+        <b>PAGO</b> com a <b>Dt. Pgto</b>, sem lançar o valor duas vezes.
+      </div>
+
+    </div>
+  </div>
+
+  {% for c in contas_pagar %}
               <tr>
                 <td>{{ c.numero_fatura or '-' }}</td>
                 <td>{{ c.fornecedor_funcionario or '-' }}</td>
@@ -215,7 +281,7 @@
 
                 <td>
                   {% if c.pago %}
-                    <span class="badge bg-success">PAGO</span
+                    <span class="badge bg-success">PAGO</span>
                   {% else %}
                     <span class="badge bg-warning text-dark">PENDENTE</span>
                   {% endif %}
@@ -367,7 +433,7 @@
           <strong>Importar planilha de receitas</strong>
           <small>
             A planilha será espelhada e usada para entradas, ranking de receitas
-            e ranking de clientes. A importação sobrescreve somente o mês/ano informado.
+            e ranking de clientes. A importação cria ou atualiza as contas por conciliação, sem duplicar registros.
           </small>
         </div>
 

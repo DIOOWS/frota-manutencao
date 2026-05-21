@@ -7,11 +7,16 @@ from models.conta_receber_importada import ContaReceberImportada
 from database import db
 from datetime import datetime, date, timedelta
 from collections import Counter
+from sqlalchemy import or_, and_
 import calendar
 
 
 gestao_bp = Blueprint("gestao", __name__, url_prefix="/gestao")
 
+
+# =========================================================
+# HELPERS GERAIS
+# =========================================================
 
 def dinheiro(valor):
     try:
@@ -105,26 +110,92 @@ def calcular_variacao_percentual(valor_atual, valor_anterior):
     return ((valor_atual - valor_anterior) / abs(valor_anterior)) * 100
 
 
+def primeiro_dia_mes(mes, ano):
+    return date(ano, mes, 1)
+
+
+def ultimo_dia_mes(mes, ano):
+    ultimo_dia = calendar.monthrange(ano, mes)[1]
+    return date(ano, mes, ultimo_dia)
+
+
+def inicio_mes_datetime(mes, ano):
+    return datetime.combine(primeiro_dia_mes(mes, ano), datetime.min.time())
+
+
+def fim_mes_datetime(mes, ano):
+    return datetime.combine(ultimo_dia_mes(mes, ano), datetime.max.time())
+
+
+def data_para_date(valor):
+    if not valor:
+        return None
+
+    if isinstance(valor, datetime):
+        return valor.date()
+
+    if isinstance(valor, date):
+        return valor
+
+    return None
+
+
+def nome_dia_semana(data_ref):
+    dias = {
+        0: "segunda-feira",
+        1: "terça-feira",
+        2: "quarta-feira",
+        3: "quinta-feira",
+        4: "sexta-feira",
+        5: "sábado",
+        6: "domingo",
+    }
+
+    return dias.get(data_ref.weekday(), "")
+
+
+def conta_esta_paga(conta):
+    if getattr(conta, "pago", False):
+        return True
+
+    status = normalizar_texto(getattr(conta, "status", None))
+
+    return status in [
+        "PAGO",
+        "RECEBIDO",
+        "OK",
+        "QUITADO",
+        "BAIXADO"
+    ]
+
+
+def valor_conta_receber(conta):
+    return dinheiro(
+        getattr(conta, "total", None)
+        or getattr(conta, "valor", 0)
+    )
+
+
+def data_movimento_fluxo(conta):
+    """
+    Fluxo é caixa realizado.
+    Portanto a data correta é data_pagamento.
+    Se não tiver data_pagamento, não entra no fluxo.
+    """
+
+    return data_para_date(getattr(conta, "data_pagamento", None))
+
+
 # =========================================================
 # CÁLCULO FINANCEIRO
 # IMPORTADAS + LANÇAMENTOS MANUAIS
 # =========================================================
+
 def calcular_totais_financeiros(mes, ano, saldo_inicial=0):
 
-    contas_pagar = ContaPagarImportada.query.filter_by(
-        mes=mes,
-        ano=ano
-    ).all()
-
-    contas_receber = ContaReceberImportada.query.filter_by(
-        mes=mes,
-        ano=ano
-    ).all()
-
-    lancamentos = LancamentoFinanceiro.query.filter_by(
-        mes=mes,
-        ano=ano
-    ).all()
+    inicio_dt = inicio_mes_datetime(mes, ano)
+    fim_dt = fim_mes_datetime(mes, ano)
+    fim_dia = ultimo_dia_mes(mes, ano)
 
     total_entradas = 0
     total_saidas = 0
@@ -138,17 +209,19 @@ def calcular_totais_financeiros(mes, ano, saldo_inicial=0):
     receitas_counter = Counter()
     clientes_counter = Counter()
 
-    # =========================
-    # CONTAS A PAGAR IMPORTADAS
-    # =========================
-    for c in contas_pagar:
+    # =====================================================
+    # SAÍDAS REALIZADAS
+    # Contas pagas pela DATA DE PAGAMENTO dentro do mês
+    # =====================================================
+    contas_pagar_pagas = ContaPagarImportada.query.filter(
+        ContaPagarImportada.pago == True,
+        ContaPagarImportada.data_pagamento >= inicio_dt,
+        ContaPagarImportada.data_pagamento <= fim_dt
+    ).all()
 
+    for c in contas_pagar_pagas:
         valor = dinheiro(c.valor)
-
-        if c.pago:
-            total_saidas += valor
-        else:
-            total_a_pagar += valor
+        total_saidas += valor
 
         categoria = c.categoria or c.plano_contas or "SEM CATEGORIA"
         setor = c.setor or "ASSISTÊNCIA"
@@ -160,17 +233,33 @@ def calcular_totais_financeiros(mes, ano, saldo_inicial=0):
         else:
             despesas_assistencia_counter[categoria] += valor
 
-    # =========================
-    # CONTAS A RECEBER IMPORTADAS
-    # =========================
-    for c in contas_receber:
+    # =====================================================
+    # A PAGAR
+    # Contas abertas com vencimento até o fim do mês filtrado
+    # Inclui atrasadas de meses anteriores
+    # =====================================================
+    contas_pagar_abertas = ContaPagarImportada.query.filter(
+        ContaPagarImportada.pago == False,
+        ContaPagarImportada.data_vencimento <= fim_dt
+    ).all()
 
-        valor = dinheiro(c.total or c.valor)
+    for c in contas_pagar_abertas:
+        valor = dinheiro(c.valor)
+        total_a_pagar += valor
 
-        if c.pago:
-            total_entradas += valor
-        else:
-            total_a_receber += valor
+    # =====================================================
+    # ENTRADAS REALIZADAS
+    # Contas recebidas pela DATA DE PAGAMENTO dentro do mês
+    # =====================================================
+    contas_receber_recebidas = ContaReceberImportada.query.filter(
+        ContaReceberImportada.pago == True,
+        ContaReceberImportada.data_pagamento >= inicio_dt,
+        ContaReceberImportada.data_pagamento <= fim_dt
+    ).all()
+
+    for c in contas_receber_recebidas:
+        valor = valor_conta_receber(c)
+        total_entradas += valor
 
         categoria = c.categoria or c.plano_contas or "SEM CATEGORIA"
         cliente = c.cliente or "SEM CLIENTE"
@@ -178,9 +267,30 @@ def calcular_totais_financeiros(mes, ano, saldo_inicial=0):
         receitas_counter[categoria] += valor
         clientes_counter[cliente] += valor
 
-    # =========================
+    # =====================================================
+    # A RECEBER
+    # Contas abertas com vencimento até o fim do mês filtrado
+    # Inclui atrasadas de meses anteriores
+    # =====================================================
+    contas_receber_abertas = ContaReceberImportada.query.filter(
+        ContaReceberImportada.pago == False,
+        ContaReceberImportada.data_vencimento <= fim_dt
+    ).all()
+
+    for c in contas_receber_abertas:
+        valor = valor_conta_receber(c)
+        total_a_receber += valor
+
+    # =====================================================
     # LANÇAMENTOS MANUAIS
-    # =========================
+    # Mantém por mes/ano porque o lançamento manual já grava
+    # o mês com base na data informada no cadastro
+    # =====================================================
+    lancamentos = LancamentoFinanceiro.query.filter_by(
+        mes=mes,
+        ano=ano
+    ).all()
+
     for l in lancamentos:
 
         if status_cancelado(l.status):
@@ -196,25 +306,25 @@ def calcular_totais_financeiros(mes, ano, saldo_inicial=0):
 
             if status_pago(l.status):
                 total_entradas += valor
+
+                receitas_counter[categoria] += valor
+                clientes_counter[cliente] += valor
             else:
                 total_a_receber += valor
-
-            receitas_counter[categoria] += valor
-            clientes_counter[cliente] += valor
 
         elif tipo == "DESPESA":
 
             if status_pago(l.status):
                 total_saidas += valor
+
+                despesas_counter[categoria] += valor
+
+                if setor == "LOGÍSTICA":
+                    despesas_logistica_counter[categoria] += valor
+                else:
+                    despesas_assistencia_counter[categoria] += valor
             else:
                 total_a_pagar += valor
-
-            despesas_counter[categoria] += valor
-
-            if setor == "LOGÍSTICA":
-                despesas_logistica_counter[categoria] += valor
-            else:
-                despesas_assistencia_counter[categoria] += valor
 
     lucro_mes = total_entradas - total_saidas
     saldo_final = dinheiro(saldo_inicial) + total_entradas - total_saidas
@@ -233,7 +343,6 @@ def calcular_totais_financeiros(mes, ano, saldo_inicial=0):
         "saldo_final": saldo_final,
         "margem_operacional": margem_operacional,
 
-        # SEM LIMITE NO RANKING
         "ranking_despesas": despesas_counter.most_common(),
         "ranking_despesas_assistencia": despesas_assistencia_counter.most_common(),
         "ranking_despesas_logistica": despesas_logistica_counter.most_common(),
@@ -245,6 +354,7 @@ def calcular_totais_financeiros(mes, ano, saldo_inicial=0):
 # =========================================================
 # EVOLUÇÃO FINANCEIRA MENSAL
 # =========================================================
+
 def calcular_evolucao_mensal(ano):
     labels = []
     entradas = []
@@ -307,6 +417,7 @@ def calcular_evolucao_mensal(ano):
 # =========================================================
 # INTELIGÊNCIA FINANCEIRA / TOMADA DE DECISÃO
 # =========================================================
+
 def calcular_inteligencia_financeira(totais, evolucao_mensal, mes, ano, saldo_inicial):
     total_entradas = dinheiro(totais["total_entradas"])
     total_saidas = dinheiro(totais["total_saidas"])
@@ -540,15 +651,15 @@ def calcular_inteligencia_financeira(totais, evolucao_mensal, mes, ano, saldo_in
         alertas.append({
             "nivel": "warning",
             "titulo": "Sem movimento financeiro",
-            "descricao": "Não há entradas nem saídas registradas para o mês filtrado.",
-            "acao": "Verifique se as importações e lançamentos deste mês foram feitos corretamente."
+            "descricao": "Não há entradas nem saídas realizadas para o mês filtrado.",
+            "acao": "Verifique se as importações possuem data de pagamento nas contas pagas/recebidas."
         })
 
     if lucro_mes < 0:
         alertas.append({
             "nivel": "danger",
             "titulo": "Prejuízo no mês",
-            "descricao": "O mês está fechando com mais saídas do que entradas.",
+            "descricao": "O mês está fechando com mais saídas realizadas do que entradas realizadas.",
             "acao": "Ataque as maiores despesas e priorize recebimentos em aberto."
         })
 
@@ -595,7 +706,7 @@ def calcular_inteligencia_financeira(totais, evolucao_mensal, mes, ano, saldo_in
     acoes_recomendadas = []
 
     if lucro_mes < 0:
-        acoes_recomendadas.append("Reduzir imediatamente as 3 maiores despesas do mês.")
+        acoes_recomendadas.append("Reduzir imediatamente as 3 maiores despesas realizadas do mês.")
         acoes_recomendadas.append("Priorizar cobrança dos valores em aberto.")
         acoes_recomendadas.append("Revisar se alguma despesa pontual distorceu o mês.")
 
@@ -667,6 +778,7 @@ def calcular_inteligencia_financeira(totais, evolucao_mensal, mes, ano, saldo_in
 # =========================================================
 # DASHBOARD FINANCEIRO
 # =========================================================
+
 @gestao_bp.route("/dashboard")
 @gestao_required
 def dashboard():
@@ -728,6 +840,7 @@ def dashboard():
 # =========================================================
 # API - DETALHES DAS CONTAS POR CATEGORIA DE DESPESA
 # =========================================================
+
 def pegar_primeiro_valor(objeto, campos, padrao="-"):
     for campo in campos:
         valor = getattr(objeto, campo, None)
@@ -774,17 +887,26 @@ def api_despesas_categoria():
             "itens": []
         }), 400
 
+    inicio_dt = inicio_mes_datetime(mes, ano)
+    fim_dt = fim_mes_datetime(mes, ano)
+
     itens = []
     total = 0
     total_pago = 0
     total_aberto = 0
 
-    # =========================
-    # CONTAS A PAGAR IMPORTADAS
-    # =========================
-    contas_pagar = ContaPagarImportada.query.filter_by(
-        mes=mes,
-        ano=ano
+    contas_pagar = ContaPagarImportada.query.filter(
+        or_(
+            and_(
+                ContaPagarImportada.pago == True,
+                ContaPagarImportada.data_pagamento >= inicio_dt,
+                ContaPagarImportada.data_pagamento <= fim_dt
+            ),
+            and_(
+                ContaPagarImportada.pago == False,
+                ContaPagarImportada.data_vencimento <= fim_dt
+            )
+        )
     ).all()
 
     for conta in contas_pagar:
@@ -794,18 +916,18 @@ def api_despesas_categoria():
             continue
 
         valor = dinheiro(getattr(conta, "valor", 0))
-        pago = bool(getattr(conta, "pago", False))
+        pago = bool(conta_esta_paga(conta))
 
         total += valor
 
         if pago:
             total_pago += valor
             status = "PAGO"
+            data = getattr(conta, "data_pagamento", None)
         else:
             total_aberto += valor
             status = "EM ABERTO"
-
-        data = getattr(conta, "data_vencimento", None) or getattr(conta, "data_documento", None)
+            data = getattr(conta, "data_vencimento", None)
 
         conta_nome = (
             getattr(conta, "plano_contas", None)
@@ -814,7 +936,6 @@ def api_despesas_categoria():
         )
 
         observacao = getattr(conta, "observacoes", None) or "-"
-
         setor = getattr(conta, "setor", None) or "-"
 
         itens.append({
@@ -830,9 +951,6 @@ def api_despesas_categoria():
             "valor": valor
         })
 
-    # =========================
-    # LANÇAMENTOS MANUAIS
-    # =========================
     lancamentos = LancamentoFinanceiro.query.filter_by(
         mes=mes,
         ano=ano
@@ -914,6 +1032,7 @@ def api_despesas_categoria():
 # =========================================================
 # FECHAMENTO MENSAL
 # =========================================================
+
 @gestao_bp.route("/fechamento", methods=["GET", "POST"])
 @gestao_required
 def fechamento():
@@ -1006,6 +1125,7 @@ def fechamento():
 # =========================================================
 # LANÇAMENTOS MANUAIS
 # =========================================================
+
 @gestao_bp.route("/lancamentos")
 @gestao_required
 def lancamentos():
@@ -1142,146 +1262,59 @@ def excluir_lancamento(id):
     flash("Lançamento excluído com sucesso!", "success")
     return redirect("/gestao/lancamentos")
 
-# =========================================================
-# HELPERS - FLUXO / RADAR
-# =========================================================
-
-def data_para_date(valor):
-    if not valor:
-        return None
-
-    if isinstance(valor, datetime):
-        return valor.date()
-
-    if isinstance(valor, date):
-        return valor
-
-    return None
-
-
-def nome_dia_semana(data_ref):
-    dias = {
-        0: "segunda-feira",
-        1: "terça-feira",
-        2: "quarta-feira",
-        3: "quinta-feira",
-        4: "sexta-feira",
-        5: "sábado",
-        6: "domingo",
-    }
-
-    return dias.get(data_ref.weekday(), "")
-
-
-def conta_esta_paga(conta):
-    if getattr(conta, "pago", False):
-        return True
-
-    status = normalizar_texto(getattr(conta, "status", None))
-
-    return status in [
-        "PAGO",
-        "RECEBIDO",
-        "OK",
-        "QUITADO",
-        "BAIXADO"
-    ]
-
-
-def data_movimento_fluxo(conta):
-    """
-    Data usada para distribuir na tabela diária.
-    A conta só chega aqui se já estiver paga/recebida.
-
-    Prioridade:
-    1. data_pagamento
-    2. data_vencimento
-    3. data_documento
-    4. data
-    """
-
-    campos = [
-        "data_pagamento",
-        "data_vencimento",
-        "data_documento",
-        "data"
-    ]
-
-    for campo in campos:
-        valor = getattr(conta, campo, None)
-        data_convertida = data_para_date(valor)
-
-        if data_convertida:
-            return data_convertida
-
-    return None
-
-
-def ajustar_data_para_mes(data_mov, mes, ano):
-    """
-    Se a conta pertence ao mês/ano filtrado, mas a data caiu fora do mês
-    ou está vazia, entra no dia 1 para não sumir do total do fluxo.
-    """
-
-    if not data_mov:
-        return date(ano, mes, 1)
-
-    if data_mov.month != mes or data_mov.year != ano:
-        return date(ano, mes, 1)
-
-    return data_mov
-
-
-def valor_conta_receber(conta):
-    return dinheiro(
-        getattr(conta, "total", None)
-        or getattr(conta, "valor", 0)
-    )
-
-
-def calcular_totais_reais_intervalo(ano, mes_inicio, mes_fim):
-    """
-    Calcula somente realizado:
-    despesas pagas + receitas recebidas.
-    """
-
-    total_despesas = 0
-    total_receitas = 0
-
-    if mes_fim < mes_inicio:
-        return total_despesas, total_receitas
-
-    contas_pagar = ContaPagarImportada.query.filter(
-        ContaPagarImportada.ano == ano,
-        ContaPagarImportada.mes >= mes_inicio,
-        ContaPagarImportada.mes <= mes_fim
-    ).all()
-
-    contas_receber = ContaReceberImportada.query.filter(
-        ContaReceberImportada.ano == ano,
-        ContaReceberImportada.mes >= mes_inicio,
-        ContaReceberImportada.mes <= mes_fim
-    ).all()
-
-    for conta in contas_pagar:
-        if not conta_esta_paga(conta):
-            continue
-
-        total_despesas += dinheiro(getattr(conta, "valor", 0))
-
-    for conta in contas_receber:
-        if not conta_esta_paga(conta):
-            continue
-
-        total_receitas += valor_conta_receber(conta)
-
-    return total_despesas, total_receitas
-
 
 # =========================================================
 # FLUXO DIÁRIO FINANCEIRO
 # SOMENTE MOVIMENTAÇÃO REALIZADA
 # =========================================================
+
+def calcular_totais_reais_periodo(data_inicio, data_fim):
+    total_despesas = 0
+    total_receitas = 0
+
+    inicio_dt = datetime.combine(data_inicio, datetime.min.time())
+    fim_dt = datetime.combine(data_fim, datetime.max.time())
+
+    contas_pagar = ContaPagarImportada.query.filter(
+        ContaPagarImportada.pago == True,
+        ContaPagarImportada.data_pagamento >= inicio_dt,
+        ContaPagarImportada.data_pagamento <= fim_dt
+    ).all()
+
+    contas_receber = ContaReceberImportada.query.filter(
+        ContaReceberImportada.pago == True,
+        ContaReceberImportada.data_pagamento >= inicio_dt,
+        ContaReceberImportada.data_pagamento <= fim_dt
+    ).all()
+
+    for conta in contas_pagar:
+        total_despesas += dinheiro(getattr(conta, "valor", 0))
+
+    for conta in contas_receber:
+        total_receitas += valor_conta_receber(conta)
+
+    lancamentos = LancamentoFinanceiro.query.filter(
+        LancamentoFinanceiro.data >= data_inicio,
+        LancamentoFinanceiro.data <= data_fim
+    ).all()
+
+    for lancamento in lancamentos:
+        if status_cancelado(getattr(lancamento, "status", None)):
+            continue
+
+        if not status_pago(getattr(lancamento, "status", None)):
+            continue
+
+        tipo = normalizar_texto(getattr(lancamento, "tipo", None))
+        valor = dinheiro(getattr(lancamento, "valor", 0))
+
+        if tipo == "DESPESA":
+            total_despesas += valor
+        elif tipo == "RECEITA":
+            total_receitas += valor
+
+    return total_despesas, total_receitas
+
 
 @gestao_bp.route("/fluxo-diario")
 @gestao_required
@@ -1296,31 +1329,51 @@ def fluxo_diario():
     if visao not in ["mes", "ano", "mes_ano"]:
         visao = "mes_ano"
 
-    ultimo_dia_numero = calendar.monthrange(ano, mes)[1]
+    primeiro_dia = primeiro_dia_mes(mes, ano)
+    ultimo_dia = ultimo_dia_mes(mes, ano)
+    ultimo_dia_numero = ultimo_dia.day
+
+    inicio_dt = datetime.combine(primeiro_dia, datetime.min.time())
+    fim_dt = datetime.combine(ultimo_dia, datetime.max.time())
 
     # =====================================================
     # TRANSPORTE DOS MESES ANTERIORES
-    # janeiro até mês anterior
+    # Tudo que realmente entrou/saiu de 01/01 até o dia
+    # anterior ao mês filtrado
     # =====================================================
-    despesas_transporte, receitas_transporte = calcular_totais_reais_intervalo(
-        ano=ano,
-        mes_inicio=1,
-        mes_fim=mes - 1
-    )
+    if mes > 1:
+        data_inicio_transporte = date(ano, 1, 1)
+        data_fim_transporte = primeiro_dia - timedelta(days=1)
+
+        despesas_transporte, receitas_transporte = calcular_totais_reais_periodo(
+            data_inicio=data_inicio_transporte,
+            data_fim=data_fim_transporte
+        )
+    else:
+        despesas_transporte = 0
+        receitas_transporte = 0
 
     saldo_transporte = dinheiro(receitas_transporte) - dinheiro(despesas_transporte)
 
     # =====================================================
-    # CONTAS DO MÊS FILTRADO
+    # CONTAS IMPORTADAS REALIZADAS NO MÊS
+    # Fluxo usa data_pagamento, não data_vencimento
     # =====================================================
-    contas_pagar_mes = ContaPagarImportada.query.filter_by(
-        mes=mes,
-        ano=ano
+    contas_pagar_mes = ContaPagarImportada.query.filter(
+        ContaPagarImportada.pago == True,
+        ContaPagarImportada.data_pagamento >= inicio_dt,
+        ContaPagarImportada.data_pagamento <= fim_dt
     ).all()
 
-    contas_receber_mes = ContaReceberImportada.query.filter_by(
-        mes=mes,
-        ano=ano
+    contas_receber_mes = ContaReceberImportada.query.filter(
+        ContaReceberImportada.pago == True,
+        ContaReceberImportada.data_pagamento >= inicio_dt,
+        ContaReceberImportada.data_pagamento <= fim_dt
+    ).all()
+
+    lancamentos_mes = LancamentoFinanceiro.query.filter(
+        LancamentoFinanceiro.data >= primeiro_dia,
+        LancamentoFinanceiro.data <= ultimo_dia
     ).all()
 
     despesas_por_dia = {}
@@ -1329,53 +1382,54 @@ def fluxo_diario():
     total_despesas_mes = 0
     total_receitas_mes = 0
 
-    # =====================================================
-    # DESPESAS DO MÊS
-    # só entra se estiver paga
-    # =====================================================
     for conta in contas_pagar_mes:
+        valor = dinheiro(getattr(conta, "valor", 0))
+        data_mov = data_movimento_fluxo(conta)
 
-        if not conta_esta_paga(conta):
+        if not data_mov:
             continue
 
-        valor = dinheiro(getattr(conta, "valor", 0))
         total_despesas_mes += valor
-
-        data_mov = data_movimento_fluxo(conta)
-        data_mov = ajustar_data_para_mes(data_mov, mes, ano)
-
         despesas_por_dia[data_mov] = despesas_por_dia.get(data_mov, 0) + valor
 
-    # =====================================================
-    # RECEITAS DO MÊS
-    # só entra se estiver recebida/paga
-    # =====================================================
     for conta in contas_receber_mes:
+        valor = valor_conta_receber(conta)
+        data_mov = data_movimento_fluxo(conta)
 
-        if not conta_esta_paga(conta):
+        if not data_mov:
             continue
 
-        valor = valor_conta_receber(conta)
         total_receitas_mes += valor
-
-        data_mov = data_movimento_fluxo(conta)
-        data_mov = ajustar_data_para_mes(data_mov, mes, ano)
-
         receitas_por_dia[data_mov] = receitas_por_dia.get(data_mov, 0) + valor
 
-    # =====================================================
-    # SALDOS
-    # =====================================================
+    for lancamento in lancamentos_mes:
+        if status_cancelado(getattr(lancamento, "status", None)):
+            continue
+
+        if not status_pago(getattr(lancamento, "status", None)):
+            continue
+
+        data_mov = data_para_date(getattr(lancamento, "data", None))
+
+        if not data_mov:
+            continue
+
+        tipo = normalizar_texto(getattr(lancamento, "tipo", None))
+        valor = dinheiro(getattr(lancamento, "valor", 0))
+
+        if tipo == "DESPESA":
+            total_despesas_mes += valor
+            despesas_por_dia[data_mov] = despesas_por_dia.get(data_mov, 0) + valor
+        elif tipo == "RECEITA":
+            total_receitas_mes += valor
+            receitas_por_dia[data_mov] = receitas_por_dia.get(data_mov, 0) + valor
+
     saldo_mes = dinheiro(total_receitas_mes) - dinheiro(total_despesas_mes)
 
     total_receitas_ano = dinheiro(receitas_transporte) + dinheiro(total_receitas_mes)
     total_despesas_ano = dinheiro(despesas_transporte) + dinheiro(total_despesas_mes)
     saldo_ano = dinheiro(total_receitas_ano) - dinheiro(total_despesas_ano)
 
-    # =====================================================
-    # TABELA DIÁRIA
-    # acumulado começa com transporte anterior
-    # =====================================================
     linhas = []
     acumulado = dinheiro(saldo_transporte)
 
@@ -1526,9 +1580,34 @@ def radar_pagamentos():
     setor = request.args.get("setor", "").strip().upper()
     filtro = request.args.get("filtro", "todos").strip().lower()
 
-    query = ContaPagarImportada.query.filter_by(
-        mes=mes,
-        ano=ano
+    inicio_dt = inicio_mes_datetime(mes, ano)
+    fim_dt = fim_mes_datetime(mes, ano)
+
+    # =====================================================
+    # RADAR USA VENCIMENTO
+    # Mostra:
+    # - contas pagas com vencimento dentro do mês filtrado
+    # - contas abertas vencidas até o fim do mês filtrado
+    #   incluindo atrasadas de meses anteriores
+    # - contas sem data que foram importadas no mês/ano
+    # =====================================================
+    query = ContaPagarImportada.query.filter(
+        or_(
+            and_(
+                ContaPagarImportada.pago == True,
+                ContaPagarImportada.data_vencimento >= inicio_dt,
+                ContaPagarImportada.data_vencimento <= fim_dt
+            ),
+            and_(
+                ContaPagarImportada.pago == False,
+                ContaPagarImportada.data_vencimento <= fim_dt
+            ),
+            and_(
+                ContaPagarImportada.data_vencimento == None,
+                ContaPagarImportada.mes == mes,
+                ContaPagarImportada.ano == ano
+            )
+        )
     )
 
     if setor:
@@ -1662,6 +1741,8 @@ def radar_adiar_pagamento(id):
         datetime.min.time()
     )
 
+    # Mantém mes/ano sincronizado para listagens administrativas,
+    # mas as telas financeiras agora usam data_vencimento/data_pagamento.
     conta.mes = nova_data.month
     conta.ano = nova_data.year
 
@@ -1686,4 +1767,3 @@ def radar_adiar_pagamento(id):
     flash("Pagamento adiado com sucesso!", "success")
 
     return redirect(request.referrer or "/gestao/radar-pagamentos")
-

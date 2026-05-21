@@ -204,6 +204,7 @@ from routes.frotas import frotas_bp
 from routes.assistente import assistente_bp
 from routes.gestao import gestao_bp
 from routes.importacoes import importacoes_bp
+from routes.radar_financeiro import radar_financeiro_bp
 
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(manutencao_bp)
@@ -214,6 +215,7 @@ app.register_blueprint(frotas_bp)
 app.register_blueprint(assistente_bp)
 app.register_blueprint(gestao_bp)
 app.register_blueprint(importacoes_bp)
+app.register_blueprint(radar_financeiro_bp)
 
 
 # ==========================================

@@ -9018,3 +9018,2354 @@ body {
   }
 }
 
+
+
+/* =========================================================
+   RADAR FINANCEIRO
+   ========================================================= */
+
+.radar-header {
+    margin-bottom: 24px;
+}
+
+.radar-top-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.radar-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.radar-kpi-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    padding: 18px;
+    text-decoration: none;
+    color: #111827;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+    transition: 0.2s ease;
+    border-left: 5px solid #2563eb;
+}
+
+.radar-kpi-card:hover {
+    transform: translateY(-3px);
+    color: #111827;
+}
+
+.radar-kpi-card span {
+    display: block;
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 8px;
+}
+
+.radar-kpi-card strong {
+    font-size: 22px;
+}
+
+.radar-kpi-card.success {
+    border-left-color: #22c55e;
+}
+
+.radar-kpi-card.warning {
+    border-left-color: #f59e0b;
+}
+
+.radar-kpi-card.danger {
+    border-left-color: #ef4444;
+}
+
+.radar-kanban-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(300px, 1fr));
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+}
+
+.radar-kanban-col {
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    min-width: 300px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+}
+
+.radar-kanban-head {
+    color: #ffffff;
+    padding: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.radar-kanban-count {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 4px 10px;
+    font-size: 12px;
+}
+
+.radar-kanban-body {
+    padding: 12px;
+    max-height: 75vh;
+    overflow-y: auto;
+}
+
+.radar-kanban-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    padding: 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+}
+
+.radar-kanban-card-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.radar-kanban-info {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.radar-kanban-info span {
+    display: block;
+    font-size: 11px;
+    color: #64748b;
+    margin-bottom: 3px;
+}
+
+.radar-kanban-info strong {
+    font-size: 13px;
+}
+
+.radar-kanban-obs {
+    margin-top: 12px;
+    background: #f1f5f9;
+    padding: 10px;
+    font-size: 12px;
+    color: #475569;
+}
+
+.radar-kanban-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 14px;
+}
+
+.radar-kanban-empty {
+    text-align: center;
+    padding: 20px;
+    color: #64748b;
+    font-size: 13px;
+}
+
+@media (max-width: 1400px) {
+    .radar-kanban-grid {
+        grid-template-columns: repeat(3, minmax(300px, 1fr));
+    }
+}
+
+@media (max-width: 900px) {
+    .radar-kanban-grid {
+        grid-template-columns: 1fr;
+        overflow-x: visible;
+    }
+}
+
+
+/* =========================================================
+   RADAR FINANCEIRO PREMIUM
+   ========================================================= */
+
+.radar-financeiro-page {
+    padding-bottom: 40px;
+}
+
+.radar-hero {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fbff 55%, #eef5ff 100%);
+    border: 1px solid #dbe7f5;
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+    padding: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 18px;
+}
+
+.radar-eyebrow {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #2563eb;
+    margin-bottom: 6px;
+}
+
+.radar-hero h2 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 900;
+    color: #0f172a;
+}
+
+.radar-hero p {
+    margin: 6px 0 0;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.radar-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.radar-btn {
+    border: 0;
+    text-decoration: none;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    transition: .2s ease;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
+.radar-btn:hover {
+    transform: translateY(-2px);
+}
+
+.radar-btn-primary {
+    background: linear-gradient(135deg, #0f62fe, #2563eb);
+    color: #fff;
+}
+
+.radar-btn-success {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    color: #fff;
+}
+
+.radar-btn-dark {
+    background: linear-gradient(135deg, #111827, #1e293b);
+    color: #fff;
+}
+
+.radar-btn-light {
+    background: #ffffff;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    box-shadow: none;
+}
+
+.radar-filter-card {
+    background: #ffffff;
+    border: 1px solid #dbe7f5;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+    padding: 18px;
+    margin-bottom: 18px;
+}
+
+.radar-filter-grid {
+    display: grid;
+    grid-template-columns: 90px 110px minmax(260px, 1fr) 180px 120px;
+    gap: 12px;
+    align-items: end;
+}
+
+.radar-field label {
+    font-size: 11px;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: #64748b;
+    margin-bottom: 6px;
+}
+
+.radar-field .form-control {
+    min-height: 42px;
+    border: 1px solid #dbe3ef;
+    box-shadow: none;
+}
+
+.radar-field .form-control:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+}
+
+.radar-filter-actions {
+    display: flex;
+}
+
+.radar-filter-actions .radar-btn {
+    width: 100%;
+}
+
+.radar-viewbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.radar-tabs {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    padding: 4px;
+    display: inline-flex;
+    gap: 4px;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.05);
+}
+
+.radar-tab {
+    text-decoration: none;
+    color: #475569;
+    padding: 9px 16px;
+    font-size: 13px;
+    font-weight: 800;
+    transition: .2s ease;
+}
+
+.radar-tab.active {
+    background: linear-gradient(135deg, #0f62fe, #2563eb);
+    color: #ffffff;
+}
+
+.radar-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.radar-kpi-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 18px;
+    text-decoration: none;
+    color: #0f172a;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+    border-left: 5px solid #2563eb;
+    transition: .2s ease;
+}
+
+.radar-kpi-card:hover {
+    transform: translateY(-3px);
+    color: #0f172a;
+}
+
+.radar-kpi-card span {
+    display: block;
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.radar-kpi-card strong {
+    font-size: 22px;
+    font-weight: 900;
+}
+
+.radar-kpi-card.success {
+    border-left-color: #22c55e;
+}
+
+.radar-kpi-card.warning {
+    border-left-color: #f59e0b;
+}
+
+.radar-kpi-card.danger {
+    border-left-color: #ef4444;
+}
+
+.radar-kpi-card.blue {
+    border-left-color: #2563eb;
+}
+
+.radar-kpi-card.dark {
+    border-left-color: #0f172a;
+}
+
+.radar-kanban-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(280px, 1fr));
+    gap: 14px;
+    overflow-x: auto;
+    padding-bottom: 14px;
+}
+
+.radar-kanban-col {
+    min-width: 280px;
+    background: #f8fafc;
+    border: 1px solid #dbe7f5;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+}
+
+.radar-kanban-head {
+    padding: 14px;
+    color: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.radar-kanban-head strong {
+    font-size: 14px;
+    font-weight: 900;
+}
+
+.radar-kanban-head span {
+    background: rgba(255, 255, 255, .22);
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.radar-kanban-head.danger {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+}
+
+.radar-kanban-head.warning {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+}
+
+.radar-kanban-head.blue {
+    background: linear-gradient(135deg, #0f62fe, #2563eb);
+}
+
+.radar-kanban-head.dark {
+    background: linear-gradient(135deg, #111827, #334155);
+}
+
+.radar-kanban-head.success {
+    background: linear-gradient(135deg, #15803d, #22c55e);
+}
+
+.radar-kanban-head.cyan {
+    background: linear-gradient(135deg, #0891b2, #06b6d4);
+}
+
+.radar-kanban-body {
+    padding: 12px;
+    min-height: 260px;
+    max-height: 72vh;
+    overflow-y: auto;
+}
+
+.radar-card-item {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+}
+
+.radar-card-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.radar-card-top strong {
+    display: block;
+    font-size: 15px;
+    color: #0f172a;
+    font-weight: 900;
+}
+
+.radar-card-top small {
+    display: block;
+    margin-top: 3px;
+    color: #64748b;
+    font-size: 12px;
+}
+
+.radar-status {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    font-size: 10px;
+    font-weight: 900;
+    padding: 5px 8px;
+    text-transform: uppercase;
+}
+
+.radar-status.success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.radar-status.danger {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.radar-status.warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.radar-status.primary {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.radar-status.dark {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.radar-status.info {
+    background: #cffafe;
+    color: #155e75;
+}
+
+.radar-status.secondary {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.radar-card-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.radar-card-metrics div {
+    background: #f8fafc;
+    border: 1px solid #eef2f7;
+    padding: 9px;
+}
+
+.radar-card-metrics span {
+    display: block;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 800;
+    margin-bottom: 3px;
+}
+
+.radar-card-metrics strong {
+    font-size: 13px;
+    color: #0f172a;
+}
+
+.radar-card-obs {
+    margin-top: 10px;
+    background: #f1f5f9;
+    border-left: 3px solid #2563eb;
+    padding: 10px;
+    font-size: 12px;
+    color: #475569;
+}
+
+.radar-card-actions,
+.radar-table-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.radar-mini-btn {
+    border: 1px solid transparent;
+    background: #ffffff;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 800;
+    transition: .2s ease;
+}
+
+.radar-mini-btn:hover {
+    transform: translateY(-1px);
+}
+
+.radar-mini-btn.success {
+    color: #15803d;
+    border-color: #22c55e;
+}
+
+.radar-mini-btn.warning {
+    color: #b45309;
+    border-color: #f59e0b;
+}
+
+.radar-mini-btn.primary {
+    color: #1d4ed8;
+    border-color: #2563eb;
+}
+
+.radar-mini-btn.muted {
+    color: #475569;
+    border-color: #cbd5e1;
+}
+
+.radar-mini-btn.danger {
+    color: #dc2626;
+    border-color: #ef4444;
+}
+
+.radar-empty {
+    text-align: center;
+    color: #64748b;
+    font-size: 13px;
+    padding: 28px 10px;
+}
+
+.radar-table-card {
+    background: #ffffff;
+    border: 1px solid #dbe7f5;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+}
+
+.radar-table thead th {
+    background: #0f172a;
+    color: #ffffff;
+    font-size: 12px;
+    text-transform: uppercase;
+    border: 0;
+    padding: 12px;
+}
+
+.radar-table td {
+    font-size: 13px;
+    padding: 12px;
+}
+
+@media (max-width: 1500px) {
+    .radar-kpi-grid {
+        grid-template-columns: repeat(3, minmax(180px, 1fr));
+    }
+
+    .radar-kanban-grid {
+        grid-template-columns: repeat(3, minmax(280px, 1fr));
+    }
+}
+
+@media (max-width: 900px) {
+    .radar-hero,
+    .radar-viewbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .radar-filter-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .radar-kpi-grid,
+    .radar-kanban-grid {
+        grid-template-columns: 1fr;
+        overflow-x: visible;
+    }
+
+    .radar-hero-actions {
+        width: 100%;
+    }
+
+    .radar-hero-actions .radar-btn {
+        flex: 1;
+    }
+}
+
+
+/* =========================================================
+   RADAR FINANCEIRO PREMIUM / RESPONSIVO
+   ========================================================= */
+
+.radar-financeiro-page {
+    padding-bottom: 48px;
+}
+
+.radar-hero {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fbff 55%, #eef5ff 100%);
+    border: 1px solid #dbe7f5;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+    padding: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 18px;
+}
+
+.radar-hero-main {
+    min-width: 0;
+}
+
+.radar-eyebrow {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #2563eb;
+    margin-bottom: 6px;
+}
+
+.radar-hero h2 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 900;
+    color: #0f172a;
+    line-height: 1.15;
+}
+
+.radar-hero p {
+    margin: 6px 0 0;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.radar-hero-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.radar-btn {
+    border: 0;
+    text-decoration: none;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 900;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    transition: 0.2s ease;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+    white-space: nowrap;
+}
+
+.radar-btn:hover {
+    transform: translateY(-2px);
+    text-decoration: none;
+}
+
+.radar-btn-primary {
+    background: linear-gradient(135deg, #0f62fe, #2563eb);
+    color: #ffffff;
+}
+
+.radar-btn-primary:hover {
+    color: #ffffff;
+}
+
+.radar-btn-success {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    color: #ffffff;
+}
+
+.radar-btn-success:hover {
+    color: #ffffff;
+}
+
+.radar-btn-dark {
+    background: linear-gradient(135deg, #111827, #1e293b);
+    color: #ffffff;
+}
+
+.radar-btn-dark:hover {
+    color: #ffffff;
+}
+
+.radar-btn-light {
+    background: #ffffff;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    box-shadow: none;
+}
+
+.radar-btn-light:hover {
+    color: #0f172a;
+    background: #f8fafc;
+}
+
+.radar-filter-card {
+    background: #ffffff;
+    border: 1px solid #dbe7f5;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+    padding: 18px;
+    margin-bottom: 18px;
+}
+
+.radar-filter-form {
+    margin: 0;
+}
+
+.radar-filter-grid {
+    display: grid;
+    grid-template-columns: 90px 110px minmax(280px, 1fr) 180px 120px;
+    gap: 12px;
+    align-items: end;
+}
+
+.radar-field {
+    min-width: 0;
+}
+
+.radar-field label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    font-weight: 900;
+    color: #64748b;
+    margin-bottom: 6px;
+}
+
+.radar-field .form-control {
+    min-height: 42px;
+    border: 1px solid #dbe3ef;
+    box-shadow: none;
+    font-size: 13px;
+}
+
+.radar-field .form-control:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.radar-filter-submit {
+    display: flex;
+    align-items: end;
+}
+
+.radar-filter-submit .radar-btn {
+    width: 100%;
+}
+
+.radar-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.radar-tabs {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    padding: 4px;
+    display: inline-flex;
+    gap: 4px;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.05);
+}
+
+.radar-tab {
+    text-decoration: none;
+    color: #475569;
+    padding: 9px 16px;
+    font-size: 13px;
+    font-weight: 900;
+    transition: 0.2s ease;
+}
+
+.radar-tab:hover {
+    color: #1d4ed8;
+    background: #eff6ff;
+}
+
+.radar-tab.active {
+    background: linear-gradient(135deg, #0f62fe, #2563eb);
+    color: #ffffff;
+}
+
+.radar-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(170px, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.radar-kpi-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 18px;
+    text-decoration: none;
+    color: #0f172a;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+    border-left: 5px solid #2563eb;
+    transition: 0.2s ease;
+    min-width: 0;
+}
+
+.radar-kpi-card:hover {
+    transform: translateY(-3px);
+    color: #0f172a;
+    text-decoration: none;
+}
+
+.radar-kpi-card span {
+    display: block;
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 900;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.radar-kpi-card strong {
+    display: block;
+    font-size: 21px;
+    font-weight: 900;
+    word-break: break-word;
+}
+
+.radar-kpi-card.success {
+    border-left-color: #22c55e;
+}
+
+.radar-kpi-card.warning {
+    border-left-color: #f59e0b;
+}
+
+.radar-kpi-card.danger {
+    border-left-color: #ef4444;
+}
+
+.radar-kpi-card.primary,
+.radar-kpi-card.blue {
+    border-left-color: #2563eb;
+}
+
+.radar-kpi-card.dark {
+    border-left-color: #0f172a;
+}
+
+.radar-kanban-wrapper {
+    width: 100%;
+}
+
+.radar-kanban-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(280px, 1fr));
+    gap: 14px;
+    overflow-x: auto;
+    padding-bottom: 14px;
+}
+
+.radar-kanban-col {
+    min-width: 280px;
+    background: #f8fafc;
+    border: 1px solid #dbe7f5;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+}
+
+.radar-kanban-head {
+    padding: 14px;
+    color: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.radar-kanban-head strong {
+    font-size: 14px;
+    font-weight: 900;
+}
+
+.radar-kanban-head span {
+    background: rgba(255, 255, 255, 0.22);
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.radar-kanban-head.danger {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+}
+
+.radar-kanban-head.warning {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+}
+
+.radar-kanban-head.blue {
+    background: linear-gradient(135deg, #0f62fe, #2563eb);
+}
+
+.radar-kanban-head.dark {
+    background: linear-gradient(135deg, #111827, #334155);
+}
+
+.radar-kanban-head.success {
+    background: linear-gradient(135deg, #15803d, #22c55e);
+}
+
+.radar-kanban-head.cyan {
+    background: linear-gradient(135deg, #0891b2, #06b6d4);
+}
+
+.radar-kanban-body {
+    padding: 12px;
+    min-height: 260px;
+    max-height: 72vh;
+    overflow-y: auto;
+}
+
+.radar-card-item {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+}
+
+.radar-card-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.radar-card-title {
+    min-width: 0;
+}
+
+.radar-card-title strong {
+    display: block;
+    font-size: 15px;
+    color: #0f172a;
+    font-weight: 900;
+    line-height: 1.25;
+}
+
+.radar-card-title small {
+    display: block;
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.25;
+}
+
+.radar-status {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    font-size: 10px;
+    font-weight: 900;
+    padding: 5px 8px;
+    text-transform: uppercase;
+}
+
+.radar-status.success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.radar-status.danger {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.radar-status.warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.radar-status.primary {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.radar-status.dark {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.radar-status.info {
+    background: #cffafe;
+    color: #155e75;
+}
+
+.radar-status.secondary {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.radar-card-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.radar-card-metrics div {
+    background: #f8fafc;
+    border: 1px solid #eef2f7;
+    padding: 9px;
+    min-width: 0;
+}
+
+.radar-card-metrics span {
+    display: block;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 900;
+    margin-bottom: 3px;
+}
+
+.radar-card-metrics strong {
+    display: block;
+    font-size: 13px;
+    color: #0f172a;
+    word-break: break-word;
+}
+
+.radar-card-obs {
+    margin-top: 10px;
+    background: #f1f5f9;
+    border-left: 3px solid #2563eb;
+    padding: 10px;
+    font-size: 12px;
+    color: #475569;
+    line-height: 1.4;
+}
+
+.radar-card-actions,
+.radar-table-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.radar-mini-btn {
+    border: 1px solid transparent;
+    background: #ffffff;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 900;
+    transition: 0.2s ease;
+    line-height: 1.2;
+}
+
+.radar-mini-btn:hover {
+    transform: translateY(-1px);
+}
+
+.radar-mini-btn.success {
+    color: #15803d;
+    border-color: #22c55e;
+}
+
+.radar-mini-btn.warning {
+    color: #b45309;
+    border-color: #f59e0b;
+}
+
+.radar-mini-btn.primary {
+    color: #1d4ed8;
+    border-color: #2563eb;
+}
+
+.radar-mini-btn.muted {
+    color: #475569;
+    border-color: #cbd5e1;
+}
+
+.radar-mini-btn.danger {
+    color: #dc2626;
+    border-color: #ef4444;
+}
+
+.radar-empty {
+    text-align: center;
+    color: #64748b;
+    font-size: 13px;
+    padding: 28px 10px;
+}
+
+.radar-table-card {
+    background: #ffffff;
+    border: 1px solid #dbe7f5;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+}
+
+.radar-table {
+    min-width: 1150px;
+}
+
+.radar-table thead th {
+    background: #0f172a;
+    color: #ffffff;
+    font-size: 12px;
+    text-transform: uppercase;
+    border: 0;
+    padding: 12px;
+    white-space: nowrap;
+}
+
+.radar-table td {
+    font-size: 13px;
+    padding: 12px;
+    vertical-align: middle;
+}
+
+.radar-table-actions {
+    margin-top: 0;
+    min-width: 260px;
+}
+
+@media (max-width: 1500px) {
+    .radar-kpi-grid {
+        grid-template-columns: repeat(3, minmax(180px, 1fr));
+    }
+
+    .radar-kanban-grid {
+        grid-template-columns: repeat(3, minmax(280px, 1fr));
+    }
+}
+
+@media (max-width: 1100px) {
+    .radar-filter-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .radar-field-search,
+    .radar-field-sector {
+        grid-column: span 1;
+    }
+
+    .radar-filter-submit {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 900px) {
+    .radar-hero {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 18px;
+    }
+
+    .radar-hero h2 {
+        font-size: 24px;
+    }
+
+    .radar-hero-actions {
+        justify-content: stretch;
+        width: 100%;
+    }
+
+    .radar-hero-actions .radar-btn {
+        flex: 1 1 100%;
+    }
+
+    .radar-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .radar-tabs {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .radar-tab {
+        text-align: center;
+    }
+
+    .radar-toolbar .radar-btn {
+        width: 100%;
+    }
+
+    .radar-filter-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .radar-filter-submit {
+        grid-column: span 1;
+    }
+
+    .radar-kpi-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .radar-kanban-grid {
+        display: flex;
+        overflow-x: auto;
+        gap: 12px;
+        scroll-snap-type: x mandatory;
+        padding-bottom: 12px;
+    }
+
+    .radar-kanban-col {
+        min-width: 86vw;
+        scroll-snap-align: start;
+    }
+
+    .radar-kanban-body {
+        max-height: none;
+        min-height: 220px;
+    }
+
+    .radar-card-actions,
+    .radar-table-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .radar-card-actions form,
+    .radar-table-actions form {
+        width: 100%;
+    }
+
+    .radar-mini-btn {
+        width: 100%;
+        min-height: 34px;
+    }
+}
+
+@media (max-width: 560px) {
+    .radar-financeiro-page {
+        padding-bottom: 32px;
+    }
+
+    .radar-hero,
+    .radar-filter-card,
+    .radar-table-card {
+        margin-left: -6px;
+        margin-right: -6px;
+    }
+
+    .radar-hero {
+        padding: 16px;
+    }
+
+    .radar-hero h2 {
+        font-size: 22px;
+    }
+
+    .radar-hero p {
+        font-size: 13px;
+    }
+
+    .radar-filter-card {
+        padding: 14px;
+    }
+
+    .radar-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .radar-kpi-card {
+        padding: 16px;
+    }
+
+    .radar-kpi-card strong {
+        font-size: 20px;
+    }
+
+    .radar-kanban-col {
+        min-width: 88vw;
+    }
+
+    .radar-card-top {
+        flex-direction: column;
+    }
+
+    .radar-status {
+        width: fit-content;
+    }
+
+    .radar-card-metrics {
+        grid-template-columns: 1fr;
+    }
+
+    .radar-card-actions,
+    .radar-table-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* =========================================================
+   RADAR FINANCEIRO - TABELA PREMIUM
+   ========================================================= */
+
+.radar-table-card {
+    background: #ffffff;
+    border: 1px solid #dbe7f5;
+    box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+}
+
+.radar-table-card .table-responsive {
+    overflow-x: auto;
+    padding: 0;
+}
+
+.radar-table {
+    min-width: 1120px;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 0;
+}
+
+.radar-table thead th {
+    background: linear-gradient(135deg, #07152e, #0f2f66);
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    border: 0;
+    padding: 14px 16px;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.radar-table tbody tr {
+    transition: .18s ease;
+}
+
+.radar-table tbody tr:hover {
+    background: #f8fbff;
+}
+
+.radar-table td {
+    font-size: 13px;
+    color: #1e293b;
+    padding: 16px;
+    vertical-align: middle;
+    border-bottom: 1px solid #edf2f7;
+    white-space: nowrap;
+}
+
+.radar-table td:nth-child(2) strong {
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 900;
+}
+
+.radar-table td:nth-child(9) strong {
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 900;
+}
+
+.radar-table .importacao-obs {
+    white-space: normal;
+    min-width: 180px;
+    max-width: 260px;
+    color: #64748b;
+    font-size: 12px;
+}
+
+.radar-table-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+    margin: 0;
+    min-width: 340px;
+}
+
+.radar-table-actions form {
+    margin: 0;
+}
+
+.radar-mini-btn {
+    border: 1px solid transparent;
+    background: #ffffff;
+    padding: 7px 11px;
+    font-size: 11px;
+    font-weight: 900;
+    line-height: 1;
+    min-height: 32px;
+    transition: .18s ease;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+}
+
+.radar-mini-btn:hover {
+    transform: translateY(-1px);
+}
+
+.radar-mini-btn.success {
+    color: #15803d;
+    background: #f0fdf4;
+    border-color: #86efac;
+}
+
+.radar-mini-btn.warning {
+    color: #b45309;
+    background: #fffbeb;
+    border-color: #fcd34d;
+}
+
+.radar-mini-btn.primary {
+    color: #1d4ed8;
+    background: #eff6ff;
+    border-color: #93c5fd;
+}
+
+.radar-mini-btn.muted {
+    color: #475569;
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.radar-mini-btn.danger {
+    color: #dc2626;
+    background: #fef2f2;
+    border-color: #fca5a5;
+}
+
+.radar-status {
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+    .radar-table-card {
+        border-radius: 0;
+    }
+
+    .radar-table {
+        min-width: 980px;
+    }
+
+    .radar-table td,
+    .radar-table thead th {
+        padding: 12px;
+    }
+
+    .radar-table-actions {
+        min-width: 280px;
+        flex-wrap: wrap;
+    }
+
+    .radar-mini-btn {
+        min-width: 82px;
+    }
+}
+
+
+
+/* =========================================================
+   RADAR FINANCEIRO - BOTÕES DA TABELA/CARDS
+   ========================================================= */
+
+.radar-table-actions,
+.radar-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
+.radar-table-actions form,
+.radar-card-actions form {
+    margin: 0;
+}
+
+.radar-mini-btn {
+    border: none;
+    padding: 8px 13px;
+    min-height: 34px;
+    font-size: 11px;
+    font-weight: 900;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    white-space: nowrap;
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
+    transition: 0.2s ease;
+}
+
+.radar-mini-btn:hover {
+    transform: translateY(-2px);
+    filter: brightness(0.98);
+}
+
+.radar-mini-btn.success {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    color: #ffffff;
+}
+
+.radar-mini-btn.warning {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    color: #1f2937;
+}
+
+.radar-mini-btn.primary {
+    background: linear-gradient(135deg, #0f62fe, #2563eb);
+    color: #ffffff;
+}
+
+.radar-mini-btn.muted {
+    background: linear-gradient(135deg, #64748b, #94a3b8);
+    color: #ffffff;
+}
+
+.radar-mini-btn.danger {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+    color: #ffffff;
+}
+
+.radar-table-actions {
+    min-width: 410px;
+}
+
+.radar-table td:last-child {
+    min-width: 420px;
+}
+
+@media (max-width: 900px) {
+    .radar-table-actions,
+    .radar-card-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .radar-table-actions form,
+    .radar-card-actions form {
+        width: 100%;
+    }
+
+    .radar-mini-btn {
+        width: 100%;
+        min-height: 38px;
+    }
+
+    .radar-table-actions {
+        min-width: 260px;
+    }
+
+    .radar-table td:last-child {
+        min-width: 270px;
+    }
+}
+
+
+/* =========================================================
+   RADAR FINANCEIRO - AÇÕES MAIS COMPACTAS
+   ========================================================= */
+
+.radar-table td:last-child,
+.radar-table th:last-child {
+    width: 300px;
+    min-width: 300px;
+    max-width: 300px;
+}
+
+.radar-table-actions {
+    display: grid;
+    grid-template-columns: repeat(5, auto);
+    justify-content: start;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    max-width: 290px;
+    margin: 0;
+}
+
+.radar-table-actions form {
+    margin: 0;
+    display: inline-flex;
+}
+
+.radar-table .radar-mini-btn {
+    padding: 7px 9px;
+    min-height: 30px;
+    font-size: 10px;
+    box-shadow: none;
+}
+
+.radar-table {
+    min-width: 1040px;
+}
+
+@media (max-width: 900px) {
+    .radar-table td:last-child,
+    .radar-table th:last-child {
+        width: 240px;
+        min-width: 240px;
+        max-width: 240px;
+    }
+
+    .radar-table-actions {
+        grid-template-columns: 1fr 1fr;
+        max-width: 230px;
+        gap: 6px;
+    }
+
+    .radar-table .radar-mini-btn {
+        width: 100%;
+        min-height: 34px;
+    }
+}
+
+
+
+.radar-kanban-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(280px, 1fr));
+    gap: 16px;
+    overflow: visible;
+}
+
+.radar-kanban-col {
+    min-width: 0;
+}
+
+.radar-desktop-table {
+    display: block;
+}
+
+.radar-mobile-list {
+    display: none;
+}
+
+.radar-table {
+    min-width: 980px;
+}
+
+.radar-table td:last-child,
+.radar-table th:last-child {
+    width: 220px;
+    min-width: 220px;
+    max-width: 220px;
+}
+
+.radar-table-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+    min-width: 0;
+    max-width: 210px;
+    margin: 0;
+}
+
+.radar-card-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.radar-actions-dropdown {
+    grid-column: span 2;
+}
+
+.radar-mini-btn {
+    width: 100%;
+    border: none;
+    padding: 9px 12px;
+    min-height: 36px;
+    font-size: 11px;
+    font-weight: 900;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    white-space: nowrap;
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
+    transition: 0.2s ease;
+}
+
+.radar-table .radar-mini-btn {
+    width: auto;
+    min-width: 70px;
+    padding: 8px 10px;
+    min-height: 32px;
+}
+
+.radar-mini-btn.success {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    color: #ffffff;
+}
+
+.radar-mini-btn.warning {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    color: #1f2937;
+}
+
+.radar-mini-btn.primary {
+    background: linear-gradient(135deg, #0f62fe, #2563eb);
+    color: #ffffff;
+}
+
+.radar-mini-btn.muted {
+    background: linear-gradient(135deg, #64748b, #94a3b8);
+    color: #ffffff;
+}
+
+.radar-mini-btn.danger {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+    color: #ffffff;
+}
+
+.radar-actions-dropdown .dropdown-menu {
+    border: 1px solid #dbe7f5;
+    box-shadow: 0 18px 38px rgba(15, 23, 42, 0.15);
+    padding: 8px;
+}
+
+.radar-actions-dropdown .dropdown-item {
+    font-size: 13px;
+    font-weight: 800;
+    padding: 9px 12px;
+}
+
+.radar-actions-dropdown form {
+    margin: 0;
+}
+
+@media (max-width: 1200px) {
+    .radar-kanban-grid {
+        grid-template-columns: repeat(2, minmax(280px, 1fr));
+    }
+}
+
+@media (max-width: 900px) {
+    .radar-kanban-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .radar-desktop-table {
+        display: none;
+    }
+
+    .radar-mobile-list {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .radar-card-actions {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .radar-actions-dropdown {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 560px) {
+    .radar-card-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .radar-actions-dropdown {
+        grid-column: span 1;
+    }
+}
+
+
+
+
+
+
+
+
+
+/* =========================================================
+   RADAR FINANCEIRO - KANBAN PREMIUM
+   ========================================================= */
+
+.radar-financeiro-page {
+    padding-bottom: 48px;
+}
+
+/* TOPO */
+.radar-topo {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fbff 55%, #eef5ff 100%);
+    border: 1px solid #dbe7f5;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+    border-radius: 22px;
+    padding: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 22px;
+}
+
+.radar-label {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    color: #2563eb;
+    margin-bottom: 8px;
+}
+
+.radar-topo h1 {
+    margin: 0;
+    font-size: 30px;
+    font-weight: 900;
+    color: #0f172a;
+}
+
+.radar-topo p {
+    margin: 8px 0 0;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.radar-topo-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* BOTÕES */
+.radar-btn {
+    border: none;
+    text-decoration: none;
+    min-height: 44px;
+    padding: 11px 18px;
+    font-size: 14px;
+    font-weight: 900;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    transition: 0.2s ease;
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+}
+
+.radar-btn:hover {
+    transform: translateY(-2px);
+    text-decoration: none;
+}
+
+.radar-btn-dark {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: #ffffff;
+}
+
+.radar-btn-dark:hover {
+    color: #ffffff;
+}
+
+.radar-btn-primary {
+    background: linear-gradient(135deg, #0f62fe, #2563eb);
+    color: #ffffff;
+}
+
+.radar-btn-primary:hover {
+    color: #ffffff;
+}
+
+/* FILTROS */
+.radar-filtros {
+    background: #ffffff;
+    border: 1px solid #dbe7f5;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 22px;
+}
+
+.radar-filtros-grid {
+    display: grid;
+    grid-template-columns: 150px 150px minmax(320px, 1fr) 210px 130px;
+    gap: 16px;
+    align-items: end;
+}
+
+.radar-field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: #475569;
+    margin-bottom: 7px;
+}
+
+.radar-field .form-control {
+    min-height: 46px;
+    border: 1px solid #dbe3ef;
+    border-radius: 10px;
+    font-size: 14px;
+    box-shadow: none;
+}
+
+.radar-field .form-control:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.radar-submit .radar-btn {
+    width: 100%;
+}
+
+/* KPIS */
+.radar-kpis {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(180px, 1fr));
+    gap: 18px;
+    margin-bottom: 26px;
+}
+
+.radar-kpi {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.07);
+    border-radius: 18px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.radar-kpi-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.radar-kpi span {
+    display: block;
+    font-size: 12px;
+    font-weight: 900;
+    color: #475569;
+    margin-bottom: 5px;
+}
+
+.radar-kpi strong {
+    font-size: 21px;
+    font-weight: 900;
+    color: #0f172a;
+}
+
+.radar-kpi.warning {
+    border-left: 4px solid #f59e0b;
+}
+
+.radar-kpi.warning .radar-kpi-icon {
+    background: #fef3c7;
+}
+
+.radar-kpi.danger {
+    border-left: 4px solid #ef4444;
+}
+
+.radar-kpi.danger .radar-kpi-icon {
+    background: #fee2e2;
+}
+
+.radar-kpi.primary {
+    border-left: 4px solid #2563eb;
+}
+
+.radar-kpi.primary .radar-kpi-icon {
+    background: #dbeafe;
+}
+
+.radar-kpi.purple {
+    border-left: 4px solid #a855f7;
+}
+
+.radar-kpi.purple .radar-kpi-icon {
+    background: #f3e8ff;
+}
+
+.radar-kpi.dark {
+    border-left: 4px solid #334155;
+}
+
+.radar-kpi.dark .radar-kpi-icon {
+    background: #e2e8f0;
+}
+
+.radar-kpi.success {
+    border-left: 4px solid #22c55e;
+}
+
+.radar-kpi.success .radar-kpi-icon {
+    background: #dcfce7;
+}
+
+/* KANBAN */
+.radar-kanban-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(230px, 1fr));
+    gap: 16px;
+}
+
+.radar-coluna {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid #dbe7f5;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+    min-width: 0;
+}
+
+.radar-coluna-header {
+    color: #ffffff;
+    padding: 16px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.radar-coluna-header strong {
+    font-size: 15px;
+    font-weight: 900;
+}
+
+.radar-coluna-header span {
+    min-width: 26px;
+    height: 26px;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.radar-coluna-header.danger {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+}
+
+.radar-coluna-header.warning {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+}
+
+.radar-coluna-header.primary {
+    background: linear-gradient(135deg, #0f62fe, #2563eb);
+}
+
+.radar-coluna-header.dark {
+    background: linear-gradient(135deg, #0f172a, #334155);
+}
+
+.radar-coluna-header.success {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+}
+
+.radar-coluna-header.cyan {
+    background: linear-gradient(135deg, #0891b2, #06b6d4);
+}
+
+.radar-coluna-body {
+    padding: 16px;
+    min-height: 360px;
+}
+
+/* CARD MENOR E MAIS MODERNO */
+.radar-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 16px;
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
+    margin-bottom: 14px;
+}
+
+.radar-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.radar-card-title strong {
+    display: block;
+    font-size: 15px;
+    font-weight: 900;
+    color: #0f172a;
+    line-height: 1.25;
+}
+
+.radar-card-title small {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.radar-menu-btn {
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #334155;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.radar-card-status {
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 900;
+    color: #92400e;
+    background: #fef3c7;
+    padding: 6px 10px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+}
+
+.radar-card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.radar-info-box {
+    background: #f8fafc;
+    border: 1px solid #edf2f7;
+    border-radius: 12px;
+    padding: 11px;
+}
+
+.radar-info-box span {
+    display: block;
+    font-size: 11px;
+    font-weight: 900;
+    color: #64748b;
+    margin-bottom: 4px;
+}
+
+.radar-info-box strong {
+    font-size: 13px;
+    font-weight: 900;
+    color: #0f172a;
+}
+
+.radar-card-obs {
+    margin-top: 12px;
+    background: #f1f5f9;
+    border-left: 3px solid #2563eb;
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 12px;
+    color: #475569;
+}
+
+.radar-coluna-vazia {
+    border: 1px dashed #cbd5e1;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 16px;
+    color: #64748b;
+    font-weight: 800;
+    text-align: center;
+    padding: 28px 12px;
+}
+
+/* DROPDOWN */
+.radar-card .dropdown-menu {
+    border: 1px solid #dbe7f5;
+    border-radius: 14px;
+    box-shadow: 0 18px 38px rgba(15, 23, 42, 0.18);
+    padding: 8px;
+}
+
+.radar-card .dropdown-item {
+    font-size: 13px;
+    font-weight: 800;
+    border-radius: 10px;
+    padding: 9px 12px;
+}
+
+.radar-card .dropdown-item:hover {
+    background: #eff6ff;
+}
+
+/* RESPONSIVO */
+@media (max-width: 1600px) {
+    .radar-kanban-grid {
+        grid-template-columns: repeat(3, minmax(260px, 1fr));
+    }
+
+    .radar-kpis {
+        grid-template-columns: repeat(3, minmax(180px, 1fr));
+    }
+}
+
+@media (max-width: 1100px) {
+    .radar-filtros-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .radar-busca {
+        grid-column: span 2;
+    }
+
+    .radar-submit {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 780px) {
+    .radar-topo {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 22px;
+    }
+
+    .radar-topo-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .radar-filtros-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .radar-busca,
+    .radar-submit {
+        grid-column: span 1;
+    }
+
+    .radar-kpis {
+        grid-template-columns: 1fr;
+    }
+
+    .radar-kanban-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .radar-coluna-body {
+        min-height: auto;
+    }
+}
