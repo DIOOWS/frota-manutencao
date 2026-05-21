@@ -5,26 +5,7 @@
 
 <div class="gestao-page">
 
-  <div class="gestao-header">
-    <div>
-      <h2>Gestão Financeira</h2>
-      <p>Fechamento de {{ "%02d"|format(mes) }}/{{ ano }}</p>
-    </div>
 
-    <div class="d-flex gap-2 flex-wrap">
-      <a href="/gestao/importacoes/?mes={{ mes }}&ano={{ ano }}" class="btn btn-primary">
-        Importações
-      </a>
-
-      <a href="/gestao/fechamento?mes={{ mes }}&ano={{ ano }}" class="btn btn-secondary">
-        Fechamento
-      </a>
-
-      <a href="/gestao/lancamentos?mes={{ mes }}&ano={{ ano }}" class="btn btn-dark">
-        Lançamentos
-      </a>
-    </div>
-  </div>
 
   <form method="GET" class="gestao-filtro">
     <input
