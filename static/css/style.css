@@ -12429,3 +12429,327 @@ body {
   }
 }
 
+
+
+
+/* =========================================================
+   FECHAMENTO MENSAL - PADRÃO EASY CONTROL
+========================================================= */
+
+.fechamento-page .gestao-header,
+.lancamentos-page .gestao-header {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 20px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+.fechamento-page .gestao-header h2,
+.lancamentos-page .gestao-header h2 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 900;
+  color: #020024;
+  letter-spacing: -0.6px;
+}
+
+.fechamento-page .gestao-header p,
+.lancamentos-page .gestao-header p {
+  margin: 6px 0 0;
+  color: #53627a;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.lancamentos-page .gestao-header .btn-success {
+  height: 40px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #064e3b, #10b981);
+  font-weight: 900;
+  padding: 0 18px;
+}
+
+/* Filtro fechamento */
+.fechamento-filtro {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 18px;
+  padding: 16px 18px;
+  margin-bottom: 22px !important;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.fechamento-filtro-info {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.fechamento-filtro-info strong {
+  font-size: 18px;
+  font-weight: 900;
+  color: #020024;
+}
+
+.fechamento-filtro-info small {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.fechamento-filtro .form-control {
+  width: 130px;
+  max-width: 130px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #020024;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.fechamento-filtro .btn-primary {
+  height: 40px;
+  min-width: 160px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+  box-shadow: 0 8px 16px rgba(9, 9, 121, 0.18);
+}
+
+/* Alertas */
+.fechamento-alerta {
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-weight: 700;
+}
+
+/* Excluir fechamento */
+.fechamento-excluir-form {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 18px;
+}
+
+.btn-excluir-fechamento {
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid #fecaca;
+  background: #fff7f7;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 0 18px;
+  box-shadow: 0 8px 18px rgba(185, 28, 28, 0.08);
+}
+
+.btn-excluir-fechamento:hover {
+  background: linear-gradient(135deg, #7f1d1d, #ef4444);
+  border-color: #ef4444;
+  color: #ffffff;
+}
+
+/* Card saldo inicial */
+.fechamento-card {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 20px;
+  overflow: hidden;
+  padding: 0 !important;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+}
+
+.fechamento-card-header {
+  padding: 18px 22px;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+}
+
+.fechamento-card-header h5 {
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.fechamento-card-header small {
+  display: block;
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.fechamento-card-body {
+  padding: 18px;
+}
+
+.fechamento-card-body .form-control {
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-weight: 700;
+}
+
+/* KPIs fechamento */
+.fechamento-kpis {
+  margin-top: 18px;
+}
+
+/* Ações */
+.fechamento-acoes {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.btn-salvar-fechamento {
+  height: 42px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #064e3b, #10b981);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 900;
+  padding: 0 22px;
+  box-shadow: 0 8px 18px rgba(16, 185, 129, 0.18);
+}
+
+.btn-salvar-fechamento:hover {
+  filter: brightness(1.07);
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   LANÇAMENTOS FINANCEIROS - PADRÃO EASY CONTROL
+========================================================= */
+
+.lancamentos-page .gestao-filtros-lancamentos {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  display: grid;
+  grid-template-columns: 90px 110px 150px 160px 1fr 110px 110px;
+  gap: 10px;
+  align-items: center;
+}
+
+.lancamentos-page .gestao-filtros-lancamentos .form-control {
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.lancamentos-page .gestao-filtros-lancamentos .btn {
+  height: 38px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.lancamentos-page .gestao-filtros-lancamentos .btn-primary {
+  border: none;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+}
+
+.lancamentos-page .gestao-filtros-lancamentos .btn-secondary {
+  border: none;
+  background: #64748b;
+}
+
+.lancamentos-card {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 20px;
+  overflow: hidden;
+  padding: 0 !important;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+}
+
+.lancamentos-card-header {
+  padding: 18px 22px;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+}
+
+.lancamentos-card-header h5 {
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.lancamentos-card-header small {
+  display: block;
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.lancamentos-table-wrap table {
+  margin-bottom: 0;
+}
+
+.lancamentos-table-wrap thead th {
+  background: #ffffff;
+  color: #020024;
+  font-size: 12px;
+  font-weight: 900;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.lancamentos-table-wrap tbody td {
+  font-size: 12px;
+  padding: 10px 8px;
+}
+
+@media (max-width: 1100px) {
+  .lancamentos-page .gestao-filtros-lancamentos {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .fechamento-filtro .form-control,
+  .fechamento-filtro .btn-primary {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .fechamento-excluir-form {
+    justify-content: stretch;
+  }
+
+  .btn-excluir-fechamento,
+  .btn-salvar-fechamento {
+    width: 100%;
+  }
+
+  .lancamentos-page .gestao-filtros-lancamentos {
+    grid-template-columns: 1fr;
+  }
+}
+

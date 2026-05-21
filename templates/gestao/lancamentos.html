@@ -3,19 +3,15 @@
 
 {% block content %}
 
-<div class="gestao-page">
+<div class="gestao-page lancamentos-page">
 
-  <div class="gestao-header">
+  <div class="gestao-header lancamentos-header">
     <div>
       <h2>Lançamentos Financeiros</h2>
       <p>Controle de receitas, despesas, contas a pagar e contas a receber</p>
     </div>
 
     <div class="d-flex gap-2">
-      <a href="/gestao/dashboard" class="btn btn-dark">
-        Dashboard
-      </a>
-
       <a href="/gestao/lancamentos/novo" class="btn btn-success">
         Novo lançamento
       </a>
@@ -69,11 +65,14 @@
 
   </form>
 
-  <div class="gestao-card mt-3">
+  <div class="gestao-card mt-3 lancamentos-card">
 
-    <h5>Lista de Lançamentos</h5>
+    <div class="lancamentos-card-header">
+      <h5>Lista de Lançamentos</h5>
+      <small>Registros manuais cadastrados no financeiro</small>
+    </div>
 
-    <div class="table-responsive">
+    <div class="table-responsive lancamentos-table-wrap">
       <table class="table table-striped align-middle mb-0">
 
         <thead>

@@ -1128,6 +1128,40 @@ def fechamento():
     )
 
 
+
+@gestao_bp.route("/fechamento/excluir", methods=["POST"])
+@gestao_required
+def excluir_fechamento():
+
+    mes = request.form.get("mes", type=int)
+    ano = request.form.get("ano", type=int)
+
+    if not mes or not ano:
+        flash("Informe mês e ano válidos para excluir o fechamento.", "danger")
+        return redirect("/gestao/fechamento")
+
+    fechamento_existente = FechamentoMensal.query.filter_by(
+        mes=mes,
+        ano=ano
+    ).first()
+
+    if not fechamento_existente:
+        flash("Nenhum fechamento encontrado para excluir neste mês.", "warning")
+        return redirect(f"/gestao/fechamento?mes={mes}&ano={ano}")
+
+    try:
+        db.session.delete(fechamento_existente)
+        db.session.commit()
+
+        flash("Fechamento excluído com sucesso!", "success")
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao excluir fechamento: {str(e)}", "danger")
+
+    return redirect(f"/gestao/fechamento?mes={mes}&ano={ano}")
+
+
 # =========================================================
 # LANÇAMENTOS MANUAIS
 # =========================================================
