@@ -13195,3 +13195,1460 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+
+
+/* =========================================================
+   RADAR FINANCEIRO - CARDS MAIS BAIXOS E COLORIDOS POR COLUNA
+========================================================= */
+
+/* Card base mais compacto */
+.radar-card-compacto {
+  padding: 8px 9px !important;
+  border-radius: 12px;
+  min-height: auto !important;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+  border: 1px solid transparent;
+}
+
+/* Reduz espaços internos */
+.radar-card-compacto .radar-card-header {
+  gap: 6px;
+}
+
+.radar-card-compacto .radar-card-title strong {
+  font-size: 12px;
+  line-height: 1.15;
+}
+
+.radar-card-compacto .radar-card-title small {
+  font-size: 10px;
+  line-height: 1.1;
+}
+
+.radar-card-compacto .radar-card-mini-info {
+  margin-top: 4px;
+}
+
+.radar-card-compacto .radar-card-mini-info span {
+  font-size: 12px;
+}
+
+.radar-card-compacto .radar-card-mini-info small {
+  font-size: 10px;
+}
+
+.radar-card-compacto .radar-card-status {
+  margin-top: 6px;
+  padding: 3px 7px;
+  font-size: 9px;
+}
+
+.radar-card-compacto .radar-menu-btn {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  font-size: 15px;
+}
+
+.radar-card-compacto .radar-card-detalhes {
+  margin-top: 7px;
+  padding-top: 7px;
+}
+
+.radar-card-compacto .radar-info-box {
+  padding: 6px;
+}
+
+.radar-card-compacto .radar-info-box span {
+  font-size: 9px;
+}
+
+.radar-card-compacto .radar-info-box strong {
+  font-size: 10px;
+}
+
+.radar-card-compacto .radar-card-obs {
+  margin-top: 6px;
+  font-size: 10px;
+  max-height: 52px;
+}
+
+/* =========================================================
+   CORES DOS CARDS CONFORME A COLUNA
+========================================================= */
+
+/* Atrasadas - Vermelho */
+.radar-coluna:has(.radar-coluna-header.danger) .radar-card {
+  background: linear-gradient(135deg, #fff5f5, #ffffff);
+  border-color: #fecaca;
+  border-left: 5px solid #dc2626;
+}
+
+.radar-coluna:has(.radar-coluna-header.danger) .radar-card-status {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Vence hoje - Amarelo/Laranja */
+.radar-coluna:has(.radar-coluna-header.warning) .radar-card {
+  background: linear-gradient(135deg, #fffbeb, #ffffff);
+  border-color: #fde68a;
+  border-left: 5px solid #f59e0b;
+}
+
+.radar-coluna:has(.radar-coluna-header.warning) .radar-card-status {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* Próximos 7 dias - Azul */
+.radar-coluna:has(.radar-coluna-header.primary) .radar-card {
+  background: linear-gradient(135deg, #eff6ff, #ffffff);
+  border-color: #bfdbfe;
+  border-left: 5px solid #2563eb;
+}
+
+.radar-coluna:has(.radar-coluna-header.primary) .radar-card-status {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+/* Pendentes - Azul escuro */
+.radar-coluna:has(.radar-coluna-header.dark) .radar-card {
+  background: linear-gradient(135deg, #f8fafc, #ffffff);
+  border-color: #cbd5e1;
+  border-left: 5px solid #020024;
+}
+
+.radar-coluna:has(.radar-coluna-header.dark) .radar-card-status {
+  background: #e2e8f0;
+  color: #020024;
+}
+
+/* Pagas - Verde */
+.radar-coluna:has(.radar-coluna-header.success) .radar-card {
+  background: linear-gradient(135deg, #f0fdf4, #ffffff);
+  border-color: #bbf7d0;
+  border-left: 5px solid #16a34a;
+}
+
+.radar-coluna:has(.radar-coluna-header.success) .radar-card-status {
+  background: #dcfce7;
+  color: #166534;
+}
+
+/* Hover mais bonito */
+.radar-card-compacto:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
+}
+
+/* Evita que o botão de abrir detalhe fique com fundo estranho */
+.radar-card-resumo {
+  background: transparent !important;
+}
+
+/* Ajusta checkbox da coluna pagas */
+.radar-card-check input {
+  width: 14px;
+  height: 14px;
+}
+
+
+
+/* =========================================================
+   RADAR FINANCEIRO - CARD TODO COLORIDO PELA COLUNA
+========================================================= */
+
+/* Base compacta */
+.radar-card-compacto {
+  padding: 8px 9px !important;
+  border-radius: 12px;
+  min-height: auto !important;
+  border: none !important;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.10);
+  overflow: hidden;
+}
+
+/* Textos dentro do card */
+.radar-card-compacto .radar-card-title strong,
+.radar-card-compacto .radar-card-mini-info span,
+.radar-card-compacto .radar-info-box strong {
+  color: #ffffff !important;
+}
+
+.radar-card-compacto .radar-card-title small,
+.radar-card-compacto .radar-card-mini-info small,
+.radar-card-compacto .radar-info-box span,
+.radar-card-compacto .radar-card-obs {
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
+/* Botão de abrir detalhes */
+.radar-card-resumo {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+/* Status dentro do card */
+.radar-card-compacto .radar-card-status {
+  margin-top: 6px;
+  padding: 3px 8px;
+  font-size: 9px;
+  font-weight: 900;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+}
+
+/* Botão menu */
+.radar-card-compacto .radar-menu-btn {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  font-size: 15px;
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+/* Detalhes */
+.radar-card-compacto .radar-card-detalhes {
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(255, 255, 255, 0.22) !important;
+}
+
+.radar-card-compacto .radar-info-box {
+  padding: 6px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+}
+
+/* Checkbox da coluna pagas */
+.radar-card-check input {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: #ffffff;
+}
+
+/* =========================================================
+   CORES DO BACKGROUND DO CARD INTEIRO
+========================================================= */
+
+/* ATRASADAS - vermelho */
+.radar-coluna:has(.radar-coluna-header.danger) .radar-card {
+  background: linear-gradient(135deg, #7f1d1d, #dc2626) !important;
+}
+
+/* VENCE HOJE - laranja */
+.radar-coluna:has(.radar-coluna-header.warning) .radar-card {
+  background: linear-gradient(135deg, #92400e, #f59e0b) !important;
+}
+
+/* PRÓXIMOS 7 DIAS - azul */
+.radar-coluna:has(.radar-coluna-header.primary) .radar-card {
+  background: linear-gradient(135deg, #1e3a8a, #2563eb) !important;
+}
+
+/* PENDENTES - azul escuro */
+.radar-coluna:has(.radar-coluna-header.dark) .radar-card {
+  background: linear-gradient(135deg, #020024, #090979) !important;
+}
+
+/* PAGAS - verde */
+.radar-coluna:has(.radar-coluna-header.success) .radar-card {
+  background: linear-gradient(135deg, #064e3b, #16a34a) !important;
+}
+
+/* Hover */
+.radar-card-compacto:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.04);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.18);
+}
+
+/* Observação */
+.radar-card-compacto .radar-card-obs {
+  margin-top: 6px;
+  font-size: 10px;
+  max-height: 52px;
+  overflow-y: auto;
+}
+
+/* Ajustes de altura menor */
+.radar-card-compacto .radar-card-header {
+  gap: 6px;
+}
+
+.radar-card-compacto .radar-card-title strong {
+  font-size: 12px;
+  line-height: 1.15;
+}
+
+.radar-card-compacto .radar-card-title small {
+  font-size: 10px;
+  line-height: 1.1;
+}
+
+.radar-card-compacto .radar-card-mini-info {
+  margin-top: 4px;
+}
+
+.radar-card-compacto .radar-card-mini-info span {
+  font-size: 12px;
+}
+
+.radar-card-compacto .radar-card-mini-info small {
+  font-size: 10px;
+}
+
+
+
+/* =========================================================
+   RADAR - AJUSTE FINO DOS CARDS COLORIDOS E MENU
+========================================================= */
+
+/* Card mais baixo e mais alinhado */
+.radar-card-compacto {
+  padding: 9px 10px !important;
+  border-radius: 13px !important;
+  min-height: 118px !important;
+  max-height: none !important;
+  overflow: visible !important;
+  position: relative;
+}
+
+/* Header do card */
+.radar-card-compacto .radar-card-header {
+  display: grid !important;
+  grid-template-columns: auto 1fr auto;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* Checkbox menor e alinhado */
+.radar-card-check {
+  margin-top: 2px !important;
+}
+
+.radar-card-check input {
+  width: 15px !important;
+  height: 15px !important;
+}
+
+/* Área clicável do resumo */
+.radar-card-resumo {
+  min-width: 0;
+  width: 100%;
+}
+
+/* Título e fornecedor */
+.radar-card-title strong {
+  display: block;
+  font-size: 13px !important;
+  line-height: 1.15 !important;
+  font-weight: 900;
+  color: #ffffff !important;
+  max-width: 170px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.radar-card-title small {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px !important;
+  line-height: 1.1 !important;
+  color: rgba(255,255,255,0.82) !important;
+  max-width: 170px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Valor e vencimento */
+.radar-card-mini-info {
+  margin-top: 7px !important;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start !important;
+  gap: 2px !important;
+}
+
+.radar-card-mini-info span {
+  font-size: 13px !important;
+  font-weight: 950 !important;
+  color: #ffffff !important;
+}
+
+.radar-card-mini-info small {
+  font-size: 10px !important;
+  color: rgba(255,255,255,0.78) !important;
+}
+
+/* Status menor */
+.radar-card-status {
+  margin-top: 8px !important;
+  padding: 4px 8px !important;
+  font-size: 9px !important;
+  line-height: 1 !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,0.20) !important;
+  color: #ffffff !important;
+  width: fit-content;
+}
+
+/* Botão de menu */
+.radar-menu-btn {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  border-radius: 9px !important;
+  background: rgba(255,255,255,0.18) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255,255,255,0.18) !important;
+  font-size: 17px !important;
+  line-height: 1 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radar-menu-btn:hover {
+  background: rgba(255,255,255,0.30) !important;
+}
+
+/* Dropdown mais bonito e menor */
+.radar-card .dropdown-menu {
+  min-width: 138px !important;
+  padding: 6px !important;
+  border-radius: 12px !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 14px 30px rgba(15,23,42,0.22) !important;
+  overflow: hidden;
+}
+
+/* Itens do menu */
+.radar-card .dropdown-item {
+  border-radius: 8px !important;
+  padding: 8px 10px !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  color: #1f2937 !important;
+}
+
+.radar-card .dropdown-item:hover {
+  background: #eff6ff !important;
+  color: #0052e0 !important;
+}
+
+.radar-card .dropdown-item.text-danger {
+  color: #dc2626 !important;
+}
+
+.radar-card .dropdown-item.text-danger:hover {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
+/* Forms dentro do dropdown sem margem esquisita */
+.radar-card .dropdown-menu form {
+  margin: 0 !important;
+}
+
+/* Detalhes quando abrir o card */
+.radar-card-detalhes {
+  margin-top: 9px !important;
+  padding-top: 9px !important;
+  border-top: 1px solid rgba(255,255,255,0.22) !important;
+}
+
+.radar-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 7px !important;
+}
+
+.radar-info-box {
+  padding: 7px !important;
+  border-radius: 9px !important;
+  background: rgba(255,255,255,0.13) !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+}
+
+.radar-info-box span {
+  font-size: 9px !important;
+  color: rgba(255,255,255,0.75) !important;
+}
+
+.radar-info-box strong {
+  font-size: 10px !important;
+  color: #ffffff !important;
+}
+
+/* Observação */
+.radar-card-obs {
+  margin-top: 7px !important;
+  padding: 7px !important;
+  border-radius: 9px !important;
+  background: rgba(255,255,255,0.13) !important;
+  color: rgba(255,255,255,0.84) !important;
+  font-size: 10px !important;
+  max-height: 54px !important;
+  overflow-y: auto;
+}
+
+/* Garante que a coluna não corte o dropdown */
+.radar-coluna,
+.radar-coluna-body {
+  overflow: visible !important;
+}
+
+/* Mas mantém rolagem geral se tiver muitos cards */
+.radar-kanban-grid {
+  overflow: visible !important;
+}
+
+
+
+/* =========================================================
+   RADAR FINANCEIRO - AJUSTE FINAL CARDS FINOS + MENU CORRIGIDO
+========================================================= */
+
+.radar-kanban-grid {
+  grid-template-columns: repeat(5, minmax(230px, 1fr)) !important;
+  gap: 14px !important;
+  overflow: visible !important;
+  align-items: flex-start;
+}
+
+.radar-coluna {
+  min-width: 230px !important;
+  overflow: visible !important;
+  position: relative;
+}
+
+.radar-coluna-body {
+  padding: 10px !important;
+  gap: 8px !important;
+  overflow: visible !important;
+  position: relative;
+}
+
+/* Card bem mais fino */
+.radar-card-slim,
+.radar-card-compacto {
+  min-height: 86px !important;
+  padding: 8px 10px !important;
+  border-radius: 13px !important;
+  border: none !important;
+  overflow: visible !important;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 7px 16px rgba(15, 23, 42, 0.14) !important;
+}
+
+.radar-card-slim:hover,
+.radar-card-compacto:hover {
+  z-index: 100;
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+}
+
+/* Header interno do card */
+.radar-card-slim .radar-card-header {
+  display: grid !important;
+  grid-template-columns: auto 1fr auto;
+  gap: 7px !important;
+  align-items: flex-start !important;
+}
+
+.radar-card-slim .radar-card-resumo {
+  width: 100%;
+  min-width: 0;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  text-align: left;
+}
+
+/* Título menor */
+.radar-card-slim .radar-card-title strong {
+  display: block;
+  font-size: 12px !important;
+  line-height: 1.08 !important;
+  font-weight: 950 !important;
+  color: #ffffff !important;
+  max-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.radar-card-slim .radar-card-title small {
+  display: block;
+  margin-top: 1px;
+  font-size: 9px !important;
+  line-height: 1 !important;
+  color: rgba(255, 255, 255, 0.82) !important;
+  max-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Valor/data menores */
+.radar-card-slim .radar-card-mini-info {
+  margin-top: 5px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 1px !important;
+  align-items: flex-start !important;
+}
+
+.radar-card-slim .radar-card-mini-info span {
+  font-size: 12px !important;
+  line-height: 1.05;
+  font-weight: 950 !important;
+  color: #ffffff !important;
+}
+
+.radar-card-slim .radar-card-mini-info small {
+  font-size: 9px !important;
+  line-height: 1;
+  font-weight: 800 !important;
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
+/* Status menor */
+.radar-card-slim .radar-card-status {
+  margin-top: 6px !important;
+  padding: 3px 7px !important;
+  font-size: 8.5px !important;
+  line-height: 1 !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.20) !important;
+  color: #ffffff !important;
+  width: fit-content;
+  font-weight: 950 !important;
+}
+
+/* Checkbox */
+.radar-card-check {
+  margin-top: 0 !important;
+}
+
+.radar-card-check input {
+  width: 13px !important;
+  height: 13px !important;
+  cursor: pointer;
+  accent-color: #ffffff;
+}
+
+/* Menu botão */
+.radar-dropdown {
+  position: relative !important;
+  z-index: 3000 !important;
+}
+
+.radar-menu-btn {
+  width: 25px !important;
+  height: 25px !important;
+  min-width: 25px !important;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.20) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  font-size: 16px !important;
+  line-height: 1 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radar-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.32) !important;
+}
+
+/* Dropdown corrigido */
+.radar-dropdown-menu,
+.radar-card .dropdown-menu {
+  min-width: 118px !important;
+  max-width: 130px !important;
+  padding: 5px !important;
+  border-radius: 11px !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.28) !important;
+  overflow: hidden !important;
+  z-index: 99999 !important;
+}
+
+.radar-card .dropdown-item {
+  border-radius: 8px !important;
+  padding: 7px 9px !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  color: #1f2937 !important;
+}
+
+.radar-card .dropdown-item:hover {
+  background: #eff6ff !important;
+  color: #0052e0 !important;
+}
+
+.radar-card .dropdown-item.text-danger {
+  color: #dc2626 !important;
+}
+
+.radar-card .dropdown-item.text-danger:hover {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
+.radar-card .dropdown-menu form {
+  margin: 0 !important;
+}
+
+/* Detalhes do card */
+.radar-card-slim .radar-card-detalhes {
+  margin-top: 7px !important;
+  padding-top: 7px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.22) !important;
+}
+
+.radar-card-slim .radar-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+}
+
+.radar-card-slim .radar-info-box {
+  padding: 6px !important;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.13) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+}
+
+.radar-card-slim .radar-info-box span {
+  font-size: 8.5px !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.radar-card-slim .radar-info-box strong {
+  font-size: 9.5px !important;
+  color: #ffffff !important;
+}
+
+.radar-card-slim .radar-card-obs {
+  margin-top: 6px !important;
+  padding: 6px !important;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.13) !important;
+  color: rgba(255, 255, 255, 0.84) !important;
+  font-size: 9.5px !important;
+  max-height: 48px !important;
+  overflow-y: auto;
+}
+
+/* Cores totais dos cards por coluna */
+
+/* Pendentes */
+.radar-coluna:has(.radar-coluna-header.dark) .radar-card {
+  background: linear-gradient(135deg, #020024, #090979) !important;
+}
+
+/* Vence hoje */
+.radar-coluna:has(.radar-coluna-header.warning) .radar-card {
+  background: linear-gradient(135deg, #92400e, #f59e0b) !important;
+}
+
+/* Próximos 7 dias */
+.radar-coluna:has(.radar-coluna-header.primary) .radar-card {
+  background: linear-gradient(135deg, #1e3a8a, #2563eb) !important;
+}
+
+/* Atrasadas */
+.radar-coluna:has(.radar-coluna-header.danger) .radar-card {
+  background: linear-gradient(135deg, #7f1d1d, #dc2626) !important;
+}
+
+/* Pagas */
+.radar-coluna:has(.radar-coluna-header.success) .radar-card {
+  background: linear-gradient(135deg, #064e3b, #16a34a) !important;
+}
+
+/* Lote pagas menor */
+.radar-pagas-lote {
+  padding: 8px !important;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.radar-pagas-lote-top {
+  display: grid;
+  grid-template-columns: 1fr 58px 72px;
+  gap: 5px;
+  align-items: center;
+}
+
+.radar-check-all {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 900;
+  color: #334155;
+  margin: 0;
+}
+
+.radar-pagas-lote .form-control {
+  height: 28px !important;
+  border-radius: 8px !important;
+  font-size: 10px !important;
+  font-weight: 800;
+  padding: 3px 5px !important;
+}
+
+.radar-btn-lote {
+  height: 30px !important;
+  width: 100%;
+  font-size: 10px !important;
+  font-weight: 900;
+  padding: 0 6px !important;
+}
+
+@media (max-width: 1400px) {
+  .radar-kanban-grid {
+    grid-template-columns: repeat(3, minmax(230px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 992px) {
+  .radar-kanban-grid {
+    grid-template-columns: repeat(2, minmax(230px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .radar-kanban-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .radar-card-slim .radar-card-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .radar-pagas-lote-top {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+
+
+/* =========================================================
+   RADAR FINANCEIRO - AJUSTE FINAL FINO
+   Cards mais baixos + menu no canto direito + KPIs menores
+========================================================= */
+
+/* =========================
+   KPIS MAIS BAIXOS E ALINHADOS
+========================= */
+
+.radar-kpis {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(170px, 1fr)) !important;
+  gap: 12px !important;
+  margin-bottom: 18px !important;
+}
+
+.radar-kpi {
+  min-height: 78px !important;
+  padding: 14px 16px !important;
+  border-radius: 18px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.radar-kpi-icon {
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  font-size: 18px !important;
+}
+
+.radar-kpi span {
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  margin-bottom: 6px !important;
+}
+
+.radar-kpi strong {
+  font-size: 22px !important;
+  line-height: 1 !important;
+  font-weight: 950 !important;
+}
+
+/* =========================
+   KANBAN MAIS COMPACTO
+========================= */
+
+.radar-kanban-grid {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(220px, 1fr)) !important;
+  gap: 12px !important;
+  align-items: flex-start !important;
+  overflow: visible !important;
+}
+
+.radar-coluna {
+  min-width: 220px !important;
+  border-radius: 14px !important;
+  overflow: visible !important;
+  position: relative !important;
+}
+
+.radar-coluna-header {
+  height: 46px !important;
+  min-height: 46px !important;
+  padding: 0 14px !important;
+  border-radius: 14px 14px 0 0 !important;
+}
+
+.radar-coluna-header strong {
+  font-size: 14px !important;
+  font-weight: 950 !important;
+}
+
+.radar-coluna-header span {
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  font-size: 13px !important;
+}
+
+.radar-coluna-body {
+  padding: 8px !important;
+  gap: 7px !important;
+  overflow: visible !important;
+  position: relative !important;
+}
+
+/* =========================
+   CARD BEM MAIS FINO
+========================= */
+
+.radar-card,
+.radar-card-slim,
+.radar-card-compacto {
+  min-height: 74px !important;
+  padding: 8px 10px !important;
+  border-radius: 12px !important;
+  border: none !important;
+  overflow: visible !important;
+  position: relative !important;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.14) !important;
+}
+
+/* Quando abrir detalhes, deixa crescer normalmente */
+.radar-card:has(.collapse.show),
+.radar-card-slim:has(.collapse.show),
+.radar-card-compacto:has(.collapse.show) {
+  min-height: auto !important;
+}
+
+/* Header do card com menu fixado no canto direito */
+.radar-card .radar-card-header,
+.radar-card-slim .radar-card-header,
+.radar-card-compacto .radar-card-header {
+  display: grid !important;
+  grid-template-columns: auto 1fr 28px !important;
+  align-items: start !important;
+  gap: 6px !important;
+  position: relative !important;
+}
+
+/* Se não tiver checkbox, mantém resumo ocupando o espaço */
+.radar-card-header > .radar-card-resumo:first-child {
+  grid-column: 1 / 3 !important;
+}
+
+/* Checkbox menor */
+.radar-card-check {
+  margin: 0 !important;
+  padding-top: 2px !important;
+}
+
+.radar-card-check input {
+  width: 13px !important;
+  height: 13px !important;
+  cursor: pointer;
+  accent-color: #ffffff;
+}
+
+/* Área clicável */
+.radar-card-resumo {
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  text-align: left !important;
+}
+
+/* Título mais fino */
+.radar-card-title strong {
+  display: block !important;
+  font-size: 12px !important;
+  line-height: 1.05 !important;
+  font-weight: 950 !important;
+  color: #ffffff !important;
+  max-width: 150px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.radar-card-title small {
+  display: block !important;
+  margin-top: 1px !important;
+  font-size: 9px !important;
+  line-height: 1 !important;
+  color: rgba(255, 255, 255, 0.80) !important;
+  max-width: 150px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Valor e data mais próximos */
+.radar-card-mini-info {
+  margin-top: 5px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1px !important;
+  align-items: flex-start !important;
+}
+
+.radar-card-mini-info span {
+  font-size: 12px !important;
+  line-height: 1 !important;
+  font-weight: 950 !important;
+  color: #ffffff !important;
+}
+
+.radar-card-mini-info small {
+  font-size: 9px !important;
+  line-height: 1 !important;
+  font-weight: 800 !important;
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
+/* Status mais baixo */
+.radar-card-status {
+  margin-top: 6px !important;
+  padding: 3px 7px !important;
+  font-size: 8px !important;
+  line-height: 1 !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.20) !important;
+  color: #ffffff !important;
+  width: fit-content !important;
+  font-weight: 950 !important;
+}
+
+/* =========================
+   3 BOLINHAS NO CANTO DIREITO
+========================= */
+
+.radar-dropdown {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+  justify-self: end !important;
+  align-self: start !important;
+  position: relative !important;
+  z-index: 9999 !important;
+}
+
+.radar-menu-btn {
+  width: 27px !important;
+  height: 27px !important;
+  min-width: 27px !important;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.20) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  font-size: 16px !important;
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+}
+
+.radar-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.32) !important;
+}
+
+/* Dropdown menor */
+.radar-dropdown-menu,
+.radar-card .dropdown-menu {
+  min-width: 112px !important;
+  max-width: 122px !important;
+  padding: 5px !important;
+  border-radius: 10px !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.26) !important;
+  overflow: hidden !important;
+  z-index: 99999 !important;
+}
+
+.radar-card .dropdown-item {
+  border-radius: 7px !important;
+  padding: 7px 8px !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  color: #1f2937 !important;
+}
+
+.radar-card .dropdown-item:hover {
+  background: #eff6ff !important;
+  color: #0052e0 !important;
+}
+
+.radar-card .dropdown-item.text-danger {
+  color: #dc2626 !important;
+}
+
+.radar-card .dropdown-item.text-danger:hover {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
+.radar-card .dropdown-menu form {
+  margin: 0 !important;
+}
+
+/* =========================
+   DETALHES QUANDO ABRIR
+========================= */
+
+.radar-card-detalhes {
+  margin-top: 7px !important;
+  padding-top: 7px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.22) !important;
+}
+
+.radar-card-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+}
+
+.radar-info-box {
+  padding: 6px !important;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.13) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+}
+
+.radar-info-box span {
+  font-size: 8px !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.radar-info-box strong {
+  font-size: 9px !important;
+  color: #ffffff !important;
+}
+
+.radar-card-obs {
+  margin-top: 6px !important;
+  padding: 6px !important;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.13) !important;
+  color: rgba(255, 255, 255, 0.84) !important;
+  font-size: 9px !important;
+  max-height: 44px !important;
+  overflow-y: auto;
+}
+
+/* =========================
+   CORES DOS CARDS POR COLUNA
+========================= */
+
+/* Pendentes */
+.radar-coluna:has(.radar-coluna-header.dark) .radar-card {
+  background: linear-gradient(135deg, #020024, #090979) !important;
+}
+
+/* Vence hoje */
+.radar-coluna:has(.radar-coluna-header.warning) .radar-card {
+  background: linear-gradient(135deg, #92400e, #f59e0b) !important;
+}
+
+/* Próximos 7 dias */
+.radar-coluna:has(.radar-coluna-header.primary) .radar-card {
+  background: linear-gradient(135deg, #1e3a8a, #2563eb) !important;
+}
+
+/* Atrasadas */
+.radar-coluna:has(.radar-coluna-header.danger) .radar-card {
+  background: linear-gradient(135deg, #7f1d1d, #dc2626) !important;
+}
+
+/* Pagas */
+.radar-coluna:has(.radar-coluna-header.success) .radar-card {
+  background: linear-gradient(135deg, #064e3b, #16a34a) !important;
+}
+
+/* =========================
+   LOTE PAGAS MAIS BAIXO
+========================= */
+
+.radar-pagas-lote {
+  padding: 7px !important;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.radar-pagas-lote-top {
+  display: grid !important;
+  grid-template-columns: 1fr 54px 68px !important;
+  gap: 5px !important;
+  align-items: center !important;
+}
+
+.radar-check-all {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  color: #334155 !important;
+  margin: 0 !important;
+}
+
+.radar-pagas-lote .form-control {
+  height: 27px !important;
+  border-radius: 7px !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  padding: 3px 5px !important;
+}
+
+.radar-btn-lote {
+  height: 28px !important;
+  width: 100%;
+  font-size: 10px !important;
+  font-weight: 900;
+  padding: 0 6px !important;
+}
+
+/* =========================
+   RESPONSIVO
+========================= */
+
+@media (max-width: 1500px) {
+  .radar-kpis {
+    grid-template-columns: repeat(5, minmax(150px, 1fr)) !important;
+  }
+
+  .radar-kpi strong {
+    font-size: 19px !important;
+  }
+
+  .radar-kanban-grid {
+    grid-template-columns: repeat(5, minmax(205px, 1fr)) !important;
+  }
+
+  .radar-coluna {
+    min-width: 205px !important;
+  }
+}
+
+@media (max-width: 1200px) {
+  .radar-kpis {
+    grid-template-columns: repeat(3, minmax(170px, 1fr)) !important;
+  }
+
+  .radar-kanban-grid {
+    grid-template-columns: repeat(3, minmax(220px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .radar-kpis {
+    grid-template-columns: 1fr !important;
+  }
+
+  .radar-kanban-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .radar-card-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .radar-pagas-lote-top {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+
+
+/* =========================================================
+   RADAR - CARDS DAS CONTAS SUPER FINOS
+   Colar no final do style.css
+========================================================= */
+
+/* Card da conta mais baixo */
+.radar-card,
+.radar-card-slim,
+.radar-card-compacto {
+  min-height: 58px !important;
+  padding: 6px 8px !important;
+  border-radius: 10px !important;
+}
+
+/* Header interno mais apertado */
+.radar-card .radar-card-header,
+.radar-card-slim .radar-card-header,
+.radar-card-compacto .radar-card-header {
+  display: grid !important;
+  grid-template-columns: auto 1fr 24px !important;
+  gap: 5px !important;
+  align-items: start !important;
+}
+
+/* Se não tiver checkbox, o conteúdo usa o espaço */
+.radar-card-header > .radar-card-resumo:first-child {
+  grid-column: 1 / 3 !important;
+}
+
+/* Título bem compacto */
+.radar-card-title strong {
+  font-size: 11px !important;
+  line-height: 1 !important;
+  max-width: 145px !important;
+  margin: 0 !important;
+}
+
+.radar-card-title small {
+  font-size: 8px !important;
+  line-height: 1 !important;
+  margin-top: 0 !important;
+  max-width: 145px !important;
+}
+
+/* Valor e vencimento mais próximos */
+.radar-card-mini-info {
+  margin-top: 3px !important;
+  gap: 0 !important;
+}
+
+.radar-card-mini-info span {
+  font-size: 11px !important;
+  line-height: 1 !important;
+}
+
+.radar-card-mini-info small {
+  font-size: 8px !important;
+  line-height: 1 !important;
+}
+
+/* Status menor */
+.radar-card-status {
+  margin-top: 4px !important;
+  padding: 2px 6px !important;
+  font-size: 7.5px !important;
+  line-height: 1 !important;
+}
+
+/* Botão das três bolinhas menor e no canto direito */
+.radar-dropdown {
+  justify-self: end !important;
+  align-self: start !important;
+}
+
+.radar-menu-btn {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  border-radius: 7px !important;
+  font-size: 14px !important;
+  padding: 0 !important;
+}
+
+/* Checkbox menor */
+.radar-card-check input {
+  width: 11px !important;
+  height: 11px !important;
+}
+
+/* Espaçamento entre cards menor */
+.radar-coluna-body {
+  gap: 6px !important;
+  padding: 7px !important;
+}
+
+/* Dropdown compacto */
+.radar-card .dropdown-menu,
+.radar-dropdown-menu {
+  min-width: 105px !important;
+  max-width: 115px !important;
+  padding: 4px !important;
+  border-radius: 9px !important;
+}
+
+.radar-card .dropdown-item {
+  padding: 6px 7px !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+}
+
+/* Quando abrir detalhes, aí sim deixa crescer */
+.radar-card:has(.collapse.show),
+.radar-card-slim:has(.collapse.show),
+.radar-card-compacto:has(.collapse.show) {
+  min-height: auto !important;
+  padding: 8px !important;
+}
+
+/* Detalhes internos também compactos */
+.radar-card-detalhes {
+  margin-top: 6px !important;
+  padding-top: 6px !important;
+}
+
+.radar-card-grid {
+  gap: 5px !important;
+}
+
+.radar-info-box {
+  padding: 5px !important;
+  border-radius: 7px !important;
+}
+
+.radar-info-box span {
+  font-size: 7.5px !important;
+}
+
+.radar-info-box strong {
+  font-size: 8.5px !important;
+}
+
+.radar-card-obs {
+  margin-top: 5px !important;
+  padding: 5px !important;
+  font-size: 8.5px !important;
+  max-height: 38px !important;
+}

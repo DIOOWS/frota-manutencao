@@ -69,19 +69,11 @@
 
     <section class="radar-kpis">
 
-        <div class="radar-kpi warning">
-            <div class="radar-kpi-icon">⏰</div>
+        <div class="radar-kpi dark">
+            <div class="radar-kpi-icon">🧾</div>
             <div>
-                <span>EM ABERTO</span>
-                <strong>R$ {{ "%.2f"|format(total_aberto) }}</strong>
-            </div>
-        </div>
-
-        <div class="radar-kpi danger">
-            <div class="radar-kpi-icon">⚠️</div>
-            <div>
-                <span>ATRASADAS</span>
-                <strong>R$ {{ "%.2f"|format(total_atrasado) }}</strong>
+                <span>PENDENTES</span>
+                <strong>R$ {{ "%.2f"|format(total_pendentes) }}</strong>
             </div>
         </div>
 
@@ -101,11 +93,11 @@
             </div>
         </div>
 
-        <div class="radar-kpi dark">
-            <div class="radar-kpi-icon">🧾</div>
+        <div class="radar-kpi danger">
+            <div class="radar-kpi-icon">⚠️</div>
             <div>
-                <span>PENDENTES</span>
-                <strong>R$ {{ "%.2f"|format(total_pendentes) }}</strong>
+                <span>ATRASADAS</span>
+                <strong>R$ {{ "%.2f"|format(total_atrasado) }}</strong>
             </div>
         </div>
 
@@ -122,10 +114,10 @@
     <section class="radar-kanban-grid">
 
         {% set colunas = [
-            ("Atrasadas", atrasadas, "danger"),
+            ("Pendentes", pendentes, "dark"),
             ("Vence hoje", vence_hoje, "warning"),
             ("Próximos 7 dias", proximas, "primary"),
-            ("Pendentes", pendentes, "dark"),
+            ("Atrasadas", atrasadas, "danger"),
             ("Pagas", pagas, "success")
         ] %}
 
@@ -178,7 +170,7 @@
                     {% for item in lista %}
                         {% set c = item.conta %}
 
-                        <article class="radar-card radar-card-compacto">
+                        <article class="radar-card radar-card-compacto radar-card-slim">
 
                             <div class="radar-card-header">
 
@@ -210,14 +202,15 @@
 
                                 </button>
 
-                                <div class="dropdown">
+                                <div class="dropdown radar-dropdown">
                                     <button class="radar-menu-btn"
                                             type="button"
-                                            data-bs-toggle="dropdown">
+                                            data-bs-toggle="dropdown"
+                                            aria-expanded="false">
                                         ⋮
                                     </button>
 
-                                    <ul class="dropdown-menu dropdown-menu-end">
+                                    <ul class="dropdown-menu dropdown-menu-end radar-dropdown-menu">
 
                                         {% if c.status not in ["PAGO", "CANCELADO", "TRANSPORTADO"] %}
                                             <li>
@@ -226,15 +219,6 @@
                                                         data-bs-toggle="modal"
                                                         data-bs-target="#modalPagar{{ c.id }}">
                                                     Pagar
-                                                </button>
-                                            </li>
-
-                                            <li>
-                                                <button type="button"
-                                                        class="dropdown-item"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#modalTransportar{{ c.id }}">
-                                                    Transportar
                                                 </button>
                                             </li>
                                         {% endif %}
@@ -247,18 +231,6 @@
                                                 Editar
                                             </button>
                                         </li>
-
-                                        {% if c.status != "CANCELADO" %}
-                                            <li>
-                                                <form method="POST"
-                                                      action="/gestao/radar-financeiro/cancelar/{{ c.id }}"
-                                                      onsubmit="return confirm('Cancelar esta conta?');">
-                                                    <button class="dropdown-item" type="submit">
-                                                        Cancelar
-                                                    </button>
-                                                </form>
-                                            </li>
-                                        {% endif %}
 
                                         <li>
                                             <form method="POST"
@@ -596,66 +568,6 @@
 
                         <button class="btn btn-success">
                             Confirmar pagamento
-                        </button>
-                    </div>
-
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modalTransportar{{ c.id }}" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <form method="POST" action="/gestao/radar-financeiro/transportar/{{ c.id }}">
-
-                    <div class="modal-header">
-                        <h5 class="modal-title">Transportar conta</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-
-                    <div class="modal-body">
-                        <p class="mb-2">
-                            <strong>{{ c.descricao }}</strong>
-                        </p>
-
-                        <div class="row g-3">
-
-                            <div class="col-md-6">
-                                <label class="form-label">Nova data de vencimento</label>
-                                <input type="date"
-                                       name="nova_data_vencimento"
-                                       class="form-control">
-                                <small class="text-muted">
-                                    Se deixar vazio, o sistema joga automaticamente para o próximo mês.
-                                </small>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label">Valor</label>
-                                <input type="text"
-                                       name="valor"
-                                       value="{{ c.valor or '0.00' }}"
-                                       class="form-control">
-                            </div>
-
-                            <div class="col-md-12">
-                                <label class="form-label">Observações da nova conta</label>
-                                <textarea name="observacoes" rows="3" class="form-control">{{ c.observacoes or '' }}</textarea>
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button"
-                                class="btn btn-secondary"
-                                data-bs-dismiss="modal">
-                            Cancelar
-                        </button>
-
-                        <button class="btn btn-warning">
-                            Transportar
                         </button>
                     </div>
 
