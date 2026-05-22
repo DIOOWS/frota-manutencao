@@ -55,23 +55,14 @@ def montar_mensagem_contas_vencendo_hoje(contas, data_ref):
         except Exception:
             parcela = ""
 
-        linhas.append(
-            f"{idx}. {descricao} — {dinheiro_br(valor)}"
-        )
-
-        linhas.append(
-            f"   Fornecedor: {fornecedor} | Setor: {setor}"
-        )
+        linhas.append(f"{idx}. {descricao} — {dinheiro_br(valor)}")
+        linhas.append(f"   Fornecedor: {fornecedor} | Setor: {setor}")
 
         if categoria:
-            linhas.append(
-                f"   Categoria: {categoria}"
-            )
+            linhas.append(f"   Categoria: {categoria}")
 
         if parcela:
-            linhas.append(
-                f"   Parcela: {parcela}"
-            )
+            linhas.append(f"   Parcela: {parcela}")
 
         linhas.append("")
 
@@ -97,7 +88,6 @@ def enviar_mensagem_telegram(mensagem):
     payload = {
         "chat_id": chat_id,
         "text": mensagem,
-        "parse_mode": "HTML",
         "disable_web_page_preview": True
     }
 
