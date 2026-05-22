@@ -4,6 +4,7 @@ from database import db
 from models.conta_radar_financeiro import ContaRadarFinanceiro
 from datetime import datetime, date, timedelta
 from decimal import Decimal
+from sqlalchemy import or_, and_
 import calendar
 
 
@@ -13,6 +14,10 @@ radar_financeiro_bp = Blueprint(
     url_prefix="/gestao/radar-financeiro"
 )
 
+
+# =========================================================
+# HELPERS
+# =========================================================
 
 def texto(valor):
     if valor is None:
@@ -56,6 +61,9 @@ def parse_data(valor):
     if not valor:
         return None
 
+    if isinstance(valor, datetime):
+        return valor.date()
+
     if isinstance(valor, date):
         return valor
 
@@ -84,6 +92,20 @@ def ultimo_dia_mes(mes, ano):
     return date(ano, mes, ultimo)
 
 
+def inicio_mes_datetime(mes, ano):
+    return datetime.combine(
+        primeiro_dia_mes(mes, ano),
+        datetime.min.time()
+    )
+
+
+def fim_mes_datetime(mes, ano):
+    return datetime.combine(
+        ultimo_dia_mes(mes, ano),
+        datetime.max.time()
+    )
+
+
 def adicionar_um_mes(data_ref):
     mes = data_ref.month
     ano = data_ref.year
@@ -101,39 +123,119 @@ def adicionar_um_mes(data_ref):
     return date(novo_ano, novo_mes, novo_dia)
 
 
-def status_visual(conta, hoje):
+def ajustar_data_para_mes_ano(data_base, mes_destino, ano_destino):
+    if not data_base:
+        data_base = date.today()
 
-    if conta.status == "PAGO":
+    ultimo_destino = calendar.monthrange(ano_destino, mes_destino)[1]
+    dia = min(data_base.day, ultimo_destino)
+
+    return date(ano_destino, mes_destino, dia)
+
+
+def data_conta_para_date(valor):
+    if not valor:
+        return None
+
+    if isinstance(valor, datetime):
+        return valor.date()
+
+    if isinstance(valor, date):
+        return valor
+
+    return None
+
+
+def redirect_radar(mes=None, ano=None):
+    if mes and ano:
+        return redirect(f"/gestao/radar-financeiro/?mes={mes}&ano={ano}")
+
+    return redirect("/gestao/radar-financeiro/")
+
+
+def criar_conta_radar(
+    descricao,
+    fornecedor,
+    categoria,
+    setor,
+    valor,
+    data_vencimento,
+    status="PENDENTE",
+    data_pagamento=None,
+    observacoes="",
+    parcela_atual=None,
+    total_parcelas=None,
+    recorrente=False,
+    gerado_por_transporte=False,
+    conta_origem_id=None
+):
+    conta = ContaRadarFinanceiro(
+        descricao=descricao,
+        fornecedor=fornecedor,
+        categoria=categoria,
+        setor=setor,
+        valor=valor,
+
+        data_vencimento=(
+            datetime.combine(data_vencimento, datetime.min.time())
+            if data_vencimento else None
+        ),
+
+        data_pagamento=(
+            datetime.combine(data_pagamento, datetime.min.time())
+            if data_pagamento else None
+        ),
+
+        status=status,
+        observacoes=observacoes,
+
+        parcela_atual=parcela_atual,
+        total_parcelas=total_parcelas,
+
+        recorrente=recorrente,
+        gerado_por_transporte=gerado_por_transporte,
+        conta_origem_id=conta_origem_id,
+
+        mes=data_vencimento.month if data_vencimento else None,
+        ano=data_vencimento.year if data_vencimento else None,
+    )
+
+    db.session.add(conta)
+
+    return conta
+
+
+def status_visual(conta, hoje):
+    status = texto(conta.status).upper()
+
+    if status == "PAGO":
         return {
             "label": "PAGO",
             "classe": "success",
             "grupo": "pagas"
         }
 
-    if conta.status == "CANCELADO":
+    if status == "CANCELADO":
         return {
             "label": "CANCELADO",
             "classe": "secondary",
-            "grupo": "canceladas"
+            "grupo": "ocultas"
         }
 
-    if conta.status == "TRANSPORTADO":
+    if status == "TRANSPORTADO":
         return {
             "label": "TRANSPORTADO",
             "classe": "info",
-            "grupo": "transportadas"
+            "grupo": "ocultas"
         }
 
-    data_vencimento = (
-        conta.data_vencimento.date()
-        if conta.data_vencimento else None
-    )
+    data_vencimento = data_conta_para_date(conta.data_vencimento)
 
     if not data_vencimento:
         return {
-            "label": "SEM DATA",
+            "label": "PENDENTE",
             "classe": "secondary",
-            "grupo": "sem_data"
+            "grupo": "pendentes"
         }
 
     if data_vencimento < hoje:
@@ -158,11 +260,15 @@ def status_visual(conta, hoje):
         }
 
     return {
-        "label": "FUTURA",
+        "label": "PENDENTE",
         "classe": "dark",
-        "grupo": "futuras"
+        "grupo": "pendentes"
     }
 
+
+# =========================================================
+# RADAR FINANCEIRO MANUAL
+# =========================================================
 
 @radar_financeiro_bp.route("")
 @radar_financeiro_bp.route("/")
@@ -175,36 +281,18 @@ def index():
     mes = request.args.get("mes", type=int) or hoje_dt.month
     ano = request.args.get("ano", type=int) or hoje_dt.year
 
-    filtro = request.args.get(
-        "filtro",
-        "todos"
-    ).strip().lower()
+    filtro = request.args.get("filtro", "todos").strip().lower()
+    setor = request.args.get("setor", "").strip().upper()
+    busca = request.args.get("busca", "").strip()
 
-    setor = request.args.get(
-        "setor",
-        ""
-    ).strip().upper()
-
-    busca = request.args.get(
-        "busca",
-        ""
-    ).strip()
-
-    visual = request.args.get(
-        "visual",
-        "kanban"
-    ).strip().lower()
+    visual = request.args.get("visual", "kanban").strip().lower()
 
     if visual not in ["kanban", "tabela"]:
         visual = "kanban"
 
-    fim = datetime.combine(
-        ultimo_dia_mes(mes, ano),
-        datetime.max.time()
-    )
-
     query = ContaRadarFinanceiro.query.filter(
-        ContaRadarFinanceiro.data_vencimento <= fim
+        ContaRadarFinanceiro.mes == mes,
+        ContaRadarFinanceiro.ano == ano
     )
 
     if setor:
@@ -216,7 +304,7 @@ def index():
         like = f"%{busca}%"
 
         query = query.filter(
-            db.or_(
+            or_(
                 ContaRadarFinanceiro.descricao.ilike(like),
                 ContaRadarFinanceiro.fornecedor.ilike(like),
                 ContaRadarFinanceiro.categoria.ilike(like),
@@ -225,14 +313,13 @@ def index():
         )
 
     contas = query.order_by(
-        ContaRadarFinanceiro.data_vencimento.asc(),
+        ContaRadarFinanceiro.data_vencimento.asc().nullslast(),
         ContaRadarFinanceiro.id.desc()
     ).all()
 
     itens = []
 
     for conta in contas:
-
         visual_status = status_visual(conta, hoje)
 
         itens.append({
@@ -245,72 +332,33 @@ def index():
     atrasadas = [i for i in itens if i["grupo"] == "atrasadas"]
     vence_hoje = [i for i in itens if i["grupo"] == "vence_hoje"]
     proximas = [i for i in itens if i["grupo"] == "proximas"]
-    futuras = [i for i in itens if i["grupo"] == "futuras"]
+    pendentes = [i for i in itens if i["grupo"] == "pendentes"]
     pagas = [i for i in itens if i["grupo"] == "pagas"]
-    transportadas = [i for i in itens if i["grupo"] == "transportadas"]
-    canceladas = [i for i in itens if i["grupo"] == "canceladas"]
+    ocultas = [i for i in itens if i["grupo"] == "ocultas"]
 
-    abertas = [
-        i for i in itens
-        if i["conta"].status in ["PENDENTE", "ADIADO"]
-    ]
+    abertas = atrasadas + vence_hoje + proximas + pendentes
 
     if filtro == "abertas":
         itens_filtrados = abertas
-
     elif filtro == "atrasadas":
         itens_filtrados = atrasadas
-
     elif filtro == "hoje":
         itens_filtrados = vence_hoje
-
     elif filtro == "proximas":
         itens_filtrados = proximas
-
-    elif filtro == "futuras":
-        itens_filtrados = futuras
-
+    elif filtro == "pendentes":
+        itens_filtrados = pendentes
     elif filtro == "pagas":
         itens_filtrados = pagas
-
-    elif filtro == "transportadas":
-        itens_filtrados = transportadas
-
-    elif filtro == "canceladas":
-        itens_filtrados = canceladas
-
     else:
-        itens_filtrados = itens
+        itens_filtrados = abertas + pagas
 
-    total_aberto = sum(
-        dinheiro(i["conta"].valor)
-        for i in abertas
-    )
-
-    total_atrasado = sum(
-        dinheiro(i["conta"].valor)
-        for i in atrasadas
-    )
-
-    total_hoje = sum(
-        dinheiro(i["conta"].valor)
-        for i in vence_hoje
-    )
-
-    total_proximas = sum(
-        dinheiro(i["conta"].valor)
-        for i in proximas
-    )
-
-    total_futuras = sum(
-        dinheiro(i["conta"].valor)
-        for i in futuras
-    )
-
-    total_pagas = sum(
-        dinheiro(i["conta"].valor)
-        for i in pagas
-    )
+    total_aberto = sum(dinheiro(i["conta"].valor) for i in abertas)
+    total_atrasado = sum(dinheiro(i["conta"].valor) for i in atrasadas)
+    total_hoje = sum(dinheiro(i["conta"].valor) for i in vence_hoje)
+    total_proximas = sum(dinheiro(i["conta"].valor) for i in proximas)
+    total_pendentes = sum(dinheiro(i["conta"].valor) for i in pendentes)
+    total_pagas = sum(dinheiro(i["conta"].valor) for i in pagas)
 
     return render_template(
         "gestao/radar_financeiro.html",
@@ -333,140 +381,138 @@ def index():
         atrasadas=atrasadas,
         vence_hoje=vence_hoje,
         proximas=proximas,
-        futuras=futuras,
+        pendentes=pendentes,
         pagas=pagas,
-        transportadas=transportadas,
-        canceladas=canceladas,
+        ocultas=ocultas,
 
         total_aberto=total_aberto,
         total_atrasado=total_atrasado,
         total_hoje=total_hoje,
         total_proximas=total_proximas,
-        total_futuras=total_futuras,
+        total_pendentes=total_pendentes,
         total_pagas=total_pagas,
 
         data_para_input=data_para_input
     )
 
 
+# =========================================================
+# NOVA CONTA
+# GERA PARCELAS AUTOMATICAMENTE
+# =========================================================
+
 @radar_financeiro_bp.route("/novo", methods=["POST"])
 @gestao_required
 def novo():
 
     try:
+        descricao = texto(request.form.get("descricao"))
+        fornecedor = texto(request.form.get("fornecedor"))
+        categoria = texto(request.form.get("categoria"))
+        setor = texto(request.form.get("setor")).upper() or "ASSISTÊNCIA"
+        valor = normalizar_decimal(request.form.get("valor"))
+        data_vencimento = parse_data(request.form.get("data_vencimento"))
+        data_pagamento = parse_data(request.form.get("data_pagamento"))
+        observacoes = texto(request.form.get("observacoes"))
 
-        descricao = texto(
-            request.form.get("descricao")
-        )
+        parcela_atual = request.form.get("parcela_atual", type=int)
+        total_parcelas = request.form.get("total_parcelas", type=int)
 
-        fornecedor = texto(
-            request.form.get("fornecedor")
-        )
-
-        categoria = texto(
-            request.form.get("categoria")
-        )
-
-        setor = texto(
-            request.form.get("setor")
-        ).upper() or "ASSISTÊNCIA"
-
-        valor = normalizar_decimal(
-            request.form.get("valor")
-        )
-
-        data_vencimento = parse_data(
-            request.form.get("data_vencimento")
-        )
-
-        observacoes = texto(
-            request.form.get("observacoes")
-        )
-
-        parcela_atual = request.form.get(
-            "parcela_atual",
-            type=int
-        )
-
-        total_parcelas = request.form.get(
-            "total_parcelas",
-            type=int
-        )
-
-        recorrente = (
-            True if request.form.get("recorrente") == "on"
-            else False
-        )
+        recorrente = True if request.form.get("recorrente") == "on" else False
+        ja_pago = True if request.form.get("ja_pago") == "on" else False
 
         if not descricao:
-            flash(
-                "Informe a descrição da conta.",
-                "danger"
-            )
-
-            return redirect(
-                request.referrer or
-                "/gestao/radar-financeiro"
-            )
+            flash("Informe a descrição da conta.", "danger")
+            return redirect(request.referrer or "/gestao/radar-financeiro")
 
         if not data_vencimento:
-            flash(
-                "Informe uma data válida.",
-                "danger"
+            flash("Informe uma data válida.", "danger")
+            return redirect(request.referrer or "/gestao/radar-financeiro")
+
+        if total_parcelas and total_parcelas < 1:
+            total_parcelas = None
+
+        if parcela_atual and parcela_atual < 1:
+            parcela_atual = None
+
+        if total_parcelas and not parcela_atual:
+            parcela_atual = 1
+
+        if parcela_atual and total_parcelas and parcela_atual > total_parcelas:
+            flash("A parcela atual não pode ser maior que o total de parcelas.", "danger")
+            return redirect(request.referrer or "/gestao/radar-financeiro")
+
+        primeira_parcela = parcela_atual or None
+
+        if total_parcelas and parcela_atual:
+            quantidade_contas = total_parcelas - parcela_atual + 1
+        else:
+            quantidade_contas = 1
+
+        conta_origem_id = None
+
+        for indice in range(quantidade_contas):
+            data_parcela = data_vencimento
+
+            for _ in range(indice):
+                data_parcela = adicionar_um_mes(data_parcela)
+
+            numero_parcela = None
+
+            if primeira_parcela:
+                numero_parcela = primeira_parcela + indice
+
+            status_conta = "PENDENTE"
+            data_pagamento_conta = None
+
+            if indice == 0 and ja_pago:
+                status_conta = "PAGO"
+                data_pagamento_conta = data_pagamento or date.today()
+
+            conta = criar_conta_radar(
+                descricao=descricao,
+                fornecedor=fornecedor,
+                categoria=categoria,
+                setor=setor,
+                valor=valor,
+                data_vencimento=data_parcela,
+                status=status_conta,
+                data_pagamento=data_pagamento_conta,
+                observacoes=observacoes,
+                parcela_atual=numero_parcela,
+                total_parcelas=total_parcelas,
+                recorrente=recorrente,
+                gerado_por_transporte=False,
+                conta_origem_id=conta_origem_id
             )
 
-            return redirect(
-                request.referrer or
-                "/gestao/radar-financeiro"
-            )
+            db.session.flush()
 
-        conta = ContaRadarFinanceiro(
-            descricao=descricao,
-            fornecedor=fornecedor,
-            categoria=categoria,
-            setor=setor,
-            valor=valor,
+            if indice == 0:
+                conta_origem_id = conta.id
 
-            data_vencimento=datetime.combine(
-                data_vencimento,
-                datetime.min.time()
-            ),
-
-            status="PENDENTE",
-
-            observacoes=observacoes,
-
-            parcela_atual=parcela_atual,
-            total_parcelas=total_parcelas,
-
-            recorrente=recorrente,
-
-            mes=data_vencimento.month,
-            ano=data_vencimento.year,
-        )
-
-        db.session.add(conta)
         db.session.commit()
 
-        flash(
-            "Conta adicionada ao Radar Financeiro!",
-            "success"
-        )
+        if quantidade_contas > 1:
+            flash(
+                f"Conta adicionada! {quantidade_contas} parcela(s) gerada(s) automaticamente.",
+                "success"
+            )
+        else:
+            flash("Conta adicionada ao Radar Financeiro!", "success")
+
+        return redirect_radar(data_vencimento.month, data_vencimento.year)
 
     except Exception as e:
-
         db.session.rollback()
+        flash(f"Erro ao cadastrar conta: {str(e)}", "danger")
 
-        flash(
-            f"Erro ao cadastrar conta: {str(e)}",
-            "danger"
-        )
+    return redirect(request.referrer or "/gestao/radar-financeiro")
 
-    return redirect(
-        request.referrer or
-        "/gestao/radar-financeiro"
-    )
 
+# =========================================================
+# EDITAR CONTA
+# =========================================================
 
 @radar_financeiro_bp.route("/editar/<int:id>", methods=["POST"])
 @gestao_required
@@ -475,73 +521,34 @@ def editar(id):
     conta = ContaRadarFinanceiro.query.get_or_404(id)
 
     try:
+        data_vencimento = parse_data(request.form.get("data_vencimento"))
+        data_pagamento = parse_data(request.form.get("data_pagamento"))
 
-        data_vencimento = parse_data(
-            request.form.get("data_vencimento")
-        )
-
-        data_pagamento = parse_data(
-            request.form.get("data_pagamento")
-        )
-
-        conta.descricao = texto(
-            request.form.get("descricao")
-        )
-
-        conta.fornecedor = texto(
-            request.form.get("fornecedor")
-        )
-
-        conta.categoria = texto(
-            request.form.get("categoria")
-        )
-
-        conta.setor = texto(
-            request.form.get("setor")
-        ).upper() or "ASSISTÊNCIA"
-
-        conta.valor = normalizar_decimal(
-            request.form.get("valor")
-        )
+        conta.descricao = texto(request.form.get("descricao"))
+        conta.fornecedor = texto(request.form.get("fornecedor"))
+        conta.categoria = texto(request.form.get("categoria"))
+        conta.setor = texto(request.form.get("setor")).upper() or "ASSISTÊNCIA"
+        conta.valor = normalizar_decimal(request.form.get("valor"))
 
         conta.data_vencimento = (
-            datetime.combine(
-                data_vencimento,
-                datetime.min.time()
-            )
+            datetime.combine(data_vencimento, datetime.min.time())
             if data_vencimento else None
         )
 
         conta.data_pagamento = (
-            datetime.combine(
-                data_pagamento,
-                datetime.min.time()
-            )
+            datetime.combine(data_pagamento, datetime.min.time())
             if data_pagamento else None
         )
 
-        conta.status = texto(
-            request.form.get("status")
-        ).upper() or "PENDENTE"
+        conta.status = texto(request.form.get("status")).upper() or "PENDENTE"
 
-        conta.observacoes = texto(
-            request.form.get("observacoes")
-        )
+        if conta.status != "PAGO":
+            conta.data_pagamento = None
 
-        conta.parcela_atual = request.form.get(
-            "parcela_atual",
-            type=int
-        )
-
-        conta.total_parcelas = request.form.get(
-            "total_parcelas",
-            type=int
-        )
-
-        conta.recorrente = (
-            True if request.form.get("recorrente") == "on"
-            else False
-        )
+        conta.observacoes = texto(request.form.get("observacoes"))
+        conta.parcela_atual = request.form.get("parcela_atual", type=int)
+        conta.total_parcelas = request.form.get("total_parcelas", type=int)
+        conta.recorrente = True if request.form.get("recorrente") == "on" else False
 
         if data_vencimento:
             conta.mes = data_vencimento.month
@@ -549,25 +556,18 @@ def editar(id):
 
         db.session.commit()
 
-        flash(
-            "Conta atualizada com sucesso!",
-            "success"
-        )
+        flash("Conta atualizada com sucesso!", "success")
 
     except Exception as e:
-
         db.session.rollback()
+        flash(f"Erro ao editar conta: {str(e)}", "danger")
 
-        flash(
-            f"Erro ao editar conta: {str(e)}",
-            "danger"
-        )
+    return redirect(request.referrer or "/gestao/radar-financeiro")
 
-    return redirect(
-        request.referrer or
-        "/gestao/radar-financeiro"
-    )
 
+# =========================================================
+# PAGAR CONTA
+# =========================================================
 
 @radar_financeiro_bp.route("/pagar/<int:id>", methods=["POST"])
 @gestao_required
@@ -575,43 +575,29 @@ def pagar(id):
 
     conta = ContaRadarFinanceiro.query.get_or_404(id)
 
-    data_pagamento = parse_data(
-        request.form.get("data_pagamento")
-    )
+    data_pagamento = parse_data(request.form.get("data_pagamento"))
 
     if not data_pagamento:
         data_pagamento = date.today()
 
     try:
-
         conta.status = "PAGO"
-
-        conta.data_pagamento = datetime.combine(
-            data_pagamento,
-            datetime.min.time()
-        )
+        conta.data_pagamento = datetime.combine(data_pagamento, datetime.min.time())
 
         db.session.commit()
 
-        flash(
-            "Conta marcada como paga!",
-            "success"
-        )
+        flash("Conta marcada como paga!", "success")
 
     except Exception as e:
-
         db.session.rollback()
+        flash(f"Erro ao marcar pagamento: {str(e)}", "danger")
 
-        flash(
-            f"Erro ao marcar pagamento: {str(e)}",
-            "danger"
-        )
+    return redirect(request.referrer or "/gestao/radar-financeiro")
 
-    return redirect(
-        request.referrer or
-        "/gestao/radar-financeiro"
-    )
 
+# =========================================================
+# TRANSPORTAR CONTA INDIVIDUAL
+# =========================================================
 
 @radar_financeiro_bp.route("/transportar/<int:id>", methods=["POST"])
 @gestao_required
@@ -620,98 +606,161 @@ def transportar(id):
     conta = ContaRadarFinanceiro.query.get_or_404(id)
 
     try:
-
-        nova_data_str = request.form.get(
-            "nova_data_vencimento"
-        )
-
-        nova_data = parse_data(
-            nova_data_str
-        )
+        nova_data_str = request.form.get("nova_data_vencimento")
+        nova_data = parse_data(nova_data_str)
 
         if not nova_data:
+            data_base = data_conta_para_date(conta.data_vencimento) or date.today()
+            nova_data = adicionar_um_mes(data_base)
 
-            data_base = (
-                conta.data_vencimento.date()
-                if conta.data_vencimento
-                else date.today()
-            )
-
-            nova_data = adicionar_um_mes(
-                data_base
-            )
-
-        novo_valor = normalizar_decimal(
-            request.form.get("valor") or conta.valor
-        )
-
-        observacao_extra = texto(
-            request.form.get("observacoes")
-        )
+        novo_valor = normalizar_decimal(request.form.get("valor") or conta.valor)
+        observacao_extra = texto(request.form.get("observacoes"))
 
         nova_parcela_atual = None
 
         if conta.parcela_atual:
             nova_parcela_atual = conta.parcela_atual + 1
 
-        nova_conta = ContaRadarFinanceiro(
+        if (
+            conta.total_parcelas
+            and nova_parcela_atual
+            and nova_parcela_atual > conta.total_parcelas
+        ):
+            flash(
+                "Essa conta já está na última parcela. Não é possível transportar para uma nova parcela.",
+                "warning"
+            )
+            return redirect(request.referrer or "/gestao/radar-financeiro")
 
+        criar_conta_radar(
             descricao=conta.descricao,
             fornecedor=conta.fornecedor,
             categoria=conta.categoria,
             setor=conta.setor,
-
             valor=novo_valor,
-
-            data_vencimento=datetime.combine(
-                nova_data,
-                datetime.min.time()
-            ),
-
+            data_vencimento=nova_data,
             status="PENDENTE",
-
-            observacoes=(
-                observacao_extra or
-                conta.observacoes
-            ),
-
+            data_pagamento=None,
+            observacoes=(observacao_extra or conta.observacoes),
             parcela_atual=nova_parcela_atual,
             total_parcelas=conta.total_parcelas,
-
             recorrente=conta.recorrente,
-
             gerado_por_transporte=True,
-
-            conta_origem_id=conta.id,
-
-            mes=nova_data.month,
-            ano=nova_data.year,
+            conta_origem_id=conta.id
         )
 
-        conta.status = "TRANSPORTADO"
+        if conta.status != "PAGO":
+            conta.status = "TRANSPORTADO"
+            conta.data_pagamento = None
 
-        db.session.add(nova_conta)
         db.session.commit()
 
         flash(
-            "Conta transportada com sucesso!",
+            f"Conta transportada para {nova_data.month:02d}/{nova_data.year} como PENDENTE!",
             "success"
         )
 
-    except Exception as e:
+        return redirect_radar(nova_data.month, nova_data.year)
 
+    except Exception as e:
         db.session.rollback()
+        flash(f"Erro ao transportar conta: {str(e)}", "danger")
+
+    return redirect(request.referrer or "/gestao/radar-financeiro")
+
+
+# =========================================================
+# TRANSPORTAR PAGAS EM LOTE
+# A original continua PAGA no mês original.
+# A nova nasce PENDENTE no mês escolhido.
+# =========================================================
+
+@radar_financeiro_bp.route("/transportar-pagas-lote", methods=["POST"])
+@gestao_required
+def transportar_pagas_lote():
+
+    ids = request.form.getlist("contas_ids")
+    mes_destino = request.form.get("mes_destino", type=int)
+    ano_destino = request.form.get("ano_destino", type=int)
+
+    if not ids:
+        flash("Selecione pelo menos uma conta paga para transportar.", "warning")
+        return redirect(request.referrer or "/gestao/radar-financeiro")
+
+    if not mes_destino or not ano_destino or mes_destino < 1 or mes_destino > 12:
+        flash("Informe mês e ano de destino válidos.", "danger")
+        return redirect(request.referrer or "/gestao/radar-financeiro")
+
+    try:
+        contas = ContaRadarFinanceiro.query.filter(
+            ContaRadarFinanceiro.id.in_(ids),
+            ContaRadarFinanceiro.status == "PAGO"
+        ).all()
+
+        total_criadas = 0
+        total_ignoradas = 0
+
+        for conta in contas:
+            data_base = data_conta_para_date(conta.data_vencimento) or date.today()
+
+            nova_data = ajustar_data_para_mes_ano(
+                data_base=data_base,
+                mes_destino=mes_destino,
+                ano_destino=ano_destino
+            )
+
+            nova_parcela_atual = None
+
+            if conta.parcela_atual:
+                nova_parcela_atual = conta.parcela_atual + 1
+
+            if (
+                conta.total_parcelas
+                and nova_parcela_atual
+                and nova_parcela_atual > conta.total_parcelas
+            ):
+                total_ignoradas += 1
+                continue
+
+            criar_conta_radar(
+                descricao=conta.descricao,
+                fornecedor=conta.fornecedor,
+                categoria=conta.categoria,
+                setor=conta.setor,
+                valor=conta.valor,
+                data_vencimento=nova_data,
+                status="PENDENTE",
+                data_pagamento=None,
+                observacoes=conta.observacoes,
+                parcela_atual=nova_parcela_atual,
+                total_parcelas=conta.total_parcelas,
+                recorrente=conta.recorrente,
+                gerado_por_transporte=True,
+                conta_origem_id=conta.id
+            )
+
+            total_criadas += 1
+
+        db.session.commit()
 
         flash(
-            f"Erro ao transportar conta: {str(e)}",
-            "danger"
+            f"{total_criadas} conta(s) transportada(s) como PENDENTE para {mes_destino:02d}/{ano_destino}. "
+            f"Ignoradas por limite de parcela: {total_ignoradas}.",
+            "success"
         )
 
-    return redirect(
-        request.referrer or
-        "/gestao/radar-financeiro"
-    )
+        return redirect_radar(mes_destino, ano_destino)
 
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao transportar contas pagas em lote: {str(e)}", "danger")
+
+    return redirect(request.referrer or "/gestao/radar-financeiro")
+
+
+# =========================================================
+# CANCELAR CONTA
+# =========================================================
 
 @radar_financeiro_bp.route("/cancelar/<int:id>", methods=["POST"])
 @gestao_required
@@ -720,30 +769,22 @@ def cancelar(id):
     conta = ContaRadarFinanceiro.query.get_or_404(id)
 
     try:
-
         conta.status = "CANCELADO"
 
         db.session.commit()
 
-        flash(
-            "Conta cancelada.",
-            "success"
-        )
+        flash("Conta cancelada.", "success")
 
     except Exception as e:
-
         db.session.rollback()
+        flash(f"Erro ao cancelar conta: {str(e)}", "danger")
 
-        flash(
-            f"Erro ao cancelar conta: {str(e)}",
-            "danger"
-        )
+    return redirect(request.referrer or "/gestao/radar-financeiro")
 
-    return redirect(
-        request.referrer or
-        "/gestao/radar-financeiro"
-    )
 
+# =========================================================
+# EXCLUIR CONTA
+# =========================================================
 
 @radar_financeiro_bp.route("/excluir/<int:id>", methods=["POST"])
 @gestao_required
@@ -752,26 +793,13 @@ def excluir(id):
     conta = ContaRadarFinanceiro.query.get_or_404(id)
 
     try:
-
         db.session.delete(conta)
-
         db.session.commit()
 
-        flash(
-            "Conta excluída.",
-            "success"
-        )
+        flash("Conta excluída.", "success")
 
     except Exception as e:
-
         db.session.rollback()
+        flash(f"Erro ao excluir conta: {str(e)}", "danger")
 
-        flash(
-            f"Erro ao excluir conta: {str(e)}",
-            "danger"
-        )
-
-    return redirect(
-        request.referrer or
-        "/gestao/radar-financeiro"
-    )
+    return redirect(request.referrer or "/gestao/radar-financeiro")

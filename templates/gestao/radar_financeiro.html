@@ -104,8 +104,8 @@
         <div class="radar-kpi dark">
             <div class="radar-kpi-icon">🧾</div>
             <div>
-                <span>FUTURAS</span>
-                <strong>R$ {{ "%.2f"|format(total_futuras) }}</strong>
+                <span>PENDENTES</span>
+                <strong>R$ {{ "%.2f"|format(total_pendentes) }}</strong>
             </div>
         </div>
 
@@ -125,9 +125,8 @@
             ("Atrasadas", atrasadas, "danger"),
             ("Vence hoje", vence_hoje, "warning"),
             ("Próximos 7 dias", proximas, "primary"),
-            ("Futuras", futuras, "dark"),
-            ("Pagas", pagas, "success"),
-            ("Transportadas", transportadas, "cyan")
+            ("Pendentes", pendentes, "dark"),
+            ("Pagas", pagas, "success")
         ] %}
 
         {% for titulo, lista, cor in colunas %}
@@ -139,19 +138,77 @@
                     <span>{{ lista|length }}</span>
                 </div>
 
+                {% if titulo == "Pagas" %}
+                    <div class="radar-pagas-lote">
+                        <form method="POST"
+                              action="/gestao/radar-financeiro/transportar-pagas-lote"
+                              id="formTransportarPagas"
+                              onsubmit="return confirm('Transportar as contas pagas selecionadas como PENDENTES para o mês escolhido?');">
+
+                            <div class="radar-pagas-lote-top">
+                                <label class="radar-check-all">
+                                    <input type="checkbox" id="selecionarTodasPagas">
+                                    Todas
+                                </label>
+
+                                <select name="mes_destino" class="form-control" required>
+                                    {% for m in range(1,13) %}
+                                        <option value="{{ m }}" {% if mes == 12 and m == 1 %}selected{% elif mes < 12 and m == mes + 1 %}selected{% endif %}>
+                                            {{ m }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+
+                                <input type="number"
+                                       name="ano_destino"
+                                       value="{% if mes == 12 %}{{ ano + 1 }}{% else %}{{ ano }}{% endif %}"
+                                       class="form-control"
+                                       required>
+                            </div>
+
+                            <button class="radar-btn radar-btn-warning radar-btn-lote">
+                                Transportar selecionadas
+                            </button>
+                        </form>
+                    </div>
+                {% endif %}
+
                 <div class="radar-coluna-body">
 
                     {% for item in lista %}
                         {% set c = item.conta %}
 
-                        <article class="radar-card">
+                        <article class="radar-card radar-card-compacto">
 
                             <div class="radar-card-header">
 
-                                <div class="radar-card-title">
-                                    <strong>{{ c.descricao }}</strong>
-                                    <small>{{ c.fornecedor or '-' }}</small>
-                                </div>
+                                {% if titulo == "Pagas" %}
+                                    <label class="radar-card-check">
+                                        <input type="checkbox"
+                                               name="contas_ids"
+                                               value="{{ c.id }}"
+                                               class="check-paga"
+                                               form="formTransportarPagas">
+                                    </label>
+                                {% endif %}
+
+                                <button type="button"
+                                        class="radar-card-resumo"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#detalhesConta{{ c.id }}"
+                                        aria-expanded="false">
+
+                                    <div class="radar-card-title">
+                                        <strong>{{ c.descricao }}</strong>
+                                        <small>{{ c.fornecedor or '-' }}</small>
+                                    </div>
+
+                                    <div class="radar-card-mini-info">
+                                        <span>R$ {{ "%.2f"|format(c.valor) }}</span>
+                                        <small>{{ c.data_vencimento.strftime('%d/%m/%Y') if c.data_vencimento else '-' }}</small>
+                                    </div>
+
+                                </button>
 
                                 <div class="dropdown">
                                     <button class="radar-menu-btn"
@@ -222,35 +279,51 @@
                                 {{ item.status_label }}
                             </div>
 
-                            <div class="radar-card-grid">
+                            <div class="collapse" id="detalhesConta{{ c.id }}">
+                                <div class="radar-card-detalhes">
 
-                                <div class="radar-info-box">
-                                    <span>Valor</span>
-                                    <strong>R$ {{ "%.2f"|format(c.valor) }}</strong>
+                                    <div class="radar-card-grid">
+
+                                        <div class="radar-info-box">
+                                            <span>Valor</span>
+                                            <strong>R$ {{ "%.2f"|format(c.valor) }}</strong>
+                                        </div>
+
+                                        <div class="radar-info-box">
+                                            <span>Vencimento</span>
+                                            <strong>{{ c.data_vencimento.strftime('%d/%m/%Y') if c.data_vencimento else '-' }}</strong>
+                                        </div>
+
+                                        <div class="radar-info-box">
+                                            <span>Parcela</span>
+                                            <strong>{{ c.nome_parcela() }}</strong>
+                                        </div>
+
+                                        <div class="radar-info-box">
+                                            <span>Setor</span>
+                                            <strong>{{ c.setor or '-' }}</strong>
+                                        </div>
+
+                                        <div class="radar-info-box">
+                                            <span>Categoria</span>
+                                            <strong>{{ c.categoria or '-' }}</strong>
+                                        </div>
+
+                                        <div class="radar-info-box">
+                                            <span>Status</span>
+                                            <strong>{{ c.status or '-' }}</strong>
+                                        </div>
+
+                                    </div>
+
+                                    {% if c.observacoes %}
+                                        <div class="radar-card-obs">
+                                            {{ c.observacoes }}
+                                        </div>
+                                    {% endif %}
+
                                 </div>
-
-                                <div class="radar-info-box">
-                                    <span>Vencimento</span>
-                                    <strong>{{ c.data_vencimento.strftime('%d/%m/%Y') if c.data_vencimento else '-' }}</strong>
-                                </div>
-
-                                <div class="radar-info-box">
-                                    <span>Parcela</span>
-                                    <strong>{{ c.nome_parcela() }}</strong>
-                                </div>
-
-                                <div class="radar-info-box">
-                                    <span>Setor</span>
-                                    <strong>{{ c.setor or '-' }}</strong>
-                                </div>
-
                             </div>
-
-                            {% if c.observacoes %}
-                                <div class="radar-card-obs">
-                                    {{ c.observacoes }}
-                                </div>
-                            {% endif %}
 
                         </article>
 
@@ -317,20 +390,44 @@
                             <input type="date" name="data_vencimento" class="form-control" required>
                         </div>
 
-                        <div class="col-md-1">
-                            <label class="form-label">Parc.</label>
-                            <input type="number" name="parcela_atual" class="form-control">
+                        <div class="col-md-2">
+                            <label class="form-label">Parcela atual</label>
+                            <input type="number" name="parcela_atual" class="form-control" placeholder="1">
                         </div>
 
-                        <div class="col-md-1">
-                            <label class="form-label">Total</label>
-                            <input type="number" name="total_parcelas" class="form-control">
+                        <div class="col-md-2">
+                            <label class="form-label">Total parcelas</label>
+                            <input type="number" name="total_parcelas" class="form-control" placeholder="12">
                         </div>
 
-                        <div class="col-md-1 d-flex align-items-end">
+                        <div class="col-md-2 d-flex align-items-end">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="recorrente" id="recorrenteNovo">
-                                <label class="form-check-label" for="recorrenteNovo">Rec.</label>
+                                <label class="form-check-label" for="recorrenteNovo">Recorrente</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 d-flex align-items-end">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="ja_pago" id="jaPagoNovo">
+                                <label class="form-check-label" for="jaPagoNovo">
+                                    Já cadastrar como paga
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Data pagamento</label>
+                            <input type="date"
+                                   name="data_pagamento"
+                                   value="{{ hoje.strftime('%Y-%m-%d') }}"
+                                   class="form-control">
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="alert alert-info mb-0">
+                                Se informar parcela atual e total de parcelas, o sistema já gera automaticamente as próximas parcelas nos meses seguintes.
+                                Se marcar “Já cadastrar como paga”, apenas a primeira parcela entra como paga; as futuras entram como pendentes.
                             </div>
                         </div>
 
@@ -568,5 +665,19 @@
     </div>
 
 {% endfor %}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const selecionarTodas = document.getElementById("selecionarTodasPagas");
+
+        if (selecionarTodas) {
+            selecionarTodas.addEventListener("change", function () {
+                document.querySelectorAll(".check-paga").forEach(function (check) {
+                    check.checked = selecionarTodas.checked;
+                });
+            });
+        }
+    });
+</script>
 
 {% endblock %}
