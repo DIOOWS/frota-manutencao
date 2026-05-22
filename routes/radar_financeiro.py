@@ -1,11 +1,18 @@
-from flask import Blueprint, render_template, request, redirect, flash
+import os
+import calendar
+from decimal import Decimal
+from datetime import datetime, date, timedelta
+
+from flask import Blueprint, render_template, request, redirect, flash, jsonify
+from sqlalchemy import or_
+
 from utils.auth import gestao_required
 from database import db
 from models.conta_radar_financeiro import ContaRadarFinanceiro
-from datetime import datetime, date, timedelta
-from decimal import Decimal
-from sqlalchemy import or_, and_
-import calendar
+from services.telegram_service import (
+    enviar_mensagem_telegram,
+    montar_mensagem_contas_vencendo_hoje
+)
 
 
 radar_financeiro_bp = Blueprint(
@@ -92,18 +99,12 @@ def ultimo_dia_mes(mes, ano):
     return date(ano, mes, ultimo)
 
 
-def inicio_mes_datetime(mes, ano):
-    return datetime.combine(
-        primeiro_dia_mes(mes, ano),
-        datetime.min.time()
-    )
+def inicio_dia_datetime(data_ref):
+    return datetime.combine(data_ref, datetime.min.time())
 
 
-def fim_mes_datetime(mes, ano):
-    return datetime.combine(
-        ultimo_dia_mes(mes, ano),
-        datetime.max.time()
-    )
+def fim_dia_datetime(data_ref):
+    return datetime.combine(data_ref, datetime.max.time())
 
 
 def adicionar_um_mes(data_ref):
@@ -266,6 +267,61 @@ def status_visual(conta, hoje):
     }
 
 
+def buscar_contas_vencendo_hoje(data_ref=None):
+    if not data_ref:
+        data_ref = date.today()
+
+    inicio = inicio_dia_datetime(data_ref)
+    fim = fim_dia_datetime(data_ref)
+
+    contas = ContaRadarFinanceiro.query.filter(
+        ContaRadarFinanceiro.data_vencimento >= inicio,
+        ContaRadarFinanceiro.data_vencimento <= fim,
+        ContaRadarFinanceiro.status.in_(["PENDENTE", "ADIADO"])
+    ).order_by(
+        ContaRadarFinanceiro.data_vencimento.asc(),
+        ContaRadarFinanceiro.id.asc()
+    ).all()
+
+    return contas
+
+
+def executar_envio_alerta_telegram_hoje():
+    hoje = date.today()
+
+    contas = buscar_contas_vencendo_hoje(hoje)
+
+    if not contas:
+        return {
+            "ok": True,
+            "enviado": False,
+            "total_contas": 0,
+            "mensagem": "Nenhuma conta pendente vencendo hoje."
+        }
+
+    mensagem = montar_mensagem_contas_vencendo_hoje(
+        contas=contas,
+        data_ref=hoje
+    )
+
+    sucesso, retorno = enviar_mensagem_telegram(mensagem)
+
+    if sucesso:
+        return {
+            "ok": True,
+            "enviado": True,
+            "total_contas": len(contas),
+            "mensagem": retorno
+        }
+
+    return {
+        "ok": False,
+        "enviado": False,
+        "total_contas": len(contas),
+        "mensagem": retorno
+    }
+
+
 # =========================================================
 # RADAR FINANCEIRO MANUAL
 # =========================================================
@@ -394,6 +450,85 @@ def index():
 
         data_para_input=data_para_input
     )
+
+
+# =========================================================
+# TELEGRAM - ENVIO MANUAL
+# =========================================================
+
+@radar_financeiro_bp.route("/enviar-alerta-hoje", methods=["POST"])
+@gestao_required
+def enviar_alerta_telegram_hoje():
+
+    try:
+        resultado = executar_envio_alerta_telegram_hoje()
+
+        if resultado["ok"] and resultado["enviado"]:
+            flash(
+                f"Alerta enviado no Telegram com {resultado['total_contas']} conta(s) vencendo hoje.",
+                "success"
+            )
+
+        elif resultado["ok"] and not resultado["enviado"]:
+            flash(
+                resultado["mensagem"],
+                "info"
+            )
+
+        else:
+            flash(
+                resultado["mensagem"],
+                "danger"
+            )
+
+    except Exception as e:
+        flash(
+            f"Erro ao enviar alerta Telegram: {str(e)}",
+            "danger"
+        )
+
+    return redirect(
+        request.referrer or
+        "/gestao/radar-financeiro"
+    )
+
+
+# =========================================================
+# TELEGRAM - ENVIO AUTOMÁTICO PROTEGIDO
+# Essa rota pode ser chamada por cron externo.
+# =========================================================
+
+@radar_financeiro_bp.route("/telegram/automatico", methods=["GET", "POST"])
+def enviar_alerta_telegram_automatico():
+
+    token_recebido = request.args.get("token") or request.form.get("token")
+    token_correto = os.getenv("ALERTA_TELEGRAM_SECRET")
+
+    if not token_correto:
+        return jsonify({
+            "ok": False,
+            "erro": "ALERTA_TELEGRAM_SECRET não configurado no .env."
+        }), 500
+
+    if not token_recebido or token_recebido != token_correto:
+        return jsonify({
+            "ok": False,
+            "erro": "Token inválido."
+        }), 403
+
+    try:
+        resultado = executar_envio_alerta_telegram_hoje()
+
+        status_code = 200 if resultado["ok"] else 500
+
+        return jsonify(resultado), status_code
+
+    except Exception as e:
+        return jsonify({
+            "ok": False,
+            "enviado": False,
+            "erro": str(e)
+        }), 500
 
 
 # =========================================================
@@ -597,6 +732,8 @@ def pagar(id):
 
 # =========================================================
 # TRANSPORTAR CONTA INDIVIDUAL
+# Mantido no backend para não quebrar registros antigos/botões antigos.
+# A tela atual não exibe mais essa ação no menu.
 # =========================================================
 
 @radar_financeiro_bp.route("/transportar/<int:id>", methods=["POST"])
@@ -760,6 +897,8 @@ def transportar_pagas_lote():
 
 # =========================================================
 # CANCELAR CONTA
+# Mantido no backend para não quebrar registros antigos/botões antigos.
+# A tela atual não exibe mais essa ação no menu.
 # =========================================================
 
 @radar_financeiro_bp.route("/cancelar/<int:id>", methods=["POST"])

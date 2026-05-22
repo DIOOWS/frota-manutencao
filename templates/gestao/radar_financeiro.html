@@ -9,10 +9,18 @@
         <div class="radar-topo-info">
             <span class="radar-label">GESTÃO FINANCEIRA</span>
             <h1>Radar Financeiro</h1>
-            <p>Controle manual das obrigações, parcelas, vencimentos e contas transportadas.</p>
+            <p>Controle manual das obrigações, parcelas e vencimentos do mês.</p>
         </div>
 
         <div class="radar-topo-actions">
+            <form method="POST"
+                  action="/gestao/radar-financeiro/enviar-alerta-hoje"
+                  onsubmit="return confirm('Enviar alerta Telegram com as contas vencendo hoje?');">
+                <button type="submit" class="radar-btn radar-btn-warning">
+                    📲 Alerta Telegram
+                </button>
+            </form>
+
             <button type="button"
                     class="radar-btn radar-btn-primary"
                     data-bs-toggle="modal"
