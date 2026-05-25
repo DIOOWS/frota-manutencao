@@ -6,11 +6,6 @@ from datetime import date, datetime
 from flask import Blueprint, render_template, request, redirect, flash, current_app
 from werkzeug.utils import secure_filename
 
-try:
-    import cloudinary.uploader
-except ImportError:
-    cloudinary = None
-
 from utils.auth import gestao_required
 from database import db
 from models.tarefa_equipe import TarefaEquipe, ExecucaoTarefaEquipe
@@ -76,54 +71,58 @@ def extensao_permitida(nome_arquivo):
 
 
 def salvar_foto_membro(arquivo):
-    """
-    Salva foto do membro da agenda.
-
-    Em produção, usa Cloudinary para a imagem não sumir após deploy/restart.
-    Em desenvolvimento, se CLOUDINARY_URL não estiver configurada, salva localmente.
-    """
     if not arquivo or not arquivo.filename:
         return None
 
     if not extensao_permitida(arquivo.filename):
         raise ValueError("Formato de imagem inválido. Use PNG, JPG, JPEG ou WEBP.")
 
-    cloudinary_url = os.getenv("CLOUDINARY_URL")
+    nome_original = secure_filename(arquivo.filename)
+    extensao = nome_original.rsplit(".", 1)[1].lower()
+    nome_final = f"agenda_equipe/membros/{uuid4().hex}"
 
-    if cloudinary_url:
-        if cloudinary is None:
-            raise RuntimeError(
-                "Cloudinary está configurado, mas a biblioteca cloudinary não está instalada. "
-                "Adicione cloudinary ao requirements.txt."
-            )
-
+    # =========================================================
+    # PRODUÇÃO: SALVA NO CLOUDINARY
+    # =========================================================
+    # Importante:
+    # - Em produção, a foto NÃO pode ficar em static/uploads,
+    #   porque a pasta local some a cada deploy/restart.
+    # - Com CLOUDINARY_URL configurado, o Cloudinary SDK já lê
+    #   cloud_name, api_key e api_secret automaticamente.
+    if os.getenv("CLOUDINARY_URL"):
         try:
+            import cloudinary.uploader
+
+            try:
+                arquivo.stream.seek(0)
+            except Exception:
+                pass
+
             resultado = cloudinary.uploader.upload(
                 arquivo,
-                folder="frota-manutencao/agenda-equipe",
+                folder="agenda_equipe/membros",
+                public_id=nome_final.split("/")[-1],
                 resource_type="image",
                 overwrite=False,
-                unique_filename=True,
+                unique_filename=False,
                 use_filename=False,
             )
 
             url_segura = resultado.get("secure_url")
 
             if not url_segura:
-                raise RuntimeError("Cloudinary não retornou a URL segura da imagem.")
+                raise ValueError("Cloudinary não retornou a URL segura da imagem.")
 
             return url_segura
 
         except Exception as e:
-            raise RuntimeError(f"Erro ao enviar foto para o Cloudinary: {str(e)}")
+            raise ValueError(f"Erro ao salvar imagem no Cloudinary: {str(e)}")
 
-    # Fallback apenas para desenvolvimento local.
-    if not current_app.debug and os.getenv("FLASK_ENV") != "development":
-        raise RuntimeError(
-            "CLOUDINARY_URL não está configurada na produção. "
-            "A foto não pode ser salva em pasta local, pois some após deploy."
-        )
-
+    # =========================================================
+    # DESENVOLVIMENTO: FALLBACK LOCAL
+    # =========================================================
+    # Esse fallback é só para rodar local sem Cloudinary.
+    # Na produção, configure CLOUDINARY_URL para a foto permanecer.
     pasta = os.path.join(
         current_app.root_path,
         "static",
@@ -133,14 +132,12 @@ def salvar_foto_membro(arquivo):
 
     os.makedirs(pasta, exist_ok=True)
 
-    nome_original = secure_filename(arquivo.filename)
-    extensao = nome_original.rsplit(".", 1)[1].lower()
-    nome_final = f"{uuid4().hex}.{extensao}"
+    nome_local = f"{uuid4().hex}.{extensao}"
+    caminho_final = os.path.join(pasta, nome_local)
 
-    caminho_final = os.path.join(pasta, nome_final)
     arquivo.save(caminho_final)
 
-    return f"/static/uploads/equipe/{nome_final}"
+    return f"/static/uploads/equipe/{nome_local}"
 
 
 def garantir_membros_padrao():
