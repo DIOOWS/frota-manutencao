@@ -3,6 +3,8 @@
 
 {% block content %}
 
+<div id="agendaEquipeApp">
+
 <div class="agenda-equipe-page agenda-mensal-page">
 
     <section class="agenda-header">
@@ -251,14 +253,11 @@
                                             {% if dia.hoje %}hoje{% endif %}
                                             {% if execucao and execucao.status == 'CONCLUIDA' %}ok{% endif %}
                                             {% if execucao and execucao.status != 'CONCLUIDA' and dia.data < hoje %}atrasada{% endif %}
-                                        "
-                                            data-dia-passado="{% if dia.data < hoje %}1{% else %}0{% endif %}"
-                                            data-status="{% if execucao %}{{ execucao.status }}{% endif %}">
+                                        ">
 
                                             {% if execucao %}
                                                 <form method="POST"
-                                                      action="/admin/agenda-equipe/execucao/{{ execucao.id }}/alternar"
-                                                      class="js-agenda-toggle-form">
+                                                      action="/admin/agenda-equipe/execucao/{{ execucao.id }}/alternar">
 
                                                     <button type="submit" class="agenda-cell-btn">
                                                         {% if execucao.status == "CONCLUIDA" %}
@@ -647,133 +646,460 @@
 
 {% endif %}
 
+</div>
+
+<style>
+    html,
+    body {
+        scroll-behavior: auto !important;
+        overflow-anchor: none;
+    }
+
+    .agenda-equipe-page,
+    .agenda-mensal-page,
+    .agenda-painel,
+    .agenda-tabela-scroll {
+        overflow-anchor: none;
+    }
+
+    #agendaEquipeApp {
+        position: relative;
+        transition: opacity 0.12s ease, transform 0.12s ease;
+    }
+
+    #agendaEquipeApp.agenda-ajax-carregando {
+        opacity: 0.82;
+        pointer-events: none;
+    }
+
+    #agendaEquipeApp.agenda-ajax-carregando::after {
+        content: "Atualizando agenda...";
+        position: fixed;
+        right: 22px;
+        bottom: 22px;
+        z-index: 99999;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.92);
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.25);
+    }
+</style>
 
 <script>
 (function () {
-    const STORAGE_KEY = "easy_control_agenda_scroll";
+    "use strict";
 
-    function salvarScrollAgenda() {
-        if (!document.body.classList.contains("agenda-scroll-handler-ready")) {
-            return;
-        }
-
-        sessionStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify({
-                x: window.scrollX || 0,
-                y: window.scrollY || 0,
-                path: window.location.pathname,
-                search: window.location.search
-            })
-        );
+    if (!document.querySelector(".agenda-equipe-page")) {
+        return;
     }
 
-    function restaurarScrollAgenda() {
-        const bruto = sessionStorage.getItem(STORAGE_KEY);
+    const CHAVE_SCROLL = "easy_control_agenda_scroll_global_v4";
+    const CHAVE_SCROLL_TABELA = "easy_control_agenda_tabela_scroll_v4";
+    let requisicaoEmAndamento = false;
 
-        if (!bruto) {
-            return;
-        }
+    if ("scrollRestoration" in history) {
+        history.scrollRestoration = "manual";
+    }
 
+    function pegarAppAgenda() {
+        return document.getElementById("agendaEquipeApp");
+    }
+
+    function pegarTabelaScroll() {
+        return document.querySelector(".agenda-tabela-scroll");
+    }
+
+    function salvarPosicaoAgenda() {
         try {
-            const dados = JSON.parse(bruto);
+            const tabelaScroll = pegarTabelaScroll();
 
-            if (
-                dados.path === window.location.pathname &&
-                dados.search === window.location.search
-            ) {
-                window.scrollTo(dados.x || 0, dados.y || 0);
-            }
+            const dadosPagina = {
+                pathname: window.location.pathname,
+                search: window.location.search,
+                scrollX: window.scrollX || window.pageXOffset || 0,
+                scrollY: window.scrollY || window.pageYOffset || 0,
+                momento: Date.now()
+            };
+
+            const dadosTabela = {
+                pathname: window.location.pathname,
+                search: window.location.search,
+                left: tabelaScroll ? tabelaScroll.scrollLeft : 0,
+                top: tabelaScroll ? tabelaScroll.scrollTop : 0,
+                momento: Date.now()
+            };
+
+            sessionStorage.setItem(CHAVE_SCROLL, JSON.stringify(dadosPagina));
+            sessionStorage.setItem(CHAVE_SCROLL_TABELA, JSON.stringify(dadosTabela));
         } catch (erro) {
-            console.warn("Não foi possível restaurar o scroll da agenda.", erro);
-        } finally {
-            sessionStorage.removeItem(STORAGE_KEY);
+            console.warn("Não foi possível salvar o scroll da agenda.", erro);
         }
     }
 
-    function atualizarCelulaAgenda(celula, botao) {
-        const statusAtual = celula.dataset.status || "";
-        const estaConcluida = statusAtual === "CONCLUIDA";
-        const proximoStatus = estaConcluida ? "PENDENTE" : "CONCLUIDA";
+    function restaurarPosicaoAgenda() {
+        try {
+            const brutoPagina = sessionStorage.getItem(CHAVE_SCROLL);
+            const brutoTabela = sessionStorage.getItem(CHAVE_SCROLL_TABELA);
 
-        celula.dataset.status = proximoStatus;
-
-        if (proximoStatus === "CONCLUIDA") {
-            celula.classList.add("ok");
-            celula.classList.remove("atrasada");
-            botao.textContent = "OK";
-            return;
-        }
-
-        celula.classList.remove("ok");
-        botao.textContent = "•";
-
-        if (celula.dataset.diaPassado === "1") {
-            celula.classList.add("atrasada");
-        }
-    }
-
-    function configurarAlternanciaSemReload() {
-        document.querySelectorAll(".js-agenda-toggle-form").forEach(function (form) {
-            form.addEventListener("submit", async function (event) {
-                event.preventDefault();
-
-                const botao = form.querySelector(".agenda-cell-btn");
-                const celula = form.closest(".agenda-dia-cell");
-
-                if (!botao || !celula || form.dataset.enviando === "1") {
-                    return;
-                }
-
-                form.dataset.enviando = "1";
-                botao.disabled = true;
-
-                try {
-                    const resposta = await fetch(form.action, {
-                        method: "POST",
-                        headers: {
-                            "X-Requested-With": "XMLHttpRequest"
-                        },
-                        credentials: "same-origin",
-                        redirect: "follow"
-                    });
-
-                    if (!resposta.ok) {
-                        throw new Error("Falha ao atualizar execução.");
-                    }
-
-                    atualizarCelulaAgenda(celula, botao);
-                } catch (erro) {
-                    console.error(erro);
-                    alert("Não foi possível atualizar essa tarefa agora.");
-                } finally {
-                    botao.disabled = false;
-                    form.dataset.enviando = "0";
-                }
-            });
-        });
-    }
-
-    document.addEventListener("DOMContentLoaded", function () {
-        document.body.classList.add("agenda-scroll-handler-ready");
-
-        restaurarScrollAgenda();
-        configurarAlternanciaSemReload();
-
-        document.querySelectorAll(".agenda-equipe-page form").forEach(function (form) {
-            if (form.classList.contains("js-agenda-toggle-form")) {
+            if (!brutoPagina && !brutoTabela) {
                 return;
             }
 
-            form.addEventListener("submit", salvarScrollAgenda);
-        });
+            const dadosPagina = brutoPagina ? JSON.parse(brutoPagina) : null;
+            const dadosTabela = brutoTabela ? JSON.parse(brutoTabela) : null;
+            const agora = Date.now();
 
-        document.querySelectorAll(".agenda-membro-card").forEach(function (link) {
-            link.addEventListener("click", salvarScrollAgenda);
+            function restaurarPagina() {
+                if (!dadosPagina) {
+                    return;
+                }
+
+                if (dadosPagina.pathname !== window.location.pathname) {
+                    return;
+                }
+
+                if (agora - Number(dadosPagina.momento || 0) > 60000) {
+                    return;
+                }
+
+                window.scrollTo({
+                    left: Number(dadosPagina.scrollX || 0),
+                    top: Number(dadosPagina.scrollY || 0),
+                    behavior: "auto"
+                });
+            }
+
+            function restaurarTabela() {
+                if (!dadosTabela) {
+                    return;
+                }
+
+                if (dadosTabela.pathname !== window.location.pathname) {
+                    return;
+                }
+
+                if (agora - Number(dadosTabela.momento || 0) > 60000) {
+                    return;
+                }
+
+                const tabelaScroll = pegarTabelaScroll();
+
+                if (tabelaScroll) {
+                    tabelaScroll.scrollLeft = Number(dadosTabela.left || 0);
+                    tabelaScroll.scrollTop = Number(dadosTabela.top || 0);
+                }
+            }
+
+            restaurarPagina();
+            restaurarTabela();
+
+            requestAnimationFrame(function () {
+                restaurarPagina();
+                restaurarTabela();
+            });
+
+            setTimeout(function () {
+                restaurarPagina();
+                restaurarTabela();
+            }, 80);
+
+            setTimeout(function () {
+                restaurarPagina();
+                restaurarTabela();
+            }, 250);
+        } catch (erro) {
+            console.warn("Não foi possível restaurar o scroll da agenda.", erro);
+        }
+    }
+
+    function limparModaisBootstrap() {
+        try {
+            document.querySelectorAll(".modal.show").forEach(function (modalEl) {
+                if (typeof bootstrap !== "undefined" && bootstrap.Modal) {
+                    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                    modal.hide();
+                } else {
+                    modalEl.classList.remove("show");
+                    modalEl.style.display = "none";
+                }
+            });
+
+            document.querySelectorAll(".modal-backdrop").forEach(function (backdrop) {
+                backdrop.remove();
+            });
+
+            document.body.classList.remove("modal-open");
+            document.body.style.removeProperty("overflow");
+            document.body.style.removeProperty("padding-right");
+        } catch (erro) {
+            console.warn("Não foi possível limpar os modais da agenda.", erro);
+        }
+    }
+
+    function aplicarEstadoCarregando(ativo) {
+        const app = pegarAppAgenda();
+
+        if (!app) {
+            return;
+        }
+
+        app.classList.toggle("agenda-ajax-carregando", ativo);
+    }
+
+    function trocarConteudoAgenda(html, urlFinal, atualizarHistorico) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        const novoApp = doc.getElementById("agendaEquipeApp");
+        const appAtual = pegarAppAgenda();
+
+        if (!novoApp || !appAtual) {
+            window.location.href = urlFinal;
+            return;
+        }
+
+        appAtual.innerHTML = novoApp.innerHTML;
+
+        if (atualizarHistorico && urlFinal) {
+            history.pushState({ agendaAjax: true }, "", urlFinal);
+        }
+
+        limparModaisBootstrap();
+        restaurarPosicaoAgenda();
+    }
+
+    async function carregarAgendaAjax(url, opcoes) {
+        if (requisicaoEmAndamento) {
+            return;
+        }
+
+        requisicaoEmAndamento = true;
+        salvarPosicaoAgenda();
+        aplicarEstadoCarregando(true);
+
+        const metodo = (opcoes && opcoes.method ? opcoes.method : "GET").toUpperCase();
+        const atualizarHistorico = metodo === "GET";
+
+        try {
+            limparModaisBootstrap();
+
+            const resposta = await fetch(url, {
+                method: metodo,
+                body: opcoes ? opcoes.body : undefined,
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                credentials: "same-origin"
+            });
+
+            if (!resposta.ok) {
+                throw new Error("Falha ao carregar a agenda.");
+            }
+
+            const html = await resposta.text();
+            const urlFinal = resposta.url || url;
+
+            trocarConteudoAgenda(html, urlFinal, atualizarHistorico);
+        } catch (erro) {
+            console.error(erro);
+            window.location.href = url;
+        } finally {
+            requisicaoEmAndamento = false;
+            aplicarEstadoCarregando(false);
+        }
+    }
+
+    function atualizarCelulaExecucao(form) {
+        const celula = form.closest(".agenda-dia-cell");
+        const botao = form.querySelector(".agenda-cell-btn");
+
+        if (!celula || !botao) {
+            return;
+        }
+
+        const estavaConcluida = celula.classList.contains("ok");
+
+        if (estavaConcluida) {
+            celula.classList.remove("ok");
+            botao.textContent = "•";
+        } else {
+            celula.classList.add("ok");
+            celula.classList.remove("atrasada");
+            botao.textContent = "OK";
+        }
+    }
+
+    function urlEhDaAgenda(url) {
+        try {
+            const destino = new URL(url, window.location.origin);
+            return destino.origin === window.location.origin &&
+                   destino.pathname.startsWith("/admin/agenda-equipe");
+        } catch (erro) {
+            return false;
+        }
+    }
+
+    document.addEventListener("mousedown", salvarPosicaoAgenda, true);
+    document.addEventListener("touchstart", salvarPosicaoAgenda, true);
+
+    document.addEventListener("click", function (event) {
+        const alvo = event.target.closest("a, button, input[type='submit'], input[type='button']");
+
+        if (!alvo) {
+            return;
+        }
+
+        salvarPosicaoAgenda();
+
+        const link = alvo.closest("a");
+        const app = pegarAppAgenda();
+
+        if (!link || !app || !app.contains(link)) {
+            return;
+        }
+
+        if (!urlEhDaAgenda(link.href)) {
+            return;
+        }
+
+        if (link.target && link.target !== "_self") {
+            return;
+        }
+
+        event.preventDefault();
+        carregarAgendaAjax(link.href, { method: "GET" });
+    }, true);
+
+    document.addEventListener("change", function (event) {
+        const alvo = event.target.closest("select, input, textarea");
+
+        if (!alvo) {
+            return;
+        }
+
+        salvarPosicaoAgenda();
+    }, true);
+
+    document.addEventListener("submit", async function (event) {
+        const form = event.target;
+
+        if (!form || !form.action) {
+            return;
+        }
+
+        salvarPosicaoAgenda();
+
+        const ehAlternarExecucao =
+            form.action.includes("/admin/agenda-equipe/execucao/") &&
+            form.action.includes("/alternar");
+
+        if (!ehAlternarExecucao) {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const botao = form.querySelector("button[type='submit']");
+        const textoOriginal = botao ? botao.textContent : "";
+
+        if (botao) {
+            botao.disabled = true;
+            botao.classList.add("salvando");
+        }
+
+        try {
+            const resposta = await fetch(form.action, {
+                method: "POST",
+                body: new FormData(form),
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                credentials: "same-origin"
+            });
+
+            if (!resposta.ok) {
+                throw new Error("Falha ao atualizar execução.");
+            }
+
+            atualizarCelulaExecucao(form);
+            restaurarPosicaoAgenda();
+        } catch (erro) {
+            console.error(erro);
+
+            if (botao) {
+                botao.textContent = textoOriginal;
+            }
+
+            alert("Não foi possível atualizar essa tarefa agora. Tente novamente.");
+        } finally {
+            if (botao) {
+                botao.disabled = false;
+                botao.classList.remove("salvando");
+            }
+        }
+    }, true);
+
+    document.addEventListener("submit", function (event) {
+        const form = event.target;
+        const app = pegarAppAgenda();
+
+        if (!form || !app || !app.contains(form)) {
+            return;
+        }
+
+        if (event.defaultPrevented) {
+            return;
+        }
+
+        if (!urlEhDaAgenda(form.action)) {
+            return;
+        }
+
+        const ehAlternarExecucao =
+            form.action.includes("/admin/agenda-equipe/execucao/") &&
+            form.action.includes("/alternar");
+
+        if (ehAlternarExecucao) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const metodo = (form.method || "GET").toUpperCase();
+
+        if (metodo === "GET") {
+            const params = new URLSearchParams(new FormData(form));
+            const url = new URL(form.action, window.location.origin);
+            url.search = params.toString();
+            carregarAgendaAjax(url.toString(), { method: "GET" });
+            return;
+        }
+
+        carregarAgendaAjax(form.action, {
+            method: metodo,
+            body: new FormData(form)
         });
+    }, false);
+
+    window.addEventListener("popstate", function () {
+        carregarAgendaAjax(window.location.href, { method: "GET" });
     });
+
+    window.addEventListener("beforeunload", salvarPosicaoAgenda);
+    window.addEventListener("pagehide", salvarPosicaoAgenda);
+    window.addEventListener("pageshow", restaurarPosicaoAgenda);
+    window.addEventListener("load", restaurarPosicaoAgenda);
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", restaurarPosicaoAgenda);
+    } else {
+        restaurarPosicaoAgenda();
+    }
 })();
 </script>
-
 
 {% endblock %}
