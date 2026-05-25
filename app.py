@@ -5,9 +5,6 @@ from dotenv import load_dotenv
 import os
 import cloudinary
 from sqlalchemy import text, inspect
-from models.tarefa_equipe import TarefaEquipe
-
-from routes.frotas import frotas_bp
 
 # ==========================================
 # 🔥 CARREGAR VARIÁVEIS
@@ -96,7 +93,8 @@ from models.fechamento_mensal import FechamentoMensal
 from models.conta_pagar_importada import ContaPagarImportada
 from models.conta_receber_importada import ContaReceberImportada
 from models.membro_agenda_equipe import MembroAgendaEquipe
-from models.tarefa_equipe import TarefaEquipe
+from models.agenda_mes_equipe import AgendaMesEquipe
+from models.tarefa_equipe import TarefaEquipe, ExecucaoTarefaEquipe
 
 
 # ==========================================
@@ -203,12 +201,12 @@ from routes.manutencoes import manutencao_bp
 from routes.auth import auth_bp
 from routes.clientes import cliente_bp
 from routes.admin import admin_bp
+from routes.frotas import frotas_bp
 from routes.assistente import assistente_bp
 from routes.gestao import gestao_bp
 from routes.importacoes import importacoes_bp
 from routes.radar_financeiro import radar_financeiro_bp
 from routes.agenda_equipe import agenda_equipe_bp
-
 
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(manutencao_bp)

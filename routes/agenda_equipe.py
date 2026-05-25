@@ -1,13 +1,16 @@
 import os
+import calendar
 from uuid import uuid4
+from datetime import date, datetime
 
 from flask import Blueprint, render_template, request, redirect, flash, current_app
 from werkzeug.utils import secure_filename
 
 from utils.auth import gestao_required
 from database import db
-from models.tarefa_equipe import TarefaEquipe
+from models.tarefa_equipe import TarefaEquipe, ExecucaoTarefaEquipe
 from models.membro_agenda_equipe import MembroAgendaEquipe
+from models.agenda_mes_equipe import AgendaMesEquipe
 
 
 agenda_equipe_bp = Blueprint(
@@ -17,14 +20,7 @@ agenda_equipe_bp = Blueprint(
 )
 
 
-DIAS_SEMANA = [
-    "SEGUNDA",
-    "TERCA",
-    "QUARTA",
-    "QUINTA",
-    "SEXTA",
-]
-
+EXTENSOES_PERMITIDAS = {"png", "jpg", "jpeg", "webp"}
 
 MEMBROS_PADRAO = [
     {
@@ -45,9 +41,6 @@ MEMBROS_PADRAO = [
 ]
 
 
-EXTENSOES_PERMITIDAS = {"png", "jpg", "jpeg", "webp"}
-
-
 def texto(valor):
     if valor is None:
         return ""
@@ -59,28 +52,13 @@ def normalizar_nome(valor):
     return texto(valor).title()
 
 
-def normalizar_status(valor):
-    status = texto(valor).upper()
+def normalizar_periodicidade(valor):
+    periodicidade = texto(valor).upper()
 
-    if status not in ["PENDENTE", "ANDAMENTO", "CONCLUIDA", "CANCELADA"]:
-        return "PENDENTE"
+    if periodicidade not in ["DIARIA", "SEMANAL", "MENSAL", "EXTRA"]:
+        return "DIARIA"
 
-    return status
-
-
-def normalizar_dia(valor):
-    dia = texto(valor).upper()
-
-    mapa = {
-        "SEGUNDA": "SEGUNDA",
-        "TERÇA": "TERCA",
-        "TERCA": "TERCA",
-        "QUARTA": "QUARTA",
-        "QUINTA": "QUINTA",
-        "SEXTA": "SEXTA",
-    }
-
-    return mapa.get(dia, "SEGUNDA")
+    return periodicidade
 
 
 def extensao_permitida(nome_arquivo):
@@ -157,122 +135,444 @@ def buscar_membro_por_id(membro_id):
     ).first()
 
 
-def montar_tarefas_por_dia(responsavel):
-    tarefas = TarefaEquipe.query.filter_by(
-        responsavel=responsavel
-    ).order_by(
-        TarefaEquipe.id.desc()
-    ).all()
+def ultimo_dia_mes(mes, ano):
+    return calendar.monthrange(ano, mes)[1]
 
-    tarefas_por_dia = {
-        dia: []
-        for dia in DIAS_SEMANA
+
+def mes_anterior(mes, ano):
+    if mes == 1:
+        return 12, ano - 1
+
+    return mes - 1, ano
+
+
+def nome_mes_texto(mes):
+    nomes = {
+        1: "Janeiro",
+        2: "Fevereiro",
+        3: "Março",
+        4: "Abril",
+        5: "Maio",
+        6: "Junho",
+        7: "Julho",
+        8: "Agosto",
+        9: "Setembro",
+        10: "Outubro",
+        11: "Novembro",
+        12: "Dezembro",
     }
 
-    for tarefa in tarefas:
-        dia = normalizar_dia(tarefa.dia_semana)
-
-        if dia not in tarefas_por_dia:
-            tarefas_por_dia[dia] = []
-
-        tarefas_por_dia[dia].append(tarefa)
-
-    return tarefas_por_dia
+    return nomes.get(mes, str(mes))
 
 
-def contar_tarefas(responsavel):
-    tarefas = TarefaEquipe.query.filter_by(
-        responsavel=responsavel
-    ).all()
-
-    total = len(tarefas)
-
-    pendentes = len([
-        t for t in tarefas
-        if (t.status or "").upper() == "PENDENTE"
-    ])
-
-    andamento = len([
-        t for t in tarefas
-        if (t.status or "").upper() == "ANDAMENTO"
-    ])
-
-    concluidas = len([
-        t for t in tarefas
-        if (t.status or "").upper() == "CONCLUIDA"
-    ])
-
-    canceladas = len([
-        t for t in tarefas
-        if (t.status or "").upper() == "CANCELADA"
-    ])
-
-    return {
-        "total": total,
-        "pendentes": pendentes,
-        "andamento": andamento,
-        "concluidas": concluidas,
-        "canceladas": canceladas,
+def nome_dia_semana(numero):
+    nomes = {
+        0: "seg",
+        1: "ter",
+        2: "qua",
+        3: "qui",
+        4: "sex",
+        5: "sáb",
+        6: "dom",
     }
 
+    return nomes.get(numero, "")
 
-def montar_membros_com_resumo(membros):
-    membros_com_resumo = []
 
-    for membro in membros:
-        resumo = contar_tarefas(membro.nome)
+def dias_do_mes(mes, ano):
+    total_dias = ultimo_dia_mes(mes, ano)
+    dias = []
 
-        membros_com_resumo.append({
-            "id": membro.id,
-            "nome": membro.nome,
-            "cargo": membro.cargo,
-            "foto": membro.foto,
-            "resumo": resumo,
+    for dia in range(1, total_dias + 1):
+        data_ref = date(ano, mes, dia)
+        semana = data_ref.weekday()
+
+        dias.append({
+            "dia": dia,
+            "data": data_ref,
+            "semana": semana,
+            "semana_nome": nome_dia_semana(semana),
+            "fim_semana": semana in [5, 6],
+            "hoje": data_ref == date.today(),
         })
 
-    return membros_com_resumo
+    return dias
+
+
+def datas_programadas_tarefa(tarefa):
+    total_dias = ultimo_dia_mes(tarefa.mes, tarefa.ano)
+    datas = []
+
+    periodicidade = (tarefa.periodicidade or "DIARIA").upper()
+
+    for dia in range(1, total_dias + 1):
+        data_ref = date(tarefa.ano, tarefa.mes, dia)
+        semana = data_ref.weekday()
+
+        if periodicidade == "DIARIA":
+            if semana <= 4:
+                datas.append(data_ref)
+
+        elif periodicidade == "SEMANAL":
+            if tarefa.dia_semana is not None and semana == tarefa.dia_semana:
+                datas.append(data_ref)
+
+        elif periodicidade == "MENSAL":
+            dia_alvo = tarefa.dia_mes or 1
+            dia_real = min(dia_alvo, total_dias)
+
+            if dia == dia_real:
+                datas.append(data_ref)
+
+        elif periodicidade == "EXTRA":
+            dia_alvo = tarefa.dia_mes or 1
+            dia_real = min(dia_alvo, total_dias)
+
+            if dia == dia_real:
+                datas.append(data_ref)
+
+    return datas
+
+
+def criar_execucoes_da_tarefa(tarefa):
+    datas = datas_programadas_tarefa(tarefa)
+
+    for data_ref in datas:
+        existe = ExecucaoTarefaEquipe.query.filter_by(
+            tarefa_id=tarefa.id,
+            data=data_ref
+        ).first()
+
+        if existe:
+            continue
+
+        execucao = ExecucaoTarefaEquipe(
+            tarefa_id=tarefa.id,
+            data=data_ref,
+            status="PENDENTE"
+        )
+
+        db.session.add(execucao)
+
+
+def garantir_execucoes_mes(membro_id, mes, ano):
+    tarefas = TarefaEquipe.query.filter_by(
+        membro_id=membro_id,
+        mes=mes,
+        ano=ano,
+        ativo=True
+    ).all()
+
+    for tarefa in tarefas:
+        criar_execucoes_da_tarefa(tarefa)
+
+    db.session.commit()
+
+
+def buscar_tarefas_mes(membro_id, mes, ano):
+    tarefas = TarefaEquipe.query.filter_by(
+        membro_id=membro_id,
+        mes=mes,
+        ano=ano,
+        ativo=True
+    ).order_by(
+        TarefaEquipe.ordem.asc(),
+        TarefaEquipe.id.asc()
+    ).all()
+
+    return tarefas
+
+
+def existe_agenda_mes(membro_id, mes, ano):
+    agenda = AgendaMesEquipe.query.filter_by(
+        membro_id=membro_id,
+        mes=mes,
+        ano=ano
+    ).first()
+
+    return agenda is not None
+
+
+def criar_registro_agenda_mes(membro_id, mes, ano):
+    agenda = AgendaMesEquipe.query.filter_by(
+        membro_id=membro_id,
+        mes=mes,
+        ano=ano
+    ).first()
+
+    if agenda:
+        return agenda
+
+    agenda = AgendaMesEquipe(
+        membro_id=membro_id,
+        mes=mes,
+        ano=ano
+    )
+
+    db.session.add(agenda)
+
+    return agenda
+
+
+def buscar_mes_base_para_copia(membro_id, mes, ano):
+    mes_ant, ano_ant = mes_anterior(mes, ano)
+
+    tarefas_mes_anterior = buscar_tarefas_mes(
+        membro_id=membro_id,
+        mes=mes_ant,
+        ano=ano_ant
+    )
+
+    if tarefas_mes_anterior:
+        return mes_ant, ano_ant, tarefas_mes_anterior
+
+    tarefas_antigas = TarefaEquipe.query.filter(
+        TarefaEquipe.membro_id == membro_id,
+        TarefaEquipe.ativo == True
+    ).order_by(
+        TarefaEquipe.ano.desc(),
+        TarefaEquipe.mes.desc(),
+        TarefaEquipe.id.asc()
+    ).all()
+
+    if tarefas_antigas:
+        tarefa_ref = tarefas_antigas[0]
+
+        tarefas_mes_ref = buscar_tarefas_mes(
+            membro_id=membro_id,
+            mes=tarefa_ref.mes,
+            ano=tarefa_ref.ano
+        )
+
+        return tarefa_ref.mes, tarefa_ref.ano, tarefas_mes_ref
+
+    return None, None, []
+
+
+def montar_linhas_tabela(tarefas):
+    linhas = []
+
+    for tarefa in tarefas:
+        execucoes = ExecucaoTarefaEquipe.query.filter_by(
+            tarefa_id=tarefa.id
+        ).all()
+
+        mapa = {}
+
+        for execucao in execucoes:
+            mapa[execucao.data.day] = execucao
+
+        linhas.append({
+            "tarefa": tarefa,
+            "execucoes": mapa,
+        })
+
+    return linhas
+
+
+def contar_resumo_mes(tarefas):
+    total_programadas = 0
+    concluidas = 0
+    pendentes = 0
+    atrasadas = 0
+
+    hoje = date.today()
+
+    for tarefa in tarefas:
+        execucoes = ExecucaoTarefaEquipe.query.filter_by(
+            tarefa_id=tarefa.id
+        ).all()
+
+        for execucao in execucoes:
+            total_programadas += 1
+
+            status = (execucao.status or "").upper()
+
+            if status == "CONCLUIDA":
+                concluidas += 1
+            elif execucao.data < hoje:
+                atrasadas += 1
+            else:
+                pendentes += 1
+
+    percentual = 0
+
+    if total_programadas:
+        percentual = round((concluidas / total_programadas) * 100, 1)
+
+    return {
+        "total_programadas": total_programadas,
+        "concluidas": concluidas,
+        "pendentes": pendentes,
+        "atrasadas": atrasadas,
+        "percentual": percentual,
+    }
+
+
+def contar_tarefas_membro(membro_id):
+    total = TarefaEquipe.query.filter_by(
+        membro_id=membro_id,
+        ativo=True
+    ).count()
+
+    return total
 
 
 @agenda_equipe_bp.route("/", methods=["GET"])
 @gestao_required
 def index():
 
-    membros = buscar_membros()
-    membros_com_resumo = montar_membros_com_resumo(membros)
+    hoje = date.today()
 
+    mes = request.args.get("mes", type=int) or hoje.month
+    ano = request.args.get("ano", type=int) or hoje.year
     membro_id = request.args.get("membro_id", type=int)
+
+    if mes < 1 or mes > 12:
+        mes = hoje.month
+
+    membros_raw = buscar_membros()
+
+    if not membro_id and membros_raw:
+        membro_id = membros_raw[0].id
 
     membro_selecionado = buscar_membro_por_id(membro_id)
 
-    if not membro_selecionado and membros:
-        membro_selecionado = membros[0]
+    membros = []
 
-    tarefas_por_dia = None
-    resumo_membro = None
+    for membro in membros_raw:
+        membros.append({
+            "id": membro.id,
+            "nome": membro.nome,
+            "cargo": membro.cargo,
+            "foto": membro.foto,
+            "total_tarefas": contar_tarefas_membro(membro.id),
+        })
+
+    agenda_iniciada = False
+    tarefas = []
+    linhas = []
+    resumo_mes = {
+        "total_programadas": 0,
+        "concluidas": 0,
+        "pendentes": 0,
+        "atrasadas": 0,
+        "percentual": 0,
+    }
 
     if membro_selecionado:
-        tarefas_por_dia = montar_tarefas_por_dia(
-            membro_selecionado.nome
+        agenda_iniciada = existe_agenda_mes(
+            membro_id=membro_selecionado.id,
+            mes=mes,
+            ano=ano
         )
 
-        resumo_membro = contar_tarefas(
-            membro_selecionado.nome
-        )
+        if agenda_iniciada:
+            garantir_execucoes_mes(
+                membro_id=membro_selecionado.id,
+                mes=mes,
+                ano=ano
+            )
+
+            tarefas = buscar_tarefas_mes(
+                membro_id=membro_selecionado.id,
+                mes=mes,
+                ano=ano
+            )
+
+            linhas = montar_linhas_tabela(tarefas)
+            resumo_mes = contar_resumo_mes(tarefas)
 
     return render_template(
         "admin/agenda_equipe.html",
-        membros=membros_com_resumo,
-        membros_raw=membros,
+        membros=membros,
+        membros_raw=membros_raw,
         membro_selecionado=membro_selecionado,
-        tarefas_por_dia=tarefas_por_dia,
-        resumo_membro=resumo_membro,
-        dias_semana=DIAS_SEMANA
+        mes=mes,
+        ano=ano,
+        nome_mes=nome_mes_texto(mes),
+        dias=dias_do_mes(mes, ano),
+        tarefas=tarefas,
+        linhas=linhas,
+        resumo_mes=resumo_mes,
+        agenda_iniciada=agenda_iniciada,
+        hoje=hoje,
     )
 
 
-# =====================================================
-# MEMBROS
-# =====================================================
+@agenda_equipe_bp.route("/iniciar-mes", methods=["POST"])
+@gestao_required
+def iniciar_mes():
+
+    membro_id = request.form.get("membro_id", type=int)
+    mes = request.form.get("mes", type=int)
+    ano = request.form.get("ano", type=int)
+
+    membro = buscar_membro_por_id(membro_id)
+
+    if not membro:
+        flash("Membro inválido.", "danger")
+        return redirect("/admin/agenda-equipe/")
+
+    if existe_agenda_mes(membro.id, mes, ano):
+        flash("A agenda deste mês já foi iniciada.", "info")
+        return redirect(f"/admin/agenda-equipe/?membro_id={membro.id}&mes={mes}&ano={ano}")
+
+    try:
+        criar_registro_agenda_mes(
+            membro_id=membro.id,
+            mes=mes,
+            ano=ano
+        )
+
+        mes_base, ano_base, tarefas_base = buscar_mes_base_para_copia(
+            membro_id=membro.id,
+            mes=mes,
+            ano=ano
+        )
+
+        total_copiadas = 0
+
+        for tarefa_base in tarefas_base:
+            nova_tarefa = TarefaEquipe(
+                membro_id=membro.id,
+                titulo=tarefa_base.titulo,
+                descricao=tarefa_base.descricao,
+                mes=mes,
+                ano=ano,
+                periodicidade=tarefa_base.periodicidade,
+                dia_semana=tarefa_base.dia_semana,
+                dia_mes=tarefa_base.dia_mes,
+                ativo=True,
+                ordem=tarefa_base.ordem or 0,
+            )
+
+            db.session.add(nova_tarefa)
+            db.session.flush()
+
+            criar_execucoes_da_tarefa(nova_tarefa)
+
+            total_copiadas += 1
+
+        db.session.commit()
+
+        if total_copiadas:
+            flash(
+                f"Agenda de {nome_mes_texto(mes)}/{ano} iniciada com {total_copiadas} tarefa(s) copiadas do mês anterior.",
+                "success"
+            )
+        else:
+            flash(
+                "Agenda iniciada vazia. Cadastre as tarefas deste mês.",
+                "success"
+            )
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao iniciar agenda do mês: {str(e)}", "danger")
+
+    return redirect(f"/admin/agenda-equipe/?membro_id={membro.id}&mes={mes}&ano={ano}")
+
 
 @agenda_equipe_bp.route("/membros/novo", methods=["POST"])
 @gestao_required
@@ -322,8 +622,6 @@ def editar_membro(id):
 
     membro = MembroAgendaEquipe.query.get_or_404(id)
 
-    nome_antigo = membro.nome
-
     nome = normalizar_nome(
         request.form.get("nome")
     )
@@ -347,13 +645,6 @@ def editar_membro(id):
         if nova_foto:
             membro.foto = nova_foto
 
-        if nome_antigo != nome:
-            TarefaEquipe.query.filter_by(
-                responsavel=nome_antigo
-            ).update({
-                "responsavel": nome
-            })
-
         db.session.commit()
 
         flash("Membro atualizado com sucesso!", "success")
@@ -372,9 +663,12 @@ def excluir_membro(id):
     membro = MembroAgendaEquipe.query.get_or_404(id)
 
     try:
-        TarefaEquipe.query.filter_by(
-            responsavel=membro.nome
-        ).delete()
+        tarefas = TarefaEquipe.query.filter_by(
+            membro_id=membro.id
+        ).all()
+
+        for tarefa in tarefas:
+            db.session.delete(tarefa)
 
         db.session.delete(membro)
         db.session.commit()
@@ -388,20 +682,22 @@ def excluir_membro(id):
     return redirect("/admin/agenda-equipe/")
 
 
-# =====================================================
-# TAREFAS
-# =====================================================
-
 @agenda_equipe_bp.route("/nova", methods=["POST"])
 @gestao_required
 def nova():
 
     membro_id = request.form.get("membro_id", type=int)
+    mes = request.form.get("mes", type=int)
+    ano = request.form.get("ano", type=int)
+
     membro = buscar_membro_por_id(membro_id)
 
     if not membro:
-        flash("Responsável inválido.", "danger")
+        flash("Perfil inválido.", "danger")
         return redirect("/admin/agenda-equipe/")
+
+    if not existe_agenda_mes(membro.id, mes, ano):
+        criar_registro_agenda_mes(membro.id, mes, ano)
 
     titulo = texto(
         request.form.get("titulo")
@@ -411,37 +707,59 @@ def nova():
         request.form.get("descricao")
     )
 
-    dia_semana = normalizar_dia(
-        request.form.get("dia_semana")
+    periodicidade = normalizar_periodicidade(
+        request.form.get("periodicidade")
     )
 
-    status = normalizar_status(
-        request.form.get("status")
-    )
+    dia_semana = request.form.get("dia_semana", type=int)
+    dia_mes = request.form.get("dia_mes", type=int)
 
     if not titulo:
         flash("Informe o título da tarefa.", "danger")
-        return redirect(f"/admin/agenda-equipe/?membro_id={membro.id}")
+        return redirect(f"/admin/agenda-equipe/?membro_id={membro.id}&mes={mes}&ano={ano}")
 
-    tarefa = TarefaEquipe(
-        responsavel=membro.nome,
-        titulo=titulo,
-        descricao=descricao,
-        dia_semana=dia_semana,
-        status=status,
-    )
+    if periodicidade == "SEMANAL" and dia_semana is None:
+        dia_semana = 0
+
+    if periodicidade in ["MENSAL", "EXTRA"] and not dia_mes:
+        dia_mes = 1
 
     try:
+        maior_ordem = db.session.query(
+            db.func.max(TarefaEquipe.ordem)
+        ).filter_by(
+            membro_id=membro.id,
+            mes=mes,
+            ano=ano
+        ).scalar() or 0
+
+        tarefa = TarefaEquipe(
+            membro_id=membro.id,
+            titulo=titulo,
+            descricao=descricao,
+            mes=mes,
+            ano=ano,
+            periodicidade=periodicidade,
+            dia_semana=dia_semana,
+            dia_mes=dia_mes,
+            ativo=True,
+            ordem=maior_ordem + 1,
+        )
+
         db.session.add(tarefa)
+        db.session.flush()
+
+        criar_execucoes_da_tarefa(tarefa)
+
         db.session.commit()
 
-        flash("Tarefa cadastrada com sucesso!", "success")
+        flash("Tarefa cadastrada no mês selecionado!", "success")
 
     except Exception as e:
         db.session.rollback()
         flash(f"Erro ao cadastrar tarefa: {str(e)}", "danger")
 
-    return redirect(f"/admin/agenda-equipe/?membro_id={membro.id}")
+    return redirect(f"/admin/agenda-equipe/?membro_id={membro.id}&mes={mes}&ano={ano}")
 
 
 @agenda_equipe_bp.route("/editar/<int:id>", methods=["POST"])
@@ -450,9 +768,6 @@ def editar(id):
 
     tarefa = TarefaEquipe.query.get_or_404(id)
 
-    membro_id = request.form.get("membro_id", type=int)
-    membro = buscar_membro_por_id(membro_id)
-
     titulo = texto(
         request.form.get("titulo")
     )
@@ -461,69 +776,48 @@ def editar(id):
         request.form.get("descricao")
     )
 
-    dia_semana = normalizar_dia(
-        request.form.get("dia_semana")
+    periodicidade = normalizar_periodicidade(
+        request.form.get("periodicidade")
     )
 
-    status = normalizar_status(
-        request.form.get("status")
-    )
+    dia_semana = request.form.get("dia_semana", type=int)
+    dia_mes = request.form.get("dia_mes", type=int)
 
     if not titulo:
         flash("Informe o título da tarefa.", "danger")
-        return redirect(f"/admin/agenda-equipe/?membro_id={membro.id if membro else ''}")
+        return redirect(f"/admin/agenda-equipe/?membro_id={tarefa.membro_id}&mes={tarefa.mes}&ano={tarefa.ano}")
+
+    if periodicidade == "SEMANAL" and dia_semana is None:
+        dia_semana = 0
+
+    if periodicidade in ["MENSAL", "EXTRA"] and not dia_mes:
+        dia_mes = 1
 
     try:
-        if membro:
-            tarefa.responsavel = membro.nome
-
         tarefa.titulo = titulo
         tarefa.descricao = descricao
+        tarefa.periodicidade = periodicidade
         tarefa.dia_semana = dia_semana
-        tarefa.status = status
+        tarefa.dia_mes = dia_mes
+
+        ExecucaoTarefaEquipe.query.filter_by(
+            tarefa_id=tarefa.id,
+            status="PENDENTE"
+        ).delete()
+
+        db.session.flush()
+
+        criar_execucoes_da_tarefa(tarefa)
 
         db.session.commit()
 
         flash("Tarefa atualizada com sucesso!", "success")
 
-        membro_destino = membro or MembroAgendaEquipe.query.filter_by(
-            nome=tarefa.responsavel
-        ).first()
-
-        if membro_destino:
-            return redirect(f"/admin/agenda-equipe/?membro_id={membro_destino.id}")
-
     except Exception as e:
         db.session.rollback()
         flash(f"Erro ao editar tarefa: {str(e)}", "danger")
 
-    return redirect("/admin/agenda-equipe/")
-
-
-@agenda_equipe_bp.route("/concluir/<int:id>", methods=["POST"])
-@gestao_required
-def concluir(id):
-
-    tarefa = TarefaEquipe.query.get_or_404(id)
-
-    try:
-        tarefa.status = "CONCLUIDA"
-        db.session.commit()
-
-        flash("Tarefa marcada como concluída!", "success")
-
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Erro ao concluir tarefa: {str(e)}", "danger")
-
-    membro = MembroAgendaEquipe.query.filter_by(
-        nome=tarefa.responsavel
-    ).first()
-
-    if membro:
-        return redirect(f"/admin/agenda-equipe/?membro_id={membro.id}")
-
-    return redirect("/admin/agenda-equipe/")
+    return redirect(f"/admin/agenda-equipe/?membro_id={tarefa.membro_id}&mes={tarefa.mes}&ano={tarefa.ano}")
 
 
 @agenda_equipe_bp.route("/excluir/<int:id>", methods=["POST"])
@@ -531,23 +825,43 @@ def concluir(id):
 def excluir(id):
 
     tarefa = TarefaEquipe.query.get_or_404(id)
-    responsavel = tarefa.responsavel
+
+    membro_id = tarefa.membro_id
+    mes = tarefa.mes
+    ano = tarefa.ano
 
     try:
         db.session.delete(tarefa)
         db.session.commit()
 
-        flash("Tarefa excluída com sucesso!", "success")
+        flash("Tarefa excluída do mês selecionado.", "success")
 
     except Exception as e:
         db.session.rollback()
         flash(f"Erro ao excluir tarefa: {str(e)}", "danger")
 
-    membro = MembroAgendaEquipe.query.filter_by(
-        nome=responsavel
-    ).first()
+    return redirect(f"/admin/agenda-equipe/?membro_id={membro_id}&mes={mes}&ano={ano}")
 
-    if membro:
-        return redirect(f"/admin/agenda-equipe/?membro_id={membro.id}")
 
-    return redirect("/admin/agenda-equipe/")
+@agenda_equipe_bp.route("/execucao/<int:id>/alternar", methods=["POST"])
+@gestao_required
+def alternar_execucao(id):
+
+    execucao = ExecucaoTarefaEquipe.query.get_or_404(id)
+    tarefa = execucao.tarefa
+
+    try:
+        status_atual = (execucao.status or "").upper()
+
+        if status_atual == "CONCLUIDA":
+            execucao.status = "PENDENTE"
+        else:
+            execucao.status = "CONCLUIDA"
+
+        db.session.commit()
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao atualizar execução: {str(e)}", "danger")
+
+    return redirect(f"/admin/agenda-equipe/?membro_id={tarefa.membro_id}&mes={tarefa.mes}&ano={tarefa.ano}")

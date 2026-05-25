@@ -3,28 +3,93 @@
 
 {% block content %}
 
-<div class="agenda-equipe-page">
+<div class="agenda-equipe-page agenda-mensal-page">
 
     <section class="agenda-header">
         <div>
             <span>ADMINISTRAÇÃO</span>
-            <h1>Agenda da Equipe</h1>
-            <p>Organize as tarefas semanais por responsável e dia da semana.</p>
+            <h1>Agenda Operacional Mensal</h1>
+            <p>Controle tarefas diárias, semanais e mensais por perfil, com leitura automática dos dias do mês.</p>
         </div>
 
-        <button type="button"
-                class="agenda-btn agenda-btn-primary"
-                data-bs-toggle="modal"
-                data-bs-target="#modalGerenciarEquipe">
-            Gerenciar equipe
-        </button>
+        <div class="agenda-header-actions">
+            {% if membro_selecionado and not agenda_iniciada %}
+                <form method="POST" action="/admin/agenda-equipe/iniciar-mes">
+                    <input type="hidden" name="membro_id" value="{{ membro_selecionado.id }}">
+                    <input type="hidden" name="mes" value="{{ mes }}">
+                    <input type="hidden" name="ano" value="{{ ano }}">
+
+                    <button class="agenda-btn agenda-btn-primary">
+                        Agendar mês
+                    </button>
+                </form>
+            {% endif %}
+
+            <button type="button"
+                    class="agenda-btn agenda-btn-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalGerenciarEquipe">
+                Gerenciar equipe
+            </button>
+        </div>
+    </section>
+
+    <section class="agenda-filtros-mes">
+        <form method="GET" action="/admin/agenda-equipe/" class="agenda-filtros-grid">
+
+            <div>
+                <label>Mês</label>
+                <select name="mes" class="form-control">
+                    {% for m in range(1, 13) %}
+                        <option value="{{ m }}" {% if mes == m %}selected{% endif %}>
+                            {% if m == 1 %}Janeiro{% endif %}
+                            {% if m == 2 %}Fevereiro{% endif %}
+                            {% if m == 3 %}Março{% endif %}
+                            {% if m == 4 %}Abril{% endif %}
+                            {% if m == 5 %}Maio{% endif %}
+                            {% if m == 6 %}Junho{% endif %}
+                            {% if m == 7 %}Julho{% endif %}
+                            {% if m == 8 %}Agosto{% endif %}
+                            {% if m == 9 %}Setembro{% endif %}
+                            {% if m == 10 %}Outubro{% endif %}
+                            {% if m == 11 %}Novembro{% endif %}
+                            {% if m == 12 %}Dezembro{% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label>Ano</label>
+                <input type="number" name="ano" value="{{ ano }}" class="form-control">
+            </div>
+
+            <div>
+                <label>Perfil</label>
+                <select name="membro_id" class="form-control">
+                    {% for membro in membros %}
+                        <option value="{{ membro.id }}"
+                                {% if membro_selecionado and membro_selecionado.id == membro.id %}selected{% endif %}>
+                            {{ membro.nome }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="agenda-filtros-submit">
+                <button class="agenda-btn agenda-btn-primary">
+                    Visualizar mês
+                </button>
+            </div>
+
+        </form>
     </section>
 
     <section class="agenda-membros">
 
         {% for membro in membros %}
 
-            <a href="/admin/agenda-equipe/?membro_id={{ membro.id }}"
+            <a href="/admin/agenda-equipe/?membro_id={{ membro.id }}&mes={{ mes }}&ano={{ ano }}"
                class="agenda-membro-card {% if membro_selecionado and membro_selecionado.id == membro.id %}ativo{% endif %}">
 
                 <div class="agenda-foto-wrap">
@@ -42,8 +107,7 @@
                 <small>{{ membro.cargo }}</small>
 
                 <div class="agenda-resumo">
-                    <span>{{ membro.resumo.total }} tarefas</span>
-                    <span>{{ membro.resumo.concluidas }} feitas</span>
+                    <span>{{ membro.total_tarefas }} tarefa(s)</span>
                 </div>
 
             </a>
@@ -68,7 +132,7 @@
                     </div>
 
                     <div>
-                        <span>Tarefas da semana</span>
+                        <span>{{ nome_mes }}/{{ ano }}</span>
                         <h2>{{ membro_selecionado.nome }}</h2>
                     </div>
                 </div>
@@ -76,135 +140,177 @@
                 <div class="agenda-kpis-mini">
 
                     <div>
-                        <span>Total</span>
-                        <strong>{{ resumo_membro.total }}</strong>
+                        <span>Programadas</span>
+                        <strong>{{ resumo_mes.total_programadas }}</strong>
                     </div>
 
                     <div>
                         <span>Pendentes</span>
-                        <strong>{{ resumo_membro.pendentes }}</strong>
+                        <strong>{{ resumo_mes.pendentes }}</strong>
                     </div>
 
                     <div>
-                        <span>Andamento</span>
-                        <strong>{{ resumo_membro.andamento }}</strong>
+                        <span>Atrasadas</span>
+                        <strong>{{ resumo_mes.atrasadas }}</strong>
                     </div>
 
                     <div>
-                        <span>Concluídas</span>
-                        <strong>{{ resumo_membro.concluidas }}</strong>
+                        <span>OK</span>
+                        <strong>{{ resumo_mes.concluidas }}</strong>
+                    </div>
+
+                    <div>
+                        <span>%</span>
+                        <strong>{{ resumo_mes.percentual }}%</strong>
                     </div>
 
                 </div>
 
             </div>
 
-            <div class="agenda-semana-grid">
+            {% if not agenda_iniciada %}
 
-                {% for dia in dias_semana %}
+                <div class="agenda-iniciar-mes">
 
-                    <div class="agenda-dia-coluna">
+                    <h3>Este mês ainda não possui agenda iniciada.</h3>
 
-                        <div class="agenda-dia-header">
-                            <strong>
-                                {% if dia == "SEGUNDA" %}Segunda{% endif %}
-                                {% if dia == "TERCA" %}Terça{% endif %}
-                                {% if dia == "QUARTA" %}Quarta{% endif %}
-                                {% if dia == "QUINTA" %}Quinta{% endif %}
-                                {% if dia == "SEXTA" %}Sexta{% endif %}
-                            </strong>
+                    <p>
+                        Clique em <strong>Agendar mês</strong> para iniciar {{ nome_mes }}/{{ ano }}.
+                        O sistema tentará copiar os afazeres do mês anterior para este perfil.
+                    </p>
 
-                            <div class="agenda-dia-header-actions">
-                                <span>{{ tarefas_por_dia[dia]|length }}</span>
+                    <form method="POST" action="/admin/agenda-equipe/iniciar-mes">
+                        <input type="hidden" name="membro_id" value="{{ membro_selecionado.id }}">
+                        <input type="hidden" name="mes" value="{{ mes }}">
+                        <input type="hidden" name="ano" value="{{ ano }}">
 
-                                <button type="button"
-                                        class="agenda-dia-add-btn"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#modalNovaTarefa{{ dia }}">
-                                    +
-                                </button>
-                            </div>
-                        </div>
+                        <button class="agenda-btn agenda-btn-primary">
+                            Agendar mês
+                        </button>
+                    </form>
 
-                        <div class="agenda-tarefas-lista">
+                </div>
 
-                            {% for tarefa in tarefas_por_dia[dia] %}
+            {% else %}
 
-                                <article class="agenda-tarefa-card {{ tarefa.status_classe() }}">
+                <div class="agenda-toolbar-mensal">
+                    <button type="button"
+                            class="agenda-btn agenda-btn-primary"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modalNovaTarefa">
+                        + Nova tarefa do mês
+                    </button>
+                </div>
 
-                                    <div class="agenda-tarefa-topo">
-                                        <h3>{{ tarefa.titulo }}</h3>
+                <div class="agenda-tabela-scroll">
 
-                                        <div class="dropdown">
-                                            <button type="button"
-                                                    class="agenda-menu-btn"
-                                                    data-bs-toggle="dropdown">
-                                                ⋮
+                    <table class="agenda-mensal-table">
+
+                        <thead>
+                            <tr>
+                                <th class="agenda-col-tarefa">Afazeres</th>
+                                <th class="agenda-col-periodicidade">Periodicidade</th>
+
+                                {% for dia in dias %}
+                                    <th class="{% if dia.fim_semana %}fim-semana{% endif %} {% if dia.hoje %}hoje{% endif %}">
+                                        <span>{{ dia.semana_nome }}</span>
+                                        <strong>{{ dia.dia }}</strong>
+                                    </th>
+                                {% endfor %}
+
+                                <th class="agenda-col-acoes">Ações</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for linha in linhas %}
+
+                                {% set tarefa = linha.tarefa %}
+
+                                <tr>
+                                    <td class="agenda-tarefa-info">
+                                        <strong>{{ tarefa.titulo }}</strong>
+
+                                        {% if tarefa.descricao %}
+                                            <small>{{ tarefa.descricao }}</small>
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="agenda-periodicidade">
+                                        {{ tarefa.periodicidade_formatada() }}
+                                    </td>
+
+                                    {% for dia in dias %}
+
+                                        {% set execucao = linha.execucoes.get(dia.dia) %}
+
+                                        <td class="
+                                            agenda-dia-cell
+                                            {% if dia.fim_semana %}fim-semana{% endif %}
+                                            {% if dia.hoje %}hoje{% endif %}
+                                            {% if execucao and execucao.status == 'CONCLUIDA' %}ok{% endif %}
+                                            {% if execucao and execucao.status != 'CONCLUIDA' and dia.data < hoje %}atrasada{% endif %}
+                                        ">
+
+                                            {% if execucao %}
+                                                <form method="POST"
+                                                      action="/admin/agenda-equipe/execucao/{{ execucao.id }}/alternar">
+
+                                                    <button type="submit" class="agenda-cell-btn">
+                                                        {% if execucao.status == "CONCLUIDA" %}
+                                                            OK
+                                                        {% else %}
+                                                            •
+                                                        {% endif %}
+                                                    </button>
+
+                                                </form>
+                                            {% else %}
+                                                <span class="agenda-cell-vazia"></span>
+                                            {% endif %}
+
+                                        </td>
+
+                                    {% endfor %}
+
+                                    <td class="agenda-acoes-cell">
+                                        <button type="button"
+                                                class="btn btn-sm btn-primary"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalEditarTarefa{{ tarefa.id }}">
+                                            Editar
+                                        </button>
+
+                                        <form method="POST"
+                                              action="/admin/agenda-equipe/excluir/{{ tarefa.id }}"
+                                              onsubmit="return confirm('Excluir esta tarefa do mês selecionado?');">
+
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                Excluir
                                             </button>
 
-                                            <ul class="dropdown-menu dropdown-menu-end agenda-dropdown">
-
-                                                <li>
-                                                    <button type="button"
-                                                            class="dropdown-item"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#modalEditarTarefa{{ tarefa.id }}">
-                                                        Editar
-                                                    </button>
-                                                </li>
-
-                                                {% if tarefa.status != "CONCLUIDA" %}
-                                                    <li>
-                                                        <form method="POST"
-                                                              action="/admin/agenda-equipe/concluir/{{ tarefa.id }}">
-                                                            <button type="submit" class="dropdown-item">
-                                                                Concluir
-                                                            </button>
-                                                        </form>
-                                                    </li>
-                                                {% endif %}
-
-                                                <li>
-                                                    <form method="POST"
-                                                          action="/admin/agenda-equipe/excluir/{{ tarefa.id }}"
-                                                          onsubmit="return confirm('Excluir esta tarefa?');">
-                                                        <button type="submit" class="dropdown-item text-danger">
-                                                            Excluir
-                                                        </button>
-                                                    </form>
-                                                </li>
-
-                                            </ul>
-                                        </div>
-                                    </div>
-
-                                    {% if tarefa.descricao %}
-                                        <p>{{ tarefa.descricao }}</p>
-                                    {% else %}
-                                        <p class="agenda-sem-descricao">Sem descrição.</p>
-                                    {% endif %}
-
-                                    <span class="agenda-status-badge {{ tarefa.status_classe() }}">
-                                        {{ tarefa.status_formatado() }}
-                                    </span>
-
-                                </article>
+                                        </form>
+                                    </td>
+                                </tr>
 
                             {% else %}
 
-                                <div class="agenda-vazio">
-                                    Nenhuma tarefa
-                                </div>
+                                <tr>
+                                    <td colspan="{{ dias|length + 3 }}" class="agenda-sem-tarefas">
+                                        Nenhuma tarefa cadastrada para este mês.
+                                    </td>
+                                </tr>
 
                             {% endfor %}
 
-                        </div>
+                        </tbody>
 
-                    </div>
+                    </table>
 
-                {% endfor %}
+                </div>
 
-            </div>
+            {% endif %}
 
         </section>
 
@@ -212,7 +318,7 @@
 
         <section class="agenda-empty-state">
             <h2>Nenhum membro cadastrado</h2>
-            <p>Clique em “Gerenciar equipe” para cadastrar os responsáveis da agenda.</p>
+            <p>Clique em “Gerenciar equipe” para cadastrar os perfis da agenda.</p>
         </section>
 
     {% endif %}
@@ -356,29 +462,108 @@
     </div>
 </div>
 
-<!-- MODAIS NOVA TAREFA POR DIA -->
-{% if membro_selecionado %}
-    {% for dia in dias_semana %}
+{% if membro_selecionado and agenda_iniciada %}
 
-        <div class="modal fade" id="modalNovaTarefa{{ dia }}" tabindex="-1" aria-hidden="true">
+    <!-- MODAL NOVA TAREFA -->
+    <div class="modal fade" id="modalNovaTarefa" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+
+                <form method="POST" action="/admin/agenda-equipe/nova">
+
+                    <input type="hidden" name="membro_id" value="{{ membro_selecionado.id }}">
+                    <input type="hidden" name="mes" value="{{ mes }}">
+                    <input type="hidden" name="ano" value="{{ ano }}">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title">Nova tarefa de {{ nome_mes }}/{{ ano }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <div class="row g-3">
+
+                            <div class="col-md-8">
+                                <label class="form-label">Título da tarefa</label>
+                                <input type="text"
+                                       name="titulo"
+                                       class="form-control"
+                                       required>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Periodicidade</label>
+                                <select name="periodicidade" class="form-control">
+                                    <option value="DIARIA">Diária</option>
+                                    <option value="SEMANAL">Semanal</option>
+                                    <option value="MENSAL">Mensal</option>
+                                    <option value="EXTRA">Extra</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Dia da semana, se semanal</label>
+                                <select name="dia_semana" class="form-control">
+                                    <option value="0">Segunda</option>
+                                    <option value="1">Terça</option>
+                                    <option value="2">Quarta</option>
+                                    <option value="3">Quinta</option>
+                                    <option value="4">Sexta</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Dia do mês, se mensal/extra</label>
+                                <input type="number"
+                                       name="dia_mes"
+                                       min="1"
+                                       max="31"
+                                       value="1"
+                                       class="form-control">
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label">Descrição</label>
+                                <textarea name="descricao"
+                                          rows="4"
+                                          class="form-control"></textarea>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button"
+                                class="btn btn-secondary"
+                                data-bs-dismiss="modal">
+                            Cancelar
+                        </button>
+
+                        <button type="submit" class="btn btn-success">
+                            Cadastrar tarefa
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAIS EDITAR TAREFA -->
+    {% for linha in linhas %}
+        {% set tarefa = linha.tarefa %}
+
+        <div class="modal fade" id="modalEditarTarefa{{ tarefa.id }}" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
 
-                    <form method="POST" action="/admin/agenda-equipe/nova">
-
-                        <input type="hidden" name="membro_id" value="{{ membro_selecionado.id }}">
-                        <input type="hidden" name="dia_semana" value="{{ dia }}">
+                    <form method="POST" action="/admin/agenda-equipe/editar/{{ tarefa.id }}">
 
                         <div class="modal-header">
-                            <h5 class="modal-title">
-                                Nova tarefa para {{ membro_selecionado.nome }} -
-                                {% if dia == "SEGUNDA" %}Segunda{% endif %}
-                                {% if dia == "TERCA" %}Terça{% endif %}
-                                {% if dia == "QUARTA" %}Quarta{% endif %}
-                                {% if dia == "QUINTA" %}Quinta{% endif %}
-                                {% if dia == "SEXTA" %}Sexta{% endif %}
-                            </h5>
-
+                            <h5 class="modal-title">Editar tarefa</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
 
@@ -390,25 +575,47 @@
                                     <label class="form-label">Título da tarefa</label>
                                     <input type="text"
                                            name="titulo"
+                                           value="{{ tarefa.titulo }}"
                                            class="form-control"
                                            required>
                                 </div>
 
                                 <div class="col-md-4">
-                                    <label class="form-label">Status</label>
-                                    <select name="status" class="form-control">
-                                        <option value="PENDENTE">Pendente</option>
-                                        <option value="ANDAMENTO">Em andamento</option>
-                                        <option value="CONCLUIDA">Concluída</option>
-                                        <option value="CANCELADA">Cancelada</option>
+                                    <label class="form-label">Periodicidade</label>
+                                    <select name="periodicidade" class="form-control">
+                                        <option value="DIARIA" {% if tarefa.periodicidade == "DIARIA" %}selected{% endif %}>Diária</option>
+                                        <option value="SEMANAL" {% if tarefa.periodicidade == "SEMANAL" %}selected{% endif %}>Semanal</option>
+                                        <option value="MENSAL" {% if tarefa.periodicidade == "MENSAL" %}selected{% endif %}>Mensal</option>
+                                        <option value="EXTRA" {% if tarefa.periodicidade == "EXTRA" %}selected{% endif %}>Extra</option>
                                     </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Dia da semana, se semanal</label>
+                                    <select name="dia_semana" class="form-control">
+                                        <option value="0" {% if tarefa.dia_semana == 0 %}selected{% endif %}>Segunda</option>
+                                        <option value="1" {% if tarefa.dia_semana == 1 %}selected{% endif %}>Terça</option>
+                                        <option value="2" {% if tarefa.dia_semana == 2 %}selected{% endif %}>Quarta</option>
+                                        <option value="3" {% if tarefa.dia_semana == 3 %}selected{% endif %}>Quinta</option>
+                                        <option value="4" {% if tarefa.dia_semana == 4 %}selected{% endif %}>Sexta</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Dia do mês, se mensal/extra</label>
+                                    <input type="number"
+                                           name="dia_mes"
+                                           min="1"
+                                           max="31"
+                                           value="{{ tarefa.dia_mes or 1 }}"
+                                           class="form-control">
                                 </div>
 
                                 <div class="col-md-12">
                                     <label class="form-label">Descrição</label>
                                     <textarea name="descricao"
                                               rows="4"
-                                              class="form-control"></textarea>
+                                              class="form-control">{{ tarefa.descricao or "" }}</textarea>
                                 </div>
 
                             </div>
@@ -422,8 +629,8 @@
                                 Cancelar
                             </button>
 
-                            <button type="submit" class="btn btn-success">
-                                Cadastrar tarefa
+                            <button type="submit" class="btn btn-primary">
+                                Salvar alterações
                             </button>
                         </div>
 
@@ -434,101 +641,7 @@
         </div>
 
     {% endfor %}
-{% endif %}
 
-<!-- MODAIS EDITAR TAREFA -->
-{% if tarefas_por_dia %}
-    {% for dia in dias_semana %}
-        {% for tarefa in tarefas_por_dia[dia] %}
-
-            <div class="modal fade" id="modalEditarTarefa{{ tarefa.id }}" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-lg modal-dialog-centered">
-                    <div class="modal-content">
-
-                        <form method="POST" action="/admin/agenda-equipe/editar/{{ tarefa.id }}">
-
-                            <div class="modal-header">
-                                <h5 class="modal-title">Editar tarefa</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-
-                            <div class="modal-body">
-
-                                <div class="row g-3">
-
-                                    <div class="col-md-6">
-                                        <label class="form-label">Responsável</label>
-                                        <select name="membro_id" class="form-control" required>
-                                            {% for membro in membros %}
-                                                <option value="{{ membro.id }}"
-                                                        {% if tarefa.responsavel == membro.nome %}selected{% endif %}>
-                                                    {{ membro.nome }}
-                                                </option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <label class="form-label">Dia da semana</label>
-                                        <select name="dia_semana" class="form-control" required>
-                                            <option value="SEGUNDA" {% if tarefa.dia_semana == "SEGUNDA" %}selected{% endif %}>Segunda</option>
-                                            <option value="TERCA" {% if tarefa.dia_semana == "TERCA" %}selected{% endif %}>Terça</option>
-                                            <option value="QUARTA" {% if tarefa.dia_semana == "QUARTA" %}selected{% endif %}>Quarta</option>
-                                            <option value="QUINTA" {% if tarefa.dia_semana == "QUINTA" %}selected{% endif %}>Quinta</option>
-                                            <option value="SEXTA" {% if tarefa.dia_semana == "SEXTA" %}selected{% endif %}>Sexta</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="col-md-8">
-                                        <label class="form-label">Título da tarefa</label>
-                                        <input type="text"
-                                               name="titulo"
-                                               value="{{ tarefa.titulo }}"
-                                               class="form-control"
-                                               required>
-                                    </div>
-
-                                    <div class="col-md-4">
-                                        <label class="form-label">Status</label>
-                                        <select name="status" class="form-control">
-                                            <option value="PENDENTE" {% if tarefa.status == "PENDENTE" %}selected{% endif %}>Pendente</option>
-                                            <option value="ANDAMENTO" {% if tarefa.status == "ANDAMENTO" %}selected{% endif %}>Em andamento</option>
-                                            <option value="CONCLUIDA" {% if tarefa.status == "CONCLUIDA" %}selected{% endif %}>Concluída</option>
-                                            <option value="CANCELADA" {% if tarefa.status == "CANCELADA" %}selected{% endif %}>Cancelada</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="col-md-12">
-                                        <label class="form-label">Descrição</label>
-                                        <textarea name="descricao"
-                                                  rows="4"
-                                                  class="form-control">{{ tarefa.descricao or "" }}</textarea>
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div class="modal-footer">
-                                <button type="button"
-                                        class="btn btn-secondary"
-                                        data-bs-dismiss="modal">
-                                    Cancelar
-                                </button>
-
-                                <button type="submit" class="btn btn-primary">
-                                    Salvar alterações
-                                </button>
-                            </div>
-
-                        </form>
-
-                    </div>
-                </div>
-            </div>
-
-        {% endfor %}
-    {% endfor %}
 {% endif %}
 
 {% endblock %}
