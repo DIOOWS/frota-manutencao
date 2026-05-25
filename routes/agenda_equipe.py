@@ -3,8 +3,13 @@ import calendar
 from uuid import uuid4
 from datetime import date, datetime
 
-from flask import Blueprint, render_template, request, redirect, flash, current_app, jsonify
+from flask import Blueprint, render_template, request, redirect, flash, current_app
 from werkzeug.utils import secure_filename
+
+try:
+    import cloudinary.uploader
+except ImportError:
+    cloudinary = None
 
 from utils.auth import gestao_required
 from database import db
@@ -70,141 +75,55 @@ def extensao_permitida(nome_arquivo):
     return extensao in EXTENSOES_PERMITIDAS
 
 
-def buscar_env(*nomes):
-    for nome in nomes:
-        valor = os.getenv(nome)
+def salvar_foto_membro(arquivo):
+    """
+    Salva foto do membro da agenda.
 
-        if valor:
-            return valor.strip()
-
-    return None
-
-
-def upload_foto_cloudflare_r2(arquivo, nome_final):
-    bucket = buscar_env(
-        "CLOUDFLARE_R2_BUCKET_NAME",
-        "CLOUDFLARE_R2_BUCKET",
-        "R2_BUCKET_NAME",
-        "R2_BUCKET"
-    )
-
-    access_key = buscar_env(
-        "CLOUDFLARE_R2_ACCESS_KEY_ID",
-        "R2_ACCESS_KEY_ID"
-    )
-
-    secret_key = buscar_env(
-        "CLOUDFLARE_R2_SECRET_ACCESS_KEY",
-        "R2_SECRET_ACCESS_KEY"
-    )
-
-    public_url = buscar_env(
-        "CLOUDFLARE_R2_PUBLIC_URL",
-        "R2_PUBLIC_URL"
-    )
-
-    endpoint_url = buscar_env(
-        "CLOUDFLARE_R2_ENDPOINT_URL",
-        "R2_ENDPOINT_URL"
-    )
-
-    account_id = buscar_env(
-        "CLOUDFLARE_R2_ACCOUNT_ID",
-        "R2_ACCOUNT_ID"
-    )
-
-    if not endpoint_url and account_id:
-        endpoint_url = f"https://{account_id}.r2.cloudflarestorage.com"
-
-    configurado = any([
-        bucket,
-        access_key,
-        secret_key,
-        public_url,
-        endpoint_url,
-        account_id,
-    ])
-
-    if not configurado:
+    Em produção, usa Cloudinary para a imagem não sumir após deploy/restart.
+    Em desenvolvimento, se CLOUDINARY_URL não estiver configurada, salva localmente.
+    """
+    if not arquivo or not arquivo.filename:
         return None
 
-    if not all([bucket, access_key, secret_key, public_url, endpoint_url]):
+    if not extensao_permitida(arquivo.filename):
+        raise ValueError("Formato de imagem inválido. Use PNG, JPG, JPEG ou WEBP.")
+
+    cloudinary_url = os.getenv("CLOUDINARY_URL")
+
+    if cloudinary_url:
+        if cloudinary is None:
+            raise RuntimeError(
+                "Cloudinary está configurado, mas a biblioteca cloudinary não está instalada. "
+                "Adicione cloudinary ao requirements.txt."
+            )
+
+        try:
+            resultado = cloudinary.uploader.upload(
+                arquivo,
+                folder="frota-manutencao/agenda-equipe",
+                resource_type="image",
+                overwrite=False,
+                unique_filename=True,
+                use_filename=False,
+            )
+
+            url_segura = resultado.get("secure_url")
+
+            if not url_segura:
+                raise RuntimeError("Cloudinary não retornou a URL segura da imagem.")
+
+            return url_segura
+
+        except Exception as e:
+            raise RuntimeError(f"Erro ao enviar foto para o Cloudinary: {str(e)}")
+
+    # Fallback apenas para desenvolvimento local.
+    if not current_app.debug and os.getenv("FLASK_ENV") != "development":
         raise RuntimeError(
-            "Cloudflare R2 incompleto. Configure bucket, access key, secret key, endpoint e public URL."
+            "CLOUDINARY_URL não está configurada na produção. "
+            "A foto não pode ser salva em pasta local, pois some após deploy."
         )
 
-    try:
-        import boto3
-    except ImportError:
-        raise RuntimeError(
-            "Para salvar no Cloudflare R2, instale boto3 e adicione boto3 no requirements.txt."
-        )
-
-    chave = f"agenda-equipe/{nome_final}"
-
-    cliente = boto3.client(
-        "s3",
-        endpoint_url=endpoint_url,
-        aws_access_key_id=access_key,
-        aws_secret_access_key=secret_key,
-        region_name="auto",
-    )
-
-    arquivo.stream.seek(0)
-
-    cliente.upload_fileobj(
-        arquivo.stream,
-        bucket,
-        chave,
-        ExtraArgs={
-            "ContentType": arquivo.content_type or "application/octet-stream"
-        }
-    )
-
-    return f"{public_url.rstrip('/')}/{chave}"
-
-
-def upload_foto_cloudinary(arquivo, nome_final):
-    cloudinary_url = buscar_env("CLOUDINARY_URL")
-    cloud_name = buscar_env("CLOUDINARY_CLOUD_NAME", "CLOUD_NAME")
-    api_key = buscar_env("CLOUDINARY_API_KEY", "CLOUD_API_KEY")
-    api_secret = buscar_env("CLOUDINARY_API_SECRET", "CLOUD_API_SECRET")
-
-    configurado = bool(cloudinary_url or (cloud_name and api_key and api_secret))
-
-    if not configurado:
-        return None
-
-    try:
-        import cloudinary
-        import cloudinary.uploader
-    except ImportError:
-        raise RuntimeError(
-            "Para salvar no Cloudinary, instale cloudinary e adicione cloudinary no requirements.txt."
-        )
-
-    if not cloudinary_url:
-        cloudinary.config(
-            cloud_name=cloud_name,
-            api_key=api_key,
-            api_secret=api_secret,
-            secure=True,
-        )
-
-    arquivo.stream.seek(0)
-
-    resultado = cloudinary.uploader.upload(
-        arquivo,
-        folder="agenda-equipe",
-        public_id=nome_final.rsplit(".", 1)[0],
-        overwrite=True,
-        resource_type="image",
-    )
-
-    return resultado.get("secure_url") or resultado.get("url")
-
-
-def salvar_foto_local(arquivo, nome_final):
     pasta = os.path.join(
         current_app.root_path,
         "static",
@@ -214,39 +133,14 @@ def salvar_foto_local(arquivo, nome_final):
 
     os.makedirs(pasta, exist_ok=True)
 
-    caminho_final = os.path.join(pasta, nome_final)
-
-    arquivo.stream.seek(0)
-    arquivo.save(caminho_final)
-
-    return f"/static/uploads/equipe/{nome_final}"
-
-
-def salvar_foto_membro(arquivo):
-    if not arquivo or not arquivo.filename:
-        return None
-
-    if not extensao_permitida(arquivo.filename):
-        raise ValueError("Formato de imagem inválido. Use PNG, JPG, JPEG ou WEBP.")
-
     nome_original = secure_filename(arquivo.filename)
     extensao = nome_original.rsplit(".", 1)[1].lower()
     nome_final = f"{uuid4().hex}.{extensao}"
 
-    # 1) Produção com Cloudflare R2 / Cloudflare Images via bucket público
-    url_cloudflare = upload_foto_cloudflare_r2(arquivo, nome_final)
+    caminho_final = os.path.join(pasta, nome_final)
+    arquivo.save(caminho_final)
 
-    if url_cloudflare:
-        return url_cloudflare
-
-    # 2) Produção com Cloudinary, caso o projeto esteja usando ele
-    url_cloudinary = upload_foto_cloudinary(arquivo, nome_final)
-
-    if url_cloudinary:
-        return url_cloudinary
-
-    # 3) Fallback local para desenvolvimento
-    return salvar_foto_local(arquivo, nome_final)
+    return f"/static/uploads/equipe/{nome_final}"
 
 
 def garantir_membros_padrao():
