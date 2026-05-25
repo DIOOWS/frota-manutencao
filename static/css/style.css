@@ -14652,3 +14652,771 @@ body {
   font-size: 8.5px !important;
   max-height: 38px !important;
 }
+
+
+
+
+/* =========================================================
+   PAINEL ADMINISTRATIVO - EASY CONTROL
+========================================================= */
+
+.admin-dashboard-page {
+  padding: 20px;
+}
+
+.admin-dashboard-header {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 22px;
+  padding: 26px 30px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  margin-bottom: 22px;
+}
+
+.admin-dashboard-header span {
+  display: block;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.8px;
+  color: #0052e0;
+  margin-bottom: 6px;
+}
+
+.admin-dashboard-header h1 {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 950;
+  color: #020024;
+}
+
+.admin-dashboard-header p {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.admin-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+.admin-dashboard-card {
+  min-height: 160px;
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 22px;
+  padding: 22px;
+  text-decoration: none;
+  color: #020024;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  transition: 0.22s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-dashboard-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 6px;
+  background: linear-gradient(180deg, #020024, #0052e0);
+}
+
+.admin-dashboard-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.14);
+  color: #020024;
+}
+
+.admin-card-icon {
+  width: 64px;
+  height: 64px;
+  min-width: 64px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 12px 22px rgba(9, 9, 121, 0.22);
+}
+
+.admin-dashboard-card h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 950;
+  color: #020024;
+}
+
+.admin-dashboard-card p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.admin-dashboard-card.usuarios::before {
+  background: linear-gradient(180deg, #020024, #0052e0);
+}
+
+.admin-dashboard-card.clientes::before {
+  background: linear-gradient(180deg, #064e3b, #16a34a);
+}
+
+.admin-dashboard-card.agenda::before {
+  background: linear-gradient(180deg, #581c87, #a855f7);
+}
+
+.admin-dashboard-card.clientes .admin-card-icon {
+  background: linear-gradient(135deg, #064e3b, #16a34a);
+}
+
+.admin-dashboard-card.agenda .admin-card-icon {
+  background: linear-gradient(135deg, #581c87, #7c3aed, #a855f7);
+}
+
+@media (max-width: 1100px) {
+  .admin-dashboard-grid {
+    grid-template-columns: repeat(2, minmax(240px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-dashboard-page {
+    padding: 12px;
+  }
+
+  .admin-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-dashboard-card {
+    min-height: 140px;
+  }
+
+  .admin-dashboard-header h1 {
+    font-size: 26px;
+  }
+}
+
+
+
+.admin-info-box {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 22px;
+  padding: 28px 30px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.admin-info-box h3 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 950;
+  color: #020024;
+}
+
+.admin-info-box p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+
+
+
+/* =========================================================
+   AGENDA DA EQUIPE - ADMINISTRAÇÃO
+========================================================= */
+
+.agenda-equipe-page {
+  padding: 20px;
+}
+
+.agenda-header {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 22px;
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+  margin-bottom: 22px;
+}
+
+.agenda-header span {
+  font-size: 12px;
+  font-weight: 900;
+  color: #0052e0;
+  letter-spacing: 0.8px;
+}
+
+.agenda-header h1 {
+  margin: 4px 0;
+  font-size: 32px;
+  font-weight: 950;
+  color: #020024;
+}
+
+.agenda-header p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.agenda-btn {
+  height: 42px;
+  border: none;
+  border-radius: 12px;
+  padding: 0 18px;
+  font-size: 13px;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.agenda-btn-primary {
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(9, 9, 121, 0.18);
+}
+
+.agenda-btn-primary:hover {
+  color: #ffffff;
+  filter: brightness(1.05);
+}
+
+.agenda-membros {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 22px;
+  padding: 26px;
+  display: flex;
+  justify-content: center;
+  gap: 42px;
+  flex-wrap: wrap;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  margin-bottom: 22px;
+}
+
+.agenda-membro-card {
+  width: 170px;
+  min-height: 220px;
+  text-decoration: none;
+  color: #020024;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 18px 14px;
+  border-radius: 22px;
+  border: 1px solid transparent;
+  transition: 0.2s ease;
+}
+
+.agenda-membro-card:hover,
+.agenda-membro-card.ativo {
+  background: #f8fafc;
+  border-color: #bfdbfe;
+  transform: translateY(-3px);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.10);
+}
+
+.agenda-foto-wrap {
+  width: 118px;
+  height: 118px;
+  border-radius: 999px;
+  position: relative;
+  margin-bottom: 14px;
+}
+
+.agenda-foto {
+  width: 118px;
+  height: 118px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 3px solid #ffffff;
+  box-shadow: 0 18px 30px rgba(15, 23, 42, 0.22);
+}
+
+.agenda-foto-fallback,
+.agenda-avatar-fallback {
+  display: none;
+  width: 118px;
+  height: 118px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #020024, #0052e0);
+  color: #ffffff;
+  font-size: 42px;
+  font-weight: 950;
+  box-shadow: 0 18px 30px rgba(15, 23, 42, 0.22);
+}
+
+.agenda-membro-card strong {
+  font-size: 22px;
+  font-weight: 950;
+  color: #020024;
+  line-height: 1;
+}
+
+.agenda-membro-card small {
+  margin-top: 5px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.agenda-resumo {
+  margin-top: 12px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.agenda-resumo span {
+  background: #eef2ff;
+  color: #1e3a8a;
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.agenda-empty-state {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 22px;
+  padding: 38px;
+  text-align: center;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.agenda-empty-state h2 {
+  font-size: 24px;
+  font-weight: 950;
+  color: #020024;
+}
+
+.agenda-empty-state p {
+  margin: 0;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.agenda-painel {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+}
+
+.agenda-painel-topo {
+  padding: 22px 24px;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+}
+
+.agenda-pessoa-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.agenda-pessoa-info img {
+  width: 66px;
+  height: 66px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 3px solid rgba(255, 255, 255, 0.5);
+}
+
+.agenda-pessoa-info .agenda-avatar-fallback {
+  width: 66px;
+  height: 66px;
+  font-size: 25px;
+  background: rgba(255, 255, 255, 0.20);
+}
+
+.agenda-pessoa-info span {
+  font-size: 12px;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.agenda-pessoa-info h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 950;
+  color: #ffffff;
+}
+
+.agenda-kpis-mini {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.agenda-kpis-mini div {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  padding: 10px 14px;
+  min-width: 88px;
+}
+
+.agenda-kpis-mini span {
+  display: block;
+  font-size: 10px;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.agenda-kpis-mini strong {
+  font-size: 22px;
+  font-weight: 950;
+  color: #ffffff;
+}
+
+.agenda-semana-grid {
+  padding: 18px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(190px, 1fr));
+  gap: 14px;
+  background: #f8fafc;
+}
+
+.agenda-dia-coluna {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 18px;
+  overflow: hidden;
+  min-height: 300px;
+}
+
+.agenda-dia-header {
+  height: 50px;
+  padding: 0 14px;
+  background: linear-gradient(135deg, #020024, #0052e0);
+  color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.agenda-dia-header strong {
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.agenda-dia-header span {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.20);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.agenda-tarefas-lista {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.agenda-tarefa-card {
+  border-radius: 14px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 7px 14px rgba(15, 23, 42, 0.06);
+}
+
+.agenda-tarefa-card.pendente {
+  border-left: 5px solid #0052e0;
+}
+
+.agenda-tarefa-card.andamento {
+  border-left: 5px solid #f59e0b;
+}
+
+.agenda-tarefa-card.concluida {
+  border-left: 5px solid #16a34a;
+}
+
+.agenda-tarefa-card.cancelada {
+  border-left: 5px solid #64748b;
+  opacity: 0.72;
+}
+
+.agenda-tarefa-topo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  position: relative;
+}
+
+.agenda-tarefa-card h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 950;
+  color: #020024;
+  line-height: 1.2;
+}
+
+.agenda-tarefa-card p {
+  margin: 7px 0 8px;
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+.agenda-sem-descricao {
+  color: #94a3b8 !important;
+  font-style: italic;
+}
+
+.agenda-menu-btn {
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  border-radius: 8px;
+  border: none;
+  background: #eef2ff;
+  color: #1e3a8a;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.agenda-dropdown {
+  min-width: 118px !important;
+  padding: 5px !important;
+  border-radius: 10px !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.18) !important;
+}
+
+.agenda-dropdown .dropdown-item {
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 7px 9px;
+}
+
+.agenda-dropdown form {
+  margin: 0;
+}
+
+.agenda-status-badge {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.agenda-status-badge.pendente {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.agenda-status-badge.andamento {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.agenda-status-badge.concluida {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.agenda-status-badge.cancelada {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.agenda-vazio {
+  border: 1px dashed #cbd5e1;
+  border-radius: 14px;
+  padding: 18px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  background: #f8fafc;
+}
+
+@media (max-width: 1400px) {
+  .agenda-semana-grid {
+    grid-template-columns: repeat(3, minmax(190px, 1fr));
+  }
+}
+
+@media (max-width: 992px) {
+  .agenda-header,
+  .agenda-painel-topo {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .agenda-semana-grid {
+    grid-template-columns: repeat(2, minmax(190px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .agenda-equipe-page {
+    padding: 12px;
+  }
+
+  .agenda-membros {
+    gap: 18px;
+  }
+
+  .agenda-semana-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+
+
+/* =========================================================
+   AGENDA - GERENCIAR MEMBROS + TAREFAS NOS CARDS
+========================================================= */
+
+.agenda-dia-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agenda-dia-add-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.22);
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 950;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.agenda-dia-add-btn:hover {
+  background: rgba(255,255,255,0.34);
+}
+
+.agenda-admin-equipe-grid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 18px;
+}
+
+.agenda-admin-box {
+  background: #f8fafc;
+  border: 1px solid #dce5f2;
+  border-radius: 18px;
+  padding: 18px;
+}
+
+.agenda-admin-box h4 {
+  margin: 0 0 14px;
+  font-size: 18px;
+  font-weight: 950;
+  color: #020024;
+}
+
+.agenda-admin-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.agenda-admin-membro-item {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 16px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.agenda-admin-membro-foto {
+  width: 58px;
+  height: 58px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.agenda-admin-membro-foto img {
+  width: 58px;
+  height: 58px;
+  object-fit: cover;
+  border-radius: 999px;
+}
+
+.agenda-admin-membro-foto div {
+  display: none;
+  width: 58px;
+  height: 58px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #020024, #0052e0);
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 950;
+}
+
+.agenda-admin-membro-form label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #475569;
+}
+
+.agenda-admin-membro-form .form-control {
+  min-height: 36px;
+  font-size: 13px;
+}
+
+@media (max-width: 992px) {
+  .agenda-admin-equipe-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .agenda-admin-membro-item {
+    grid-template-columns: 1fr;
+  }
+}
