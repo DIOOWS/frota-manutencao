@@ -251,11 +251,14 @@
                                             {% if dia.hoje %}hoje{% endif %}
                                             {% if execucao and execucao.status == 'CONCLUIDA' %}ok{% endif %}
                                             {% if execucao and execucao.status != 'CONCLUIDA' and dia.data < hoje %}atrasada{% endif %}
-                                        ">
+                                        "
+                                            data-dia-passado="{% if dia.data < hoje %}1{% else %}0{% endif %}"
+                                            data-status="{% if execucao %}{{ execucao.status }}{% endif %}">
 
                                             {% if execucao %}
                                                 <form method="POST"
-                                                      action="/admin/agenda-equipe/execucao/{{ execucao.id }}/alternar">
+                                                      action="/admin/agenda-equipe/execucao/{{ execucao.id }}/alternar"
+                                                      class="js-agenda-toggle-form">
 
                                                     <button type="submit" class="agenda-cell-btn">
                                                         {% if execucao.status == "CONCLUIDA" %}
@@ -643,5 +646,134 @@
     {% endfor %}
 
 {% endif %}
+
+
+<script>
+(function () {
+    const STORAGE_KEY = "easy_control_agenda_scroll";
+
+    function salvarScrollAgenda() {
+        if (!document.body.classList.contains("agenda-scroll-handler-ready")) {
+            return;
+        }
+
+        sessionStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify({
+                x: window.scrollX || 0,
+                y: window.scrollY || 0,
+                path: window.location.pathname,
+                search: window.location.search
+            })
+        );
+    }
+
+    function restaurarScrollAgenda() {
+        const bruto = sessionStorage.getItem(STORAGE_KEY);
+
+        if (!bruto) {
+            return;
+        }
+
+        try {
+            const dados = JSON.parse(bruto);
+
+            if (
+                dados.path === window.location.pathname &&
+                dados.search === window.location.search
+            ) {
+                window.scrollTo(dados.x || 0, dados.y || 0);
+            }
+        } catch (erro) {
+            console.warn("Não foi possível restaurar o scroll da agenda.", erro);
+        } finally {
+            sessionStorage.removeItem(STORAGE_KEY);
+        }
+    }
+
+    function atualizarCelulaAgenda(celula, botao) {
+        const statusAtual = celula.dataset.status || "";
+        const estaConcluida = statusAtual === "CONCLUIDA";
+        const proximoStatus = estaConcluida ? "PENDENTE" : "CONCLUIDA";
+
+        celula.dataset.status = proximoStatus;
+
+        if (proximoStatus === "CONCLUIDA") {
+            celula.classList.add("ok");
+            celula.classList.remove("atrasada");
+            botao.textContent = "OK";
+            return;
+        }
+
+        celula.classList.remove("ok");
+        botao.textContent = "•";
+
+        if (celula.dataset.diaPassado === "1") {
+            celula.classList.add("atrasada");
+        }
+    }
+
+    function configurarAlternanciaSemReload() {
+        document.querySelectorAll(".js-agenda-toggle-form").forEach(function (form) {
+            form.addEventListener("submit", async function (event) {
+                event.preventDefault();
+
+                const botao = form.querySelector(".agenda-cell-btn");
+                const celula = form.closest(".agenda-dia-cell");
+
+                if (!botao || !celula || form.dataset.enviando === "1") {
+                    return;
+                }
+
+                form.dataset.enviando = "1";
+                botao.disabled = true;
+
+                try {
+                    const resposta = await fetch(form.action, {
+                        method: "POST",
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest"
+                        },
+                        credentials: "same-origin",
+                        redirect: "follow"
+                    });
+
+                    if (!resposta.ok) {
+                        throw new Error("Falha ao atualizar execução.");
+                    }
+
+                    atualizarCelulaAgenda(celula, botao);
+                } catch (erro) {
+                    console.error(erro);
+                    alert("Não foi possível atualizar essa tarefa agora.");
+                } finally {
+                    botao.disabled = false;
+                    form.dataset.enviando = "0";
+                }
+            });
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        document.body.classList.add("agenda-scroll-handler-ready");
+
+        restaurarScrollAgenda();
+        configurarAlternanciaSemReload();
+
+        document.querySelectorAll(".agenda-equipe-page form").forEach(function (form) {
+            if (form.classList.contains("js-agenda-toggle-form")) {
+                return;
+            }
+
+            form.addEventListener("submit", salvarScrollAgenda);
+        });
+
+        document.querySelectorAll(".agenda-membro-card").forEach(function (link) {
+            link.addEventListener("click", salvarScrollAgenda);
+        });
+    });
+})();
+</script>
+
 
 {% endblock %}
