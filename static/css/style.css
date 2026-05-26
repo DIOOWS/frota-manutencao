@@ -20256,3 +20256,265 @@ body {
 .radar-ajax-loading-card .spinner-border {
   color: #2563eb;
 }
+
+
+
+
+
+/* =========================================================
+   AJUSTE RADAR - LAYOUT NORMAL 100% + HISTÓRICO
+========================================================= */
+
+/* Evita a tela ficar larga demais e depender de zoom 75% */
+.radar-herdadas-page {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  padding: 18px 18px 48px;
+}
+
+/* KPIs mais compactos */
+.radar-herdadas-kpis {
+  grid-template-columns: repeat(6, minmax(150px, 1fr)) 230px;
+  gap: 10px;
+}
+
+.radar-herdadas-kpi {
+  min-height: 86px;
+  padding: 13px 14px;
+}
+
+.radar-herdadas-kpi-icon {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  font-size: 18px;
+}
+
+.radar-herdadas-kpi strong {
+  font-size: 18px;
+}
+
+.radar-herdadas-kpi small {
+  font-size: 10px;
+}
+
+/* Filtros mais compactos */
+.radar-herdadas-filters {
+  padding: 10px;
+}
+
+.radar-herdadas-filters form {
+  gap: 7px;
+}
+
+.radar-herdadas-filters .form-control {
+  height: 38px;
+  font-size: 12px;
+}
+
+.radar-filter-arrow,
+.radar-filter-submit {
+  width: 38px;
+  height: 38px;
+}
+
+/* Layout principal com painel lateral menor */
+.radar-herdadas-layout {
+  grid-template-columns: minmax(0, 1fr) 295px;
+  gap: 10px;
+}
+
+/* Board agora cabe melhor em tela normal */
+.radar-herdadas-board {
+  grid-template-columns:
+    minmax(210px, 1fr)
+    minmax(210px, 1fr)
+    minmax(210px, 1fr)
+    minmax(210px, 1fr)
+    minmax(210px, 1fr)
+    minmax(210px, 1fr);
+  gap: 8px;
+}
+
+/* Colunas mais compactas */
+.radar-herdadas-coluna-header {
+  padding: 12px 10px;
+}
+
+.radar-herdadas-coluna-header strong {
+  font-size: 12px;
+}
+
+.radar-herdadas-coluna-header small {
+  font-size: 9px;
+}
+
+.radar-herdadas-coluna-total {
+  font-size: 18px;
+  padding-bottom: 10px;
+}
+
+.radar-herdadas-coluna-body {
+  padding: 8px;
+  gap: 8px;
+  max-height: 540px;
+}
+
+/* Cards mais compactos */
+.radar-normal-card,
+.radar-herdada-card a {
+  padding: 10px;
+}
+
+.radar-normal-card-top strong,
+.radar-herdada-card-top strong {
+  font-size: 11px;
+}
+
+.radar-normal-card-top small,
+.radar-herdada-card-top small {
+  font-size: 9px;
+}
+
+.radar-normal-valor,
+.radar-herdada-valor {
+  font-size: 14px;
+}
+
+.radar-normal-info,
+.radar-herdada-desde {
+  font-size: 9px;
+}
+
+.radar-card-menu {
+  width: 25px;
+  height: 25px;
+}
+
+/* Painel lateral do histórico */
+.radar-historico-panel {
+  width: 295px;
+  max-width: 295px;
+  padding: 14px;
+  top: 75px;
+}
+
+/* Tabela do histórico mais compacta */
+.radar-historico-table {
+  font-size: 9px;
+}
+
+.radar-historico-table th,
+.radar-historico-table td {
+  padding: 5px 2px;
+}
+
+.radar-historico-header h2 {
+  font-size: 15px;
+}
+
+/* Botão X do histórico */
+.radar-historico-close {
+  border: none;
+  background: transparent;
+  color: #0f172a;
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: 0.18s ease;
+}
+
+.radar-historico-close:hover {
+  background: #f1f5f9;
+  color: #dc2626;
+}
+
+/* Cards de baixo mais compactos */
+.radar-herdadas-info-grid,
+.radar-herdadas-bottom-grid {
+  gap: 8px;
+}
+
+.radar-info-card,
+.radar-bottom-card {
+  padding: 12px;
+}
+
+.radar-info-card h3,
+.radar-bottom-card h3 {
+  font-size: 13px;
+}
+
+.radar-info-card p,
+.radar-bottom-card p {
+  font-size: 11px;
+}
+
+/* Em telas menores, mantém scroll horizontal só no kanban */
+@media (max-width: 1500px) {
+  .radar-herdadas-kpis {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .radar-herdadas-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .radar-historico-panel {
+    width: 100%;
+    max-width: 100%;
+    position: static;
+  }
+
+  .radar-herdadas-board {
+    overflow-x: auto;
+    grid-template-columns: repeat(6, 230px);
+    padding-bottom: 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .radar-herdadas-page {
+    padding: 12px;
+  }
+
+  .radar-herdadas-kpis,
+  .radar-herdadas-info-grid,
+  .radar-herdadas-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .radar-herdadas-board {
+    grid-template-columns: repeat(6, 225px);
+  }
+}
+
+
+
+
+.radar-historico-close {
+  border: none;
+  background: transparent;
+  color: #0f172a;
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: 0.18s ease;
+  cursor: pointer;
+}
+
+.radar-historico-close:hover {
+  background: #f1f5f9;
+  color: #dc2626;
+}

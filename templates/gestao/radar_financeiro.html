@@ -3,6 +3,89 @@
 
 {% block content %}
 
+<style>
+/* Ajuste para o Radar ficar organizado em zoom 100% */
+.radar-herdadas-page {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+@media (min-width: 1200px) {
+  .radar-herdadas-layout {
+    grid-template-columns: minmax(0, 1fr) 300px !important;
+    gap: 10px !important;
+  }
+
+  .radar-herdadas-board {
+    grid-template-columns: repeat(6, minmax(145px, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .radar-herdadas-coluna-header {
+    padding: 10px 8px !important;
+  }
+
+  .radar-herdadas-coluna-header strong {
+    font-size: 12px !important;
+  }
+
+  .radar-herdadas-coluna-header small {
+    font-size: 9px !important;
+  }
+
+  .radar-herdadas-coluna-total {
+    font-size: 17px !important;
+    padding-bottom: 9px !important;
+  }
+
+  .radar-herdadas-coluna-body {
+    padding: 7px !important;
+    gap: 7px !important;
+    max-height: 610px !important;
+  }
+
+  .radar-normal-card,
+  .radar-herdada-card a {
+    padding: 9px !important;
+  }
+
+  .radar-normal-card-top strong,
+  .radar-herdada-card-top strong {
+    font-size: 11px !important;
+  }
+
+  .radar-normal-valor,
+  .radar-herdada-valor {
+    font-size: 14px !important;
+  }
+
+  .radar-historico-panel {
+    width: 300px !important;
+    max-height: calc(100vh - 94px) !important;
+  }
+
+  .radar-historico-table {
+    font-size: 9px !important;
+  }
+
+  .radar-historico-table th,
+  .radar-historico-table td {
+    padding: 5px 2px !important;
+  }
+}
+
+@media (max-width: 1199px) {
+  .radar-herdadas-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .radar-historico-panel {
+    position: static !important;
+    width: 100% !important;
+  }
+}
+</style>
+
 <div class="gestao-page radar-herdadas-page">
 
     <section class="radar-herdadas-header">
@@ -479,9 +562,11 @@
                 <div class="radar-historico-header">
                     <h2>Histórico: {{ grupo_selecionado.descricao }}</h2>
 
-                    <a href="/gestao/radar-financeiro/?mes={{ mes }}&ano={{ ano }}&setor={{ setor }}&busca={{ busca }}&visao={{ visao }}">
+                    <button type="button"
+                            class="radar-historico-close js-fechar-historico"
+                            title="Fechar histórico">
                         <i class="bi bi-x-lg"></i>
-                    </a>
+                    </button>
                 </div>
 
                 <div class="radar-historico-total">
@@ -631,7 +716,16 @@
 
                         <div class="col-md-3">
                             <label class="form-label">Valor</label>
-                            <input type="text" name="valor" class="form-control js-moeda" placeholder="R$ 0,00" inputmode="numeric" autocomplete="off" required>
+                            <input type="text"
+                                   name="valor_visual"
+                                   class="form-control js-moeda"
+                                   placeholder="R$ 0,00"
+                                   inputmode="decimal"
+                                   autocomplete="off"
+                                   required>
+                            <input type="hidden"
+                                   name="valor"
+                                   class="js-moeda-hidden">
                         </div>
 
                         <div class="col-md-3">
@@ -823,12 +917,16 @@
                                     <div class="col-md-3">
                                         <label class="form-label">Valor</label>
                                         <input type="text"
-                                               name="valor"
+                                               name="valor_visual"
                                                value="{{ item.valor_formatado }}"
                                                class="form-control js-moeda"
-                                               inputmode="numeric"
+                                               inputmode="decimal"
                                                autocomplete="off"
                                                required>
+                                        <input type="hidden"
+                                               name="valor"
+                                               value="{{ item.valor }}"
+                                               class="js-moeda-hidden">
                                     </div>
 
                                     <div class="col-md-3">
@@ -972,35 +1070,119 @@
         mesEl.closest("form").submit();
     }
 
-    function radarAplicarMascaraMoedaBR(input) {
-        let valor = input.value || "";
-
-        valor = valor.replace(/\D/g, "");
-
-        if (!valor) {
-            input.value = "";
-            return;
-        }
-
-        const numero = Number(valor) / 100;
-
-        input.value = numero.toLocaleString("pt-BR", {
+    function radarFormatarMoedaBR(numero) {
+        return Number(numero || 0).toLocaleString("pt-BR", {
             style: "currency",
             currency: "BRL"
         });
     }
 
-    function radarLimparMoedaAntesSubmit(form) {
-        form.querySelectorAll(".js-moeda").forEach(function (input) {
-            let valor = input.value || "";
+    function radarInterpretarValorDigitado(valor) {
+        let texto = String(valor || "")
+            .replace("R$", "")
+            .replace(/\s/g, "")
+            .trim();
 
-            valor = valor
-                .replace("R$", "")
-                .replace(/\s/g, "")
-                .replace(/\./g, "")
-                .replace(",", ".");
+        if (!texto) {
+            return { visual: "", decimal: "" };
+        }
 
-            input.value = valor;
+        let numero;
+
+        // Respeita vírgula quando o usuário digitar centavos manualmente.
+        // Ex.: 357,07 / 3.557,07
+        if (texto.includes(",")) {
+            numero = Number(texto.replace(/\./g, "").replace(",", "."));
+        }
+        // Respeita decimal americano se vier do backend ou escondido.
+        // Ex.: 357.07
+        else if (/^\d+\.\d{1,2}$/.test(texto)) {
+            numero = Number(texto);
+        }
+        else {
+            const digitos = texto.replace(/\D/g, "");
+
+            if (!digitos) {
+                return { visual: "", decimal: "" };
+            }
+
+            // Regra pedida:
+            // 1000   => 1.000,00
+            // 35707  => 357,07
+            // 355707 => 3.557,07
+            // 401234 => 4.012,34
+            if (digitos.length <= 4) {
+                numero = Number(digitos);
+            } else {
+                numero = Number(digitos) / 100;
+            }
+        }
+
+        if (Number.isNaN(numero)) {
+            return { visual: "", decimal: "" };
+        }
+
+        return {
+            visual: radarFormatarMoedaBR(numero),
+            decimal: numero.toFixed(2)
+        };
+    }
+
+    function radarAplicarMascaraMoeda(input) {
+        const resultado = radarInterpretarValorDigitado(input.value);
+
+        input.value = resultado.visual;
+
+        const form = input.closest("form");
+
+        if (!form) {
+            return;
+        }
+
+        const hidden = form.querySelector(".js-moeda-hidden");
+
+        if (hidden) {
+            hidden.value = resultado.decimal;
+        }
+    }
+
+    function radarInicializarMascaraMoeda() {
+        document.querySelectorAll(".js-moeda").forEach(function (input) {
+            if (input.dataset.moedaInicializada === "true") {
+                return;
+            }
+
+            input.dataset.moedaInicializada = "true";
+            input.setAttribute("inputmode", "decimal");
+            input.setAttribute("autocomplete", "off");
+
+            if (input.value) {
+                radarAplicarMascaraMoeda(input);
+            }
+
+            input.addEventListener("blur", function () {
+                radarAplicarMascaraMoeda(input);
+            });
+
+            input.addEventListener("keydown", function (event) {
+                if (event.key === "Enter") {
+                    radarAplicarMascaraMoeda(input);
+                }
+            });
+        });
+
+        document.querySelectorAll("form").forEach(function (form) {
+            if (form.dataset.moedaSubmitInicializado === "true") {
+                return;
+            }
+
+            form.dataset.moedaSubmitInicializado = "true";
+
+            form.addEventListener("submit", function () {
+                form.querySelectorAll(".js-moeda").forEach(function (input) {
+                    radarAplicarMascaraMoeda(input);
+                });
+            });
         });
     }
 
@@ -1022,29 +1204,10 @@
             });
         }
 
-        document.querySelectorAll(".js-moeda").forEach(function (input) {
-            input.setAttribute("inputmode", "numeric");
-            input.setAttribute("autocomplete", "off");
-
-            if (input.value) {
-                radarAplicarMascaraMoedaBR(input);
-            }
-
-            input.addEventListener("input", function () {
-                radarAplicarMascaraMoedaBR(input);
-            });
-
-            input.addEventListener("blur", function () {
-                radarAplicarMascaraMoedaBR(input);
-            });
-        });
-
-        document.querySelectorAll("form").forEach(function (form) {
-            form.addEventListener("submit", function () {
-                radarLimparMoedaAntesSubmit(form);
-            });
-        });
+        radarInicializarMascaraMoeda();
     });
+
+    window.inicializarMascaraMoedaRadar = radarInicializarMascaraMoeda;
 </script>
 
 
@@ -1202,6 +1365,10 @@
 
             executarScriptsDoNovoConteudo(novoRadar);
 
+            if (window.inicializarMascaraMoedaRadar) {
+                window.inicializarMascaraMoedaRadar();
+            }
+
             if (options.atualizarUrl !== false && resposta.url) {
                 window.history.pushState({}, "", resposta.url);
             }
@@ -1216,6 +1383,8 @@
             ajaxAtivo = false;
         }
     }
+
+    window.radarAjaxRequest = radarAjaxRequest;
 
     function formParaAjax(form) {
         if (!form) {
@@ -1319,6 +1488,20 @@
     });
 
     document.addEventListener("click", function (event) {
+        const fecharHistorico = event.target.closest(".js-fechar-historico");
+
+        if (fecharHistorico) {
+            event.preventDefault();
+
+            const url = new URL(window.location.href);
+            url.searchParams.delete("grupo");
+
+            radarAjaxRequest(url.toString(), {
+                method: "GET"
+            });
+            return;
+        }
+
         const link = event.target.closest("a");
 
         if (!linkParaAjax(link)) {
