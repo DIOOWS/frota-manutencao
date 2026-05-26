@@ -18026,3 +18026,2233 @@ body {
   line-height: 1.35;
 }
 
+
+
+
+/* =========================================================
+   RADAR FINANCEIRO INTELIGENTE - BRANCO + DÍVIDA HERDADA
+   Cole no final do style.css
+========================================================= */
+
+.radar-herdadas-page {
+  color: #0f172a;
+  padding-bottom: 40px;
+}
+
+.radar-herdadas-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.radar-herdadas-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.radar-herdadas-title-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.22);
+}
+
+.radar-herdadas-title h1 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 950;
+  letter-spacing: -0.8px;
+  color: #0f172a;
+}
+
+.radar-herdadas-title p {
+  margin: 3px 0 0;
+  font-size: 14px;
+  color: #475569;
+  font-weight: 600;
+}
+
+.radar-herdadas-user-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.radar-herdadas-user-actions form {
+  margin: 0;
+}
+
+.radar-herdadas-alert-btn,
+.radar-herdadas-new-btn {
+  height: 42px;
+  border-radius: 11px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 900;
+  border: 1px solid transparent;
+  background: #ffffff;
+  transition: .18s ease;
+}
+
+.radar-herdadas-alert-btn {
+  color: #f97316;
+  border-color: #fed7aa;
+}
+
+.radar-herdadas-new-btn {
+  color: #16a34a;
+  border-color: #bbf7d0;
+}
+
+.radar-herdadas-alert-btn:hover,
+.radar-herdadas-new-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.10);
+}
+
+.radar-herdadas-kpis {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.radar-herdadas-kpi {
+  min-height: 94px;
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  border-radius: 14px;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+}
+
+.radar-herdadas-kpi-icon {
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+  border-radius: 999px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.radar-herdadas-kpi span {
+  display: block;
+  font-size: 11px;
+  font-weight: 950;
+  color: #0f172a;
+}
+
+.radar-herdadas-kpi strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 20px;
+  font-weight: 950;
+  color: #0f172a;
+}
+
+.radar-herdadas-kpi small {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.radar-herdadas-kpi.danger { border-color: #fecaca; }
+.radar-herdadas-kpi.danger .radar-herdadas-kpi-icon { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
+.radar-herdadas-kpi.warning { border-color: #fed7aa; }
+.radar-herdadas-kpi.warning .radar-herdadas-kpi-icon { background: linear-gradient(135deg, #f59e0b, #f97316); }
+
+.radar-herdadas-kpi.purple { border-color: #ddd6fe; }
+.radar-herdadas-kpi.purple .radar-herdadas-kpi-icon { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
+
+.radar-herdadas-kpi.blue { border-color: #bfdbfe; }
+.radar-herdadas-kpi.blue .radar-herdadas-kpi-icon { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+
+.radar-herdadas-kpi.success { border-color: #bbf7d0; }
+.radar-herdadas-kpi.success .radar-herdadas-kpi-icon { background: linear-gradient(135deg, #22c55e, #16a34a); }
+
+.radar-herdadas-kpi.teal { border-color: #99f6e4; }
+.radar-herdadas-kpi.teal .radar-herdadas-kpi-icon { background: linear-gradient(135deg, #14b8a6, #0d9488); }
+
+.radar-herdadas-kpi.risk {
+  display: block;
+  text-align: center;
+  padding: 13px;
+}
+
+.radar-herdadas-kpi.risk strong {
+  color: #f97316;
+  font-size: 22px;
+}
+
+.radar-risk-bar {
+  height: 7px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ef4444, #f59e0b, #22c55e);
+  margin-top: 9px;
+  overflow: hidden;
+}
+
+.radar-risk-bar span {
+  display: block;
+  width: 70%;
+  height: 100%;
+}
+
+.radar-herdadas-filters {
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  border-radius: 15px;
+  padding: 12px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.05);
+  margin-bottom: 14px;
+}
+
+.radar-herdadas-filters form {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+}
+
+.radar-herdadas-filters .form-control {
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid #dbe4f0;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.radar-herdadas-filters select[name="mes"] {
+  width: 130px;
+}
+
+.radar-herdadas-filters input[name="ano"] {
+  width: 94px;
+}
+
+.radar-herdadas-filters select[name="visao"] {
+  width: 170px;
+}
+
+.radar-herdadas-filters select[name="setor"] {
+  width: 170px;
+}
+
+.radar-herdadas-filters .radar-search {
+  flex: 1;
+}
+
+.radar-filter-arrow,
+.radar-filter-submit {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid #dbe4f0;
+  background: #ffffff;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radar-filter-submit {
+  background: #ffffff;
+}
+
+.radar-filter-divider {
+  width: 1px;
+  height: 28px;
+  background: #e2e8f0;
+}
+
+.radar-herdadas-filters label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 900;
+  color: #334155;
+}
+
+.radar-herdadas-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  gap: 14px;
+  align-items: start;
+}
+
+.radar-herdadas-main {
+  min-width: 0;
+}
+
+.radar-herdadas-board {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(190px, 1fr));
+  gap: 10px;
+  align-items: stretch;
+}
+
+.radar-herdadas-coluna {
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  border-radius: 14px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.radar-herdadas-coluna-header {
+  padding: 14px;
+  text-align: center;
+  border-bottom: 1px solid #eef2f7;
+  position: relative;
+}
+
+.radar-herdadas-coluna-header strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.radar-herdadas-coluna-header small {
+  display: block;
+  margin-top: 4px;
+  font-size: 10px;
+  color: #475569;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.radar-herdadas-coluna-header span {
+  position: absolute;
+  right: 10px;
+  top: 11px;
+  min-width: 24px;
+  height: 22px;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 11px;
+  font-weight: 950;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid currentColor;
+}
+
+.radar-herdadas-coluna-total {
+  text-align: center;
+  padding: 0 12px 12px;
+  font-size: 20px;
+  font-weight: 950;
+}
+
+.radar-herdadas-coluna.danger { border-color: #fecaca; }
+.radar-herdadas-coluna.danger .radar-herdadas-coluna-header,
+.radar-herdadas-coluna.danger .radar-herdadas-coluna-total { color: #dc2626; }
+
+.radar-herdadas-coluna.warning { border-color: #fed7aa; }
+.radar-herdadas-coluna.warning .radar-herdadas-coluna-header,
+.radar-herdadas-coluna.warning .radar-herdadas-coluna-total { color: #f97316; }
+
+.radar-herdadas-coluna.purple { border-color: #ddd6fe; }
+.radar-herdadas-coluna.purple .radar-herdadas-coluna-header,
+.radar-herdadas-coluna.purple .radar-herdadas-coluna-total { color: #6d28d9; }
+
+.radar-herdadas-coluna.blue { border-color: #bfdbfe; }
+.radar-herdadas-coluna.blue .radar-herdadas-coluna-header,
+.radar-herdadas-coluna.blue .radar-herdadas-coluna-total { color: #2563eb; }
+
+.radar-herdadas-coluna.success { border-color: #bbf7d0; }
+.radar-herdadas-coluna.success .radar-herdadas-coluna-header,
+.radar-herdadas-coluna.success .radar-herdadas-coluna-total { color: #16a34a; }
+
+.radar-herdadas-coluna.teal { border-color: #99f6e4; }
+.radar-herdadas-coluna.teal .radar-herdadas-coluna-header,
+.radar-herdadas-coluna.teal .radar-herdadas-coluna-total { color: #0d9488; }
+
+.radar-herdadas-coluna-body {
+  padding: 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+.radar-herdadas-coluna-body::-webkit-scrollbar,
+.radar-historico-panel::-webkit-scrollbar {
+  width: 7px;
+}
+
+.radar-herdadas-coluna-body::-webkit-scrollbar-thumb,
+.radar-historico-panel::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.radar-herdada-card,
+.radar-normal-card {
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  border-radius: 10px;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+  transition: .16s ease;
+}
+
+.radar-herdada-card:hover,
+.radar-normal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08);
+}
+
+.radar-herdada-card.ativo {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.10);
+}
+
+.radar-herdada-card a {
+  display: block;
+  padding: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.radar-herdada-card-top {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  gap: 9px;
+  align-items: center;
+}
+
+.radar-herdada-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radar-herdada-card-top strong,
+.radar-normal-card-top strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 950;
+  color: #0f172a;
+}
+
+.radar-herdada-card-top small,
+.radar-normal-card-top small {
+  display: block;
+  font-size: 10px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.radar-herdada-card-top > span {
+  border: 1px solid #fecaca;
+  color: #ef4444;
+  background: #fff5f5;
+  border-radius: 7px;
+  padding: 3px 6px;
+  font-size: 10px;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.radar-herdada-valor,
+.radar-normal-valor {
+  margin-top: 9px;
+  font-size: 15px;
+  font-weight: 950;
+  color: #0f172a;
+}
+
+.radar-herdada-desde,
+.radar-normal-info {
+  margin-top: 3px;
+  font-size: 10px;
+  color: #334155;
+  font-weight: 700;
+}
+
+.radar-herdada-meses {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 9px;
+}
+
+.radar-herdada-meses div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #475569;
+}
+
+.radar-herdada-meses small {
+  color: #dc2626;
+  font-weight: 950;
+}
+
+.radar-herdada-link {
+  margin-top: 10px;
+  color: #dc2626;
+  font-size: 11px;
+  font-weight: 950;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.radar-normal-card {
+  padding: 12px;
+}
+
+.radar-normal-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.radar-card-menu {
+  border: none;
+  background: #f8fafc;
+  color: #475569;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+}
+
+.radar-card-dropdown {
+  border: none;
+  border-radius: 14px;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.18);
+  padding: 8px;
+}
+
+.radar-card-dropdown .dropdown-item {
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.radar-card-dropdown form {
+  margin: 0;
+}
+
+.radar-normal-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.radar-status-pill {
+  min-height: 22px;
+  padding: 0 7px;
+  border-radius: 7px;
+  font-size: 9px;
+  font-weight: 950;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+}
+
+.radar-status-pill.pago { background: #dcfce7; color: #16a34a; border: 1px solid #86efac; }
+.radar-status-pill.aberto { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+.radar-status-pill.vencido { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+.radar-status-pill.hoje { background: #ffedd5; color: #f97316; border: 1px solid #fed7aa; }
+.radar-status-pill.proximo { background: #f3e8ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+.radar-status-pill.futuro { background: #dbeafe; color: #2563eb; border: 1px solid #bfdbfe; }
+.radar-status-pill.cancelado { background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
+
+.radar-herdadas-empty {
+  min-height: 80px;
+  border: 1px dashed #cbd5e1;
+  background: #f8fafc;
+  color: #94a3b8;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px;
+}
+
+.radar-historico-panel {
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  border-radius: 14px;
+  padding: 16px;
+  max-height: 790px;
+  overflow-y: auto;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+  position: sticky;
+  top: 82px;
+}
+
+.radar-historico-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.radar-historico-header h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 950;
+  color: #0f172a;
+}
+
+.radar-historico-header a {
+  color: #0f172a;
+}
+
+.radar-historico-total {
+  border: 1px solid #dbe4f0;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 14px;
+}
+
+.radar-historico-total span,
+.radar-historico-total small {
+  display: block;
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 800;
+}
+
+.radar-historico-total strong {
+  display: block;
+  font-size: 21px;
+  color: #0f172a;
+  font-weight: 950;
+  margin: 4px 0;
+}
+
+.radar-historico-resumo,
+.radar-historico-table-wrap,
+.radar-pagar-herdada,
+.radar-historico-info {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 14px;
+  margin-top: 14px;
+}
+
+.radar-historico-resumo h3,
+.radar-historico-table-wrap h3,
+.radar-pagar-herdada h3,
+.radar-historico-info h3 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 950;
+  color: #0f172a;
+}
+
+.radar-historico-resumo p,
+.radar-historico-info p {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  color: #475569;
+  margin: 0 0 7px;
+}
+
+.radar-historico-resumo strong {
+  color: #0f172a;
+}
+
+.radar-historico-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+
+.radar-historico-table th {
+  color: #64748b;
+  font-weight: 950;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 5px 3px;
+}
+
+.radar-historico-table td {
+  border-bottom: 1px solid #f1f5f9;
+  padding: 6px 3px;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.radar-pagar-herdada label {
+  font-size: 11px;
+  font-weight: 900;
+  color: #334155;
+  margin-bottom: 5px;
+}
+
+.radar-pagar-herdada .form-control {
+  height: 38px;
+  border-radius: 9px;
+  font-size: 12px;
+  margin-bottom: 9px;
+}
+
+.radar-pagar-herdada button {
+  width: 100%;
+  height: 38px;
+  border: none;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.radar-historico-empty {
+  text-align: center;
+  color: #64748b;
+  padding: 30px 10px;
+}
+
+.radar-historico-empty i {
+  font-size: 36px;
+  color: #2563eb;
+}
+
+.radar-historico-empty h2 {
+  font-size: 18px;
+  font-weight: 950;
+  color: #0f172a;
+  margin-top: 12px;
+}
+
+.radar-herdadas-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.radar-info-card,
+.radar-bottom-card {
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+}
+
+.radar-info-card h3,
+.radar-bottom-card h3 {
+  margin: 0 0 9px;
+  font-size: 14px;
+  font-weight: 950;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.radar-info-card p,
+.radar-bottom-card p {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: #334155;
+  font-weight: 600;
+}
+
+.radar-info-card.blue h3 { color: #2563eb; }
+.radar-info-card.insight h3 { color: #f59e0b; }
+.radar-info-card.fluxo h3 { color: #2563eb; }
+
+.radar-fluxo-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+}
+
+.radar-fluxo-mini-grid div {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.radar-fluxo-mini-grid span {
+  display: block;
+  font-size: 10px;
+  color: #64748b;
+  font-weight: 900;
+}
+
+.radar-fluxo-mini-grid strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.radar-fluxo-mini-grid .positivo strong { color: #16a34a; }
+.radar-fluxo-mini-grid .negativo strong { color: #dc2626; }
+
+.radar-herdadas-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.35fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.radar-bottom-card p {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.radar-bottom-card i {
+  color: #2563eb;
+}
+
+.radar-total-pressao {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
+  color: #dc2626;
+  font-size: 17px;
+  font-weight: 950;
+  text-align: right;
+}
+
+.radar-herdadas-modal {
+  border: none;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 24px 55px rgba(15, 23, 42, 0.24);
+}
+
+.radar-herdadas-modal .modal-header {
+  background: linear-gradient(135deg, #0f172a, #1d4ed8);
+  color: #ffffff;
+  border: none;
+}
+
+.radar-herdadas-modal .modal-title {
+  color: #ffffff;
+  font-weight: 950;
+}
+
+.radar-herdadas-modal .btn-close {
+  filter: invert(1);
+}
+
+.radar-herdadas-modal .modal-body {
+  background: #f8fafc;
+}
+
+.radar-herdadas-modal .form-label {
+  font-size: 12px;
+  font-weight: 900;
+  color: #334155;
+}
+
+.radar-herdadas-modal .form-control {
+  border-radius: 10px;
+  min-height: 40px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+@media (max-width: 1500px) {
+  .radar-herdadas-kpis {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .radar-herdadas-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .radar-historico-panel {
+    position: static;
+    max-height: none;
+  }
+}
+
+@media (max-width: 1200px) {
+  .radar-herdadas-board {
+    overflow-x: auto;
+    grid-template-columns: repeat(6, 235px);
+    padding-bottom: 8px;
+  }
+
+  .radar-herdadas-info-grid,
+  .radar-herdadas-bottom-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .radar-herdadas-header,
+  .radar-herdadas-user-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .radar-herdadas-alert-btn,
+  .radar-herdadas-new-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .radar-herdadas-kpis,
+  .radar-herdadas-info-grid,
+  .radar-herdadas-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .radar-herdadas-filters form {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .radar-herdadas-filters .form-control,
+  .radar-herdadas-filters select[name="mes"],
+  .radar-herdadas-filters input[name="ano"],
+  .radar-herdadas-filters select[name="visao"],
+  .radar-herdadas-filters select[name="setor"] {
+    width: 100%;
+  }
+
+  .radar-filter-arrow,
+  .radar-filter-submit {
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   RADAR - RECORRÊNCIA AUTOMÁTICA
+========================================================= */
+
+.radar-recorrente-badge {
+  width: fit-content;
+  margin-top: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: .3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.radar-recorrente-badge i {
+  font-size: 11px;
+}
+
+.radar-recorrencia-check {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.radar-recorrencia-check small {
+  display: block;
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.radar-recorrencia-info {
+  border-radius: 14px;
+  padding: 13px 14px;
+  background: linear-gradient(135deg, #eff6ff, #ffffff);
+  border: 1px solid #bfdbfe;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.radar-recorrencia-info strong {
+  color: #1d4ed8;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.radar-recorrencia-info span {
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+/* =========================================================
+   RADAR - CONTA PARCELADA
+========================================================= */
+
+.radar-parcela-badge {
+  width: fit-content;
+  margin-top: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fcd34d;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: .3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.radar-parcela-badge i {
+  font-size: 11px;
+}
+
+.radar-herdada-card .radar-parcela-badge {
+  margin-top: 7px;
+  background: #fff7ed;
+  color: #c2410c;
+  border-color: #fed7aa;
+}
+
+
+
+
+/* =========================================================
+   RADAR FINANCEIRO INTELIGENTE - BRANCO + DÍVIDA HERDADA
+   RECORRÊNCIA + PARCELAMENTO
+   Cole no final do static/css/style.css
+========================================================= */
+
+.radar-herdadas-page {
+  color: #0f172a;
+  padding-bottom: 40px;
+}
+
+.radar-herdadas-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.radar-herdadas-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.radar-herdadas-title-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.22);
+}
+
+.radar-herdadas-title h1 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 950;
+  letter-spacing: -0.8px;
+  color: #0f172a;
+}
+
+.radar-herdadas-title p {
+  margin: 3px 0 0;
+  font-size: 14px;
+  color: #475569;
+  font-weight: 600;
+}
+
+.radar-herdadas-user-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.radar-herdadas-user-actions form {
+  margin: 0;
+}
+
+.radar-herdadas-alert-btn,
+.radar-herdadas-new-btn {
+  height: 42px;
+  border-radius: 11px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 900;
+  border: 1px solid transparent;
+  background: #ffffff;
+  transition: .18s ease;
+}
+
+.radar-herdadas-alert-btn {
+  color: #f97316;
+  border-color: #fed7aa;
+}
+
+.radar-herdadas-new-btn {
+  color: #16a34a;
+  border-color: #bbf7d0;
+}
+
+.radar-herdadas-alert-btn:hover,
+.radar-herdadas-new-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.10);
+}
+
+.radar-herdadas-kpis {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.radar-herdadas-kpi {
+  min-height: 94px;
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  border-radius: 14px;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+}
+
+.radar-herdadas-kpi-icon {
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+  border-radius: 999px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.radar-herdadas-kpi span {
+  display: block;
+  font-size: 11px;
+  font-weight: 950;
+  color: #0f172a;
+}
+
+.radar-herdadas-kpi strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 20px;
+  font-weight: 950;
+  color: #0f172a;
+}
+
+.radar-herdadas-kpi small {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.radar-herdadas-kpi.danger {
+  border-color: #fecaca;
+}
+
+.radar-herdadas-kpi.danger .radar-herdadas-kpi-icon {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.radar-herdadas-kpi.warning {
+  border-color: #fed7aa;
+}
+
+.radar-herdadas-kpi.warning .radar-herdadas-kpi-icon {
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+}
+
+.radar-herdadas-kpi.purple {
+  border-color: #ddd6fe;
+}
+
+.radar-herdadas-kpi.purple .radar-herdadas-kpi-icon {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+}
+
+.radar-herdadas-kpi.blue {
+  border-color: #bfdbfe;
+}
+
+.radar-herdadas-kpi.blue .radar-herdadas-kpi-icon {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+.radar-herdadas-kpi.success {
+  border-color: #bbf7d0;
+}
+
+.radar-herdadas-kpi.success .radar-herdadas-kpi-icon {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+
+.radar-herdadas-kpi.teal {
+  border-color: #99f6e4;
+}
+
+.radar-herdadas-kpi.teal .radar-herdadas-kpi-icon {
+  background: linear-gradient(135deg, #14b8a6, #0d9488);
+}
+
+.radar-herdadas-kpi.risk {
+  display: block;
+  text-align: center;
+  padding: 13px;
+}
+
+.radar-herdadas-kpi.risk strong {
+  color: #f97316;
+  font-size: 22px;
+}
+
+.radar-risk-bar {
+  height: 7px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ef4444, #f59e0b, #22c55e);
+  margin-top: 9px;
+  overflow: hidden;
+}
+
+.radar-risk-bar span {
+  display: block;
+  width: 70%;
+  height: 100%;
+}
+
+.radar-herdadas-filters {
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  border-radius: 15px;
+  padding: 12px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.05);
+  margin-bottom: 14px;
+}
+
+.radar-herdadas-filters form {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+}
+
+.radar-herdadas-filters .form-control {
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid #dbe4f0;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.radar-herdadas-filters select[name="mes"] {
+  width: 130px;
+}
+
+.radar-herdadas-filters input[name="ano"] {
+  width: 94px;
+}
+
+.radar-herdadas-filters select[name="visao"] {
+  width: 170px;
+}
+
+.radar-herdadas-filters select[name="setor"] {
+  width: 170px;
+}
+
+.radar-herdadas-filters .radar-search {
+  flex: 1;
+}
+
+.radar-filter-arrow,
+.radar-filter-submit {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid #dbe4f0;
+  background: #ffffff;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radar-filter-divider {
+  width: 1px;
+  height: 28px;
+  background: #e2e8f0;
+}
+
+.radar-herdadas-filters label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 900;
+  color: #334155;
+}
+
+.radar-herdadas-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  gap: 14px;
+  align-items: start;
+}
+
+.radar-herdadas-main {
+  min-width: 0;
+}
+
+.radar-herdadas-board {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(190px, 1fr));
+  gap: 10px;
+  align-items: stretch;
+}
+
+.radar-herdadas-coluna {
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  border-radius: 14px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.radar-herdadas-coluna-header {
+  padding: 14px;
+  text-align: center;
+  border-bottom: 1px solid #eef2f7;
+  position: relative;
+}
+
+.radar-herdadas-coluna-header strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.radar-herdadas-coluna-header small {
+  display: block;
+  margin-top: 4px;
+  font-size: 10px;
+  color: #475569;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.radar-herdadas-coluna-header span {
+  position: absolute;
+  right: 10px;
+  top: 11px;
+  min-width: 24px;
+  height: 22px;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 11px;
+  font-weight: 950;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid currentColor;
+}
+
+.radar-herdadas-coluna-total {
+  text-align: center;
+  padding: 0 12px 12px;
+  font-size: 20px;
+  font-weight: 950;
+}
+
+.radar-herdadas-coluna.danger {
+  border-color: #fecaca;
+}
+
+.radar-herdadas-coluna.danger .radar-herdadas-coluna-header,
+.radar-herdadas-coluna.danger .radar-herdadas-coluna-total {
+  color: #dc2626;
+}
+
+.radar-herdadas-coluna.warning {
+  border-color: #fed7aa;
+}
+
+.radar-herdadas-coluna.warning .radar-herdadas-coluna-header,
+.radar-herdadas-coluna.warning .radar-herdadas-coluna-total {
+  color: #f97316;
+}
+
+.radar-herdadas-coluna.purple {
+  border-color: #ddd6fe;
+}
+
+.radar-herdadas-coluna.purple .radar-herdadas-coluna-header,
+.radar-herdadas-coluna.purple .radar-herdadas-coluna-total {
+  color: #6d28d9;
+}
+
+.radar-herdadas-coluna.blue {
+  border-color: #bfdbfe;
+}
+
+.radar-herdadas-coluna.blue .radar-herdadas-coluna-header,
+.radar-herdadas-coluna.blue .radar-herdadas-coluna-total {
+  color: #2563eb;
+}
+
+.radar-herdadas-coluna.success {
+  border-color: #bbf7d0;
+}
+
+.radar-herdadas-coluna.success .radar-herdadas-coluna-header,
+.radar-herdadas-coluna.success .radar-herdadas-coluna-total {
+  color: #16a34a;
+}
+
+.radar-herdadas-coluna.teal {
+  border-color: #99f6e4;
+}
+
+.radar-herdadas-coluna.teal .radar-herdadas-coluna-header,
+.radar-herdadas-coluna.teal .radar-herdadas-coluna-total {
+  color: #0d9488;
+}
+
+.radar-herdadas-coluna-body {
+  padding: 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+.radar-herdadas-coluna-body::-webkit-scrollbar,
+.radar-historico-panel::-webkit-scrollbar {
+  width: 7px;
+}
+
+.radar-herdadas-coluna-body::-webkit-scrollbar-thumb,
+.radar-historico-panel::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.radar-herdada-card,
+.radar-normal-card {
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  border-radius: 10px;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+  transition: .16s ease;
+}
+
+.radar-herdada-card:hover,
+.radar-normal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08);
+}
+
+.radar-herdada-card.ativo {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.10);
+}
+
+.radar-herdada-card a {
+  display: block;
+  padding: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.radar-herdada-card-top {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  gap: 9px;
+  align-items: center;
+}
+
+.radar-herdada-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radar-herdada-card-top strong,
+.radar-normal-card-top strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 950;
+  color: #0f172a;
+}
+
+.radar-herdada-card-top small,
+.radar-normal-card-top small {
+  display: block;
+  font-size: 10px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.radar-herdada-card-top > span {
+  border: 1px solid #fecaca;
+  color: #ef4444;
+  background: #fff5f5;
+  border-radius: 7px;
+  padding: 3px 6px;
+  font-size: 10px;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.radar-herdada-valor,
+.radar-normal-valor {
+  margin-top: 9px;
+  font-size: 15px;
+  font-weight: 950;
+  color: #0f172a;
+}
+
+.radar-herdada-desde,
+.radar-normal-info {
+  margin-top: 3px;
+  font-size: 10px;
+  color: #334155;
+  font-weight: 700;
+}
+
+.radar-parcela-badge,
+.radar-recorrente-badge,
+.radar-parcelada-badge {
+  width: fit-content;
+  margin-top: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: .3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.radar-parcela-badge {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.radar-recorrente-badge {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.radar-parcelada-badge {
+  background: #f3e8ff;
+  color: #7c3aed;
+  border: 1px solid #ddd6fe;
+}
+
+.radar-herdada-meses {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 9px;
+}
+
+.radar-herdada-meses div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #475569;
+}
+
+.radar-herdada-meses small {
+  color: #dc2626;
+  font-weight: 950;
+}
+
+.radar-herdada-link {
+  margin-top: 10px;
+  color: #dc2626;
+  font-size: 11px;
+  font-weight: 950;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.radar-normal-card {
+  padding: 12px;
+}
+
+.radar-normal-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.radar-card-menu {
+  border: none;
+  background: #f8fafc;
+  color: #475569;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+}
+
+.radar-card-dropdown {
+  border: none;
+  border-radius: 14px;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.18);
+  padding: 8px;
+}
+
+.radar-card-dropdown .dropdown-item {
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.radar-card-dropdown form {
+  margin: 0;
+}
+
+.radar-normal-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.radar-status-pill {
+  min-height: 22px;
+  padding: 0 7px;
+  border-radius: 7px;
+  font-size: 9px;
+  font-weight: 950;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+}
+
+.radar-status-pill.pago {
+  background: #dcfce7;
+  color: #16a34a;
+  border: 1px solid #86efac;
+}
+
+.radar-status-pill.aberto {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.radar-status-pill.vencido {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.radar-status-pill.hoje {
+  background: #ffedd5;
+  color: #f97316;
+  border: 1px solid #fed7aa;
+}
+
+.radar-status-pill.proximo {
+  background: #f3e8ff;
+  color: #7c3aed;
+  border: 1px solid #ddd6fe;
+}
+
+.radar-status-pill.futuro {
+  background: #dbeafe;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.radar-status-pill.cancelado {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+.radar-herdadas-empty {
+  min-height: 80px;
+  border: 1px dashed #cbd5e1;
+  background: #f8fafc;
+  color: #94a3b8;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px;
+}
+
+.radar-historico-panel {
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  border-radius: 14px;
+  padding: 16px;
+  max-height: 790px;
+  overflow-y: auto;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+  position: sticky;
+  top: 82px;
+}
+
+.radar-historico-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.radar-historico-header h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 950;
+  color: #0f172a;
+}
+
+.radar-historico-header a {
+  color: #0f172a;
+}
+
+.radar-historico-total {
+  border: 1px solid #dbe4f0;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 14px;
+}
+
+.radar-historico-total span,
+.radar-historico-total small {
+  display: block;
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 800;
+}
+
+.radar-historico-total strong {
+  display: block;
+  font-size: 21px;
+  color: #0f172a;
+  font-weight: 950;
+  margin: 4px 0;
+}
+
+.radar-historico-resumo,
+.radar-historico-table-wrap,
+.radar-pagar-herdada,
+.radar-historico-info {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 14px;
+  margin-top: 14px;
+}
+
+.radar-historico-resumo h3,
+.radar-historico-table-wrap h3,
+.radar-pagar-herdada h3,
+.radar-historico-info h3 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 950;
+  color: #0f172a;
+}
+
+.radar-historico-resumo p,
+.radar-historico-info p {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  color: #475569;
+  margin: 0 0 7px;
+}
+
+.radar-historico-resumo strong {
+  color: #0f172a;
+}
+
+.radar-historico-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+
+.radar-historico-table th {
+  color: #64748b;
+  font-weight: 950;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 5px 3px;
+}
+
+.radar-historico-table td {
+  border-bottom: 1px solid #f1f5f9;
+  padding: 6px 3px;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.radar-pagar-herdada label {
+  font-size: 11px;
+  font-weight: 900;
+  color: #334155;
+  margin-bottom: 5px;
+}
+
+.radar-pagar-herdada .form-control {
+  height: 38px;
+  border-radius: 9px;
+  font-size: 12px;
+  margin-bottom: 9px;
+}
+
+.radar-pagar-herdada button {
+  width: 100%;
+  height: 38px;
+  border: none;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.radar-historico-empty {
+  text-align: center;
+  color: #64748b;
+  padding: 30px 10px;
+}
+
+.radar-historico-empty i {
+  font-size: 36px;
+  color: #2563eb;
+}
+
+.radar-historico-empty h2 {
+  font-size: 18px;
+  font-weight: 950;
+  color: #0f172a;
+  margin-top: 12px;
+}
+
+.radar-herdadas-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.radar-info-card,
+.radar-bottom-card {
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+}
+
+.radar-info-card h3,
+.radar-bottom-card h3 {
+  margin: 0 0 9px;
+  font-size: 14px;
+  font-weight: 950;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.radar-info-card p,
+.radar-bottom-card p {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: #334155;
+  font-weight: 600;
+}
+
+.radar-info-card.blue h3 {
+  color: #2563eb;
+}
+
+.radar-info-card.insight h3 {
+  color: #f59e0b;
+}
+
+.radar-info-card.fluxo h3 {
+  color: #2563eb;
+}
+
+.radar-fluxo-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+}
+
+.radar-fluxo-mini-grid div {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.radar-fluxo-mini-grid span {
+  display: block;
+  font-size: 10px;
+  color: #64748b;
+  font-weight: 900;
+}
+
+.radar-fluxo-mini-grid strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.radar-fluxo-mini-grid .positivo strong {
+  color: #16a34a;
+}
+
+.radar-fluxo-mini-grid .negativo strong {
+  color: #dc2626;
+}
+
+.radar-herdadas-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.35fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.radar-bottom-card p {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.radar-bottom-card i {
+  color: #2563eb;
+}
+
+.radar-total-pressao {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
+  color: #dc2626;
+  font-size: 17px;
+  font-weight: 950;
+  text-align: right;
+}
+
+.radar-herdadas-modal {
+  border: none;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 24px 55px rgba(15, 23, 42, 0.24);
+}
+
+.radar-herdadas-modal .modal-header {
+  background: linear-gradient(135deg, #0f172a, #1d4ed8);
+  color: #ffffff;
+  border: none;
+}
+
+.radar-herdadas-modal .modal-title {
+  color: #ffffff;
+  font-weight: 950;
+}
+
+.radar-herdadas-modal .btn-close {
+  filter: invert(1);
+}
+
+.radar-herdadas-modal .modal-body {
+  background: #f8fafc;
+}
+
+.radar-herdadas-modal .form-label {
+  font-size: 12px;
+  font-weight: 900;
+  color: #334155;
+}
+
+.radar-herdadas-modal .form-control {
+  border-radius: 10px;
+  min-height: 40px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.radar-recorrencia-check {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.radar-recorrencia-check small {
+  display: block;
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.radar-recorrencia-info {
+  border-radius: 14px;
+  padding: 13px 14px;
+  background: linear-gradient(135deg, #eff6ff, #ffffff);
+  border: 1px solid #bfdbfe;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.radar-recorrencia-info strong {
+  color: #1d4ed8;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.radar-recorrencia-info span {
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.radar-parcelamento-box {
+  display: none;
+  border: 1px solid #ddd6fe;
+  background: #faf5ff;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.radar-parcelamento-box.ativo {
+  display: block;
+}
+
+.radar-tipo-obrigacao-box {
+  border: 1px solid #dbe4f0;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.radar-tipo-obrigacao-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+}
+
+.radar-tipo-option {
+  border: 1px solid #dbe4f0;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 10px;
+  cursor: pointer;
+  transition: .16s ease;
+}
+
+.radar-tipo-option:hover {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.radar-tipo-option input {
+  margin-right: 6px;
+}
+
+.radar-tipo-option strong {
+  font-size: 12px;
+  font-weight: 950;
+  color: #0f172a;
+}
+
+.radar-tipo-option small {
+  display: block;
+  margin-top: 3px;
+  font-size: 10px;
+  color: #64748b;
+  line-height: 1.25;
+}
+
+@media (max-width: 1500px) {
+  .radar-herdadas-kpis {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .radar-herdadas-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .radar-historico-panel {
+    position: static;
+    max-height: none;
+  }
+}
+
+@media (max-width: 1200px) {
+  .radar-herdadas-board {
+    overflow-x: auto;
+    grid-template-columns: repeat(6, 235px);
+    padding-bottom: 8px;
+  }
+
+  .radar-herdadas-info-grid,
+  .radar-herdadas-bottom-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .radar-herdadas-header,
+  .radar-herdadas-user-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .radar-herdadas-alert-btn,
+  .radar-herdadas-new-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .radar-herdadas-kpis,
+  .radar-herdadas-info-grid,
+  .radar-herdadas-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .radar-herdadas-filters form {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .radar-herdadas-filters .form-control,
+  .radar-herdadas-filters select[name="mes"],
+  .radar-herdadas-filters input[name="ano"],
+  .radar-herdadas-filters select[name="visao"],
+  .radar-herdadas-filters select[name="setor"] {
+    width: 100%;
+  }
+
+  .radar-filter-arrow,
+  .radar-filter-submit {
+    width: 100%;
+  }
+
+  .radar-tipo-obrigacao-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+
+
+/* =========================================================
+   RADAR AJAX LOADING
+========================================================= */
+
+#radarAjaxLoading {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: none;
+  pointer-events: none;
+  background: rgba(248, 250, 252, 0.20);
+  backdrop-filter: blur(1px);
+}
+
+#radarAjaxLoading.ativo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 86px;
+}
+
+.radar-ajax-loading-card {
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  color: #0f172a;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.16);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.radar-ajax-loading-card .spinner-border {
+  color: #2563eb;
+}

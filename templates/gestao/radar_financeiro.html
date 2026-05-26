@@ -76,11 +76,11 @@
 
         <div class="radar-herdadas-kpi blue">
             <div class="radar-herdadas-kpi-icon">
-                <i class="bi bi-calendar2-check-fill"></i>
+                <i class="bi bi-exclamation-circle-fill"></i>
             </div>
             <div>
-                <span>ATÉ FIM DO MÊS</span>
-                <strong>{{ moeda(total_ate_fim_mes) }}</strong>
+                <span>ATRASADAS DO MÊS</span>
+                <strong>{{ moeda(total_atrasadas_mes) }}</strong>
                 <small>{{ colunas[3].badge }} conta(s)</small>
             </div>
         </div>
@@ -230,6 +230,12 @@
                                                 Desde {{ grupo.desde_label }}
                                             </div>
 
+                                            {% if grupo.parcelas_resumo %}
+                                                <div class="radar-parcela-badge">
+                                                    Parcelas: {{ grupo.parcelas_resumo }}
+                                                </div>
+                                            {% endif %}
+
                                             <div class="radar-herdada-meses">
                                                 {% for h in grupo.historico[:3] %}
                                                     <div>
@@ -346,6 +352,13 @@
                                             <div class="radar-recorrente-badge">
                                                 <i class="bi bi-arrow-repeat"></i>
                                                 RECORRENTE
+                                            </div>
+                                        {% endif %}
+
+                                        {% if item.parcelada %}
+                                            <div class="radar-parcela-badge">
+                                                <i class="bi bi-list-ol"></i>
+                                                PARCELA {{ item.parcela_label }}
                                             </div>
                                         {% endif %}
 
@@ -491,6 +504,7 @@
                         <thead>
                             <tr>
                                 <th>Mês origem</th>
+                                <th>Parcela</th>
                                 <th>Venc.</th>
                                 <th>Valor</th>
                                 <th>Dias</th>
@@ -501,6 +515,7 @@
                             {% for h in grupo_selecionado.historico %}
                                 <tr>
                                     <td>{{ h.competencia }}</td>
+                                    <td>{{ h.parcela_label }}</td>
                                     <td>{{ h.data_vencimento_formatada }}</td>
                                     <td>{{ h.valor_formatado }}</td>
                                     <td>{{ h.dias_atraso }}</td>
@@ -527,7 +542,7 @@
                             <option value="">Selecione o mês...</option>
                             {% for h in grupo_selecionado.historico %}
                                 <option value="{{ h.id }}">
-                                    {{ h.competencia }} • {{ h.valor_formatado }} • venc. {{ h.data_vencimento_formatada }}
+                                    {{ h.competencia }}{% if h.parcelada %} • Parcela {{ h.parcela_label }}{% endif %} • {{ h.valor_formatado }} • venc. {{ h.data_vencimento_formatada }}
                                 </option>
                             {% endfor %}
                         </select>
@@ -606,8 +621,17 @@
                         </div>
 
                         <div class="col-md-3">
+                            <label class="form-label">Tipo da conta</label>
+                            <select name="tipo_obrigacao" class="form-control">
+                                <option value="UNICA">Única</option>
+                                <option value="RECORRENTE">Recorrente mensal</option>
+                                <option value="PARCELADA">Parcelada</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
                             <label class="form-label">Valor</label>
-                            <input type="text" name="valor" class="form-control" placeholder="0,00" required>
+                            <input type="text" name="valor" class="form-control js-moeda" placeholder="R$ 0,00" inputmode="numeric" autocomplete="off" required>
                         </div>
 
                         <div class="col-md-3">
@@ -620,6 +644,16 @@
                             <input type="text" name="numero_fatura" class="form-control">
                         </div>
 
+                        <div class="col-md-2">
+                            <label class="form-label">Parcela atual</label>
+                            <input type="number" name="parcela_atual" class="form-control" placeholder="18">
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label">Total parcelas</label>
+                            <input type="number" name="total_parcelas" class="form-control" placeholder="72">
+                        </div>
+
                         <div class="col-md-3 d-flex align-items-end">
                             <div class="form-check radar-recorrencia-check">
                                 <input class="form-check-input"
@@ -629,7 +663,7 @@
                                 <label class="form-check-label" for="novaRecorrente">
                                     Repetir todo mês
                                 </label>
-                                <small>Cria uma obrigação automática todo mês no mesmo dia.</small>
+                                <small>Você também pode escolher “Recorrente mensal” no tipo da conta.</small>
                             </div>
                         </div>
 
@@ -660,8 +694,8 @@
 
                         <div class="col-md-12">
                             <div class="radar-recorrencia-info">
-                                <strong>Como funciona a recorrência?</strong>
-                                <span>Se marcar “Repetir todo mês”, o sistema cria automaticamente essa conta para cada mês aberto no Radar. Se não pagar, ela entra na Dívida Herdada agrupada pelo histórico.</span>
+                                <strong>Como funciona?</strong>
+                                <span><b>Recorrente mensal:</b> cria uma conta todo mês automaticamente. <b>Parcelada:</b> gera as próximas parcelas até o total informado, exemplo 18/72 até 72/72. Se não pagar, as parcelas antigas entram na Dívida Herdada.</span>
                             </div>
                         </div>
 
@@ -767,6 +801,15 @@
                                     </div>
 
                                     <div class="col-md-3">
+                                        <label class="form-label">Tipo da conta</label>
+                                        <select name="tipo_obrigacao" class="form-control">
+                                            <option value="UNICA" {% if item.tipo_obrigacao == "UNICA" %}selected{% endif %}>Única</option>
+                                            <option value="RECORRENTE" {% if item.tipo_obrigacao == "RECORRENTE" %}selected{% endif %}>Recorrente mensal</option>
+                                            <option value="PARCELADA" {% if item.tipo_obrigacao == "PARCELADA" %}selected{% endif %}>Parcelada</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-3">
                                         <label class="form-label">Status</label>
                                         <select name="status" class="form-control">
                                             <option value="PENDENTE" {% if item.status == "PENDENTE" %}selected{% endif %}>PENDENTE</option>
@@ -781,8 +824,10 @@
                                         <label class="form-label">Valor</label>
                                         <input type="text"
                                                name="valor"
-                                               value="{{ item.valor }}"
-                                               class="form-control"
+                                               value="{{ item.valor_formatado }}"
+                                               class="form-control js-moeda"
+                                               inputmode="numeric"
+                                               autocomplete="off"
                                                required>
                                     </div>
 
@@ -799,6 +844,22 @@
                                         <input type="date"
                                                name="data_pagamento"
                                                value="{{ item.data_pagamento_input }}"
+                                               class="form-control">
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <label class="form-label">Parcela atual</label>
+                                        <input type="number"
+                                               name="parcela_atual"
+                                               value="{{ item.parcela_atual }}"
+                                               class="form-control">
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <label class="form-label">Total parcelas</label>
+                                        <input type="number"
+                                               name="total_parcelas"
+                                               value="{{ item.total_parcelas }}"
                                                class="form-control">
                                     </div>
 
@@ -911,6 +972,38 @@
         mesEl.closest("form").submit();
     }
 
+    function radarAplicarMascaraMoedaBR(input) {
+        let valor = input.value || "";
+
+        valor = valor.replace(/\D/g, "");
+
+        if (!valor) {
+            input.value = "";
+            return;
+        }
+
+        const numero = Number(valor) / 100;
+
+        input.value = numero.toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL"
+        });
+    }
+
+    function radarLimparMoedaAntesSubmit(form) {
+        form.querySelectorAll(".js-moeda").forEach(function (input) {
+            let valor = input.value || "";
+
+            valor = valor
+                .replace("R$", "")
+                .replace(/\s/g, "")
+                .replace(/\./g, "")
+                .replace(",", ".");
+
+            input.value = valor;
+        });
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
         const formPagarHerdada = document.getElementById("formPagarHerdada");
         const selectContaHerdada = document.getElementById("selectContaHerdada");
@@ -928,7 +1021,360 @@
                 formPagarHerdada.action = `/gestao/radar-financeiro/pagar/${contaId}`;
             });
         }
+
+        document.querySelectorAll(".js-moeda").forEach(function (input) {
+            input.setAttribute("inputmode", "numeric");
+            input.setAttribute("autocomplete", "off");
+
+            if (input.value) {
+                radarAplicarMascaraMoedaBR(input);
+            }
+
+            input.addEventListener("input", function () {
+                radarAplicarMascaraMoedaBR(input);
+            });
+
+            input.addEventListener("blur", function () {
+                radarAplicarMascaraMoedaBR(input);
+            });
+        });
+
+        document.querySelectorAll("form").forEach(function (form) {
+            form.addEventListener("submit", function () {
+                radarLimparMoedaAntesSubmit(form);
+            });
+        });
     });
+</script>
+
+
+<script>
+(function () {
+    const RADAR_SELECTOR = ".radar-herdadas-page";
+    const RADAR_URL_BASE = "/gestao/radar-financeiro";
+
+    let ajaxAtivo = false;
+
+    function getRadarPage() {
+        return document.querySelector(RADAR_SELECTOR);
+    }
+
+    function salvarEstadoVisual() {
+        const board = document.querySelector(".radar-herdadas-board");
+        const historico = document.querySelector(".radar-historico-panel");
+
+        return {
+            scrollY: window.scrollY || 0,
+            boardScrollLeft: board ? board.scrollLeft : 0,
+            historicoScrollTop: historico ? historico.scrollTop : 0
+        };
+    }
+
+    function restaurarEstadoVisual(estado) {
+        requestAnimationFrame(function () {
+            window.scrollTo({
+                top: estado.scrollY || 0,
+                left: 0,
+                behavior: "auto"
+            });
+
+            const board = document.querySelector(".radar-herdadas-board");
+            const historico = document.querySelector(".radar-historico-panel");
+
+            if (board) {
+                board.scrollLeft = estado.boardScrollLeft || 0;
+            }
+
+            if (historico) {
+                historico.scrollTop = estado.historicoScrollTop || 0;
+            }
+        });
+    }
+
+    function mostrarLoading() {
+        const radar = getRadarPage();
+
+        if (!radar) {
+            return;
+        }
+
+        let loading = document.getElementById("radarAjaxLoading");
+
+        if (!loading) {
+            loading = document.createElement("div");
+            loading.id = "radarAjaxLoading";
+            loading.innerHTML = `
+                <div class="radar-ajax-loading-card">
+                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                    <span>Atualizando Radar...</span>
+                </div>
+            `;
+            document.body.appendChild(loading);
+        }
+
+        loading.classList.add("ativo");
+    }
+
+    function esconderLoading() {
+        const loading = document.getElementById("radarAjaxLoading");
+
+        if (loading) {
+            loading.classList.remove("ativo");
+        }
+    }
+
+    function fecharModaisAbertos() {
+        document.querySelectorAll(".modal.show").forEach(function (modalEl) {
+            if (typeof bootstrap === "undefined") {
+                return;
+            }
+
+            const modal = bootstrap.Modal.getInstance(modalEl);
+
+            if (modal) {
+                modal.hide();
+            }
+        });
+
+        document.querySelectorAll(".modal-backdrop").forEach(function (backdrop) {
+            backdrop.remove();
+        });
+
+        document.body.classList.remove("modal-open");
+        document.body.style.removeProperty("overflow");
+        document.body.style.removeProperty("padding-right");
+    }
+
+    function executarScriptsDoNovoConteudo(novoRadar) {
+        novoRadar.querySelectorAll("script").forEach(function (scriptAntigo) {
+            const scriptNovo = document.createElement("script");
+
+            Array.from(scriptAntigo.attributes).forEach(function (attr) {
+                scriptNovo.setAttribute(attr.name, attr.value);
+            });
+
+            scriptNovo.textContent = scriptAntigo.textContent;
+            scriptAntigo.replaceWith(scriptNovo);
+        });
+    }
+
+    async function radarAjaxRequest(url, options = {}) {
+        if (ajaxAtivo) {
+            return;
+        }
+
+        const radarAtual = getRadarPage();
+
+        if (!radarAtual) {
+            window.location.href = url;
+            return;
+        }
+
+        ajaxAtivo = true;
+
+        const estado = salvarEstadoVisual();
+
+        mostrarLoading();
+
+        try {
+            const resposta = await fetch(url, {
+                method: options.method || "GET",
+                body: options.body || null,
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                redirect: "follow"
+            });
+
+            const html = await resposta.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, "text/html");
+            const novoRadar = doc.querySelector(RADAR_SELECTOR);
+
+            if (!novoRadar) {
+                window.location.href = resposta.url || url;
+                return;
+            }
+
+            fecharModaisAbertos();
+
+            radarAtual.replaceWith(novoRadar);
+
+            executarScriptsDoNovoConteudo(novoRadar);
+
+            if (options.atualizarUrl !== false && resposta.url) {
+                window.history.pushState({}, "", resposta.url);
+            }
+
+            restaurarEstadoVisual(estado);
+
+        } catch (erro) {
+            console.error("Erro AJAX Radar:", erro);
+            window.location.href = url;
+        } finally {
+            esconderLoading();
+            ajaxAtivo = false;
+        }
+    }
+
+    function formParaAjax(form) {
+        if (!form) {
+            return false;
+        }
+
+        const action = form.getAttribute("action") || "";
+        const method = (form.getAttribute("method") || "GET").toUpperCase();
+
+        if (!action.includes(RADAR_URL_BASE)) {
+            return false;
+        }
+
+        if (form.dataset.noAjax === "true") {
+            return false;
+        }
+
+        return method === "GET" || method === "POST";
+    }
+
+    function linkParaAjax(link) {
+        if (!link) {
+            return false;
+        }
+
+        const href = link.getAttribute("href") || "";
+
+        if (!href.includes(RADAR_URL_BASE)) {
+            return false;
+        }
+
+        if (link.dataset.noAjax === "true") {
+            return false;
+        }
+
+        if (link.hasAttribute("download")) {
+            return false;
+        }
+
+        if (link.getAttribute("target") === "_blank") {
+            return false;
+        }
+
+        return true;
+    }
+
+    function executarConfirmacaoPadrao(form) {
+        const textoConfirmacao = form.dataset.confirm;
+
+        if (textoConfirmacao) {
+            return confirm(textoConfirmacao);
+        }
+
+        const onsubmit = form.getAttribute("onsubmit") || "";
+
+        if (onsubmit.includes("confirm")) {
+            const match = onsubmit.match(/confirm\(['"](.+?)['"]\)/);
+
+            if (match && match[1]) {
+                return confirm(match[1]);
+            }
+        }
+
+        return true;
+    }
+
+    document.addEventListener("submit", function (event) {
+        const form = event.target;
+
+        if (!formParaAjax(form)) {
+            return;
+        }
+
+        if (!executarConfirmacaoPadrao(form)) {
+            event.preventDefault();
+            return;
+        }
+
+        event.preventDefault();
+
+        const method = (form.getAttribute("method") || "GET").toUpperCase();
+        const action = form.getAttribute("action") || window.location.href;
+
+        if (typeof radarLimparMoedaAntesSubmit === "function") {
+            radarLimparMoedaAntesSubmit(form);
+        }
+
+        if (method === "GET") {
+            const params = new URLSearchParams(new FormData(form));
+            const url = `${action}?${params.toString()}`;
+            radarAjaxRequest(url, {
+                method: "GET"
+            });
+            return;
+        }
+
+        radarAjaxRequest(action, {
+            method: "POST",
+            body: new FormData(form)
+        });
+    });
+
+    document.addEventListener("click", function (event) {
+        const link = event.target.closest("a");
+
+        if (!linkParaAjax(link)) {
+            return;
+        }
+
+        event.preventDefault();
+
+        radarAjaxRequest(link.href, {
+            method: "GET"
+        });
+    });
+
+    window.addEventListener("popstate", function () {
+        radarAjaxRequest(window.location.href, {
+            method: "GET",
+            atualizarUrl: false
+        });
+    });
+
+    window.radarHerdadasMudarMes = function (delta) {
+        const mesEl = document.getElementById("radarMes");
+        const anoEl = document.getElementById("radarAno");
+
+        if (!mesEl || !anoEl) {
+            return;
+        }
+
+        let mes = parseInt(mesEl.value || "1", 10);
+        let ano = parseInt(anoEl.value || String(new Date().getFullYear()), 10);
+
+        mes += delta;
+
+        if (mes < 1) {
+            mes = 12;
+            ano -= 1;
+        }
+
+        if (mes > 12) {
+            mes = 1;
+            ano += 1;
+        }
+
+        mesEl.value = String(mes);
+        anoEl.value = String(ano);
+
+        const form = mesEl.closest("form");
+
+        if (form) {
+            form.dispatchEvent(new Event("submit", {
+                bubbles: true,
+                cancelable: true
+            }));
+        }
+    };
+})();
 </script>
 
 {% endblock %}

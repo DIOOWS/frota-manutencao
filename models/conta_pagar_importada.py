@@ -28,6 +28,25 @@ class ContaPagarImportada(db.Model):
 
     observacoes = db.Column(db.Text)
 
+    # =====================================================
+    # CONTROLE DE OBRIGAÇÃO / PARCELAMENTO
+    # =====================================================
+    # UNICA, RECORRENTE ou PARCELADA
+    tipo_obrigacao = db.Column(db.String(30), default="UNICA")
+
+    # Para contas parceladas: 18/72, 19/72 etc.
+    parcela_atual = db.Column(db.Integer)
+    total_parcelas = db.Column(db.Integer)
+
+    # Identifica todas as parcelas do mesmo contrato/acordo/empréstimo.
+    grupo_parcelamento = db.Column(db.String(255), index=True)
+
+    # Dia fixo de vencimento usado para gerar as próximas parcelas.
+    dia_vencimento_parcela = db.Column(db.Integer)
+
+    # Guarda o ID da primeira parcela/cadastro que originou a sequência.
+    parcela_origem_id = db.Column(db.Integer)
+
     mes = db.Column(db.Integer)
     ano = db.Column(db.Integer)
 

@@ -98,6 +98,7 @@ from models.tarefa_equipe import TarefaEquipe, ExecucaoTarefaEquipe
 from models.conta_recorrente import ContaRecorrente
 
 
+
 # ==========================================
 # 🧱 HELPERS DE BANCO
 # ==========================================

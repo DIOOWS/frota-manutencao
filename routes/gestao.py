@@ -8,6 +8,7 @@ from models.conta_recorrente import ContaRecorrente
 from database import db
 from datetime import datetime, date, timedelta
 from collections import Counter
+from decimal import Decimal, InvalidOperation
 from sqlalchemy import or_, and_
 import calendar
 
@@ -20,9 +21,45 @@ gestao_bp = Blueprint("gestao", __name__, url_prefix="/gestao")
 # =========================================================
 
 def dinheiro(valor):
+    """
+    Converte valores financeiros com segurança.
+
+    Aceita:
+    - Decimal, int, float
+    - "R$ 1.234,56"
+    - "1.234,56"
+    - "1234,56"
+    - "1234.56"
+
+    Observação: campos com máscara JS serão enviados como "1234.56".
+    """
+    if valor is None:
+        return 0
+
+    if isinstance(valor, Decimal):
+        return float(valor)
+
+    if isinstance(valor, (int, float)):
+        return float(valor)
+
+    texto_valor = str(valor).strip()
+
+    if not texto_valor:
+        return 0
+
+    texto_valor = (
+        texto_valor
+        .replace("R$", "")
+        .replace(" ", "")
+    )
+
+    # Formato brasileiro: 1.234,56
+    if "," in texto_valor:
+        texto_valor = texto_valor.replace(".", "").replace(",", ".")
+
     try:
-        return float(valor or 0)
-    except Exception:
+        return float(Decimal(texto_valor))
+    except (InvalidOperation, ValueError):
         return 0
 
 
@@ -1897,8 +1934,79 @@ def radar_normalizar_chave(valor):
     return " ".join(valor.upper().split())
 
 
+def radar_tipo_obrigacao(conta):
+    tipo = normalizar_texto(getattr(conta, "tipo_obrigacao", None))
+
+    if tipo in ["RECORRENTE", "PARCELADA", "UNICA"]:
+        return tipo
+
+    chave = str(getattr(conta, "chave_conciliacao", "") or "")
+
+    if chave.startswith("RECORRENTE:"):
+        return "RECORRENTE"
+
+    if chave.startswith("PARCELADA:"):
+        return "PARCELADA"
+
+    return "UNICA"
+
+
+def radar_conta_parcelada(conta):
+    return radar_tipo_obrigacao(conta) == "PARCELADA"
+
+
+def radar_parcela_label(conta):
+    parcela_atual = getattr(conta, "parcela_atual", None)
+    total_parcelas = getattr(conta, "total_parcelas", None)
+
+    if parcela_atual and total_parcelas:
+        return f"{parcela_atual}/{total_parcelas}"
+
+    if parcela_atual:
+        return str(parcela_atual)
+
+    return "-"
+
+
+def radar_chave_base_obrigacao(descricao, fornecedor, categoria, setor):
+    import hashlib
+
+    partes = [
+        radar_normalizar_chave(descricao),
+        radar_normalizar_chave(fornecedor),
+        radar_normalizar_chave(categoria),
+        radar_normalizar_chave(setor),
+    ]
+
+    base = "|".join(partes)
+    return hashlib.md5(base.encode("utf-8")).hexdigest()
+
+
+def radar_grupo_parcelamento_padrao(descricao, fornecedor, categoria, setor):
+    return f"PARCELAMENTO:{radar_chave_base_obrigacao(descricao, fornecedor, categoria, setor)}"
+
+
+def radar_chave_parcelada(grupo_parcelamento, parcela_atual, total_parcelas):
+    return f"PARCELADA:{grupo_parcelamento}:{int(parcela_atual)}:{int(total_parcelas)}"
+
+
+def radar_somar_meses(data_base, quantidade_meses):
+    mes = data_base.month + quantidade_meses
+    ano = data_base.year + ((mes - 1) // 12)
+    mes = ((mes - 1) % 12) + 1
+    dia = min(data_base.day, calendar.monthrange(ano, mes)[1])
+
+    return date(ano, mes, dia)
+
+
 def radar_chave_grupo(conta):
     import hashlib
+
+    if radar_conta_parcelada(conta):
+        grupo_parcelamento = getattr(conta, "grupo_parcelamento", None)
+
+        if grupo_parcelamento:
+            return f"PARCELADA:{grupo_parcelamento}"
 
     partes = [
         radar_normalizar_chave(radar_descricao_conta(conta)),
@@ -1987,7 +2095,13 @@ def radar_item_conta(conta, hoje):
         "dias_para_vencer": dias_para_vencer,
         "observacoes": radar_texto(getattr(conta, "observacoes", None), ""),
         "numero_fatura": radar_texto(getattr(conta, "numero_fatura", None), "-"),
-        "recorrente": str(getattr(conta, "chave_conciliacao", "") or "").startswith("RECORRENTE:"),
+        "tipo_obrigacao": radar_tipo_obrigacao(conta),
+        "recorrente": radar_tipo_obrigacao(conta) == "RECORRENTE",
+        "parcelada": radar_tipo_obrigacao(conta) == "PARCELADA",
+        "parcela_atual": getattr(conta, "parcela_atual", None) or "",
+        "total_parcelas": getattr(conta, "total_parcelas", None) or "",
+        "parcela_label": radar_parcela_label(conta),
+        "grupo_parcelamento": radar_texto(getattr(conta, "grupo_parcelamento", None), ""),
     }
 
 
@@ -2089,6 +2203,151 @@ def radar_gerar_recorrencias_ate_mes(mes, ano):
     return total_criadas
 
 
+
+def radar_garantir_parcelas_existentes_ate_mes(mes, ano):
+    """
+    Garante que contratos parcelados já existentes no banco tenham suas próximas parcelas geradas.
+
+    Exemplo real:
+    - Existe Empréstimo Caixa parcela 18/72 com vencimento em março.
+    - Ao abrir maio, o sistema cria automaticamente 19/72 abril e 20/72 maio se ainda não existirem.
+    - Ao abrir junho, cria 21/72 junho, mantendo as anteriores abertas/pagas conforme a situação.
+
+    Isso é o que faz a coluna Dívida Herdada enxergar Abril/Maio como abertas quando Março já foi paga.
+    """
+
+    data_limite = ultimo_dia_mes(mes, ano)
+    total_criadas = 0
+    total_ajustadas = 0
+
+    contas_parceladas = ContaPagarImportada.query.filter(
+        ContaPagarImportada.tipo_obrigacao == "PARCELADA",
+        ContaPagarImportada.parcela_atual.isnot(None),
+        ContaPagarImportada.total_parcelas.isnot(None),
+        ContaPagarImportada.data_vencimento.isnot(None)
+    ).order_by(
+        ContaPagarImportada.data_vencimento.asc(),
+        ContaPagarImportada.id.asc()
+    ).all()
+
+    for conta_base in contas_parceladas:
+        data_base = data_para_date(conta_base.data_vencimento)
+        parcela_base = getattr(conta_base, "parcela_atual", None)
+        total_parcelas = getattr(conta_base, "total_parcelas", None)
+
+        if not data_base or not parcela_base or not total_parcelas:
+            continue
+
+        try:
+            parcela_base = int(parcela_base)
+            total_parcelas = int(total_parcelas)
+        except Exception:
+            continue
+
+        if parcela_base < 1 or total_parcelas < parcela_base:
+            continue
+
+        descricao = radar_descricao_conta(conta_base)
+        fornecedor = radar_texto(getattr(conta_base, "fornecedor_funcionario", None), "")
+        categoria = radar_texto(getattr(conta_base, "categoria", None), "")
+        setor = radar_texto(getattr(conta_base, "setor", None), "GERAL")
+
+        grupo_parcelamento = getattr(conta_base, "grupo_parcelamento", None)
+
+        if not grupo_parcelamento:
+            grupo_parcelamento = radar_grupo_parcelamento_padrao(
+                descricao=descricao,
+                fornecedor=fornecedor,
+                categoria=categoria,
+                setor=setor
+            )
+            conta_base.grupo_parcelamento = grupo_parcelamento
+            total_ajustadas += 1
+
+        chave_base = radar_chave_parcelada(
+            grupo_parcelamento=grupo_parcelamento,
+            parcela_atual=parcela_base,
+            total_parcelas=total_parcelas
+        )
+
+        if not getattr(conta_base, "chave_conciliacao", None):
+            conta_base.chave_conciliacao = chave_base
+            total_ajustadas += 1
+
+        if not getattr(conta_base, "dia_vencimento_parcela", None):
+            conta_base.dia_vencimento_parcela = data_base.day
+            total_ajustadas += 1
+
+        if not getattr(conta_base, "parcela_origem_id", None):
+            conta_base.parcela_origem_id = conta_base.id
+            total_ajustadas += 1
+
+        # Gera somente até o mês visualizado, para não criar todo o contrato de uma vez.
+        for parcela in range(parcela_base + 1, total_parcelas + 1):
+            meses_adiante = parcela - parcela_base
+            data_vencimento = radar_somar_meses(data_base, meses_adiante)
+
+            if data_vencimento > data_limite:
+                break
+
+            chave = radar_chave_parcelada(
+                grupo_parcelamento=grupo_parcelamento,
+                parcela_atual=parcela,
+                total_parcelas=total_parcelas
+            )
+
+            existente = ContaPagarImportada.query.filter_by(
+                chave_conciliacao=chave
+            ).first()
+
+            if existente:
+                continue
+
+            observacao_parcela = (
+                f"Conta parcelada gerada automaticamente a partir da parcela "
+                f"{parcela_base}/{total_parcelas}. "
+                f"Parcela {parcela}/{total_parcelas}. "
+                f"Grupo: {grupo_parcelamento}. "
+                f"Competência: {radar_competencia_label(data_vencimento)}."
+            )
+
+            nova_conta = ContaPagarImportada(
+                numero_fatura=(
+                    f"{radar_texto(getattr(conta_base, 'numero_fatura', None), 'PARC')}-{parcela:03d}"
+                ),
+                fornecedor_funcionario=getattr(conta_base, "fornecedor_funcionario", None),
+                telefone=getattr(conta_base, "telefone", None),
+                email=getattr(conta_base, "email", None),
+                plano_contas=getattr(conta_base, "plano_contas", None),
+                categoria=getattr(conta_base, "categoria", None),
+                setor=getattr(conta_base, "setor", None) or "GERAL",
+                data_documento=datetime.combine(date.today(), datetime.min.time()),
+                data_vencimento=datetime.combine(data_vencimento, datetime.min.time()),
+                valor=getattr(conta_base, "valor", 0),
+                pago=False,
+                status="PENDENTE",
+                observacoes=f"{observacao_parcela}\n{radar_texto(getattr(conta_base, 'observacoes', None), '')}".strip(),
+                tipo_obrigacao="PARCELADA",
+                parcela_atual=parcela,
+                total_parcelas=total_parcelas,
+                grupo_parcelamento=grupo_parcelamento,
+                dia_vencimento_parcela=getattr(conta_base, "dia_vencimento_parcela", None) or data_base.day,
+                parcela_origem_id=getattr(conta_base, "parcela_origem_id", None) or conta_base.id,
+                mes=data_vencimento.month,
+                ano=data_vencimento.year,
+                chave_conciliacao=chave,
+                origem_importacao="PARCELADA",
+            )
+
+            db.session.add(nova_conta)
+            total_criadas += 1
+
+    if total_criadas or total_ajustadas:
+        db.session.commit()
+
+    return total_criadas
+
+
 def radar_filtrar_busca(contas, busca):
     busca = radar_normalizar_chave(busca)
 
@@ -2135,12 +2394,16 @@ def radar_agrupar_herdadas(contas_herdadas, hoje):
                 "maior_atraso": 0,
                 "atraso_medio": 0,
                 "historico": [],
+                "parcelas_labels": [],
             }
 
         grupo = grupos_map[chave]
         grupo["total"] += item["valor"]
         grupo["qtd"] += 1
         grupo["historico"].append(item)
+
+        if item.get("parcelada") and item.get("parcela_label") and item.get("parcela_label") != "-":
+            grupo["parcelas_labels"].append(item["parcela_label"])
 
         if item["data_vencimento"]:
             if not grupo["desde_data"] or item["data_vencimento"] < grupo["desde_data"]:
@@ -2161,6 +2424,9 @@ def radar_agrupar_herdadas(contas_herdadas, hoje):
             grupo["desde_label"] = grupo["historico"][0]["competencia"]
 
         grupo["total_formatado"] = radar_moeda(grupo["total"])
+        grupo["parcelas_resumo"] = ", ".join(grupo.get("parcelas_labels", [])[:4])
+        if len(grupo.get("parcelas_labels", [])) > 4:
+            grupo["parcelas_resumo"] += "..."
         atrasos = [h["dias_atraso"] for h in grupo["historico"] if h["dias_atraso"]]
         grupo["atraso_medio"] = round(sum(atrasos) / len(atrasos)) if atrasos else 0
         grupos.append(grupo)
@@ -2289,8 +2555,12 @@ def radar_financeiro():
     # março, abril, maio e junho serão criados se ainda não existirem.
     radar_gerar_recorrencias_ate_mes(mes, ano)
 
+    # Gera automaticamente parcelas faltantes de contratos parcelados já cadastrados.
+    # Exemplo: se já existe 18/72 em março, ao abrir maio ele cria 19/72 abril e 20/72 maio.
+    radar_garantir_parcelas_existentes_ate_mes(mes, ano)
+
     query = ContaPagarImportada.query.filter(
-        ContaPagarImportada.origem_importacao.in_(["PAGAMENTO", "MANUAL", "VENCIMENTO", "IMPORTACAO", "RECORRENTE"])
+        ContaPagarImportada.origem_importacao.in_(["PAGAMENTO", "MANUAL", "VENCIMENTO", "IMPORTACAO", "RECORRENTE", "PARCELADA"])
     )
 
     if setor:
@@ -2509,15 +2779,15 @@ def radar_financeiro():
             "vazia": "Sem vencimentos próximos",
         },
         {
-            "slug": "fim_mes",
-            "titulo": "ATÉ FIM DO MÊS",
-            "subtitulo": f"Vencem até {fim_mes.strftime('%d/%m')}",
+            "slug": "atrasadas_mes",
+            "titulo": "ATRASADAS DO MÊS",
+            "subtitulo": "Venceram neste mês e ainda não foram pagas",
             "cor": "blue",
-            "total": total_ate_fim_mes,
-            "total_formatado": radar_moeda(total_ate_fim_mes),
-            "badge": len(ate_fim_mes),
-            "itens": ate_fim_mes,
-            "vazia": "Sem contas até fim do mês",
+            "total": total_atrasadas_mes,
+            "total_formatado": radar_moeda(total_atrasadas_mes),
+            "badge": len(atrasadas_mes),
+            "itens": atrasadas_mes,
+            "vazia": "Sem atrasadas do mês",
         },
         {
             "slug": "pagas_mes",
@@ -2582,6 +2852,105 @@ def radar_financeiro():
     )
 
 
+def radar_criar_parcelas_automaticas(
+    descricao,
+    fornecedor,
+    categoria,
+    setor,
+    valor,
+    data_vencimento_inicial,
+    parcela_atual,
+    total_parcelas,
+    observacoes,
+    numero_fatura=None,
+    ja_pago=False,
+    data_pagamento=None
+):
+    grupo_parcelamento = radar_grupo_parcelamento_padrao(
+        descricao=descricao,
+        fornecedor=fornecedor,
+        categoria=categoria,
+        setor=setor
+    )
+
+    contas_criadas = []
+
+    for parcela in range(parcela_atual, total_parcelas + 1):
+        meses_adiante = parcela - parcela_atual
+        data_vencimento = radar_somar_meses(data_vencimento_inicial, meses_adiante)
+        chave = radar_chave_parcelada(
+            grupo_parcelamento=grupo_parcelamento,
+            parcela_atual=parcela,
+            total_parcelas=total_parcelas
+        )
+
+        existente = ContaPagarImportada.query.filter_by(
+            chave_conciliacao=chave
+        ).first()
+
+        if existente:
+            continue
+
+        observacao_parcela = (
+            f"Conta parcelada gerada automaticamente. "
+            f"Parcela {parcela}/{total_parcelas}. "
+            f"Grupo: {grupo_parcelamento}. "
+            f"Competência: {radar_competencia_label(data_vencimento)}."
+        )
+
+        conta = ContaPagarImportada(
+            numero_fatura=(
+                f"{numero_fatura}-{parcela:03d}"
+                if numero_fatura else
+                f"PARC-{grupo_parcelamento[-10:]}-{parcela:03d}-{total_parcelas}"
+            ),
+            fornecedor_funcionario=fornecedor,
+            plano_contas=descricao,
+            categoria=categoria,
+            setor=setor,
+            data_documento=datetime.combine(date.today(), datetime.min.time()),
+            data_vencimento=datetime.combine(data_vencimento, datetime.min.time()),
+            valor=valor,
+            pago=False,
+            status="PENDENTE",
+            observacoes=f"{observacao_parcela}\n{observacoes or ''}".strip(),
+            tipo_obrigacao="PARCELADA",
+            parcela_atual=parcela,
+            total_parcelas=total_parcelas,
+            grupo_parcelamento=grupo_parcelamento,
+            dia_vencimento_parcela=data_vencimento_inicial.day,
+            parcela_origem_id=None,
+            mes=data_vencimento.month,
+            ano=data_vencimento.year,
+            chave_conciliacao=chave,
+            origem_importacao="PARCELADA",
+        )
+
+        if ja_pago and parcela == parcela_atual:
+            conta.pago = True
+            conta.status = "PAGO"
+            conta.data_pagamento = datetime.combine(
+                data_pagamento or date.today(),
+                datetime.min.time()
+            )
+
+        db.session.add(conta)
+        db.session.flush()
+
+        if not conta.parcela_origem_id:
+            conta.parcela_origem_id = conta.id
+
+        contas_criadas.append(conta)
+
+    if contas_criadas:
+        origem_id = contas_criadas[0].id
+
+        for conta in contas_criadas:
+            conta.parcela_origem_id = origem_id
+
+    return contas_criadas
+
+
 @gestao_bp.route("/radar-financeiro/novo", methods=["POST"])
 @gestao_required
 def radar_financeiro_novo():
@@ -2590,13 +2959,20 @@ def radar_financeiro_novo():
     fornecedor = request.form.get("fornecedor", "").strip()
     categoria = request.form.get("categoria", "").strip()
     setor = normalizar_texto(request.form.get("setor")) or "GERAL"
-    valor = dinheiro(
-        str(request.form.get("valor") or "0")
-        .replace(".", "")
-        .replace(",", ".")
-    )
+    valor = dinheiro(request.form.get("valor"))
     data_vencimento = parse_data(request.form.get("data_vencimento"))
     observacoes = request.form.get("observacoes", "").strip()
+    tipo_obrigacao = normalizar_texto(request.form.get("tipo_obrigacao")) or "UNICA"
+    parcela_atual = request.form.get("parcela_atual", type=int)
+    total_parcelas = request.form.get("total_parcelas", type=int)
+
+    if tipo_obrigacao not in ["UNICA", "RECORRENTE", "PARCELADA"]:
+        tipo_obrigacao = "UNICA"
+
+    if tipo_obrigacao == "PARCELADA":
+        if not parcela_atual or not total_parcelas or parcela_atual < 1 or total_parcelas < parcela_atual:
+            flash("Para conta parcelada, informe parcela atual e total de parcelas corretamente.", "danger")
+            return redirect(request.referrer or "/gestao/radar-financeiro/")
 
     if not descricao:
         flash("Informe a descrição da conta.", "danger")
@@ -2606,8 +2982,29 @@ def radar_financeiro_novo():
         flash("Informe a data de vencimento.", "danger")
         return redirect(request.referrer or "/gestao/radar-financeiro/")
 
-    recorrente = request.form.get("recorrente") == "on"
+    recorrente = tipo_obrigacao == "RECORRENTE" or request.form.get("recorrente") == "on"
     recorrencia = None
+
+    if tipo_obrigacao == "PARCELADA":
+        ja_pago = request.form.get("ja_pago") == "on"
+        data_pagamento = parse_data(request.form.get("data_pagamento")) or date.today()
+        radar_criar_parcelas_automaticas(
+            descricao=descricao,
+            fornecedor=fornecedor,
+            categoria=categoria,
+            setor=setor,
+            valor=valor,
+            data_vencimento_inicial=data_vencimento,
+            parcela_atual=parcela_atual,
+            total_parcelas=total_parcelas,
+            observacoes=observacoes,
+            numero_fatura=request.form.get("numero_fatura"),
+            ja_pago=ja_pago,
+            data_pagamento=data_pagamento
+        )
+        db.session.commit()
+        flash("Conta parcelada criada. As parcelas futuras foram geradas automaticamente.", "success")
+        return redirect(request.referrer or "/gestao/radar-financeiro/")
 
     if recorrente:
         recorrencia = ContaRecorrente(
@@ -2658,6 +3055,12 @@ def radar_financeiro_novo():
         pago=False,
         status="PENDENTE",
         observacoes=observacoes_conta,
+        tipo_obrigacao="RECORRENTE" if recorrencia else "UNICA",
+        parcela_atual=None,
+        total_parcelas=None,
+        grupo_parcelamento=None,
+        dia_vencimento_parcela=None,
+        parcela_origem_id=None,
         mes=data_vencimento.month,
         ano=data_vencimento.year,
         chave_conciliacao=chave_conciliacao,
@@ -2692,14 +3095,16 @@ def radar_financeiro_editar(id):
     categoria = request.form.get("categoria", "").strip()
     setor = normalizar_texto(request.form.get("setor")) or "GERAL"
     status = normalizar_texto(request.form.get("status")) or "PENDENTE"
-    valor = dinheiro(
-        str(request.form.get("valor") or "0")
-        .replace(".", "")
-        .replace(",", ".")
-    )
+    valor = dinheiro(request.form.get("valor"))
     data_vencimento = parse_data(request.form.get("data_vencimento"))
     data_pagamento = parse_data(request.form.get("data_pagamento"))
     observacoes = request.form.get("observacoes", "").strip()
+    tipo_obrigacao = normalizar_texto(request.form.get("tipo_obrigacao")) or radar_tipo_obrigacao(conta)
+    parcela_atual = request.form.get("parcela_atual", type=int)
+    total_parcelas = request.form.get("total_parcelas", type=int)
+
+    if tipo_obrigacao not in ["UNICA", "RECORRENTE", "PARCELADA"]:
+        tipo_obrigacao = "UNICA"
 
     if not descricao:
         flash("Informe a descrição da conta.", "danger")
@@ -2712,6 +3117,25 @@ def radar_financeiro_editar(id):
     conta.valor = valor
     conta.status = status
     conta.observacoes = observacoes
+    conta.tipo_obrigacao = tipo_obrigacao
+
+    if tipo_obrigacao == "PARCELADA":
+        conta.parcela_atual = parcela_atual
+        conta.total_parcelas = total_parcelas
+        conta.dia_vencimento_parcela = (data_vencimento.day if data_vencimento else conta.dia_vencimento_parcela)
+
+        if not conta.grupo_parcelamento:
+            conta.grupo_parcelamento = radar_grupo_parcelamento_padrao(
+                descricao=descricao,
+                fornecedor=fornecedor,
+                categoria=categoria,
+                setor=setor
+            )
+    else:
+        conta.parcela_atual = None
+        conta.total_parcelas = None
+        conta.grupo_parcelamento = None
+        conta.dia_vencimento_parcela = None
 
     if data_vencimento:
         conta.data_vencimento = datetime.combine(data_vencimento, datetime.min.time())
@@ -2830,6 +3254,12 @@ def radar_financeiro_transportar(id):
         pago=False,
         status="PENDENTE",
         observacoes=f"{observacao_origem}\n{conta.observacoes or ''}".strip(),
+        tipo_obrigacao=radar_tipo_obrigacao(conta),
+        parcela_atual=getattr(conta, "parcela_atual", None),
+        total_parcelas=getattr(conta, "total_parcelas", None),
+        grupo_parcelamento=getattr(conta, "grupo_parcelamento", None),
+        dia_vencimento_parcela=getattr(conta, "dia_vencimento_parcela", None),
+        parcela_origem_id=getattr(conta, "parcela_origem_id", None),
         mes=mes_destino,
         ano=ano_destino,
         chave_conciliacao=None,
