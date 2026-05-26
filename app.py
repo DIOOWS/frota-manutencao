@@ -95,6 +95,7 @@ from models.conta_receber_importada import ContaReceberImportada
 from models.membro_agenda_equipe import MembroAgendaEquipe
 from models.agenda_mes_equipe import AgendaMesEquipe
 from models.tarefa_equipe import TarefaEquipe, ExecucaoTarefaEquipe
+from models.conta_recorrente import ContaRecorrente
 
 
 # ==========================================

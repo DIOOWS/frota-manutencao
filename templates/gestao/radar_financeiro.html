@@ -1,333 +1,578 @@
 {% extends "base.html" %}
-{% block title %}Radar Financeiro{% endblock %}
+{% block title %}Radar Financeiro Inteligente{% endblock %}
 
 {% block content %}
 
-<div class="gestao-page radar-financeiro-page">
+<div class="gestao-page radar-herdadas-page">
 
-    <section class="radar-topo">
-        <div class="radar-topo-info">
-            <span class="radar-label">GESTÃO FINANCEIRA</span>
-            <h1>Radar Financeiro</h1>
-            <p>Controle manual das obrigações, parcelas e vencimentos do mês.</p>
+    <section class="radar-herdadas-header">
+
+        <div class="radar-herdadas-title">
+            <div class="radar-herdadas-title-icon">
+                <i class="bi bi-bullseye"></i>
+            </div>
+
+            <div>
+                <h1>Radar Financeiro Inteligente</h1>
+                <p>Visão completa das obrigações, dívidas herdadas e fluxo de caixa.</p>
+            </div>
         </div>
 
-        <div class="radar-topo-actions">
+        <div class="radar-herdadas-user-actions">
             <form method="POST"
                   action="/gestao/radar-financeiro/enviar-alerta-hoje"
-                  onsubmit="return confirm('Enviar alerta Telegram com as contas vencendo hoje?');">
-                <button type="submit" class="radar-btn radar-btn-warning">
-                    📲 Alerta Telegram
+                  onsubmit="return confirm('Enviar alerta com as contas vencendo hoje?');">
+                <button type="submit" class="radar-herdadas-alert-btn">
+                    <i class="bi bi-envelope-fill"></i>
+                    Alerta hoje
                 </button>
             </form>
 
             <button type="button"
-                    class="radar-btn radar-btn-primary"
+                    class="radar-herdadas-new-btn"
                     data-bs-toggle="modal"
                     data-bs-target="#modalNovaConta">
-                + Nova conta
+                <i class="bi bi-plus-lg"></i>
+                Nova conta
             </button>
         </div>
+
     </section>
 
-    <section class="radar-filtros">
-        <form method="GET" action="/gestao/radar-financeiro/" class="radar-filtros-grid">
+    <section class="radar-herdadas-kpis">
 
-            <div class="radar-field">
-                <label>Mês</label>
-                <select name="mes" class="form-control">
-                    {% for m in range(1,13) %}
-                        <option value="{{ m }}" {% if mes == m %}selected{% endif %}>{{ m }}</option>
-                    {% endfor %}
-                </select>
+        <div class="radar-herdadas-kpi danger">
+            <div class="radar-herdadas-kpi-icon">
+                <i class="bi bi-heartbreak-fill"></i>
             </div>
+            <div>
+                <span>DÍVIDA HERDADA</span>
+                <strong>{{ moeda(total_divida_herdada) }}</strong>
+                <small>{{ grupos_herdados|length }} tipo(s) • {{ colunas[0].badge }} conta(s)</small>
+            </div>
+        </div>
 
-            <div class="radar-field">
-                <label>Ano</label>
-                <input type="number" name="ano" value="{{ ano }}" class="form-control">
+        <div class="radar-herdadas-kpi warning">
+            <div class="radar-herdadas-kpi-icon">
+                <i class="bi bi-calendar-event-fill"></i>
             </div>
+            <div>
+                <span>VENCE HOJE</span>
+                <strong>{{ moeda(total_hoje) }}</strong>
+                <small>{{ colunas[1].badge }} conta(s)</small>
+            </div>
+        </div>
 
-            <div class="radar-field radar-busca">
-                <label>Busca</label>
-                <input type="text"
-                       name="busca"
-                       value="{{ busca or '' }}"
-                       placeholder="Descrição, fornecedor, categoria..."
-                       class="form-control">
+        <div class="radar-herdadas-kpi purple">
+            <div class="radar-herdadas-kpi-icon">
+                <i class="bi bi-graph-up-arrow"></i>
             </div>
+            <div>
+                <span>PRÓXIMOS 7 DIAS</span>
+                <strong>{{ moeda(total_proximos_7) }}</strong>
+                <small>{{ colunas[2].badge }} conta(s)</small>
+            </div>
+        </div>
 
-            <div class="radar-field">
-                <label>Setor</label>
-                <select name="setor" class="form-control">
-                    <option value="">Todos</option>
-                    <option value="ASSISTÊNCIA" {% if setor == "ASSISTÊNCIA" %}selected{% endif %}>Assistência</option>
-                    <option value="LOGÍSTICA" {% if setor == "LOGÍSTICA" %}selected{% endif %}>Logística</option>
-                    <option value="GERAL" {% if setor == "GERAL" %}selected{% endif %}>Geral</option>
-                </select>
+        <div class="radar-herdadas-kpi blue">
+            <div class="radar-herdadas-kpi-icon">
+                <i class="bi bi-calendar2-check-fill"></i>
             </div>
+            <div>
+                <span>ATÉ FIM DO MÊS</span>
+                <strong>{{ moeda(total_ate_fim_mes) }}</strong>
+                <small>{{ colunas[3].badge }} conta(s)</small>
+            </div>
+        </div>
 
-            <div class="radar-submit">
-                <button class="radar-btn radar-btn-primary">
-                    Filtrar
-                </button>
+        <div class="radar-herdadas-kpi success">
+            <div class="radar-herdadas-kpi-icon">
+                <i class="bi bi-receipt-cutoff"></i>
             </div>
+            <div>
+                <span>PAGAS NO MÊS</span>
+                <strong>{{ moeda(total_pagas_mes) }}</strong>
+                <small>{{ colunas[4].badge }} conta(s)</small>
+            </div>
+        </div>
+
+        <div class="radar-herdadas-kpi teal">
+            <div class="radar-herdadas-kpi-icon">
+                <i class="bi bi-arrow-counterclockwise"></i>
+            </div>
+            <div>
+                <span>PAGAS DE MESES ANT.</span>
+                <strong>{{ moeda(total_pagas_meses_anteriores) }}</strong>
+                <small>{{ colunas[5].badge }} conta(s)</small>
+            </div>
+        </div>
+
+        <div class="radar-herdadas-kpi risk {{ risco_classe }}">
+            <div>
+                <span>DIAGNÓSTICO DO MÊS</span>
+                <strong>{{ risco }}</strong>
+                <small>Pressão: {{ moeda(pressao_imediata) }}</small>
+            </div>
+            <div class="radar-risk-bar">
+                <span></span>
+            </div>
+        </div>
+
+    </section>
+
+    <section class="radar-herdadas-filters">
+        <form method="GET" action="/gestao/radar-financeiro/">
+
+            <button type="button" class="radar-filter-arrow" onclick="radarHerdadasMudarMes(-1)">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+
+            <select name="mes" id="radarMes" class="form-control">
+                {% for m in range(1, 13) %}
+                    <option value="{{ m }}" {% if mes == m %}selected{% endif %}>
+                        {{ nome_mes(m) }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <input type="number"
+                   name="ano"
+                   id="radarAno"
+                   value="{{ ano }}"
+                   class="form-control">
+
+            <button type="button" class="radar-filter-arrow" onclick="radarHerdadasMudarMes(1)">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+
+            <div class="radar-filter-divider"></div>
+
+            <label>Visão:</label>
+
+            <select name="visao" class="form-control">
+                <option value="vencimento" {% if visao == "vencimento" %}selected{% endif %}>
+                    Mês de vencimento
+                </option>
+                <option value="pagamento" {% if visao == "pagamento" %}selected{% endif %}>
+                    Mês de pagamento
+                </option>
+            </select>
+
+            <select name="setor" class="form-control">
+                <option value="">Todos os setores</option>
+                <option value="ASSISTÊNCIA" {% if setor == "ASSISTÊNCIA" %}selected{% endif %}>Assistência</option>
+                <option value="LOGÍSTICA" {% if setor == "LOGÍSTICA" %}selected{% endif %}>Logística</option>
+                <option value="GERAL" {% if setor == "GERAL" %}selected{% endif %}>Geral</option>
+            </select>
+
+            <input type="text"
+                   name="busca"
+                   value="{{ busca or '' }}"
+                   placeholder="Buscar conta..."
+                   class="form-control radar-search">
+
+            <button class="radar-filter-submit" type="submit">
+                <i class="bi bi-search"></i>
+            </button>
 
         </form>
     </section>
 
-    <section class="radar-kpis">
+    <section class="radar-herdadas-layout">
 
-        <div class="radar-kpi dark">
-            <div class="radar-kpi-icon">🧾</div>
-            <div>
-                <span>PENDENTES</span>
-                <strong>R$ {{ "%.2f"|format(total_pendentes) }}</strong>
-            </div>
-        </div>
+        <div class="radar-herdadas-main">
 
-        <div class="radar-kpi primary">
-            <div class="radar-kpi-icon">📅</div>
-            <div>
-                <span>VENCE HOJE</span>
-                <strong>R$ {{ "%.2f"|format(total_hoje) }}</strong>
-            </div>
-        </div>
+            <section class="radar-herdadas-board">
 
-        <div class="radar-kpi purple">
-            <div class="radar-kpi-icon">📌</div>
-            <div>
-                <span>PRÓXIMOS 7 DIAS</span>
-                <strong>R$ {{ "%.2f"|format(total_proximas) }}</strong>
-            </div>
-        </div>
+                {% for coluna in colunas %}
 
-        <div class="radar-kpi danger">
-            <div class="radar-kpi-icon">⚠️</div>
-            <div>
-                <span>ATRASADAS</span>
-                <strong>R$ {{ "%.2f"|format(total_atrasado) }}</strong>
-            </div>
-        </div>
+                    <div class="radar-herdadas-coluna {{ coluna.cor }}">
 
-        <div class="radar-kpi success">
-            <div class="radar-kpi-icon">✅</div>
-            <div>
-                <span>PAGAS</span>
-                <strong>R$ {{ "%.2f"|format(total_pagas) }}</strong>
-            </div>
-        </div>
-
-    </section>
-
-    <section class="radar-kanban-grid">
-
-        {% set colunas = [
-            ("Pendentes", pendentes, "dark"),
-            ("Vence hoje", vence_hoje, "warning"),
-            ("Próximos 7 dias", proximas, "primary"),
-            ("Atrasadas", atrasadas, "danger"),
-            ("Pagas", pagas, "success")
-        ] %}
-
-        {% for titulo, lista, cor in colunas %}
-
-            <div class="radar-coluna">
-
-                <div class="radar-coluna-header {{ cor }}">
-                    <strong>{{ titulo }}</strong>
-                    <span>{{ lista|length }}</span>
-                </div>
-
-                {% if titulo == "Pagas" %}
-                    <div class="radar-pagas-lote">
-                        <form method="POST"
-                              action="/gestao/radar-financeiro/transportar-pagas-lote"
-                              id="formTransportarPagas"
-                              onsubmit="return confirm('Transportar as contas pagas selecionadas como PENDENTES para o mês escolhido?');">
-
-                            <div class="radar-pagas-lote-top">
-                                <label class="radar-check-all">
-                                    <input type="checkbox" id="selecionarTodasPagas">
-                                    Todas
-                                </label>
-
-                                <select name="mes_destino" class="form-control" required>
-                                    {% for m in range(1,13) %}
-                                        <option value="{{ m }}" {% if mes == 12 and m == 1 %}selected{% elif mes < 12 and m == mes + 1 %}selected{% endif %}>
-                                            {{ m }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-
-                                <input type="number"
-                                       name="ano_destino"
-                                       value="{% if mes == 12 %}{{ ano + 1 }}{% else %}{{ ano }}{% endif %}"
-                                       class="form-control"
-                                       required>
+                        <div class="radar-herdadas-coluna-header">
+                            <div>
+                                <strong>{{ coluna.titulo }}</strong>
+                                <small>{{ coluna.subtitulo }}</small>
                             </div>
+                            <span>{{ coluna.badge }}</span>
+                        </div>
 
-                            <button class="radar-btn radar-btn-warning radar-btn-lote">
-                                Transportar selecionadas
-                            </button>
-                        </form>
-                    </div>
-                {% endif %}
+                        <div class="radar-herdadas-coluna-total">
+                            {{ coluna.total_formatado }}
+                        </div>
 
-                <div class="radar-coluna-body">
+                        <div class="radar-herdadas-coluna-body">
 
-                    {% for item in lista %}
-                        {% set c = item.conta %}
+                            {% if coluna.slug == "herdada" %}
 
-                        <article class="radar-card radar-card-compacto radar-card-slim">
+                                {% for grupo in coluna.grupos %}
 
-                            <div class="radar-card-header">
+                                    <article class="radar-herdada-card {% if grupo_selecionado and grupo_selecionado.grupo_key == grupo.grupo_key %}ativo{% endif %}">
+                                        <a href="/gestao/radar-financeiro/?mes={{ mes }}&ano={{ ano }}&setor={{ setor }}&busca={{ busca }}&visao={{ visao }}&grupo={{ grupo.grupo_key }}">
 
-                                {% if titulo == "Pagas" %}
-                                    <label class="radar-card-check">
-                                        <input type="checkbox"
-                                               name="contas_ids"
-                                               value="{{ c.id }}"
-                                               class="check-paga"
-                                               form="formTransportarPagas">
-                                    </label>
-                                {% endif %}
+                                            <div class="radar-herdada-card-top">
+                                                <div class="radar-herdada-icon">
+                                                    <i class="bi bi-house-exclamation-fill"></i>
+                                                </div>
 
-                                <button type="button"
-                                        class="radar-card-resumo"
-                                        data-bs-toggle="collapse"
-                                        data-bs-target="#detalhesConta{{ c.id }}"
-                                        aria-expanded="false">
+                                                <div>
+                                                    <strong>{{ grupo.descricao }}</strong>
+                                                    <small>{{ grupo.fornecedor }}</small>
+                                                </div>
 
-                                    <div class="radar-card-title">
-                                        <strong>{{ c.descricao }}</strong>
-                                        <small>{{ c.fornecedor or '-' }}</small>
+                                                <span>{{ grupo.qtd }} em aberto</span>
+                                            </div>
+
+                                            <div class="radar-herdada-valor">
+                                                {{ grupo.total_formatado }}
+                                            </div>
+
+                                            <div class="radar-herdada-desde">
+                                                Desde {{ grupo.desde_label }}
+                                            </div>
+
+                                            <div class="radar-herdada-meses">
+                                                {% for h in grupo.historico[:3] %}
+                                                    <div>
+                                                        <span>{{ h.competencia }}</span>
+                                                        <small>{{ h.dias_atraso }} dias</small>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+
+                                            <div class="radar-herdada-link">
+                                                Ver histórico completo
+                                                <i class="bi bi-arrow-right"></i>
+                                            </div>
+
+                                        </a>
+                                    </article>
+
+                                {% else %}
+                                    <div class="radar-herdadas-empty">
+                                        {{ coluna.vazia }}
                                     </div>
+                                {% endfor %}
 
-                                    <div class="radar-card-mini-info">
-                                        <span>R$ {{ "%.2f"|format(c.valor) }}</span>
-                                        <small>{{ c.data_vencimento.strftime('%d/%m/%Y') if c.data_vencimento else '-' }}</small>
-                                    </div>
+                            {% else %}
 
-                                </button>
+                                {% for item in coluna.itens %}
+                                    <article class="radar-normal-card {{ coluna.cor }}">
 
-                                <div class="dropdown radar-dropdown">
-                                    <button class="radar-menu-btn"
-                                            type="button"
-                                            data-bs-toggle="dropdown"
-                                            aria-expanded="false">
-                                        ⋮
-                                    </button>
+                                        <div class="radar-normal-card-top">
+                                            <div>
+                                                <strong>{{ item.descricao }}</strong>
+                                                <small>{{ item.fornecedor }}</small>
+                                            </div>
 
-                                    <ul class="dropdown-menu dropdown-menu-end radar-dropdown-menu">
-
-                                        {% if c.status not in ["PAGO", "CANCELADO", "TRANSPORTADO"] %}
-                                            <li>
-                                                <button type="button"
-                                                        class="dropdown-item"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#modalPagar{{ c.id }}">
-                                                    Pagar
+                                            <div class="dropdown">
+                                                <button class="radar-card-menu"
+                                                        data-bs-toggle="dropdown"
+                                                        type="button">
+                                                    <i class="bi bi-three-dots-vertical"></i>
                                                 </button>
-                                            </li>
+
+                                                <ul class="dropdown-menu dropdown-menu-end radar-card-dropdown">
+                                                    {% if not item.pago and item.status != "CANCELADO" %}
+                                                        <li>
+                                                            <button type="button"
+                                                                    class="dropdown-item"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#modalPagar{{ item.id }}">
+                                                                Marcar como paga
+                                                            </button>
+                                                        </li>
+                                                    {% endif %}
+
+                                                    <li>
+                                                        <button type="button"
+                                                                class="dropdown-item"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#modalEditar{{ item.id }}">
+                                                            Editar
+                                                        </button>
+                                                    </li>
+
+                                                    <li>
+                                                        <button type="button"
+                                                                class="dropdown-item"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#modalTransportar{{ item.id }}">
+                                                            Transportar
+                                                        </button>
+                                                    </li>
+
+                                                    {% if item.status != "CANCELADO" %}
+                                                        <li>
+                                                            <form method="POST"
+                                                                  action="/gestao/radar-financeiro/cancelar/{{ item.id }}"
+                                                                  onsubmit="return confirm('Cancelar esta conta?');">
+                                                                <button type="submit" class="dropdown-item text-warning">
+                                                                    Cancelar
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                    {% endif %}
+
+                                                    <li>
+                                                        <form method="POST"
+                                                              action="/gestao/radar-financeiro/excluir/{{ item.id }}"
+                                                              onsubmit="return confirm('Excluir definitivamente esta conta?');">
+                                                            <button type="submit" class="dropdown-item text-danger">
+                                                                Excluir
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+
+                                        <div class="radar-normal-valor">
+                                            {{ item.valor_formatado }}
+                                        </div>
+
+                                        <div class="radar-normal-info">
+                                            {% if item.pago %}
+                                                Pago em: {{ item.data_pagamento_formatada }}
+                                            {% else %}
+                                                Venc: {{ item.data_vencimento_formatada }}
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="radar-normal-info">
+                                            Setor: {{ item.setor }}
+                                        </div>
+
+                                        {% if item.recorrente %}
+                                            <div class="radar-recorrente-badge">
+                                                <i class="bi bi-arrow-repeat"></i>
+                                                RECORRENTE
+                                            </div>
                                         {% endif %}
 
-                                        <li>
-                                            <button type="button"
-                                                    class="dropdown-item"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#modalEditar{{ c.id }}">
-                                                Editar
-                                            </button>
-                                        </li>
-
-                                        <li>
-                                            <form method="POST"
-                                                  action="/gestao/radar-financeiro/excluir/{{ c.id }}"
-                                                  onsubmit="return confirm('Excluir definitivamente esta conta?');">
-                                                <button class="dropdown-item text-danger" type="submit">
-                                                    Excluir
-                                                </button>
-                                            </form>
-                                        </li>
-
-                                    </ul>
-                                </div>
-
-                            </div>
-
-                            <div class="radar-card-status">
-                                {{ item.status_label }}
-                            </div>
-
-                            <div class="collapse" id="detalhesConta{{ c.id }}">
-                                <div class="radar-card-detalhes">
-
-                                    <div class="radar-card-grid">
-
-                                        <div class="radar-info-box">
-                                            <span>Valor</span>
-                                            <strong>R$ {{ "%.2f"|format(c.valor) }}</strong>
+                                        <div class="radar-normal-footer">
+                                            <span class="radar-status-pill {{ item.status_classe }}">
+                                                {{ item.status_label }}
+                                            </span>
                                         </div>
 
-                                        <div class="radar-info-box">
-                                            <span>Vencimento</span>
-                                            <strong>{{ c.data_vencimento.strftime('%d/%m/%Y') if c.data_vencimento else '-' }}</strong>
-                                        </div>
-
-                                        <div class="radar-info-box">
-                                            <span>Parcela</span>
-                                            <strong>{{ c.nome_parcela() }}</strong>
-                                        </div>
-
-                                        <div class="radar-info-box">
-                                            <span>Setor</span>
-                                            <strong>{{ c.setor or '-' }}</strong>
-                                        </div>
-
-                                        <div class="radar-info-box">
-                                            <span>Categoria</span>
-                                            <strong>{{ c.categoria or '-' }}</strong>
-                                        </div>
-
-                                        <div class="radar-info-box">
-                                            <span>Status</span>
-                                            <strong>{{ c.status or '-' }}</strong>
-                                        </div>
-
+                                    </article>
+                                {% else %}
+                                    <div class="radar-herdadas-empty">
+                                        {{ coluna.vazia }}
                                     </div>
+                                {% endfor %}
 
-                                    {% if c.observacoes %}
-                                        <div class="radar-card-obs">
-                                            {{ c.observacoes }}
-                                        </div>
-                                    {% endif %}
+                            {% endif %}
 
-                                </div>
-                            </div>
-
-                        </article>
-
-                    {% else %}
-                        <div class="radar-coluna-vazia">
-                            Sem contas
                         </div>
-                    {% endfor %}
 
+                    </div>
+
+                {% endfor %}
+
+            </section>
+
+            <section class="radar-herdadas-info-grid">
+
+                <div class="radar-info-card blue">
+                    <h3>
+                        <i class="bi bi-question-circle-fill"></i>
+                        Como funciona a Dívida Herdada?
+                    </h3>
+                    <p>Contas não pagas de meses anteriores aparecem agrupadas aqui.</p>
+                    <p>Cada mês não pago continua existindo no histórico da conta.</p>
+                    <p>Pague os meses em ordem para colocar a obrigação em dia.</p>
                 </div>
 
-            </div>
+                <div class="radar-info-card insight">
+                    <h3>
+                        <i class="bi bi-lightbulb-fill"></i>
+                        Insight Inteligente
+                    </h3>
+                    <p>{{ insight }}</p>
+                </div>
 
-        {% endfor %}
+                <div class="radar-info-card fluxo">
+                    <h3>
+                        <i class="bi bi-graph-up-arrow"></i>
+                        Fluxo Parcial do Mês
+                    </h3>
+
+                    <div class="radar-fluxo-mini-grid">
+                        <div>
+                            <span>Receitas até agora</span>
+                            <strong>{{ moeda(receitas_realizadas) }}</strong>
+                        </div>
+                        <div>
+                            <span>Pagamentos até agora</span>
+                            <strong>{{ moeda(total_pagas_mes + total_pagas_meses_anteriores) }}</strong>
+                        </div>
+                        <div class="{% if resultado_parcial < 0 %}negativo{% else %}positivo{% endif %}">
+                            <span>Resultado parcial</span>
+                            <strong>{{ moeda(resultado_parcial) }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <section class="radar-herdadas-bottom-grid">
+
+                <div class="radar-bottom-card">
+                    <h3>Situação Financeira</h3>
+                    <p><span>Receitas realizadas</span><strong>{{ moeda(receitas_realizadas) }}</strong></p>
+                    <p><span>Receitas previstas</span><strong>{{ moeda(receitas_previstas) }}</strong></p>
+                    <p><span>Pressão imediata</span><strong>{{ moeda(pressao_imediata) }}</strong></p>
+                    <p><span>Diferença estimada</span><strong class="{% if diferenca_estimada < 0 %}text-danger{% else %}text-success{% endif %}">{{ moeda(diferenca_estimada) }}</strong></p>
+                </div>
+
+                <div class="radar-bottom-card">
+                    <h3>Top 5 despesas do mês</h3>
+                    {% for item in top_despesas %}
+                        <p>
+                            <span>{{ loop.index }}. {{ item.nome }}</span>
+                            <strong>{{ item.valor_formatado }}</strong>
+                        </p>
+                    {% else %}
+                        <p><span>Sem despesas pagas no mês</span></p>
+                    {% endfor %}
+                </div>
+
+                <div class="radar-bottom-card">
+                    <h3>Recomendações</h3>
+                    <p><i class="bi bi-check2-circle"></i> {{ recomendacao }}</p>
+                    <p><i class="bi bi-check2-circle"></i> Pague primeiro os meses mais antigos.</p>
+                    <p><i class="bi bi-check2-circle"></i> Evite novas dívidas antes de reduzir a pressão.</p>
+                </div>
+
+                <div class="radar-bottom-card dicas">
+                    <h3>Dicas rápidas</h3>
+                    <p><span>Pague hoje:</span><strong>{{ moeda(total_hoje) }}</strong></p>
+                    <p><span>Próximos 7 dias:</span><strong>{{ moeda(total_proximos_7) }}</strong></p>
+                    <p><span>Dívidas herdadas:</span><strong>{{ moeda(total_divida_herdada) }}</strong></p>
+                    <div class="radar-total-pressao">
+                        Total de pressão: {{ moeda(pressao_imediata) }}
+                    </div>
+                </div>
+
+            </section>
+
+        </div>
+
+        <aside class="radar-historico-panel">
+
+            {% if grupo_selecionado %}
+
+                <div class="radar-historico-header">
+                    <h2>Histórico: {{ grupo_selecionado.descricao }}</h2>
+
+                    <a href="/gestao/radar-financeiro/?mes={{ mes }}&ano={{ ano }}&setor={{ setor }}&busca={{ busca }}&visao={{ visao }}">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                </div>
+
+                <div class="radar-historico-total">
+                    <span>Total da dívida</span>
+                    <strong>{{ grupo_selecionado.total_formatado }}</strong>
+                    <small>{{ grupo_selecionado.qtd }} em aberto • Desde {{ grupo_selecionado.desde_label }}</small>
+                </div>
+
+                <div class="radar-historico-resumo">
+                    <h3>Resumo da dívida</h3>
+                    <p><span>Valor total:</span><strong>{{ grupo_selecionado.total_formatado }}</strong></p>
+                    <p><span>Atraso médio:</span><strong>{{ grupo_selecionado.atraso_medio }} dias</strong></p>
+                    <p><span>Maior atraso:</span><strong>{{ grupo_selecionado.maior_atraso }} dias</strong></p>
+                </div>
+
+                <div class="radar-historico-table-wrap">
+                    <h3>Histórico por mês</h3>
+
+                    <table class="radar-historico-table">
+                        <thead>
+                            <tr>
+                                <th>Mês origem</th>
+                                <th>Venc.</th>
+                                <th>Valor</th>
+                                <th>Dias</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for h in grupo_selecionado.historico %}
+                                <tr>
+                                    <td>{{ h.competencia }}</td>
+                                    <td>{{ h.data_vencimento_formatada }}</td>
+                                    <td>{{ h.valor_formatado }}</td>
+                                    <td>{{ h.dias_atraso }}</td>
+                                    <td>
+                                        <span class="radar-status-pill vencido">
+                                            Em aberto
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="radar-pagar-herdada">
+                    <h3>Marcar mês como pago</h3>
+
+                    <form method="POST" id="formPagarHerdada">
+                        <label>Selecione o mês que deseja marcar como pago:</label>
+
+                        <select class="form-control"
+                                id="selectContaHerdada"
+                                required>
+                            <option value="">Selecione o mês...</option>
+                            {% for h in grupo_selecionado.historico %}
+                                <option value="{{ h.id }}">
+                                    {{ h.competencia }} • {{ h.valor_formatado }} • venc. {{ h.data_vencimento_formatada }}
+                                </option>
+                            {% endfor %}
+                        </select>
+
+                        <label>Data de pagamento</label>
+                        <input type="date"
+                               name="data_pagamento"
+                               value="{{ hoje.strftime('%Y-%m-%d') }}"
+                               class="form-control"
+                               required>
+
+                        <button type="submit">
+                            Marcar como paga
+                        </button>
+                    </form>
+                </div>
+
+                <div class="radar-historico-info">
+                    <h3>Informações</h3>
+                    <p>• Cada mês não pago gera uma nova obrigação.</p>
+                    <p>• Pague os meses em ordem para sair da dívida herdada.</p>
+                    <p>• Após pagar o último mês em aberto, a conta volta ao fluxo normal.</p>
+                </div>
+
+            {% else %}
+
+                <div class="radar-historico-empty">
+                    <i class="bi bi-clock-history"></i>
+                    <h2>Sem dívida selecionada</h2>
+                    <p>Clique em uma conta da coluna Dívida Herdada para ver o histórico por mês.</p>
+                </div>
+
+            {% endif %}
+
+        </aside>
 
     </section>
 
 </div>
 
+<!-- MODAL NOVA CONTA -->
 <div class="modal fade" id="modalNovaConta" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
+        <div class="modal-content radar-herdadas-modal">
             <form method="POST" action="/gestao/radar-financeiro/novo">
-
                 <div class="modal-header">
                     <h5 class="modal-title">Nova conta no Radar Financeiro</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -362,35 +607,39 @@
 
                         <div class="col-md-3">
                             <label class="form-label">Valor</label>
-                            <input type="text" name="valor" class="form-control" required>
+                            <input type="text" name="valor" class="form-control" placeholder="0,00" required>
                         </div>
 
                         <div class="col-md-3">
-                            <label class="form-label">Data Vencimento</label>
+                            <label class="form-label">Data vencimento</label>
                             <input type="date" name="data_vencimento" class="form-control" required>
                         </div>
 
-                        <div class="col-md-2">
-                            <label class="form-label">Parcela atual</label>
-                            <input type="number" name="parcela_atual" class="form-control" placeholder="1">
+                        <div class="col-md-3">
+                            <label class="form-label">Número fatura</label>
+                            <input type="text" name="numero_fatura" class="form-control">
                         </div>
 
-                        <div class="col-md-2">
-                            <label class="form-label">Total parcelas</label>
-                            <input type="number" name="total_parcelas" class="form-control" placeholder="12">
-                        </div>
-
-                        <div class="col-md-2 d-flex align-items-end">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="recorrente" id="recorrenteNovo">
-                                <label class="form-check-label" for="recorrenteNovo">Recorrente</label>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <div class="form-check radar-recorrencia-check">
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       name="recorrente"
+                                       id="novaRecorrente">
+                                <label class="form-check-label" for="novaRecorrente">
+                                    Repetir todo mês
+                                </label>
+                                <small>Cria uma obrigação automática todo mês no mesmo dia.</small>
                             </div>
                         </div>
 
                         <div class="col-md-3 d-flex align-items-end">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="ja_pago" id="jaPagoNovo">
-                                <label class="form-check-label" for="jaPagoNovo">
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       name="ja_pago"
+                                       id="novaJaPago">
+                                <label class="form-check-label" for="novaJaPago">
                                     Já cadastrar como paga
                                 </label>
                             </div>
@@ -405,15 +654,15 @@
                         </div>
 
                         <div class="col-md-12">
-                            <div class="alert alert-info mb-0">
-                                Se informar parcela atual e total de parcelas, o sistema já gera automaticamente as próximas parcelas nos meses seguintes.
-                                Se marcar “Já cadastrar como paga”, apenas a primeira parcela entra como paga; as futuras entram como pendentes.
-                            </div>
+                            <label class="form-label">Observações</label>
+                            <textarea name="observacoes" rows="3" class="form-control"></textarea>
                         </div>
 
                         <div class="col-md-12">
-                            <label class="form-label">Observações</label>
-                            <textarea name="observacoes" rows="3" class="form-control"></textarea>
+                            <div class="radar-recorrencia-info">
+                                <strong>Como funciona a recorrência?</strong>
+                                <span>Se marcar “Repetir todo mês”, o sistema cria automaticamente essa conta para cada mês aberto no Radar. Se não pagar, ela entra na Dívida Herdada agrupada pelo histórico.</span>
+                            </div>
                         </div>
 
                     </div>
@@ -430,171 +679,253 @@
                         Cadastrar conta
                     </button>
                 </div>
-
             </form>
         </div>
     </div>
 </div>
 
-{% for item in itens %}
-    {% set c = item.conta %}
+{% for coluna in colunas %}
+    {% if coluna.itens is defined %}
+        {% for item in coluna.itens %}
+            <div class="modal fade" id="modalPagar{{ item.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-md modal-dialog-centered">
+                    <div class="modal-content radar-herdadas-modal">
+                        <form method="POST" action="/gestao/radar-financeiro/pagar/{{ item.id }}">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Marcar como paga</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
 
-    <div class="modal fade" id="modalEditar{{ c.id }}" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content">
-                <form method="POST" action="/gestao/radar-financeiro/editar/{{ c.id }}">
+                            <div class="modal-body">
+                                <p><strong>{{ item.descricao }}</strong></p>
 
-                    <div class="modal-header">
-                        <h5 class="modal-title">Editar conta #{{ c.id }}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                <label class="form-label">Data de pagamento</label>
+                                <input type="date"
+                                       name="data_pagamento"
+                                       value="{{ hoje.strftime('%Y-%m-%d') }}"
+                                       class="form-control"
+                                       required>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    Cancelar
+                                </button>
+                                <button class="btn btn-success">
+                                    Confirmar pagamento
+                                </button>
+                            </div>
+                        </form>
                     </div>
+                </div>
+            </div>
 
-                    <div class="modal-body">
-                        <div class="row g-3">
-
-                            <div class="col-md-5">
-                                <label class="form-label">Descrição</label>
-                                <input type="text" name="descricao" value="{{ c.descricao or '' }}" class="form-control" required>
+            <div class="modal fade" id="modalEditar{{ item.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content radar-herdadas-modal">
+                        <form method="POST" action="/gestao/radar-financeiro/editar/{{ item.id }}">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Editar conta #{{ item.id }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
 
-                            <div class="col-md-4">
-                                <label class="form-label">Fornecedor</label>
-                                <input type="text" name="fornecedor" value="{{ c.fornecedor or '' }}" class="form-control">
-                            </div>
+                            <div class="modal-body">
+                                <div class="row g-3">
 
-                            <div class="col-md-3">
-                                <label class="form-label">Categoria</label>
-                                <input type="text" name="categoria" value="{{ c.categoria or '' }}" class="form-control">
-                            </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label">Descrição</label>
+                                        <input type="text"
+                                               name="descricao"
+                                               value="{{ item.descricao }}"
+                                               class="form-control"
+                                               required>
+                                    </div>
 
-                            <div class="col-md-3">
-                                <label class="form-label">Setor</label>
-                                <select name="setor" class="form-control">
-                                    <option value="ASSISTÊNCIA" {% if c.setor == "ASSISTÊNCIA" %}selected{% endif %}>ASSISTÊNCIA</option>
-                                    <option value="LOGÍSTICA" {% if c.setor == "LOGÍSTICA" %}selected{% endif %}>LOGÍSTICA</option>
-                                    <option value="GERAL" {% if c.setor == "GERAL" %}selected{% endif %}>GERAL</option>
-                                </select>
-                            </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Fornecedor</label>
+                                        <input type="text"
+                                               name="fornecedor"
+                                               value="{{ item.fornecedor }}"
+                                               class="form-control">
+                                    </div>
 
-                            <div class="col-md-3">
-                                <label class="form-label">Status</label>
-                                <select name="status" class="form-control">
-                                    <option value="PENDENTE" {% if c.status == "PENDENTE" %}selected{% endif %}>PENDENTE</option>
-                                    <option value="ADIADO" {% if c.status == "ADIADO" %}selected{% endif %}>ADIADO</option>
-                                    <option value="PAGO" {% if c.status == "PAGO" %}selected{% endif %}>PAGO</option>
-                                    <option value="TRANSPORTADO" {% if c.status == "TRANSPORTADO" %}selected{% endif %}>TRANSPORTADO</option>
-                                    <option value="CANCELADO" {% if c.status == "CANCELADO" %}selected{% endif %}>CANCELADO</option>
-                                </select>
-                            </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Categoria</label>
+                                        <input type="text"
+                                               name="categoria"
+                                               value="{{ item.categoria }}"
+                                               class="form-control">
+                                    </div>
 
-                            <div class="col-md-3">
-                                <label class="form-label">Valor</label>
-                                <input type="text" name="valor" value="{{ c.valor or '0.00' }}" class="form-control" required>
-                            </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Setor</label>
+                                        <select name="setor" class="form-control">
+                                            <option value="ASSISTÊNCIA" {% if item.setor == "ASSISTÊNCIA" %}selected{% endif %}>ASSISTÊNCIA</option>
+                                            <option value="LOGÍSTICA" {% if item.setor == "LOGÍSTICA" %}selected{% endif %}>LOGÍSTICA</option>
+                                            <option value="GERAL" {% if item.setor == "GERAL" %}selected{% endif %}>GERAL</option>
+                                        </select>
+                                    </div>
 
-                            <div class="col-md-3">
-                                <label class="form-label">Data Vencimento</label>
-                                <input type="date" name="data_vencimento" value="{{ data_para_input(c.data_vencimento) }}" class="form-control">
-                            </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Status</label>
+                                        <select name="status" class="form-control">
+                                            <option value="PENDENTE" {% if item.status == "PENDENTE" %}selected{% endif %}>PENDENTE</option>
+                                            <option value="ADIADO" {% if item.status == "ADIADO" %}selected{% endif %}>ADIADO</option>
+                                            <option value="PAGO" {% if item.status == "PAGO" %}selected{% endif %}>PAGO</option>
+                                            <option value="TRANSPORTADO" {% if item.status == "TRANSPORTADO" %}selected{% endif %}>TRANSPORTADO</option>
+                                            <option value="CANCELADO" {% if item.status == "CANCELADO" %}selected{% endif %}>CANCELADO</option>
+                                        </select>
+                                    </div>
 
-                            <div class="col-md-3">
-                                <label class="form-label">Data Pagamento</label>
-                                <input type="date" name="data_pagamento" value="{{ data_para_input(c.data_pagamento) }}" class="form-control">
-                            </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Valor</label>
+                                        <input type="text"
+                                               name="valor"
+                                               value="{{ item.valor }}"
+                                               class="form-control"
+                                               required>
+                                    </div>
 
-                            <div class="col-md-2">
-                                <label class="form-label">Parcela atual</label>
-                                <input type="number" name="parcela_atual" value="{{ c.parcela_atual or '' }}" class="form-control">
-                            </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Data vencimento</label>
+                                        <input type="date"
+                                               name="data_vencimento"
+                                               value="{{ item.data_vencimento_input }}"
+                                               class="form-control">
+                                    </div>
 
-                            <div class="col-md-2">
-                                <label class="form-label">Total parcelas</label>
-                                <input type="number" name="total_parcelas" value="{{ c.total_parcelas or '' }}" class="form-control">
-                            </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Data pagamento</label>
+                                        <input type="date"
+                                               name="data_pagamento"
+                                               value="{{ item.data_pagamento_input }}"
+                                               class="form-control">
+                                    </div>
 
-                            <div class="col-md-2 d-flex align-items-end">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="recorrente" id="recorrente{{ c.id }}" {% if c.recorrente %}checked{% endif %}>
-                                    <label class="form-check-label" for="recorrente{{ c.id }}">Recorrente</label>
+                                    <div class="col-md-12">
+                                        <label class="form-label">Observações</label>
+                                        <textarea name="observacoes"
+                                                  rows="3"
+                                                  class="form-control">{{ item.observacoes }}</textarea>
+                                    </div>
+
                                 </div>
                             </div>
 
-                            <div class="col-md-12">
-                                <label class="form-label">Observações</label>
-                                <textarea name="observacoes" rows="3" class="form-control">{{ c.observacoes or '' }}</textarea>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    Cancelar
+                                </button>
+                                <button class="btn btn-primary">
+                                    Salvar alterações
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="modalTransportar{{ item.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-md modal-dialog-centered">
+                    <div class="modal-content radar-herdadas-modal">
+                        <form method="POST" action="/gestao/radar-financeiro/transportar/{{ item.id }}">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Transportar conta</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
 
-                        </div>
+                            <div class="modal-body">
+                                <p><strong>{{ item.descricao }}</strong></p>
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Mês destino</label>
+                                        <select name="mes_destino" class="form-control" required>
+                                            {% for m in range(1,13) %}
+                                                <option value="{{ m }}"
+                                                        {% if mes == 12 and m == 1 %}
+                                                            selected
+                                                        {% elif mes < 12 and m == mes + 1 %}
+                                                            selected
+                                                        {% endif %}>
+                                                    {{ m }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Ano destino</label>
+                                        <input type="number"
+                                               name="ano_destino"
+                                               value="{% if mes == 12 %}{{ ano + 1 }}{% else %}{{ ano }}{% endif %}"
+                                               class="form-control"
+                                               required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    Cancelar
+                                </button>
+                                <button class="btn btn-warning">
+                                    Transportar
+                                </button>
+                            </div>
+                        </form>
                     </div>
-
-                    <div class="modal-footer">
-                        <button type="button"
-                                class="btn btn-secondary"
-                                data-bs-dismiss="modal">
-                            Cancelar
-                        </button>
-
-                        <button class="btn btn-primary">
-                            Salvar alterações
-                        </button>
-                    </div>
-
-                </form>
+                </div>
             </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modalPagar{{ c.id }}" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-md modal-dialog-centered">
-            <div class="modal-content">
-                <form method="POST" action="/gestao/radar-financeiro/pagar/{{ c.id }}">
-
-                    <div class="modal-header">
-                        <h5 class="modal-title">Marcar como pago</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-
-                    <div class="modal-body">
-                        <p class="mb-2">
-                            <strong>{{ c.descricao }}</strong>
-                        </p>
-
-                        <label class="form-label">Data de pagamento</label>
-                        <input type="date"
-                               name="data_pagamento"
-                               value="{{ hoje.strftime('%Y-%m-%d') }}"
-                               class="form-control"
-                               required>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button"
-                                class="btn btn-secondary"
-                                data-bs-dismiss="modal">
-                            Cancelar
-                        </button>
-
-                        <button class="btn btn-success">
-                            Confirmar pagamento
-                        </button>
-                    </div>
-
-                </form>
-            </div>
-        </div>
-    </div>
-
+        {% endfor %}
+    {% endif %}
 {% endfor %}
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const selecionarTodas = document.getElementById("selecionarTodasPagas");
+    function radarHerdadasMudarMes(delta) {
+        const mesEl = document.getElementById("radarMes");
+        const anoEl = document.getElementById("radarAno");
 
-        if (selecionarTodas) {
-            selecionarTodas.addEventListener("change", function () {
-                document.querySelectorAll(".check-paga").forEach(function (check) {
-                    check.checked = selecionarTodas.checked;
-                });
+        if (!mesEl || !anoEl) {
+            return;
+        }
+
+        let mes = parseInt(mesEl.value || "1", 10);
+        let ano = parseInt(anoEl.value || "{{ ano }}", 10);
+
+        mes += delta;
+
+        if (mes < 1) {
+            mes = 12;
+            ano -= 1;
+        }
+
+        if (mes > 12) {
+            mes = 1;
+            ano += 1;
+        }
+
+        mesEl.value = String(mes);
+        anoEl.value = String(ano);
+
+        mesEl.closest("form").submit();
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const formPagarHerdada = document.getElementById("formPagarHerdada");
+        const selectContaHerdada = document.getElementById("selectContaHerdada");
+
+        if (formPagarHerdada && selectContaHerdada) {
+            formPagarHerdada.addEventListener("submit", function (event) {
+                const contaId = selectContaHerdada.value;
+
+                if (!contaId) {
+                    event.preventDefault();
+                    alert("Selecione o mês/conta que deseja pagar.");
+                    return;
+                }
+
+                formPagarHerdada.action = `/gestao/radar-financeiro/pagar/${contaId}`;
             });
         }
     });

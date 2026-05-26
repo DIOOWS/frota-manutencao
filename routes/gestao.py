@@ -4,6 +4,7 @@ from models.lancamento_financeiro import LancamentoFinanceiro
 from models.fechamento_mensal import FechamentoMensal
 from models.conta_pagar_importada import ContaPagarImportada
 from models.conta_receber_importada import ContaReceberImportada
+from models.conta_recorrente import ContaRecorrente
 from database import db
 from datetime import datetime, date, timedelta
 from collections import Counter
@@ -1812,3 +1813,1098 @@ def radar_adiar_pagamento(id):
     flash("Pagamento adiado com sucesso!", "success")
 
     return redirect(request.referrer or "/gestao/radar-pagamentos")
+
+# =========================================================
+# RADAR FINANCEIRO INTELIGENTE
+# DÍVIDA HERDADA AGRUPADA + HISTÓRICO POR MÊS
+# =========================================================
+
+def radar_moeda(valor):
+    valor = dinheiro(valor)
+    return f"R$ {valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def radar_nome_mes(mes):
+    nomes = {
+        1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril",
+        5: "Maio", 6: "Junho", 7: "Julho", 8: "Agosto",
+        9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro",
+    }
+    return nomes.get(int(mes or 0), str(mes or ""))
+
+
+def radar_nome_mes_curto(mes):
+    nomes = {
+        1: "Jan", 2: "Fev", 3: "Mar", 4: "Abr",
+        5: "Mai", 6: "Jun", 7: "Jul", 8: "Ago",
+        9: "Set", 10: "Out", 11: "Nov", 12: "Dez",
+    }
+    return nomes.get(int(mes or 0), str(mes or ""))
+
+
+def radar_data_input(valor):
+    data_ref = data_para_date(valor)
+    if not data_ref:
+        return ""
+    return data_ref.strftime("%Y-%m-%d")
+
+
+def radar_data_br(valor):
+    data_ref = data_para_date(valor)
+    if not data_ref:
+        return "-"
+    return data_ref.strftime("%d/%m/%Y")
+
+
+def radar_competencia_label(data_ref):
+    data_ref = data_para_date(data_ref)
+    if not data_ref:
+        return "-"
+    return f"{radar_nome_mes(data_ref.month)}/{data_ref.year}"
+
+
+def radar_texto(valor, padrao="-"):
+    if valor is None:
+        return padrao
+    valor = str(valor).strip()
+    return valor if valor else padrao
+
+
+def radar_descricao_conta(conta):
+    return (
+        radar_texto(getattr(conta, "plano_contas", None), "")
+        or radar_texto(getattr(conta, "categoria", None), "")
+        or radar_texto(getattr(conta, "fornecedor_funcionario", None), "")
+        or radar_texto(getattr(conta, "numero_fatura", None), "")
+        or f"Conta #{conta.id}"
+    )
+
+
+def radar_fornecedor_conta(conta):
+    return radar_texto(getattr(conta, "fornecedor_funcionario", None), "-")
+
+
+def radar_categoria_conta(conta):
+    return radar_texto(getattr(conta, "categoria", None), "-")
+
+
+def radar_setor_conta(conta):
+    return radar_texto(getattr(conta, "setor", None), "GERAL")
+
+
+def radar_normalizar_chave(valor):
+    valor = radar_texto(valor, "")
+    return " ".join(valor.upper().split())
+
+
+def radar_chave_grupo(conta):
+    import hashlib
+
+    partes = [
+        radar_normalizar_chave(radar_descricao_conta(conta)),
+        radar_normalizar_chave(radar_fornecedor_conta(conta)),
+        radar_normalizar_chave(radar_categoria_conta(conta)),
+        radar_normalizar_chave(radar_setor_conta(conta)),
+    ]
+
+    base = "|".join(partes)
+    return hashlib.md5(base.encode("utf-8")).hexdigest()
+
+
+def radar_mesmo_grupo(item, chave):
+    return item.get("grupo_key") == chave
+
+
+def radar_conta_cancelada(conta):
+    return status_cancelado(getattr(conta, "status", None))
+
+
+def radar_conta_aberta(conta):
+    return not conta_esta_paga(conta) and not radar_conta_cancelada(conta)
+
+
+def radar_valor_conta(conta):
+    return dinheiro(getattr(conta, "valor", 0))
+
+
+def radar_item_conta(conta, hoje):
+    data_vencimento = data_para_date(getattr(conta, "data_vencimento", None))
+    data_pagamento = data_para_date(getattr(conta, "data_pagamento", None))
+    valor = radar_valor_conta(conta)
+    pago = conta_esta_paga(conta)
+    dias_atraso = 0
+    dias_para_vencer = None
+
+    if data_vencimento:
+        if data_vencimento < hoje and not pago:
+            dias_atraso = (hoje - data_vencimento).days
+        elif data_vencimento >= hoje and not pago:
+            dias_para_vencer = (data_vencimento - hoje).days
+
+    status_label = "PAGO" if pago else "EM ABERTO"
+    status_classe = "pago" if pago else "aberto"
+
+    if not pago and data_vencimento:
+        if data_vencimento < hoje:
+            status_label = "ATRASADA"
+            status_classe = "vencido"
+        elif data_vencimento == hoje:
+            status_label = "HOJE"
+            status_classe = "hoje"
+        elif data_vencimento <= hoje + timedelta(days=7):
+            status_label = f"{dias_para_vencer} dia(s)"
+            status_classe = "proximo"
+        else:
+            status_label = f"{dias_para_vencer} dia(s)"
+            status_classe = "futuro"
+
+    if radar_conta_cancelada(conta):
+        status_label = "CANCELADA"
+        status_classe = "cancelado"
+
+    return {
+        "id": conta.id,
+        "conta": conta,
+        "grupo_key": radar_chave_grupo(conta),
+        "descricao": radar_descricao_conta(conta),
+        "fornecedor": radar_fornecedor_conta(conta),
+        "categoria": radar_categoria_conta(conta),
+        "setor": radar_setor_conta(conta),
+        "valor": valor,
+        "valor_formatado": radar_moeda(valor),
+        "data_vencimento": data_vencimento,
+        "data_vencimento_formatada": radar_data_br(data_vencimento),
+        "data_vencimento_input": radar_data_input(data_vencimento),
+        "data_pagamento": data_pagamento,
+        "data_pagamento_formatada": radar_data_br(data_pagamento),
+        "data_pagamento_input": radar_data_input(data_pagamento),
+        "competencia": radar_competencia_label(data_vencimento),
+        "pago": pago,
+        "status": radar_texto(getattr(conta, "status", None), "PENDENTE"),
+        "status_label": status_label,
+        "status_classe": status_classe,
+        "dias_atraso": dias_atraso,
+        "dias_para_vencer": dias_para_vencer,
+        "observacoes": radar_texto(getattr(conta, "observacoes", None), ""),
+        "numero_fatura": radar_texto(getattr(conta, "numero_fatura", None), "-"),
+        "recorrente": str(getattr(conta, "chave_conciliacao", "") or "").startswith("RECORRENTE:"),
+    }
+
+
+def radar_chave_recorrente(recorrencia_id, mes, ano):
+    return f"RECORRENTE:{recorrencia_id}:{int(mes):02d}:{int(ano)}"
+
+
+def radar_mes_ano_iter(inicio, fim):
+    mes = inicio.month
+    ano = inicio.year
+
+    while (ano, mes) <= (fim.year, fim.month):
+        yield mes, ano
+
+        mes += 1
+
+        if mes > 12:
+            mes = 1
+            ano += 1
+
+
+def radar_criar_conta_recorrente_mes(recorrencia, mes, ano):
+    chave = radar_chave_recorrente(recorrencia.id, mes, ano)
+
+    existente = ContaPagarImportada.query.filter_by(
+        chave_conciliacao=chave
+    ).first()
+
+    if existente:
+        return None
+
+    ultimo_dia = calendar.monthrange(ano, mes)[1]
+    dia_vencimento = min(int(recorrencia.dia_vencimento or 1), ultimo_dia)
+    data_vencimento = date(ano, mes, dia_vencimento)
+
+    observacoes_base = recorrencia.observacoes or ""
+    observacao_recorrencia = (
+        f"Conta gerada automaticamente pela recorrência #{recorrencia.id}. "
+        f"Competência: {radar_competencia_label(data_vencimento)}."
+    )
+
+    conta = ContaPagarImportada(
+        numero_fatura=f"REC-{recorrencia.id}-{mes:02d}-{ano}",
+        fornecedor_funcionario=recorrencia.fornecedor_funcionario,
+        plano_contas=recorrencia.plano_contas or recorrencia.descricao,
+        categoria=recorrencia.categoria,
+        setor=recorrencia.setor or "GERAL",
+        data_documento=datetime.combine(date.today(), datetime.min.time()),
+        data_vencimento=datetime.combine(data_vencimento, datetime.min.time()),
+        valor=recorrencia.valor,
+        pago=False,
+        status="PENDENTE",
+        observacoes=f"{observacao_recorrencia}\n{observacoes_base}".strip(),
+        mes=mes,
+        ano=ano,
+        chave_conciliacao=chave,
+        origem_importacao="RECORRENTE",
+    )
+
+    db.session.add(conta)
+
+    return conta
+
+
+def radar_gerar_recorrencias_ate_mes(mes, ano):
+    data_limite = ultimo_dia_mes(mes, ano)
+
+    recorrencias = ContaRecorrente.query.filter_by(
+        ativo=True
+    ).all()
+
+    total_criadas = 0
+
+    for recorrencia in recorrencias:
+        data_inicio = recorrencia.data_inicio or date(ano, mes, 1)
+        data_fim = recorrencia.data_fim
+
+        if data_inicio > data_limite:
+            continue
+
+        fim_geracao = data_limite
+
+        if data_fim and data_fim < fim_geracao:
+            fim_geracao = data_fim
+
+        for mes_ref, ano_ref in radar_mes_ano_iter(data_inicio, fim_geracao):
+            criada = radar_criar_conta_recorrente_mes(
+                recorrencia=recorrencia,
+                mes=mes_ref,
+                ano=ano_ref
+            )
+
+            if criada:
+                total_criadas += 1
+
+    if total_criadas:
+        db.session.commit()
+
+    return total_criadas
+
+
+def radar_filtrar_busca(contas, busca):
+    busca = radar_normalizar_chave(busca)
+
+    if not busca:
+        return contas
+
+    filtradas = []
+
+    for conta in contas:
+        texto_busca = " ".join([
+            radar_descricao_conta(conta),
+            radar_fornecedor_conta(conta),
+            radar_categoria_conta(conta),
+            radar_setor_conta(conta),
+            radar_texto(getattr(conta, "numero_fatura", None), ""),
+            radar_texto(getattr(conta, "observacoes", None), ""),
+        ])
+
+        if busca in radar_normalizar_chave(texto_busca):
+            filtradas.append(conta)
+
+    return filtradas
+
+
+def radar_agrupar_herdadas(contas_herdadas, hoje):
+    grupos_map = {}
+
+    for conta in contas_herdadas:
+        item = radar_item_conta(conta, hoje)
+        chave = item["grupo_key"]
+
+        if chave not in grupos_map:
+            grupos_map[chave] = {
+                "grupo_key": chave,
+                "descricao": item["descricao"],
+                "fornecedor": item["fornecedor"],
+                "categoria": item["categoria"],
+                "setor": item["setor"],
+                "total": 0,
+                "total_formatado": radar_moeda(0),
+                "qtd": 0,
+                "desde_data": item["data_vencimento"],
+                "desde_label": item["competencia"],
+                "maior_atraso": 0,
+                "atraso_medio": 0,
+                "historico": [],
+            }
+
+        grupo = grupos_map[chave]
+        grupo["total"] += item["valor"]
+        grupo["qtd"] += 1
+        grupo["historico"].append(item)
+
+        if item["data_vencimento"]:
+            if not grupo["desde_data"] or item["data_vencimento"] < grupo["desde_data"]:
+                grupo["desde_data"] = item["data_vencimento"]
+                grupo["desde_label"] = item["competencia"]
+
+        grupo["maior_atraso"] = max(grupo["maior_atraso"], item["dias_atraso"] or 0)
+
+    grupos = []
+
+    for grupo in grupos_map.values():
+        grupo["historico"] = sorted(
+            grupo["historico"],
+            key=lambda x: (x["data_vencimento"] or date.max, x["id"])
+        )
+
+        if grupo["historico"]:
+            grupo["desde_label"] = grupo["historico"][0]["competencia"]
+
+        grupo["total_formatado"] = radar_moeda(grupo["total"])
+        atrasos = [h["dias_atraso"] for h in grupo["historico"] if h["dias_atraso"]]
+        grupo["atraso_medio"] = round(sum(atrasos) / len(atrasos)) if atrasos else 0
+        grupos.append(grupo)
+
+    return sorted(
+        grupos,
+        key=lambda g: (g["desde_data"] or date.max, -g["total"])
+    )
+
+
+def radar_somar_itens(lista):
+    return sum(dinheiro(item.get("valor")) for item in lista)
+
+
+def radar_somar_grupos(lista):
+    return sum(dinheiro(item.get("total")) for item in lista)
+
+
+def radar_classificar_risco(pressao, receitas_previstas):
+    pressao = dinheiro(pressao)
+    receitas_previstas = dinheiro(receitas_previstas)
+
+    if pressao <= 0:
+        return "CONTROLADO", "controlado"
+
+    if receitas_previstas <= 0:
+        return "ATENÇÃO", "atencao"
+
+    percentual = (pressao / receitas_previstas) * 100
+
+    if percentual <= 50:
+        return "CONTROLADO", "controlado"
+
+    if percentual <= 80:
+        return "ATENÇÃO", "atencao"
+
+    if percentual <= 100:
+        return "ALTO RISCO", "alto-risco"
+
+    return "CRÍTICO", "critico"
+
+
+def radar_recomendacao(total_divida_herdada, total_proximos, diferenca):
+    if total_divida_herdada > 0:
+        return "Priorize pagar os meses mais antigos das dívidas herdadas para cortar a bola de neve."
+
+    if diferenca < 0:
+        return "A pressão do mês está acima das entradas previstas. Revise despesas e renegocie vencimentos."
+
+    if total_proximos > 0:
+        return "Organize o caixa para cobrir os próximos vencimentos sem atrasar novas contas."
+
+    return "Cenário saudável. Continue mantendo as obrigações em dia."
+
+
+def radar_insight(total_divida_herdada, grupos_herdados, total_pagas_antigas):
+    qtd_grupos = len(grupos_herdados)
+
+    if total_divida_herdada > 0:
+        return (
+            f"Você possui {radar_moeda(total_divida_herdada)} em dívidas herdadas "
+            f"agrupadas em {qtd_grupos} tipo(s). Pague os meses em ordem para colocar as contas em dia."
+        )
+
+    if total_pagas_antigas > 0:
+        return (
+            f"Você já pagou {radar_moeda(total_pagas_antigas)} de meses anteriores neste mês. "
+            "Isso ajuda a limpar o histórico e reduzir a pressão futura."
+        )
+
+    return "Nenhuma dívida herdada aberta encontrada para este período. O fluxo está mais limpo."
+
+
+def radar_receitas_realizadas_mes(mes, ano):
+    inicio_dt = inicio_mes_datetime(mes, ano)
+    fim_dt = fim_mes_datetime(mes, ano)
+
+    total = 0
+
+    contas_receber = ContaReceberImportada.query.filter(
+        ContaReceberImportada.pago == True,
+        ContaReceberImportada.origem_importacao == "RECEBIMENTO",
+        ContaReceberImportada.data_pagamento >= inicio_dt,
+        ContaReceberImportada.data_pagamento <= fim_dt
+    ).all()
+
+    for conta in contas_receber:
+        total += valor_conta_receber(conta)
+
+    lancamentos = LancamentoFinanceiro.query.filter(
+        LancamentoFinanceiro.tipo == "RECEITA",
+        LancamentoFinanceiro.mes == mes,
+        LancamentoFinanceiro.ano == ano
+    ).all()
+
+    for lancamento in lancamentos:
+        if status_pago(lancamento.status):
+            total += dinheiro(lancamento.valor)
+
+    return total
+
+
+@gestao_bp.route("/radar-financeiro/")
+@gestao_required
+def radar_financeiro():
+
+    hoje = date.today()
+
+    mes = request.args.get("mes", type=int) or hoje.month
+    ano = request.args.get("ano", type=int) or hoje.year
+    setor = request.args.get("setor", "").strip().upper()
+    busca = request.args.get("busca", "").strip()
+    visao = request.args.get("visao", "vencimento").strip().lower()
+    grupo_key = request.args.get("grupo", "").strip()
+
+    if mes < 1 or mes > 12:
+        mes = hoje.month
+
+    inicio_mes = primeiro_dia_mes(mes, ano)
+    fim_mes = ultimo_dia_mes(mes, ano)
+    inicio_dt = inicio_mes_datetime(mes, ano)
+    fim_dt = fim_mes_datetime(mes, ano)
+
+    # Gera automaticamente as obrigações recorrentes até o mês visualizado.
+    # Assim, se uma conta recorrente nasceu em março e você abre junho,
+    # março, abril, maio e junho serão criados se ainda não existirem.
+    radar_gerar_recorrencias_ate_mes(mes, ano)
+
+    query = ContaPagarImportada.query.filter(
+        ContaPagarImportada.origem_importacao.in_(["PAGAMENTO", "MANUAL", "VENCIMENTO", "IMPORTACAO", "RECORRENTE"])
+    )
+
+    if setor:
+        query = query.filter(
+            ContaPagarImportada.setor.ilike(f"%{setor}%")
+        )
+
+    contas_base = query.order_by(
+        ContaPagarImportada.data_vencimento.asc().nullslast(),
+        ContaPagarImportada.id.asc()
+    ).all()
+
+    contas_base = radar_filtrar_busca(contas_base, busca)
+
+    contas_abertas = [
+        c for c in contas_base
+        if radar_conta_aberta(c)
+    ]
+
+    contas_pagas = [
+        c for c in contas_base
+        if conta_esta_paga(c)
+    ]
+
+    # =====================================================
+    # HERDADAS
+    # Contas abertas que nasceram/venceram antes do mês filtrado.
+    # Cada conta mantém sua própria data, e a coluna agrupa por tipo.
+    # =====================================================
+    contas_herdadas = [
+        c for c in contas_abertas
+        if data_para_date(c.data_vencimento)
+        and data_para_date(c.data_vencimento) < inicio_mes
+    ]
+
+    grupos_herdados = radar_agrupar_herdadas(contas_herdadas, hoje)
+
+    # =====================================================
+    # FLUXO NORMAL DO MÊS
+    # Aqui não entram as herdadas, para não duplicar no radar.
+    # =====================================================
+    abertas_mes = [
+        c for c in contas_abertas
+        if data_para_date(c.data_vencimento)
+        and inicio_mes <= data_para_date(c.data_vencimento) <= fim_mes
+    ]
+
+    vence_hoje = []
+    proximos_7 = []
+    ate_fim_mes = []
+    atrasadas_mes = []
+
+    for conta in abertas_mes:
+        data_venc = data_para_date(conta.data_vencimento)
+
+        if not data_venc:
+            continue
+
+        item = radar_item_conta(conta, hoje)
+
+        if data_venc < hoje:
+            atrasadas_mes.append(item)
+        elif data_venc == hoje:
+            vence_hoje.append(item)
+        elif data_venc <= hoje + timedelta(days=7):
+            proximos_7.append(item)
+        else:
+            ate_fim_mes.append(item)
+
+    pagas_mes_contas = [
+        c for c in contas_pagas
+        if data_para_date(c.data_pagamento)
+        and inicio_mes <= data_para_date(c.data_pagamento) <= fim_mes
+        and (
+            not data_para_date(c.data_vencimento)
+            or data_para_date(c.data_vencimento) >= inicio_mes
+        )
+    ]
+
+    pagas_antigas_contas = [
+        c for c in contas_pagas
+        if data_para_date(c.data_pagamento)
+        and inicio_mes <= data_para_date(c.data_pagamento) <= fim_mes
+        and data_para_date(c.data_vencimento)
+        and data_para_date(c.data_vencimento) < inicio_mes
+    ]
+
+    pagas_mes = [
+        radar_item_conta(c, hoje)
+        for c in sorted(
+            pagas_mes_contas,
+            key=lambda conta: (data_para_date(conta.data_pagamento) or date.max, conta.id)
+        )
+    ]
+
+    pagas_meses_anteriores = [
+        radar_item_conta(c, hoje)
+        for c in sorted(
+            pagas_antigas_contas,
+            key=lambda conta: (data_para_date(conta.data_pagamento) or date.max, conta.id)
+        )
+    ]
+
+    total_divida_herdada = radar_somar_grupos(grupos_herdados)
+    total_atrasadas_mes = radar_somar_itens(atrasadas_mes)
+    total_hoje = radar_somar_itens(vence_hoje)
+    total_proximos_7 = radar_somar_itens(proximos_7)
+    total_ate_fim_mes = radar_somar_itens(ate_fim_mes)
+    total_pagas_mes = radar_somar_itens(pagas_mes)
+    total_pagas_meses_anteriores = radar_somar_itens(pagas_meses_anteriores)
+
+    receitas_realizadas = radar_receitas_realizadas_mes(mes, ano)
+
+    # Receita prevista simples: realizado + contas a receber abertas até fim do mês.
+    receitas_previstas = receitas_realizadas
+    contas_receber_abertas = ContaReceberImportada.query.filter(
+        ContaReceberImportada.pago == False,
+        ContaReceberImportada.origem_importacao == "RECEBIMENTO",
+        ContaReceberImportada.data_vencimento <= fim_dt
+    ).all()
+
+    for conta_receber in contas_receber_abertas:
+        receitas_previstas += valor_conta_receber(conta_receber)
+
+    pressao_imediata = (
+        total_divida_herdada
+        + total_atrasadas_mes
+        + total_hoje
+        + total_proximos_7
+    )
+
+    diferenca_estimada = receitas_previstas - pressao_imediata
+    resultado_parcial = receitas_realizadas - (total_pagas_mes + total_pagas_meses_anteriores)
+
+    risco, risco_classe = radar_classificar_risco(
+        pressao=pressao_imediata,
+        receitas_previstas=receitas_previstas
+    )
+
+    recomendacao = radar_recomendacao(
+        total_divida_herdada=total_divida_herdada,
+        total_proximos=total_proximos_7,
+        diferenca=diferenca_estimada
+    )
+
+    insight = radar_insight(
+        total_divida_herdada=total_divida_herdada,
+        grupos_herdados=grupos_herdados,
+        total_pagas_antigas=total_pagas_meses_anteriores
+    )
+
+    grupo_selecionado = None
+
+    if grupo_key:
+        for grupo in grupos_herdados:
+            if grupo["grupo_key"] == grupo_key:
+                grupo_selecionado = grupo
+                break
+
+    if not grupo_selecionado and grupos_herdados:
+        grupo_selecionado = grupos_herdados[0]
+
+    top_despesas = []
+
+    despesas_counter = Counter()
+
+    for item in pagas_mes + pagas_meses_anteriores:
+        despesas_counter[item["descricao"]] += item["valor"]
+
+    for nome, valor in despesas_counter.most_common(5):
+        percentual = 0
+        total_pago_geral = total_pagas_mes + total_pagas_meses_anteriores
+
+        if total_pago_geral:
+            percentual = (dinheiro(valor) / total_pago_geral) * 100
+
+        top_despesas.append({
+            "nome": nome,
+            "valor": valor,
+            "valor_formatado": radar_moeda(valor),
+            "percentual": percentual,
+        })
+
+    colunas = [
+        {
+            "slug": "herdada",
+            "titulo": "DÍVIDA HERDADA",
+            "subtitulo": "Contas de meses anteriores não pagas",
+            "cor": "danger",
+            "total": total_divida_herdada,
+            "total_formatado": radar_moeda(total_divida_herdada),
+            "badge": sum(g["qtd"] for g in grupos_herdados),
+            "grupos": grupos_herdados,
+            "vazia": "Sem dívidas herdadas",
+        },
+        {
+            "slug": "hoje",
+            "titulo": "VENCE HOJE",
+            "subtitulo": f"Vencem hoje ({hoje.strftime('%d/%m/%Y')})",
+            "cor": "warning",
+            "total": total_hoje,
+            "total_formatado": radar_moeda(total_hoje),
+            "badge": len(vence_hoje),
+            "itens": vence_hoje,
+            "vazia": "Sem contas para hoje",
+        },
+        {
+            "slug": "proximos",
+            "titulo": "PRÓXIMOS 7 DIAS",
+            "subtitulo": "Pressão imediata do caixa",
+            "cor": "purple",
+            "total": total_proximos_7,
+            "total_formatado": radar_moeda(total_proximos_7),
+            "badge": len(proximos_7),
+            "itens": proximos_7,
+            "vazia": "Sem vencimentos próximos",
+        },
+        {
+            "slug": "fim_mes",
+            "titulo": "ATÉ FIM DO MÊS",
+            "subtitulo": f"Vencem até {fim_mes.strftime('%d/%m')}",
+            "cor": "blue",
+            "total": total_ate_fim_mes,
+            "total_formatado": radar_moeda(total_ate_fim_mes),
+            "badge": len(ate_fim_mes),
+            "itens": ate_fim_mes,
+            "vazia": "Sem contas até fim do mês",
+        },
+        {
+            "slug": "pagas_mes",
+            "titulo": "PAGAS NO MÊS",
+            "subtitulo": f"Pagas em {radar_nome_mes(mes)}",
+            "cor": "success",
+            "total": total_pagas_mes,
+            "total_formatado": radar_moeda(total_pagas_mes),
+            "badge": len(pagas_mes),
+            "itens": pagas_mes,
+            "vazia": "Sem contas pagas no mês",
+        },
+        {
+            "slug": "pagas_antigas",
+            "titulo": "PAGAS DE MESES ANT.",
+            "subtitulo": "Dívidas antigas pagas agora",
+            "cor": "teal",
+            "total": total_pagas_meses_anteriores,
+            "total_formatado": radar_moeda(total_pagas_meses_anteriores),
+            "badge": len(pagas_meses_anteriores),
+            "itens": pagas_meses_anteriores,
+            "vazia": "Sem dívidas antigas pagas",
+        },
+    ]
+
+    return render_template(
+        "gestao/radar_financeiro.html",
+        hoje=hoje,
+        mes=mes,
+        ano=ano,
+        setor=setor,
+        busca=busca,
+        visao=visao,
+        grupo_key=grupo_key,
+
+        moeda=radar_moeda,
+        nome_mes=radar_nome_mes,
+        nome_mes_curto=radar_nome_mes_curto,
+
+        colunas=colunas,
+        grupos_herdados=grupos_herdados,
+        grupo_selecionado=grupo_selecionado,
+
+        total_divida_herdada=total_divida_herdada,
+        total_atrasadas_mes=total_atrasadas_mes,
+        total_hoje=total_hoje,
+        total_proximos_7=total_proximos_7,
+        total_ate_fim_mes=total_ate_fim_mes,
+        total_pagas_mes=total_pagas_mes,
+        total_pagas_meses_anteriores=total_pagas_meses_anteriores,
+
+        receitas_realizadas=receitas_realizadas,
+        receitas_previstas=receitas_previstas,
+        pressao_imediata=pressao_imediata,
+        diferenca_estimada=diferenca_estimada,
+        resultado_parcial=resultado_parcial,
+        risco=risco,
+        risco_classe=risco_classe,
+        recomendacao=recomendacao,
+        insight=insight,
+        top_despesas=top_despesas,
+    )
+
+
+@gestao_bp.route("/radar-financeiro/novo", methods=["POST"])
+@gestao_required
+def radar_financeiro_novo():
+
+    descricao = request.form.get("descricao", "").strip()
+    fornecedor = request.form.get("fornecedor", "").strip()
+    categoria = request.form.get("categoria", "").strip()
+    setor = normalizar_texto(request.form.get("setor")) or "GERAL"
+    valor = dinheiro(
+        str(request.form.get("valor") or "0")
+        .replace(".", "")
+        .replace(",", ".")
+    )
+    data_vencimento = parse_data(request.form.get("data_vencimento"))
+    observacoes = request.form.get("observacoes", "").strip()
+
+    if not descricao:
+        flash("Informe a descrição da conta.", "danger")
+        return redirect(request.referrer or "/gestao/radar-financeiro/")
+
+    if not data_vencimento:
+        flash("Informe a data de vencimento.", "danger")
+        return redirect(request.referrer or "/gestao/radar-financeiro/")
+
+    recorrente = request.form.get("recorrente") == "on"
+    recorrencia = None
+
+    if recorrente:
+        recorrencia = ContaRecorrente(
+            descricao=descricao,
+            fornecedor_funcionario=fornecedor,
+            plano_contas=descricao,
+            categoria=categoria,
+            setor=setor,
+            valor=valor,
+            dia_vencimento=data_vencimento.day,
+            data_inicio=data_vencimento,
+            ativo=True,
+            observacoes=observacoes,
+        )
+
+        db.session.add(recorrencia)
+        db.session.flush()
+
+    chave_conciliacao = None
+    origem_importacao = "PAGAMENTO"
+
+    if recorrencia:
+        chave_conciliacao = radar_chave_recorrente(
+            recorrencia_id=recorrencia.id,
+            mes=data_vencimento.month,
+            ano=data_vencimento.year
+        )
+        origem_importacao = "RECORRENTE"
+
+    observacoes_conta = observacoes
+
+    if recorrencia:
+        observacoes_conta = (
+            f"Conta gerada pela recorrência #{recorrencia.id}. "
+            f"Competência: {radar_competencia_label(data_vencimento)}.\n"
+            f"{observacoes or ''}"
+        ).strip()
+
+    conta = ContaPagarImportada(
+        numero_fatura=request.form.get("numero_fatura") or (f"REC-{recorrencia.id}-{data_vencimento.month:02d}-{data_vencimento.year}" if recorrencia else None),
+        fornecedor_funcionario=fornecedor,
+        plano_contas=descricao,
+        categoria=categoria,
+        setor=setor,
+        data_documento=datetime.combine(date.today(), datetime.min.time()),
+        data_vencimento=datetime.combine(data_vencimento, datetime.min.time()),
+        valor=valor,
+        pago=False,
+        status="PENDENTE",
+        observacoes=observacoes_conta,
+        mes=data_vencimento.month,
+        ano=data_vencimento.year,
+        chave_conciliacao=chave_conciliacao,
+        origem_importacao=origem_importacao,
+    )
+
+    if request.form.get("ja_pago") == "on":
+        data_pagamento = parse_data(request.form.get("data_pagamento")) or date.today()
+        conta.pago = True
+        conta.status = "PAGO"
+        conta.data_pagamento = datetime.combine(data_pagamento, datetime.min.time())
+
+    db.session.add(conta)
+    db.session.commit()
+
+    if recorrencia:
+        flash("Conta cadastrada e recorrência mensal criada. Os próximos meses serão gerados automaticamente.", "success")
+    else:
+        flash("Conta cadastrada no Radar Financeiro.", "success")
+
+    return redirect(request.referrer or "/gestao/radar-financeiro/")
+
+
+@gestao_bp.route("/radar-financeiro/editar/<int:id>", methods=["POST"])
+@gestao_required
+def radar_financeiro_editar(id):
+
+    conta = ContaPagarImportada.query.get_or_404(id)
+
+    descricao = request.form.get("descricao", "").strip()
+    fornecedor = request.form.get("fornecedor", "").strip()
+    categoria = request.form.get("categoria", "").strip()
+    setor = normalizar_texto(request.form.get("setor")) or "GERAL"
+    status = normalizar_texto(request.form.get("status")) or "PENDENTE"
+    valor = dinheiro(
+        str(request.form.get("valor") or "0")
+        .replace(".", "")
+        .replace(",", ".")
+    )
+    data_vencimento = parse_data(request.form.get("data_vencimento"))
+    data_pagamento = parse_data(request.form.get("data_pagamento"))
+    observacoes = request.form.get("observacoes", "").strip()
+
+    if not descricao:
+        flash("Informe a descrição da conta.", "danger")
+        return redirect(request.referrer or "/gestao/radar-financeiro/")
+
+    conta.plano_contas = descricao
+    conta.fornecedor_funcionario = fornecedor
+    conta.categoria = categoria
+    conta.setor = setor
+    conta.valor = valor
+    conta.status = status
+    conta.observacoes = observacoes
+
+    if data_vencimento:
+        conta.data_vencimento = datetime.combine(data_vencimento, datetime.min.time())
+        conta.mes = data_vencimento.month
+        conta.ano = data_vencimento.year
+
+    if status == "PAGO":
+        conta.pago = True
+        conta.data_pagamento = datetime.combine(
+            data_pagamento or date.today(),
+            datetime.min.time()
+        )
+    else:
+        conta.pago = False
+        if data_pagamento:
+            conta.data_pagamento = datetime.combine(data_pagamento, datetime.min.time())
+        else:
+            conta.data_pagamento = None
+
+    db.session.commit()
+
+    flash("Conta atualizada com sucesso.", "success")
+
+    return redirect(request.referrer or "/gestao/radar-financeiro/")
+
+
+@gestao_bp.route("/radar-financeiro/pagar/<int:id>", methods=["POST"])
+@gestao_required
+def radar_financeiro_pagar(id):
+
+    conta = ContaPagarImportada.query.get_or_404(id)
+
+    data_pagamento = parse_data(request.form.get("data_pagamento")) or date.today()
+
+    conta.pago = True
+    conta.status = "PAGO"
+    conta.data_pagamento = datetime.combine(
+        data_pagamento,
+        datetime.min.time()
+    )
+
+    observacao_extra = request.form.get("observacao", "").strip()
+
+    if observacao_extra:
+        observacao_antiga = conta.observacoes or ""
+        conta.observacoes = f"{observacao_antiga}\nPagamento: {observacao_extra}".strip()
+
+    db.session.commit()
+
+    flash("Conta marcada como paga. Se ela era herdada, agora aparecerá em Pagas de Meses Anteriores.", "success")
+
+    return redirect(request.referrer or "/gestao/radar-financeiro/")
+
+
+@gestao_bp.route("/radar-financeiro/cancelar/<int:id>", methods=["POST"])
+@gestao_required
+def radar_financeiro_cancelar(id):
+
+    conta = ContaPagarImportada.query.get_or_404(id)
+
+    conta.status = "CANCELADO"
+    conta.pago = False
+
+    db.session.commit()
+
+    flash("Conta cancelada no Radar Financeiro.", "success")
+
+    return redirect(request.referrer or "/gestao/radar-financeiro/")
+
+
+@gestao_bp.route("/radar-financeiro/excluir/<int:id>", methods=["POST"])
+@gestao_required
+def radar_financeiro_excluir(id):
+
+    conta = ContaPagarImportada.query.get_or_404(id)
+
+    db.session.delete(conta)
+    db.session.commit()
+
+    flash("Conta excluída definitivamente.", "success")
+
+    return redirect(request.referrer or "/gestao/radar-financeiro/")
+
+
+@gestao_bp.route("/radar-financeiro/transportar/<int:id>", methods=["POST"])
+@gestao_required
+def radar_financeiro_transportar(id):
+
+    conta = ContaPagarImportada.query.get_or_404(id)
+
+    mes_destino = request.form.get("mes_destino", type=int)
+    ano_destino = request.form.get("ano_destino", type=int)
+
+    if not mes_destino or not ano_destino:
+        flash("Informe mês e ano de destino.", "danger")
+        return redirect(request.referrer or "/gestao/radar-financeiro/")
+
+    data_vencimento_atual = data_para_date(conta.data_vencimento) or date.today()
+    dia = min(data_vencimento_atual.day, calendar.monthrange(ano_destino, mes_destino)[1])
+    nova_data = date(ano_destino, mes_destino, dia)
+
+    observacao_origem = (
+        f"Conta criada por transporte de {radar_competencia_label(data_vencimento_atual)}. "
+        f"Vencimento original: {radar_data_br(data_vencimento_atual)}."
+    )
+
+    nova_conta = ContaPagarImportada(
+        numero_fatura=conta.numero_fatura,
+        fornecedor_funcionario=conta.fornecedor_funcionario,
+        plano_contas=conta.plano_contas,
+        categoria=conta.categoria,
+        setor=conta.setor,
+        data_documento=datetime.combine(date.today(), datetime.min.time()),
+        data_vencimento=datetime.combine(nova_data, datetime.min.time()),
+        valor=conta.valor,
+        pago=False,
+        status="PENDENTE",
+        observacoes=f"{observacao_origem}\n{conta.observacoes or ''}".strip(),
+        mes=mes_destino,
+        ano=ano_destino,
+        chave_conciliacao=None,
+        origem_importacao="PAGAMENTO",
+    )
+
+    observacao_antiga = conta.observacoes or ""
+    conta.status = "TRANSPORTADO"
+    conta.observacoes = (
+        f"{observacao_antiga}\n"
+        f"Transportada para {radar_nome_mes(mes_destino)}/{ano_destino} em {date.today().strftime('%d/%m/%Y')}."
+    ).strip()
+
+    db.session.add(nova_conta)
+    db.session.commit()
+
+    flash("Conta transportada mantendo histórico no mês original e criando nova obrigação no destino.", "success")
+
+    return redirect(request.referrer or "/gestao/radar-financeiro/")
+
+
+@gestao_bp.route("/radar-financeiro/transportar-pagas-lote", methods=["POST"])
+@gestao_required
+def radar_financeiro_transportar_pagas_lote():
+
+    ids = request.form.getlist("contas_ids")
+    mes_destino = request.form.get("mes_destino", type=int)
+    ano_destino = request.form.get("ano_destino", type=int)
+
+    if not ids:
+        flash("Selecione ao menos uma conta paga para transportar.", "warning")
+        return redirect(request.referrer or "/gestao/radar-financeiro/")
+
+    if not mes_destino or not ano_destino:
+        flash("Informe mês e ano de destino.", "danger")
+        return redirect(request.referrer or "/gestao/radar-financeiro/")
+
+    total = 0
+
+    for id_conta in ids:
+        conta = ContaPagarImportada.query.get(id_conta)
+
+        if not conta:
+            continue
+
+        data_vencimento_atual = data_para_date(conta.data_vencimento) or date.today()
+        dia = min(data_vencimento_atual.day, calendar.monthrange(ano_destino, mes_destino)[1])
+        nova_data = date(ano_destino, mes_destino, dia)
+
+        nova_conta = ContaPagarImportada(
+            numero_fatura=conta.numero_fatura,
+            fornecedor_funcionario=conta.fornecedor_funcionario,
+            plano_contas=conta.plano_contas,
+            categoria=conta.categoria,
+            setor=conta.setor,
+            data_documento=datetime.combine(date.today(), datetime.min.time()),
+            data_vencimento=datetime.combine(nova_data, datetime.min.time()),
+            valor=conta.valor,
+            pago=False,
+            status="PENDENTE",
+            observacoes=(
+                f"Conta transportada em lote a partir de {radar_competencia_label(data_vencimento_atual)}. "
+                f"Vencimento original: {radar_data_br(data_vencimento_atual)}."
+            ),
+            mes=mes_destino,
+            ano=ano_destino,
+            chave_conciliacao=None,
+            origem_importacao="PAGAMENTO",
+        )
+
+        db.session.add(nova_conta)
+        total += 1
+
+    db.session.commit()
+
+    flash(f"{total} conta(s) transportada(s) para {radar_nome_mes(mes_destino)}/{ano_destino}.", "success")
+
+    return redirect(request.referrer or "/gestao/radar-financeiro/")
