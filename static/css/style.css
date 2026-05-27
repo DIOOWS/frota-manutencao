@@ -20729,3 +20729,135 @@ body {
 .radar-herdada-valor::after {
   content: "";
 }
+
+/* =========================================================
+   RADAR FINANCEIRO - TRANSPORTAR COLUNA / SELECIONADAS
+========================================================= */
+.radar-lote-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  padding: 8px 10px 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(248, 250, 252, 0.92);
+}
+
+.radar-lote-check-all {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: #334155;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.radar-lote-check-all input,
+.radar-card-check-label input {
+  width: 14px;
+  height: 14px;
+  accent-color: #2563eb;
+  cursor: pointer;
+}
+
+.radar-lote-btn {
+  width: 100%;
+  height: 30px;
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  border-radius: 10px;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  color: #1d4ed8;
+  font-size: 10px;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: 0.18s ease;
+}
+
+.radar-lote-btn:hover {
+  filter: brightness(1.03);
+  transform: translateY(-1px);
+}
+
+.radar-lote-btn.warning {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: linear-gradient(135deg, #fffbeb, #fde68a);
+  color: #92400e;
+}
+
+.radar-card-select-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.radar-card-check-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 10px;
+  font-weight: 900;
+  color: inherit;
+  opacity: 0.92;
+  cursor: pointer;
+  user-select: none;
+}
+
+.radar-lote-resumo {
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f8fafc, #e0f2fe);
+  border: 1px solid #bae6fd;
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.radar-lote-resumo strong {
+  color: #1d4ed8;
+  font-size: 16px;
+}
+
+.radar-lote-resumo small {
+  color: #475569;
+}
+
+@media (max-width: 768px) {
+  .radar-lote-actions {
+    gap: 5px;
+  }
+
+  .radar-lote-btn {
+    height: 32px;
+  }
+}
+
+
+/* =========================================================
+   RADAR - EXCLUSÃO EM LOTE / COLUNA
+========================================================= */
+.radar-lote-btn.danger {
+  border-color: rgba(220, 38, 38, 0.35);
+  background: linear-gradient(135deg, #fff1f2, #fecdd3);
+  color: #991b1b;
+}
+
+.radar-lote-btn.danger:hover {
+  filter: brightness(1.03);
+  transform: translateY(-1px);
+}
+
+#modalExcluirLote .alert-danger {
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 700;
+}

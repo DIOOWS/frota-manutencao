@@ -206,6 +206,63 @@ def criar_conta_radar(
     return conta
 
 
+def conta_transportada_ja_existe(
+    conta_origem,
+    mes_destino,
+    ano_destino,
+    valor=None,
+    parcela_atual=None,
+    total_parcelas=None
+):
+    """
+    Evita duplicar transporte.
+
+    Regra principal:
+    - mesma conta de origem
+    - mesmo mês/ano destino
+
+    Reforços:
+    - mesmo valor, quando informado
+    - mesma parcela, quando informado
+    """
+    if not conta_origem or not getattr(conta_origem, "id", None):
+        return None
+
+    query = ContaRadarFinanceiro.query.filter(
+        ContaRadarFinanceiro.conta_origem_id == conta_origem.id,
+        ContaRadarFinanceiro.mes == mes_destino,
+        ContaRadarFinanceiro.ano == ano_destino
+    )
+
+    if valor is not None:
+        query = query.filter(ContaRadarFinanceiro.valor == valor)
+
+    if parcela_atual is not None:
+        query = query.filter(ContaRadarFinanceiro.parcela_atual == parcela_atual)
+
+    if total_parcelas is not None:
+        query = query.filter(ContaRadarFinanceiro.total_parcelas == total_parcelas)
+
+    return query.first()
+
+
+def ids_limpos_formulario(nome_campo="contas_ids"):
+    ids = request.form.getlist(nome_campo)
+
+    if not ids:
+        ids = request.form.getlist(f"{nome_campo}[]")
+
+    ids_limpos = []
+
+    for item in ids:
+        try:
+            ids_limpos.append(int(item))
+        except Exception:
+            pass
+
+    return list(dict.fromkeys(ids_limpos))
+
+
 def status_visual(conta, hoje):
     status = texto(conta.status).upper()
 
@@ -418,21 +475,15 @@ def index():
 
     return render_template(
         "gestao/radar_financeiro.html",
-
         visual=visual,
-
         mes=mes,
         ano=ano,
-
         filtro=filtro,
         setor=setor,
         busca=busca,
-
         hoje=hoje,
-
         itens=itens,
         itens_filtrados=itens_filtrados,
-
         abertas=abertas,
         atrasadas=atrasadas,
         vence_hoje=vence_hoje,
@@ -440,14 +491,12 @@ def index():
         pendentes=pendentes,
         pagas=pagas,
         ocultas=ocultas,
-
         total_aberto=total_aberto,
         total_atrasado=total_atrasado,
         total_hoje=total_hoje,
         total_proximas=total_proximas,
         total_pendentes=total_pendentes,
         total_pagas=total_pagas,
-
         data_para_input=data_para_input
     )
 
@@ -495,7 +544,6 @@ def enviar_alerta_telegram_hoje():
 
 # =========================================================
 # TELEGRAM - ENVIO AUTOMÁTICO PROTEGIDO
-# Essa rota pode ser chamada por cron externo.
 # =========================================================
 
 @radar_financeiro_bp.route("/telegram/automatico", methods=["GET", "POST"])
@@ -533,7 +581,6 @@ def enviar_alerta_telegram_automatico():
 
 # =========================================================
 # NOVA CONTA
-# GERA PARCELAS AUTOMATICAMENTE
 # =========================================================
 
 @radar_financeiro_bp.route("/novo", methods=["POST"])
@@ -732,8 +779,6 @@ def pagar(id):
 
 # =========================================================
 # TRANSPORTAR CONTA INDIVIDUAL
-# Mantido no backend para não quebrar registros antigos/botões antigos.
-# A tela atual não exibe mais essa ação no menu.
 # =========================================================
 
 @radar_financeiro_bp.route("/transportar/<int:id>", methods=["POST"])
@@ -745,6 +790,17 @@ def transportar(id):
     try:
         nova_data_str = request.form.get("nova_data_vencimento")
         nova_data = parse_data(nova_data_str)
+
+        mes_destino = request.form.get("mes_destino", type=int)
+        ano_destino = request.form.get("ano_destino", type=int)
+
+        if not nova_data and mes_destino and ano_destino and 1 <= mes_destino <= 12:
+            data_base = data_conta_para_date(conta.data_vencimento) or date.today()
+            nova_data = ajustar_data_para_mes_ano(
+                data_base=data_base,
+                mes_destino=mes_destino,
+                ano_destino=ano_destino
+            )
 
         if not nova_data:
             data_base = data_conta_para_date(conta.data_vencimento) or date.today()
@@ -768,6 +824,22 @@ def transportar(id):
                 "warning"
             )
             return redirect(request.referrer or "/gestao/radar-financeiro")
+
+        duplicada = conta_transportada_ja_existe(
+            conta_origem=conta,
+            mes_destino=nova_data.month,
+            ano_destino=nova_data.year,
+            valor=novo_valor,
+            parcela_atual=nova_parcela_atual,
+            total_parcelas=conta.total_parcelas
+        )
+
+        if duplicada:
+            flash(
+                f"Essa conta já foi transportada para {nova_data.month:02d}/{nova_data.year}. Nenhuma duplicidade foi criada.",
+                "warning"
+            )
+            return redirect_radar(nova_data.month, nova_data.year)
 
         criar_conta_radar(
             descricao=conta.descricao,
@@ -807,20 +879,152 @@ def transportar(id):
 
 
 # =========================================================
+# TRANSPORTAR CONTAS EM LOTE / COLUNA INTEIRA
+# =========================================================
+
+@radar_financeiro_bp.route("/transportar-lote", methods=["POST"])
+@gestao_required
+def transportar_lote():
+
+    ids_limpos = ids_limpos_formulario("contas_ids")
+
+    mes_destino = request.form.get("mes_destino", type=int)
+    ano_destino = request.form.get("ano_destino", type=int)
+    observacao_extra = texto(request.form.get("observacoes"))
+
+    if not ids_limpos:
+        flash("Selecione pelo menos uma conta para transportar.", "warning")
+        return redirect(request.referrer or "/gestao/radar-financeiro")
+
+    if not mes_destino or not ano_destino or mes_destino < 1 or mes_destino > 12:
+        flash("Informe mês e ano de destino válidos.", "danger")
+        return redirect(request.referrer or "/gestao/radar-financeiro")
+
+    try:
+        contas = ContaRadarFinanceiro.query.filter(
+            ContaRadarFinanceiro.id.in_(ids_limpos)
+        ).order_by(
+            ContaRadarFinanceiro.data_vencimento.asc().nullslast(),
+            ContaRadarFinanceiro.id.asc()
+        ).all()
+
+        total_criadas = 0
+        total_ignoradas = 0
+        total_duplicadas = 0
+        total_marcadas_transportado = 0
+        hoje_label = date.today().strftime("%d/%m/%Y")
+
+        for conta in contas:
+            status_atual = texto(conta.status).upper()
+
+            if status_atual in ["CANCELADO", "TRANSPORTADO"]:
+                total_ignoradas += 1
+                continue
+
+            data_base = data_conta_para_date(conta.data_vencimento) or date.today()
+
+            nova_data = ajustar_data_para_mes_ano(
+                data_base=data_base,
+                mes_destino=mes_destino,
+                ano_destino=ano_destino
+            )
+
+            nova_parcela_atual = None
+
+            if conta.parcela_atual:
+                nova_parcela_atual = conta.parcela_atual + 1
+
+            if (
+                conta.total_parcelas
+                and nova_parcela_atual
+                and nova_parcela_atual > conta.total_parcelas
+            ):
+                total_ignoradas += 1
+                continue
+
+            duplicada = conta_transportada_ja_existe(
+                conta_origem=conta,
+                mes_destino=mes_destino,
+                ano_destino=ano_destino,
+                valor=conta.valor,
+                parcela_atual=nova_parcela_atual,
+                total_parcelas=conta.total_parcelas
+            )
+
+            if duplicada:
+                total_duplicadas += 1
+                continue
+
+            observacoes_nova = observacao_extra or conta.observacoes or ""
+
+            complemento = (
+                f"Transportada em lote em {hoje_label}. "
+                f"Origem: conta #{conta.id}, vencimento original "
+                f"{data_base.strftime('%d/%m/%Y') if data_base else '-'}."
+            )
+
+            if observacoes_nova:
+                observacoes_nova = f"{complemento}\n{observacoes_nova}".strip()
+            else:
+                observacoes_nova = complemento
+
+            criar_conta_radar(
+                descricao=conta.descricao,
+                fornecedor=conta.fornecedor,
+                categoria=conta.categoria,
+                setor=conta.setor,
+                valor=conta.valor,
+                data_vencimento=nova_data,
+                status="PENDENTE",
+                data_pagamento=None,
+                observacoes=observacoes_nova,
+                parcela_atual=nova_parcela_atual,
+                total_parcelas=conta.total_parcelas,
+                recorrente=conta.recorrente,
+                gerado_por_transporte=True,
+                conta_origem_id=conta.id
+            )
+
+            total_criadas += 1
+
+            if status_atual != "PAGO":
+                conta.status = "TRANSPORTADO"
+                conta.data_pagamento = None
+                total_marcadas_transportado += 1
+
+        db.session.commit()
+
+        flash(
+            f"{total_criadas} conta(s) transportada(s) para {mes_destino:02d}/{ano_destino}. "
+            f"Originais marcadas como TRANSPORTADO: {total_marcadas_transportado}. "
+            f"Duplicadas ignoradas: {total_duplicadas}. "
+            f"Ignoradas: {total_ignoradas}.",
+            "success"
+        )
+
+        return redirect_radar(mes_destino, ano_destino)
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao transportar contas em lote: {str(e)}", "danger")
+
+    return redirect(request.referrer or "/gestao/radar-financeiro")
+
+
+# =========================================================
 # TRANSPORTAR PAGAS EM LOTE
-# A original continua PAGA no mês original.
-# A nova nasce PENDENTE no mês escolhido.
 # =========================================================
 
 @radar_financeiro_bp.route("/transportar-pagas-lote", methods=["POST"])
 @gestao_required
 def transportar_pagas_lote():
 
-    ids = request.form.getlist("contas_ids")
+    ids_limpos = ids_limpos_formulario("contas_ids")
+
     mes_destino = request.form.get("mes_destino", type=int)
     ano_destino = request.form.get("ano_destino", type=int)
 
-    if not ids:
+    if not ids_limpos:
         flash("Selecione pelo menos uma conta paga para transportar.", "warning")
         return redirect(request.referrer or "/gestao/radar-financeiro")
 
@@ -830,12 +1034,13 @@ def transportar_pagas_lote():
 
     try:
         contas = ContaRadarFinanceiro.query.filter(
-            ContaRadarFinanceiro.id.in_(ids),
+            ContaRadarFinanceiro.id.in_(ids_limpos),
             ContaRadarFinanceiro.status == "PAGO"
         ).all()
 
         total_criadas = 0
         total_ignoradas = 0
+        total_duplicadas = 0
 
         for conta in contas:
             data_base = data_conta_para_date(conta.data_vencimento) or date.today()
@@ -857,6 +1062,19 @@ def transportar_pagas_lote():
                 and nova_parcela_atual > conta.total_parcelas
             ):
                 total_ignoradas += 1
+                continue
+
+            duplicada = conta_transportada_ja_existe(
+                conta_origem=conta,
+                mes_destino=mes_destino,
+                ano_destino=ano_destino,
+                valor=conta.valor,
+                parcela_atual=nova_parcela_atual,
+                total_parcelas=conta.total_parcelas
+            )
+
+            if duplicada:
+                total_duplicadas += 1
                 continue
 
             criar_conta_radar(
@@ -882,6 +1100,7 @@ def transportar_pagas_lote():
 
         flash(
             f"{total_criadas} conta(s) transportada(s) como PENDENTE para {mes_destino:02d}/{ano_destino}. "
+            f"Duplicadas ignoradas: {total_duplicadas}. "
             f"Ignoradas por limite de parcela: {total_ignoradas}.",
             "success"
         )
@@ -897,8 +1116,6 @@ def transportar_pagas_lote():
 
 # =========================================================
 # CANCELAR CONTA
-# Mantido no backend para não quebrar registros antigos/botões antigos.
-# A tela atual não exibe mais essa ação no menu.
 # =========================================================
 
 @radar_financeiro_bp.route("/cancelar/<int:id>", methods=["POST"])
@@ -917,6 +1134,47 @@ def cancelar(id):
     except Exception as e:
         db.session.rollback()
         flash(f"Erro ao cancelar conta: {str(e)}", "danger")
+
+    return redirect(request.referrer or "/gestao/radar-financeiro")
+
+
+# =========================================================
+# EXCLUIR CONTAS EM LOTE / COLUNA INTEIRA
+# =========================================================
+
+@radar_financeiro_bp.route("/excluir-lote", methods=["POST"])
+@gestao_required
+def excluir_lote():
+
+    ids_limpos = ids_limpos_formulario("contas_ids")
+
+    mes_retorno = request.form.get("mes_retorno", type=int)
+    ano_retorno = request.form.get("ano_retorno", type=int)
+
+    if not ids_limpos:
+        flash("Selecione pelo menos uma conta para excluir.", "warning")
+        return redirect(request.referrer or "/gestao/radar-financeiro")
+
+    try:
+        contas = ContaRadarFinanceiro.query.filter(
+            ContaRadarFinanceiro.id.in_(ids_limpos)
+        ).all()
+
+        total = len(contas)
+
+        for conta in contas:
+            db.session.delete(conta)
+
+        db.session.commit()
+
+        flash(f"{total} conta(s) excluída(s) com sucesso.", "success")
+
+        if mes_retorno and ano_retorno:
+            return redirect_radar(mes_retorno, ano_retorno)
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao excluir contas em lote: {str(e)}", "danger")
 
     return redirect(request.referrer or "/gestao/radar-financeiro")
 

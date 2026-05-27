@@ -202,6 +202,47 @@
                             {{ coluna.total_formatado }}
                         </div>
 
+                        {% if coluna.slug != "herdada" and coluna.itens is defined and coluna.itens %}
+                            <div class="radar-lote-actions" data-coluna-slug="{{ coluna.slug }}">
+                                <label class="radar-lote-check-all">
+                                    <input type="checkbox"
+                                           class="radar-check-coluna"
+                                           data-coluna-slug="{{ coluna.slug }}">
+                                    Selecionar coluna
+                                </label>
+
+                                <button type="button"
+                                        class="radar-lote-btn js-radar-transportar-selecionadas"
+                                        data-coluna-slug="{{ coluna.slug }}">
+                                    <i class="bi bi-check2-square"></i>
+                                    Selecionadas
+                                </button>
+
+                                <button type="button"
+                                        class="radar-lote-btn warning js-radar-transportar-coluna"
+                                        data-coluna-slug="{{ coluna.slug }}"
+                                        data-coluna-titulo="{{ coluna.titulo }}">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                    Coluna inteira
+                                </button>
+
+                                <button type="button"
+                                        class="radar-lote-btn danger js-radar-excluir-selecionadas"
+                                        data-coluna-slug="{{ coluna.slug }}">
+                                    <i class="bi bi-trash3"></i>
+                                    Excluir selecionadas
+                                </button>
+
+                                <button type="button"
+                                        class="radar-lote-btn danger js-radar-excluir-coluna"
+                                        data-coluna-slug="{{ coluna.slug }}"
+                                        data-coluna-titulo="{{ coluna.titulo }}">
+                                    <i class="bi bi-trash-fill"></i>
+                                    Excluir coluna
+                                </button>
+                            </div>
+                        {% endif %}
+
                         <div class="radar-herdadas-coluna-body">
 
                             {% if coluna.slug == "herdada" %}
@@ -264,7 +305,18 @@
                             {% else %}
 
                                 {% for item in coluna.itens %}
-                                    <article class="radar-normal-card {{ coluna.cor }}">
+                                    <article class="radar-normal-card {{ coluna.cor }}" data-radar-card-id="{{ item.id }}" data-radar-card-coluna="{{ coluna.slug }}">
+
+                                        <div class="radar-card-select-row">
+                                            <label class="radar-card-check-label">
+                                                <input type="checkbox"
+                                                       class="radar-select-conta"
+                                                       value="{{ item.id }}"
+                                                       data-coluna-slug="{{ coluna.slug }}"
+                                                       data-descricao="{{ item.descricao }}">
+                                                Selecionar
+                                            </label>
+                                        </div>
 
                                         <div class="radar-normal-card-top">
                                             <div>
@@ -1097,6 +1149,114 @@
     {% endif %}
 {% endfor %}
 
+<div class="modal fade" id="modalTransportarLote" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content radar-herdadas-modal">
+            <form method="POST"
+                  action="/gestao/radar-financeiro/transportar-lote"
+                  id="formTransportarLote"
+                  data-confirm="Confirmar transporte das contas selecionadas?">
+                <div class="modal-header">
+                    <h5 class="modal-title">Transportar contas</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="radar-lote-resumo" id="radarLoteResumo">
+                        Nenhuma conta selecionada.
+                    </div>
+
+                    <div id="radarLoteIds"></div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Mês destino</label>
+                            <select name="mes_destino" class="form-control" required>
+                                {% for m in range(1, 13) %}
+                                    <option value="{{ m }}"
+                                            {% if mes == 12 and m == 1 %}
+                                                selected
+                                            {% elif mes < 12 and m == mes + 1 %}
+                                                selected
+                                            {% endif %}>
+                                        {{ nome_mes(m) }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Ano destino</label>
+                            <input type="number"
+                                   name="ano_destino"
+                                   value="{% if mes == 12 %}{{ ano + 1 }}{% else %}{{ ano }}{% endif %}"
+                                   class="form-control"
+                                   required>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label">Observação opcional</label>
+                            <textarea name="observacoes"
+                                      rows="3"
+                                      class="form-control"
+                                      placeholder="Ex.: Transporte autorizado para o próximo mês."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button class="btn btn-warning" id="btnConfirmarTransporteLote">
+                        Transportar contas
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalExcluirLote" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content radar-herdadas-modal">
+            <form method="POST"
+                  action="/gestao/radar-financeiro/excluir-lote"
+                  id="formExcluirLote"
+                  data-confirm="Confirmar exclusão definitiva das contas selecionadas? Essa ação não pode ser desfeita.">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">Excluir contas</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="alert alert-danger mb-3">
+                        Atenção: as contas selecionadas serão excluídas definitivamente do Radar.
+                    </div>
+
+                    <div class="radar-lote-resumo" id="radarExcluirLoteResumo">
+                        Nenhuma conta selecionada.
+                    </div>
+
+                    <div id="radarExcluirLoteIds"></div>
+
+                    <input type="hidden" name="mes_retorno" value="{{ mes }}">
+                    <input type="hidden" name="ano_retorno" value="{{ ano }}">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button class="btn btn-danger" id="btnConfirmarExclusaoLote">
+                        Excluir contas
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
     function radarHerdadasMudarMes(delta) {
         const mesEl = document.getElementById("radarMes");
@@ -1436,6 +1596,7 @@
             }
 
             radarInicializarBuscaLocal();
+            radarInicializarTransporteEmLote();
             radarAbrirHistoricoSeSolicitado();
 
             if (options.atualizarUrl !== false && resposta.url) {
@@ -1553,9 +1714,197 @@
 
     document.addEventListener("DOMContentLoaded", function () {
         radarInicializarBuscaLocal();
+        radarInicializarTransporteEmLote();
         /* Não abre histórico automaticamente no carregamento da página.
            O modal só abre depois do clique em uma dívida herdada. */
     });
+
+
+    function radarIdsSelecionadosPorColuna(colunaSlug) {
+        return Array.from(document.querySelectorAll(`.radar-select-conta[data-coluna-slug="${colunaSlug}"]:checked`))
+            .map(function (input) {
+                return input.value;
+            })
+            .filter(Boolean);
+    }
+
+    function radarTodosIdsDaColuna(colunaSlug) {
+        return Array.from(document.querySelectorAll(`.radar-select-conta[data-coluna-slug="${colunaSlug}"]`))
+            .map(function (input) {
+                return input.value;
+            })
+            .filter(Boolean);
+    }
+
+    function radarAbrirModalTransporteLote(ids, titulo) {
+        const modalEl = document.getElementById("modalTransportarLote");
+        const idsBox = document.getElementById("radarLoteIds");
+        const resumo = document.getElementById("radarLoteResumo");
+        const botaoConfirmar = document.getElementById("btnConfirmarTransporteLote");
+
+        if (!modalEl || !idsBox || !resumo) {
+            return;
+        }
+
+        ids = Array.from(new Set(ids || []));
+
+        if (!ids.length) {
+            alert("Selecione pelo menos uma conta para transportar.");
+            return;
+        }
+
+        idsBox.innerHTML = "";
+
+        ids.forEach(function (id) {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = "contas_ids";
+            input.value = id;
+            idsBox.appendChild(input);
+        });
+
+        resumo.innerHTML = `
+            <strong>${ids.length}</strong> conta(s) selecionada(s).<br>
+            <small>${titulo || "As contas serão copiadas para o mês destino mantendo histórico."}</small>
+        `;
+
+        if (botaoConfirmar) {
+            botaoConfirmar.textContent = ids.length === 1 ? "Transportar 1 conta" : `Transportar ${ids.length} contas`;
+        }
+
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    }
+
+    function radarAbrirModalExclusaoLote(ids, titulo) {
+        const modalEl = document.getElementById("modalExcluirLote");
+        const idsBox = document.getElementById("radarExcluirLoteIds");
+        const resumo = document.getElementById("radarExcluirLoteResumo");
+        const botaoConfirmar = document.getElementById("btnConfirmarExclusaoLote");
+
+        if (!modalEl || !idsBox || !resumo) {
+            return;
+        }
+
+        ids = Array.from(new Set(ids || []));
+
+        if (!ids.length) {
+            alert("Selecione pelo menos uma conta para excluir.");
+            return;
+        }
+
+        idsBox.innerHTML = "";
+
+        ids.forEach(function (id) {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = "contas_ids";
+            input.value = id;
+            idsBox.appendChild(input);
+        });
+
+        resumo.innerHTML = `
+            <strong>${ids.length}</strong> conta(s) selecionada(s) para exclusão.<br>
+            <small>${titulo || "As contas serão removidas definitivamente do Radar."}</small>
+        `;
+
+        if (botaoConfirmar) {
+            botaoConfirmar.textContent = ids.length === 1 ? "Excluir 1 conta" : `Excluir ${ids.length} contas`;
+        }
+
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    }
+
+    function radarInicializarTransporteEmLote() {
+        document.querySelectorAll(".radar-check-coluna").forEach(function (checkbox) {
+            if (checkbox.dataset.inicializado === "true") {
+                return;
+            }
+
+            checkbox.dataset.inicializado = "true";
+
+            checkbox.addEventListener("change", function () {
+                const colunaSlug = this.dataset.colunaSlug;
+
+                document.querySelectorAll(`.radar-select-conta[data-coluna-slug="${colunaSlug}"]`).forEach(function (itemCheckbox) {
+                    itemCheckbox.checked = checkbox.checked;
+                });
+            });
+        });
+
+        document.querySelectorAll(".js-radar-transportar-selecionadas").forEach(function (botao) {
+            if (botao.dataset.inicializado === "true") {
+                return;
+            }
+
+            botao.dataset.inicializado = "true";
+
+            botao.addEventListener("click", function () {
+                const colunaSlug = this.dataset.colunaSlug;
+                const ids = radarIdsSelecionadosPorColuna(colunaSlug);
+                radarAbrirModalTransporteLote(ids, "Transportando apenas as contas marcadas nesta coluna.");
+            });
+        });
+
+        document.querySelectorAll(".js-radar-transportar-coluna").forEach(function (botao) {
+            if (botao.dataset.inicializado === "true") {
+                return;
+            }
+
+            botao.dataset.inicializado = "true";
+
+            botao.addEventListener("click", function () {
+                const colunaSlug = this.dataset.colunaSlug;
+                const colunaTitulo = this.dataset.colunaTitulo || "coluna";
+                const ids = radarTodosIdsDaColuna(colunaSlug);
+
+                if (!ids.length) {
+                    alert("Essa coluna não possui contas para transportar.");
+                    return;
+                }
+
+                if (!confirm(`Transportar TODA a coluna ${colunaTitulo}?`)) {
+                    return;
+                }
+
+                radarAbrirModalTransporteLote(ids, `Transportando a coluna inteira: ${colunaTitulo}.`);
+            });
+        });
+
+        document.querySelectorAll(".js-radar-excluir-selecionadas").forEach(function (botao) {
+            if (botao.dataset.inicializado === "true") {
+                return;
+            }
+
+            botao.dataset.inicializado = "true";
+
+            botao.addEventListener("click", function () {
+                const colunaSlug = this.dataset.colunaSlug;
+                const ids = radarIdsSelecionadosPorColuna(colunaSlug);
+                radarAbrirModalExclusaoLote(ids, "Excluindo apenas as contas marcadas nesta coluna.");
+            });
+        });
+
+        document.querySelectorAll(".js-radar-excluir-coluna").forEach(function (botao) {
+            if (botao.dataset.inicializado === "true") {
+                return;
+            }
+
+            botao.dataset.inicializado = "true";
+
+            botao.addEventListener("click", function () {
+                const colunaSlug = this.dataset.colunaSlug;
+                const colunaTitulo = this.dataset.colunaTitulo || "coluna";
+                const ids = radarTodosIdsDaColuna(colunaSlug);
+
+                if (!ids.length) {
+                    alert("Essa coluna não possui contas para excluir.");
+                    return;
+                }
+
+                radarAbrirModalExclusaoLote(ids, `Excluindo a coluna inteira: ${colunaTitulo}.`);
+            });
+        });
+    }
 
 
     function formParaAjax(form) {
