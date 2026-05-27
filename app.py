@@ -96,6 +96,8 @@ from models.membro_agenda_equipe import MembroAgendaEquipe
 from models.agenda_mes_equipe import AgendaMesEquipe
 from models.tarefa_equipe import TarefaEquipe, ExecucaoTarefaEquipe
 from models.conta_recorrente import ContaRecorrente
+from models.causa_manutencao import CausaManutencao
+from models.problema_manutencao import ProblemaManutencao
 
 
 

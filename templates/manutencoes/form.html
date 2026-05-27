@@ -63,27 +63,31 @@
     {% endfor %}
   </select>
 
-  <label>Problema</label>
-  <select name="problema" id="problema" class="form-control mb-2">
-    <option value="">Selecione o Problema</option>
-
-    <option value="Preventiva" {% if m and m.problema|upper == "PREVENTIVA" %}selected{% endif %}>Preventiva</option>
-    <option value="Vazamento placa eutética" {% if m and m.problema|upper == "VAZAMENTO PLACA EUTÉTICA" %}selected{% endif %}>Vazamento placa eutética</option>
-    <option value="Substituição de peça" {% if m and m.problema|upper == "SUBSTITUIÇÃO DE PEÇA" %}selected{% endif %}>Substituição de peça</option>
-    <option value="Desencarroçamento" {% if m and m.problema|upper == "DESENCARROÇAMENTO" %}selected{% endif %}>Desencarroçamento</option>
-    <option value="Encarroçamento" {% if m and m.problema|upper == "ENCARROÇAMENTO" %}selected{% endif %}>Encarroçamento</option>
-    <option value="Curto elétrico" {% if m and m.problema|upper == "CURTO ELÉTRICO" %}selected{% endif %}>Curto elétrico</option>
-    <option value="Vazamento de gás no sistema" {% if m and m.problema|upper == "VAZAMENTO DE GÁS NO SISTEMA" %}selected{% endif %}>Vazamento de gás no sistema</option>
-    <option value="Componente elétrico queimado" {% if m and m.problema|upper == "COMPONENTE ELÉTRICO QUEIMADO" %}selected{% endif %}>Componente elétrico queimado</option>
-    <option value="Compressor queimado" {% if m and m.problema|upper == "COMPRESSOR QUEIMADO" %}selected{% endif %}>Compressor queimado</option>
-    <option value="Tomada avariada" {% if m and m.problema|upper == "TOMADA AVARIADA" %}selected{% endif %}>Tomada avariada</option>
-    <option value="Queda de energia" {% if m and m.problema|upper == "QUEDA DE ENERGIA" %}selected{% endif %}>Queda de energia</option>
-  </select>
-
   <label>Causa</label>
-  <select name="causa" id="causa" class="form-control mb-2">
-    <option value="">Selecione primeiro o problema</option>
-  </select>
+  <div class="input-group mb-2">
+    <select name="causa" id="causa" class="form-control">
+      <option value="">Selecione a Causa</option>
+      {% for c in causas %}
+        <option value="{{ c.nome }}" data-id="{{ c.id }}"
+          {% if m and m.causa and m.causa|upper == c.nome|upper %}selected{% endif %}>
+          {{ c.nome }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <button type="button" class="btn btn-outline-primary" id="btnNovaCausa">+</button>
+    <button type="button" class="btn btn-outline-secondary" id="btnEditarCausa">Editar</button>
+  </div>
+
+  <label>Problema</label>
+  <div class="input-group mb-2">
+    <select name="problema" id="problema" class="form-control">
+      <option value="">Selecione primeiro a causa</option>
+    </select>
+
+    <button type="button" class="btn btn-outline-primary" id="btnNovoProblema">+</button>
+    <button type="button" class="btn btn-outline-secondary" id="btnEditarProblema">Editar</button>
+  </div>
 
   <hr>
   <h5>Aferição dos Termômetros</h5>
@@ -208,55 +212,367 @@
 
 </form>
 
+<div class="modal fade" id="modalCausa" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 id="modalCausaTitulo" class="modal-title">Nova Causa</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="causaIdEdicao">
+        <label>Nome da Causa</label>
+        <input type="text" id="inputNomeCausa" class="form-control" placeholder="Ex.: DESGASTE NATURAL">
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="salvarCausa">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalProblema" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 id="modalProblemaTitulo" class="modal-title">Novo Problema</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="problemaIdEdicao">
+
+        <label>Causa vinculada</label>
+        <select id="selectCausaProblema" class="form-control mb-2">
+          <option value="">Selecione a causa</option>
+        </select>
+
+        <label>Nome do Problema</label>
+        <input type="text" id="inputNomeProblema" class="form-control" placeholder="Ex.: COMPRESSOR QUEIMADO">
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="salvarProblema">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-
-  const problemaSelect = document.getElementById("problema");
-  const causaSelect = document.getElementById("causa");
+  let causasData = {{ causas_json|tojson }};
   const causaAtual = {{ (m.causa if m and m.causa else '')|tojson }};
+  const problemaAtual = {{ (m.problema if m and m.problema else '')|tojson }};
 
-  const causasPorProblema = {
-    "Preventiva": ["Preventiva"],
-    "Vazamento placa eutética": ["Desgaste"],
-    "Substituição de peça": ["Desgaste por uso"],
-    "Desencarroçamento": ["Contrato"],
-    "Encarroçamento": ["Contrato"],
-    "Curto elétrico": ["Queda de energia", "Tomada queimada", "Mau uso da tomada"],
-    "Vazamento de gás no sistema": ["Desgaste natural", "Avaria / mau uso"],
-    "Componente elétrico queimado": ["Mal contato", "Sistema mal feito"],
-    "Compressor queimado": ["Queda de energia", "Desgaste natural", "Vazamento de óleo"],
-    "Tomada avariada": ["Mau uso", "Desgaste natural", "Sobrecarga elétrica", "Mal contato", "Tomada queimada"],
-    "Estrutura avariada": ["Mau uso"],
-    "Queda de energia": ["Não apresentou problema", "Componente eletrico desarmado (djuntor)"]
-  };
+  const causaSelect = document.getElementById("causa");
+  const problemaSelect = document.getElementById("problema");
+  const selectCausaProblema = document.getElementById("selectCausaProblema");
 
-  function carregarCausas() {
-    if (!problemaSelect || !causaSelect) {
-      return;
+  const btnNovaCausa = document.getElementById("btnNovaCausa");
+  const btnEditarCausa = document.getElementById("btnEditarCausa");
+  const btnNovoProblema = document.getElementById("btnNovoProblema");
+  const btnEditarProblema = document.getElementById("btnEditarProblema");
+
+  const modalCausaEl = document.getElementById("modalCausa");
+  const modalProblemaEl = document.getElementById("modalProblema");
+
+  const modalCausa = modalCausaEl ? new bootstrap.Modal(modalCausaEl) : null;
+  const modalProblema = modalProblemaEl ? new bootstrap.Modal(modalProblemaEl) : null;
+
+  const causaIdEdicao = document.getElementById("causaIdEdicao");
+  const inputNomeCausa = document.getElementById("inputNomeCausa");
+  const modalCausaTitulo = document.getElementById("modalCausaTitulo");
+
+  const problemaIdEdicao = document.getElementById("problemaIdEdicao");
+  const inputNomeProblema = document.getElementById("inputNomeProblema");
+  const modalProblemaTitulo = document.getElementById("modalProblemaTitulo");
+
+  const salvarCausa = document.getElementById("salvarCausa");
+  const salvarProblema = document.getElementById("salvarProblema");
+
+  function normalizar(valor) {
+    return (valor || "").toString().trim().toUpperCase();
+  }
+
+  function getCausaSelecionada() {
+    const option = causaSelect.options[causaSelect.selectedIndex];
+
+    if (!option) {
+      return null;
     }
 
-    const problema = problemaSelect.value;
-    const causas = causasPorProblema[problema] || [];
+    const id = option.dataset.id;
 
+    if (!id) {
+      return null;
+    }
+
+    return causasData.find(c => String(c.id) === String(id));
+  }
+
+  function getProblemaSelecionado() {
+    const option = problemaSelect.options[problemaSelect.selectedIndex];
+
+    if (!option) {
+      return null;
+    }
+
+    const id = option.dataset.id;
+
+    if (!id) {
+      return null;
+    }
+
+    const causa = getCausaSelecionada();
+
+    if (!causa) {
+      return null;
+    }
+
+    return causa.problemas.find(p => String(p.id) === String(id));
+  }
+
+  function renderizarCausas(valorSelecionado = "") {
     causaSelect.innerHTML = '<option value="">Selecione a Causa</option>';
 
-    causas.forEach(function (causa) {
+    causasData.forEach(function (causa) {
       const option = document.createElement("option");
-      option.value = causa;
-      option.textContent = causa;
+      option.value = causa.nome;
+      option.textContent = causa.nome;
+      option.dataset.id = causa.id;
 
-      if (causaAtual && causaAtual.toUpperCase() === causa.toUpperCase()) {
+      if (
+        normalizar(valorSelecionado) === normalizar(causa.nome) ||
+        normalizar(causaAtual) === normalizar(causa.nome)
+      ) {
         option.selected = true;
       }
 
       causaSelect.appendChild(option);
     });
+
+    renderizarSelectCausaProblema();
+    carregarProblemas();
   }
 
-  if (problemaSelect && causaSelect) {
-    problemaSelect.addEventListener("change", carregarCausas);
-    carregarCausas();
+  function renderizarSelectCausaProblema(valorSelecionado = "") {
+    selectCausaProblema.innerHTML = '<option value="">Selecione a causa</option>';
+
+    causasData.forEach(function (causa) {
+      const option = document.createElement("option");
+      option.value = causa.id;
+      option.textContent = causa.nome;
+
+      if (String(valorSelecionado) === String(causa.id)) {
+        option.selected = true;
+      }
+
+      selectCausaProblema.appendChild(option);
+    });
   }
+
+  function carregarProblemas(valorSelecionado = "") {
+    const causa = getCausaSelecionada();
+
+    problemaSelect.innerHTML = '<option value="">Selecione o Problema</option>';
+
+    if (!causa) {
+      problemaSelect.innerHTML = '<option value="">Selecione primeiro a causa</option>';
+      return;
+    }
+
+    causa.problemas.forEach(function (problema) {
+      const option = document.createElement("option");
+      option.value = problema.nome;
+      option.textContent = problema.nome;
+      option.dataset.id = problema.id;
+
+      if (
+        normalizar(valorSelecionado) === normalizar(problema.nome) ||
+        normalizar(problemaAtual) === normalizar(problema.nome)
+      ) {
+        option.selected = true;
+      }
+
+      problemaSelect.appendChild(option);
+    });
+  }
+
+  async function recarregarCausas(valorCausa = "", valorProblema = "") {
+    const response = await fetch("/manutencoes/api/causas");
+    const data = await response.json();
+
+    if (!response.ok || !data.ok) {
+      alert(data.message || "Erro ao carregar causas.");
+      return;
+    }
+
+    causasData = data.causas || [];
+    renderizarCausas(valorCausa);
+
+    if (valorProblema) {
+      carregarProblemas(valorProblema);
+    }
+  }
+
+  if (causaSelect && problemaSelect) {
+    causaSelect.addEventListener("change", function () {
+      carregarProblemas();
+    });
+
+    renderizarCausas(causaAtual);
+    carregarProblemas(problemaAtual);
+  }
+
+  btnNovaCausa.addEventListener("click", function () {
+    causaIdEdicao.value = "";
+    inputNomeCausa.value = "";
+    modalCausaTitulo.textContent = "Nova Causa";
+    modalCausa.show();
+  });
+
+  btnEditarCausa.addEventListener("click", function () {
+    const causa = getCausaSelecionada();
+
+    if (!causa) {
+      alert("Selecione uma causa para editar.");
+      return;
+    }
+
+    causaIdEdicao.value = causa.id;
+    inputNomeCausa.value = causa.nome;
+    modalCausaTitulo.textContent = "Editar Causa";
+    modalCausa.show();
+  });
+
+  salvarCausa.addEventListener("click", async function () {
+    const id = causaIdEdicao.value;
+    const nome = inputNomeCausa.value.trim();
+
+    if (!nome) {
+      alert("Informe o nome da causa.");
+      return;
+    }
+
+    salvarCausa.disabled = true;
+    salvarCausa.textContent = "Salvando...";
+
+    const formData = new FormData();
+    formData.append("nome", nome);
+
+    const url = id ? `/manutencoes/api/causas/${id}` : "/manutencoes/api/causas";
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        alert(data.message || "Erro ao salvar causa.");
+        return;
+      }
+
+      modalCausa.hide();
+      await recarregarCausas(data.causa.nome);
+
+    } catch (error) {
+      console.error(error);
+      alert("Erro ao salvar causa.");
+    } finally {
+      salvarCausa.disabled = false;
+      salvarCausa.textContent = "Salvar";
+    }
+  });
+
+  btnNovoProblema.addEventListener("click", function () {
+    const causa = getCausaSelecionada();
+
+    problemaIdEdicao.value = "";
+    inputNomeProblema.value = "";
+    modalProblemaTitulo.textContent = "Novo Problema";
+
+    renderizarSelectCausaProblema(causa ? causa.id : "");
+
+    modalProblema.show();
+  });
+
+  btnEditarProblema.addEventListener("click", function () {
+    const causa = getCausaSelecionada();
+    const problema = getProblemaSelecionado();
+
+    if (!causa || !problema) {
+      alert("Selecione uma causa e um problema para editar.");
+      return;
+    }
+
+    problemaIdEdicao.value = problema.id;
+    inputNomeProblema.value = problema.nome;
+    modalProblemaTitulo.textContent = "Editar Problema";
+
+    renderizarSelectCausaProblema(causa.id);
+
+    modalProblema.show();
+  });
+
+  salvarProblema.addEventListener("click", async function () {
+    const id = problemaIdEdicao.value;
+    const causaId = selectCausaProblema.value;
+    const nome = inputNomeProblema.value.trim();
+
+    if (!causaId) {
+      alert("Selecione a causa.");
+      return;
+    }
+
+    if (!nome) {
+      alert("Informe o nome do problema.");
+      return;
+    }
+
+    salvarProblema.disabled = true;
+    salvarProblema.textContent = "Salvando...";
+
+    const formData = new FormData();
+    formData.append("causa_id", causaId);
+    formData.append("nome", nome);
+
+    const url = id ? `/manutencoes/api/problemas/${id}` : "/manutencoes/api/problemas";
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        alert(data.message || "Erro ao salvar problema.");
+        return;
+      }
+
+      modalProblema.hide();
+
+      const causaCriada = causasData.find(c => String(c.id) === String(data.problema.causa_id));
+      const nomeCausa = causaCriada ? causaCriada.nome : "";
+
+      await recarregarCausas(nomeCausa, data.problema.nome);
+
+    } catch (error) {
+      console.error(error);
+      alert("Erro ao salvar problema.");
+    } finally {
+      salvarProblema.disabled = false;
+      salvarProblema.textContent = "Salvar";
+    }
+  });
 
   const botoesExcluir = document.querySelectorAll(".btn-excluir-imagem");
 
@@ -349,7 +665,6 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   });
-
 });
 </script>
 

@@ -2,6 +2,8 @@ from flask import Blueprint, render_template, request, redirect, session, flash,
 from models.manutencao import Manutencao
 from models.cliente import Cliente
 from models.afericao_termometro import AfericaoTermometro
+from models.causa_manutencao import CausaManutencao
+from models.problema_manutencao import ProblemaManutencao
 from database import db
 from datetime import datetime
 import json
@@ -66,7 +68,7 @@ def carregar_lista_imagens(valor):
     try:
         lista = json.loads(valor) if valor else []
         return lista if isinstance(lista, list) else []
-    except:
+    except Exception:
         return []
 
 
@@ -88,7 +90,7 @@ def extrair_public_id_cloudinary(url):
             resto = resto.rsplit(".", 1)[0]
 
         return resto
-    except:
+    except Exception:
         return None
 
 
@@ -98,7 +100,7 @@ def extrair_public_id_cloudinary(url):
 def parse_data(valor):
     try:
         return datetime.strptime(valor, "%Y-%m-%d").date() if valor else None
-    except:
+    except Exception:
         return None
 
 
@@ -127,7 +129,6 @@ def normalizar_simples(valor):
 
 
 def calcular_dtm(data_entrada, data_saida):
-
     if not data_entrada or not data_saida:
         return None
 
@@ -137,6 +138,31 @@ def calcular_dtm(data_entrada, data_saida):
     dias = (data_saida - data_entrada).days
 
     return max(dias, 1)
+
+
+# ==========================================
+# 🔥 HELPERS CAUSAS / PROBLEMAS
+# ==========================================
+def listar_causas_json():
+    causas = CausaManutencao.query.filter_by(ativo=True).order_by(CausaManutencao.nome).all()
+
+    return [
+        {
+            "id": c.id,
+            "nome": c.nome,
+            "problemas": [
+                {
+                    "id": p.id,
+                    "nome": p.nome
+                }
+                for p in sorted(
+                    [p for p in c.problemas if p.ativo],
+                    key=lambda item: item.nome or ""
+                )
+            ]
+        }
+        for c in causas
+    ]
 
 
 # ==========================================
@@ -252,11 +278,279 @@ def mover_afericoes_se_trocar_frota_ou_os(numero_frota_antiga, os_antiga, numero
 
 
 # ==========================================
+# 🔄 MIGRAR CAUSAS/PROBLEMAS ANTIGOS
+# ==========================================
+@manutencao_bp.route("/admin/migrar-causas-problemas", methods=["GET", "POST"])
+def migrar_causas_problemas():
+    if not session.get("user_id"):
+        return redirect("/login")
+
+    if not usuario_tem_permissao_operacional():
+        return jsonify({
+            "ok": False,
+            "message": "Sem permissão."
+        }), 403
+
+    registros = Manutencao.query.all()
+
+    causas_criadas = 0
+    problemas_criados = 0
+    vinculos_existentes = 0
+    ignorados = 0
+
+    try:
+        for m in registros:
+            causa_nome = normalizar_texto(m.causa)
+            problema_nome = normalizar_texto(m.problema)
+
+            if not causa_nome or not problema_nome:
+                ignorados += 1
+                continue
+
+            causa = CausaManutencao.query.filter(
+                db.func.upper(CausaManutencao.nome) == causa_nome.upper()
+            ).first()
+
+            if not causa:
+                causa = CausaManutencao(
+                    nome=causa_nome,
+                    ativo=True
+                )
+                db.session.add(causa)
+                db.session.flush()
+                causas_criadas += 1
+            else:
+                causa.ativo = True
+
+            problema = ProblemaManutencao.query.filter(
+                ProblemaManutencao.causa_id == causa.id,
+                db.func.upper(ProblemaManutencao.nome) == problema_nome.upper()
+            ).first()
+
+            if not problema:
+                problema = ProblemaManutencao(
+                    causa_id=causa.id,
+                    nome=problema_nome,
+                    ativo=True
+                )
+                db.session.add(problema)
+                problemas_criados += 1
+            else:
+                problema.ativo = True
+                vinculos_existentes += 1
+
+        db.session.commit()
+
+        return jsonify({
+            "ok": True,
+            "message": "Migração concluída com sucesso.",
+            "total_manutencoes_lidas": len(registros),
+            "causas_criadas": causas_criadas,
+            "problemas_criados": problemas_criados,
+            "vinculos_existentes": vinculos_existentes,
+            "ignorados_sem_causa_ou_problema": ignorados
+        })
+
+    except Exception as e:
+        db.session.rollback()
+
+        return jsonify({
+            "ok": False,
+            "message": f"Erro ao migrar causas e problemas: {str(e)}"
+        }), 500
+
+
+# ==========================================
+# API CAUSAS / PROBLEMAS
+# ==========================================
+@manutencao_bp.route("/api/causas", methods=["GET"])
+def api_listar_causas():
+    if not session.get("user_id"):
+        return jsonify({"ok": False, "message": "Sessão expirada."}), 401
+
+    return jsonify({
+        "ok": True,
+        "causas": listar_causas_json()
+    })
+
+
+@manutencao_bp.route("/api/causas", methods=["POST"])
+def api_criar_causa():
+    if not session.get("user_id"):
+        return jsonify({"ok": False, "message": "Sessão expirada."}), 401
+
+    if not usuario_tem_permissao_operacional():
+        return jsonify({"ok": False, "message": "Sem permissão."}), 403
+
+    nome = normalizar_texto(request.form.get("nome"))
+
+    if not nome:
+        return jsonify({"ok": False, "message": "Informe o nome da causa."}), 400
+
+    existente = CausaManutencao.query.filter(
+        db.func.upper(CausaManutencao.nome) == nome.upper()
+    ).first()
+
+    if existente:
+        existente.ativo = True
+        db.session.commit()
+
+        return jsonify({
+            "ok": True,
+            "message": "Causa já existia e foi ativada.",
+            "causa": {
+                "id": existente.id,
+                "nome": existente.nome
+            }
+        })
+
+    causa = CausaManutencao(nome=nome, ativo=True)
+    db.session.add(causa)
+    db.session.commit()
+
+    return jsonify({
+        "ok": True,
+        "message": "Causa criada com sucesso.",
+        "causa": {
+            "id": causa.id,
+            "nome": causa.nome
+        }
+    })
+
+
+@manutencao_bp.route("/api/causas/<int:causa_id>", methods=["POST"])
+def api_editar_causa(causa_id):
+    if not session.get("user_id"):
+        return jsonify({"ok": False, "message": "Sessão expirada."}), 401
+
+    if not usuario_tem_permissao_operacional():
+        return jsonify({"ok": False, "message": "Sem permissão."}), 403
+
+    causa = CausaManutencao.query.get_or_404(causa_id)
+    nome = normalizar_texto(request.form.get("nome"))
+
+    if not nome:
+        return jsonify({"ok": False, "message": "Informe o nome da causa."}), 400
+
+    causa.nome = nome
+    causa.ativo = True
+    db.session.commit()
+
+    return jsonify({
+        "ok": True,
+        "message": "Causa atualizada com sucesso.",
+        "causa": {
+            "id": causa.id,
+            "nome": causa.nome
+        }
+    })
+
+
+@manutencao_bp.route("/api/problemas", methods=["POST"])
+def api_criar_problema():
+    if not session.get("user_id"):
+        return jsonify({"ok": False, "message": "Sessão expirada."}), 401
+
+    if not usuario_tem_permissao_operacional():
+        return jsonify({"ok": False, "message": "Sem permissão."}), 403
+
+    causa_id = request.form.get("causa_id")
+    nome = normalizar_texto(request.form.get("nome"))
+
+    if not causa_id:
+        return jsonify({"ok": False, "message": "Selecione uma causa."}), 400
+
+    if not nome:
+        return jsonify({"ok": False, "message": "Informe o nome do problema."}), 400
+
+    causa = CausaManutencao.query.get(causa_id)
+
+    if not causa:
+        return jsonify({"ok": False, "message": "Causa não encontrada."}), 404
+
+    existente = ProblemaManutencao.query.filter(
+        ProblemaManutencao.causa_id == causa.id,
+        db.func.upper(ProblemaManutencao.nome) == nome.upper()
+    ).first()
+
+    if existente:
+        existente.ativo = True
+        db.session.commit()
+
+        return jsonify({
+            "ok": True,
+            "message": "Problema já existia e foi ativado.",
+            "problema": {
+                "id": existente.id,
+                "nome": existente.nome,
+                "causa_id": causa.id
+            }
+        })
+
+    problema = ProblemaManutencao(
+        causa_id=causa.id,
+        nome=nome,
+        ativo=True
+    )
+    db.session.add(problema)
+    db.session.commit()
+
+    return jsonify({
+        "ok": True,
+        "message": "Problema criado com sucesso.",
+        "problema": {
+            "id": problema.id,
+            "nome": problema.nome,
+            "causa_id": causa.id
+        }
+    })
+
+
+@manutencao_bp.route("/api/problemas/<int:problema_id>", methods=["POST"])
+def api_editar_problema(problema_id):
+    if not session.get("user_id"):
+        return jsonify({"ok": False, "message": "Sessão expirada."}), 401
+
+    if not usuario_tem_permissao_operacional():
+        return jsonify({"ok": False, "message": "Sem permissão."}), 403
+
+    problema = ProblemaManutencao.query.get_or_404(problema_id)
+
+    causa_id = request.form.get("causa_id")
+    nome = normalizar_texto(request.form.get("nome"))
+
+    if not causa_id:
+        return jsonify({"ok": False, "message": "Selecione uma causa."}), 400
+
+    if not nome:
+        return jsonify({"ok": False, "message": "Informe o nome do problema."}), 400
+
+    causa = CausaManutencao.query.get(causa_id)
+
+    if not causa:
+        return jsonify({"ok": False, "message": "Causa não encontrada."}), 404
+
+    problema.causa_id = causa.id
+    problema.nome = nome
+    problema.ativo = True
+    db.session.commit()
+
+    return jsonify({
+        "ok": True,
+        "message": "Problema atualizado com sucesso.",
+        "problema": {
+            "id": problema.id,
+            "nome": problema.nome,
+            "causa_id": causa.id
+        }
+    })
+
+
+# ==========================================
 # 🖼️ EXCLUIR IMAGEM MANUTENÇÃO
 # ==========================================
 @manutencao_bp.route("/<int:id>/excluir-imagem", methods=["POST"])
 def excluir_imagem(id):
-
     if not session.get("user_id"):
         return jsonify({"ok": False, "message": "Sessão expirada."}), 401
 
@@ -298,7 +592,6 @@ def excluir_imagem(id):
 # ==========================================
 @manutencao_bp.route("/afericao/<int:afericao_id>/excluir-imagem", methods=["POST"])
 def excluir_imagem_afericao(afericao_id):
-
     if not session.get("user_id"):
         return jsonify({"ok": False, "message": "Sessão expirada."}), 401
 
@@ -340,7 +633,6 @@ def excluir_imagem_afericao(afericao_id):
 # ==========================================
 @manutencao_bp.route("/", methods=["GET", "POST"])
 def nova():
-
     if not session.get("user_id"):
         return redirect("/login")
 
@@ -348,7 +640,6 @@ def nova():
         return redirect("/")
 
     if request.method == "POST":
-
         data_convertida = parse_data(request.form.get("data"))
         data_saida_convertida = parse_data(request.form.get("data_saida"))
         dtm_calculado = calcular_dtm(data_convertida, data_saida_convertida)
@@ -374,8 +665,8 @@ def nova():
             observacao=normalizar_texto(request.form.get("observacao")),
             cliente=normalizar_texto(request.form.get("cliente")),
             os=os_numero,
-            problema=normalizar_texto(request.form.get("problema")),
             causa=normalizar_texto(request.form.get("causa")),
+            problema=normalizar_texto(request.form.get("problema")),
             imagens=json.dumps(caminhos_imagens)
         )
 
@@ -413,10 +704,13 @@ def nova():
             return redirect(request.url)
 
     clientes = Cliente.query.order_by(Cliente.nome).all()
+    causas = CausaManutencao.query.filter_by(ativo=True).order_by(CausaManutencao.nome).all()
 
     return render_template(
         "manutencoes/form.html",
         clientes=clientes,
+        causas=causas,
+        causas_json=listar_causas_json(),
         m=None,
         imagens_lista=[],
         afericao_placa={"id": None, "afericao": "", "data_afericao": "", "status": "", "imagens": []},
@@ -429,7 +723,6 @@ def nova():
 # ==========================================
 @manutencao_bp.route("/lista")
 def lista():
-
     if not session.get("user_id"):
         return redirect("/login")
 
@@ -451,7 +744,7 @@ def lista():
             inicio = datetime.strptime(data_inicio, "%Y-%m-%d")
             fim = datetime.strptime(data_fim, "%Y-%m-%d")
             query = query.filter(Manutencao.data.between(inicio, fim))
-        except:
+        except Exception:
             pass
 
     registros = query.order_by(
@@ -500,7 +793,6 @@ def lista():
 # ==========================================
 @manutencao_bp.route("/editar/<int:id>", methods=["GET", "POST"])
 def editar(id):
-
     if not session.get("user_id"):
         return redirect("/login")
 
@@ -533,8 +825,8 @@ def editar(id):
         m.observacao = normalizar_texto(request.form.get("observacao"))
         m.cliente = normalizar_texto(request.form.get("cliente"))
         m.os = normalizar_simples(request.form.get("os"))
-        m.problema = normalizar_texto(request.form.get("problema"))
         m.causa = normalizar_texto(request.form.get("causa"))
+        m.problema = normalizar_texto(request.form.get("problema"))
 
         placa_novas_imagens = salvar_imagens_arquivos(request.files.getlist("placa_imagens"))
         ambiente_novas_imagens = salvar_imagens_arquivos(request.files.getlist("ambiente_imagens"))
@@ -579,6 +871,7 @@ def editar(id):
 
     clientes = Cliente.query.order_by(Cliente.nome).all()
     imagens_lista = carregar_lista_imagens(m.imagens)
+    causas = CausaManutencao.query.filter_by(ativo=True).order_by(CausaManutencao.nome).all()
 
     afericao_placa = carregar_afericao(m.numero_frota, m.os, "PLACA")
     afericao_ambiente = carregar_afericao(m.numero_frota, m.os, "AMBIENTE")
@@ -587,6 +880,8 @@ def editar(id):
         "manutencoes/form.html",
         m=m,
         clientes=clientes,
+        causas=causas,
+        causas_json=listar_causas_json(),
         imagens_lista=imagens_lista,
         afericao_placa=afericao_placa,
         afericao_ambiente=afericao_ambiente
@@ -598,7 +893,6 @@ def editar(id):
 # ==========================================
 @manutencao_bp.route("/excluir/<int:id>")
 def excluir(id):
-
     if not session.get("user_id"):
         return redirect("/login")
 
@@ -625,7 +919,6 @@ def excluir(id):
 # ==========================================
 @manutencao_bp.route("/exportar-excel")
 def exportar_excel():
-
     if not session.get("user_id"):
         return redirect("/login")
 
@@ -643,7 +936,7 @@ def exportar_excel():
                 Manutencao.data.between(inicio, fim)
             )
 
-        except:
+        except Exception:
             pass
 
     registros = query.order_by(
@@ -668,8 +961,8 @@ def exportar_excel():
         "TIPO MANUTENÇÃO",
         "STATUS",
         "CLIENTE",
-        "PROBLEMA",
         "CAUSA",
+        "PROBLEMA",
         "PLACA AFERIÇÃO",
         "PLACA STATUS",
         "AMBIENTE AFERIÇÃO",
@@ -690,7 +983,6 @@ def exportar_excel():
         cell.fill = fill
 
     for r in registros:
-
         afericao_placa = AfericaoTermometro.query.filter_by(
             numero_frota=str(r.numero_frota).strip() if r.numero_frota else "",
             os=str(r.os).strip() if r.os else "",
@@ -716,8 +1008,8 @@ def exportar_excel():
             r.tipo_manutencao or "",
             r.status or "",
             r.cliente or "",
-            r.problema or "",
             r.causa or "",
+            r.problema or "",
             afericao_placa.afericao if afericao_placa else "",
             afericao_placa.status if afericao_placa else "",
             afericao_ambiente.afericao if afericao_ambiente else "",
@@ -726,7 +1018,6 @@ def exportar_excel():
         ])
 
     for column in ws.columns:
-
         max_length = 0
         column_letter = get_column_letter(column[0].column)
 
@@ -737,7 +1028,7 @@ def exportar_excel():
                         max_length,
                         len(str(cell.value))
                     )
-            except:
+            except Exception:
                 pass
 
         adjusted_width = max_length + 5
