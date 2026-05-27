@@ -2424,6 +2424,20 @@ def radar_agrupar_herdadas(contas_herdadas, hoje):
             grupo["desde_label"] = grupo["historico"][0]["competencia"]
 
         grupo["total_formatado"] = radar_moeda(grupo["total"])
+
+        valores_historico = [dinheiro(h.get("valor")) for h in grupo["historico"] if dinheiro(h.get("valor")) > 0]
+        valores_unicos = sorted(set(round(v, 2) for v in valores_historico))
+
+        if len(valores_unicos) == 1:
+            grupo["valor_parcela"] = valores_unicos[0]
+            grupo["valor_parcela_formatado"] = radar_moeda(valores_unicos[0])
+        elif valores_unicos:
+            grupo["valor_parcela"] = valores_unicos[0]
+            grupo["valor_parcela_formatado"] = radar_moeda(valores_unicos[0])
+        else:
+            grupo["valor_parcela"] = 0
+            grupo["valor_parcela_formatado"] = radar_moeda(0)
+
         grupo["parcelas_resumo"] = ", ".join(grupo.get("parcelas_labels", [])[:4])
         if len(grupo.get("parcelas_labels", [])) > 4:
             grupo["parcelas_resumo"] += "..."

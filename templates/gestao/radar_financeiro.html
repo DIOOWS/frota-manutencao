@@ -3,88 +3,6 @@
 
 {% block content %}
 
-<style>
-/* Ajuste para o Radar ficar organizado em zoom 100% */
-.radar-herdadas-page {
-  max-width: 100%;
-  overflow-x: hidden;
-}
-
-@media (min-width: 1200px) {
-  .radar-herdadas-layout {
-    grid-template-columns: minmax(0, 1fr) 300px !important;
-    gap: 10px !important;
-  }
-
-  .radar-herdadas-board {
-    grid-template-columns: repeat(6, minmax(145px, 1fr)) !important;
-    gap: 8px !important;
-  }
-
-  .radar-herdadas-coluna-header {
-    padding: 10px 8px !important;
-  }
-
-  .radar-herdadas-coluna-header strong {
-    font-size: 12px !important;
-  }
-
-  .radar-herdadas-coluna-header small {
-    font-size: 9px !important;
-  }
-
-  .radar-herdadas-coluna-total {
-    font-size: 17px !important;
-    padding-bottom: 9px !important;
-  }
-
-  .radar-herdadas-coluna-body {
-    padding: 7px !important;
-    gap: 7px !important;
-    max-height: 610px !important;
-  }
-
-  .radar-normal-card,
-  .radar-herdada-card a {
-    padding: 9px !important;
-  }
-
-  .radar-normal-card-top strong,
-  .radar-herdada-card-top strong {
-    font-size: 11px !important;
-  }
-
-  .radar-normal-valor,
-  .radar-herdada-valor {
-    font-size: 14px !important;
-  }
-
-  .radar-historico-panel {
-    width: 300px !important;
-    max-height: calc(100vh - 94px) !important;
-  }
-
-  .radar-historico-table {
-    font-size: 9px !important;
-  }
-
-  .radar-historico-table th,
-  .radar-historico-table td {
-    padding: 5px 2px !important;
-  }
-}
-
-@media (max-width: 1199px) {
-  .radar-herdadas-layout {
-    grid-template-columns: 1fr !important;
-  }
-
-  .radar-historico-panel {
-    position: static !important;
-    width: 100% !important;
-  }
-}
-</style>
 
 <div class="gestao-page radar-herdadas-page">
 
@@ -104,6 +22,7 @@
         <div class="radar-herdadas-user-actions">
             <form method="POST"
                   action="/gestao/radar-financeiro/enviar-alerta-hoje"
+                  data-no-ajax="true"
                   onsubmit="return confirm('Enviar alerta com as contas vencendo hoje?');">
                 <button type="submit" class="radar-herdadas-alert-btn">
                     <i class="bi bi-envelope-fill"></i>
@@ -290,7 +209,7 @@
                                 {% for grupo in coluna.grupos %}
 
                                     <article class="radar-herdada-card {% if grupo_selecionado and grupo_selecionado.grupo_key == grupo.grupo_key %}ativo{% endif %}">
-                                        <a href="/gestao/radar-financeiro/?mes={{ mes }}&ano={{ ano }}&setor={{ setor }}&busca={{ busca }}&visao={{ visao }}&grupo={{ grupo.grupo_key }}">
+                                        <a class="js-abrir-historico" href="/gestao/radar-financeiro/?mes={{ mes }}&ano={{ ano }}&setor={{ setor }}&busca={{ busca }}&visao={{ visao }}&grupo={{ grupo.grupo_key }}">
 
                                             <div class="radar-herdada-card-top">
                                                 <div class="radar-herdada-icon">
@@ -306,11 +225,11 @@
                                             </div>
 
                                             <div class="radar-herdada-valor">
-                                                {{ grupo.total_formatado }}
+                                                {{ grupo.valor_parcela_formatado or grupo.total_formatado }}
                                             </div>
 
                                             <div class="radar-herdada-desde">
-                                                Desde {{ grupo.desde_label }}
+                                                Valor da parcela • Desde {{ grupo.desde_label }}
                                             </div>
 
                                             {% if grupo.parcelas_resumo %}
@@ -555,114 +474,139 @@
 
         </div>
 
-        <aside class="radar-historico-panel">
 
-            {% if grupo_selecionado %}
 
-                <div class="radar-historico-header">
-                    <h2>Histórico: {{ grupo_selecionado.descricao }}</h2>
+        {% if grupo_selecionado %}
+        <div class="modal fade radar-historico-modal" id="modalHistoricoHerdada" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content radar-herdadas-modal">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Histórico: {{ grupo_selecionado.descricao }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
 
-                    <button type="button"
-                            class="radar-historico-close js-fechar-historico"
-                            title="Fechar histórico">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
+                    <div class="modal-body">
+                        <div class="radar-historico-modal-grid">
+                            <div class="radar-historico-modal-left">
+                                <div class="radar-historico-total">
+                                    <span>Total da dívida</span>
+                                    <strong>{{ grupo_selecionado.total_formatado }}</strong>
+                                    <small>{{ grupo_selecionado.qtd }} em aberto • Desde {{ grupo_selecionado.desde_label }}</small>
+                                </div>
+
+                                <div class="radar-historico-resumo">
+                                    <h3>Resumo da dívida</h3>
+                                    <p><span>Valor total:</span><strong>{{ grupo_selecionado.total_formatado }}</strong></p>
+                                    <p><span>Atraso médio:</span><strong>{{ grupo_selecionado.atraso_medio }} dias</strong></p>
+                                    <p><span>Maior atraso:</span><strong>{{ grupo_selecionado.maior_atraso }} dias</strong></p>
+                                </div>
+
+                                <div class="radar-pagar-herdada">
+                                    <h3>Marcar mês como pago</h3>
+
+                                    <form method="POST"
+                                          id="formPagarHerdada"
+                                          action="{% if grupo_selecionado.historico %}/gestao/radar-financeiro/pagar/{{ grupo_selecionado.historico[0].id }}{% else %}#{% endif %}">
+                                        <label>Selecione o mês que deseja marcar como pago:</label>
+
+                                        <select class="form-control"
+                                                id="selectContaHerdada"
+                                                required>
+                                            <option value="">Selecione o mês...</option>
+                                            {% for h in grupo_selecionado.historico %}
+                                                <option value="{{ h.id }}">
+                                                    {{ h.competencia }}{% if h.parcelada %} • Parcela {{ h.parcela_label }}{% endif %} • {{ h.valor_formatado }} • venc. {{ h.data_vencimento_formatada }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+
+                                        <label>Data de pagamento</label>
+                                        <input type="date"
+                                               name="data_pagamento"
+                                               value="{{ hoje.strftime('%Y-%m-%d') }}"
+                                               class="form-control"
+                                               required>
+
+                                        <button type="submit">
+                                            Marcar como paga
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <div class="radar-historico-info">
+                                    <h3>Informações</h3>
+                                    <p>• Cada mês não pago gera uma nova obrigação.</p>
+                                    <p>• Pague os meses em ordem para sair da dívida herdada.</p>
+                                    <p>• Após pagar o último mês em aberto, a conta volta ao fluxo normal.</p>
+                                </div>
+                            </div>
+
+                            <div class="radar-historico-modal-right">
+                                <div class="radar-historico-table-wrap">
+                                    <h3>Histórico por mês</h3>
+
+                                    <table class="radar-historico-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Mês origem</th>
+                                                <th>Parcela</th>
+                                                <th>Venc.</th>
+                                                <th>Valor</th>
+                                                <th>Dias</th>
+                                                <th>Status</th>
+                                                <th>Ação</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for h in grupo_selecionado.historico %}
+                                                <tr>
+                                                    <td>{{ h.competencia }}</td>
+                                                    <td>{{ h.parcela_label }}</td>
+                                                    <td>{{ h.data_vencimento_formatada }}</td>
+                                                    <td>{{ h.valor_formatado }}</td>
+                                                    <td>{{ h.dias_atraso }}</td>
+                                                    <td>
+                                                        <span class="radar-status-pill vencido">
+                                                            Em aberto
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <div class="radar-historico-actions">
+                                                            <button type="button"
+                                                                    class="radar-historico-action-btn editar"
+                                                                    title="Editar esta conta"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#modalEditarHerdada{{ h.id }}">
+                                                                <i class="bi bi-pencil-fill"></i>
+                                                            </button>
+
+                                                            <form method="POST"
+                                                                  action="/gestao/radar-financeiro/pagar/{{ h.id }}"
+                                                                  onsubmit="return confirm('Marcar este mês como pago?');">
+                                                                <input type="hidden"
+                                                                       name="data_pagamento"
+                                                                       value="{{ hoje.strftime('%Y-%m-%d') }}">
+                                                                <button type="submit"
+                                                                        class="radar-historico-action-btn pagar"
+                                                                        title="Marcar como paga">
+                                                                    <i class="bi bi-check-lg"></i>
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+            </div>
+        </div>
+{% endif %}
 
-                <div class="radar-historico-total">
-                    <span>Total da dívida</span>
-                    <strong>{{ grupo_selecionado.total_formatado }}</strong>
-                    <small>{{ grupo_selecionado.qtd }} em aberto • Desde {{ grupo_selecionado.desde_label }}</small>
-                </div>
-
-                <div class="radar-historico-resumo">
-                    <h3>Resumo da dívida</h3>
-                    <p><span>Valor total:</span><strong>{{ grupo_selecionado.total_formatado }}</strong></p>
-                    <p><span>Atraso médio:</span><strong>{{ grupo_selecionado.atraso_medio }} dias</strong></p>
-                    <p><span>Maior atraso:</span><strong>{{ grupo_selecionado.maior_atraso }} dias</strong></p>
-                </div>
-
-                <div class="radar-historico-table-wrap">
-                    <h3>Histórico por mês</h3>
-
-                    <table class="radar-historico-table">
-                        <thead>
-                            <tr>
-                                <th>Mês origem</th>
-                                <th>Parcela</th>
-                                <th>Venc.</th>
-                                <th>Valor</th>
-                                <th>Dias</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for h in grupo_selecionado.historico %}
-                                <tr>
-                                    <td>{{ h.competencia }}</td>
-                                    <td>{{ h.parcela_label }}</td>
-                                    <td>{{ h.data_vencimento_formatada }}</td>
-                                    <td>{{ h.valor_formatado }}</td>
-                                    <td>{{ h.dias_atraso }}</td>
-                                    <td>
-                                        <span class="radar-status-pill vencido">
-                                            Em aberto
-                                        </span>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="radar-pagar-herdada">
-                    <h3>Marcar mês como pago</h3>
-
-                    <form method="POST" id="formPagarHerdada">
-                        <label>Selecione o mês que deseja marcar como pago:</label>
-
-                        <select class="form-control"
-                                id="selectContaHerdada"
-                                required>
-                            <option value="">Selecione o mês...</option>
-                            {% for h in grupo_selecionado.historico %}
-                                <option value="{{ h.id }}">
-                                    {{ h.competencia }}{% if h.parcelada %} • Parcela {{ h.parcela_label }}{% endif %} • {{ h.valor_formatado }} • venc. {{ h.data_vencimento_formatada }}
-                                </option>
-                            {% endfor %}
-                        </select>
-
-                        <label>Data de pagamento</label>
-                        <input type="date"
-                               name="data_pagamento"
-                               value="{{ hoje.strftime('%Y-%m-%d') }}"
-                               class="form-control"
-                               required>
-
-                        <button type="submit">
-                            Marcar como paga
-                        </button>
-                    </form>
-                </div>
-
-                <div class="radar-historico-info">
-                    <h3>Informações</h3>
-                    <p>• Cada mês não pago gera uma nova obrigação.</p>
-                    <p>• Pague os meses em ordem para sair da dívida herdada.</p>
-                    <p>• Após pagar o último mês em aberto, a conta volta ao fluxo normal.</p>
-                </div>
-
-            {% else %}
-
-                <div class="radar-historico-empty">
-                    <i class="bi bi-clock-history"></i>
-                    <h2>Sem dívida selecionada</h2>
-                    <p>Clique em uma conta da coluna Dívida Herdada para ver o histórico por mês.</p>
-                </div>
-
-            {% endif %}
-
-        </aside>
 
     </section>
 
@@ -811,6 +755,119 @@
         </div>
     </div>
 </div>
+
+
+{% if grupo_selecionado %}
+    {% for h in grupo_selecionado.historico %}
+        <div class="modal fade" id="modalEditarHerdada{{ h.id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content radar-herdadas-modal">
+                    <form method="POST" action="/gestao/radar-financeiro/editar/{{ h.id }}">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Editar conta herdada #{{ h.id }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <div class="row g-3">
+
+                                <div class="col-md-5">
+                                    <label class="form-label">Descrição</label>
+                                    <input type="text" name="descricao" value="{{ h.descricao }}" class="form-control" required>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Fornecedor</label>
+                                    <input type="text" name="fornecedor" value="{{ h.fornecedor }}" class="form-control">
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label class="form-label">Categoria</label>
+                                    <input type="text" name="categoria" value="{{ h.categoria }}" class="form-control">
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label class="form-label">Setor</label>
+                                    <select name="setor" class="form-control">
+                                        <option value="ASSISTÊNCIA" {% if h.setor == "ASSISTÊNCIA" %}selected{% endif %}>ASSISTÊNCIA</option>
+                                        <option value="LOGÍSTICA" {% if h.setor == "LOGÍSTICA" %}selected{% endif %}>LOGÍSTICA</option>
+                                        <option value="GERAL" {% if h.setor == "GERAL" %}selected{% endif %}>GERAL</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label class="form-label">Tipo da conta</label>
+                                    <select name="tipo_obrigacao" class="form-control">
+                                        <option value="UNICA" {% if h.tipo_obrigacao == "UNICA" %}selected{% endif %}>Única</option>
+                                        <option value="RECORRENTE" {% if h.tipo_obrigacao == "RECORRENTE" %}selected{% endif %}>Recorrente mensal</option>
+                                        <option value="PARCELADA" {% if h.tipo_obrigacao == "PARCELADA" %}selected{% endif %}>Parcelada</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label class="form-label">Status</label>
+                                    <select name="status" class="form-control">
+                                        <option value="PENDENTE" {% if h.status == "PENDENTE" %}selected{% endif %}>PENDENTE</option>
+                                        <option value="ADIADO" {% if h.status == "ADIADO" %}selected{% endif %}>ADIADO</option>
+                                        <option value="PAGO" {% if h.status == "PAGO" %}selected{% endif %}>PAGO</option>
+                                        <option value="TRANSPORTADO" {% if h.status == "TRANSPORTADO" %}selected{% endif %}>TRANSPORTADO</option>
+                                        <option value="CANCELADO" {% if h.status == "CANCELADO" %}selected{% endif %}>CANCELADO</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label class="form-label">Valor</label>
+                                    <input type="text"
+                                           name="valor_visual"
+                                           value="{{ h.valor_formatado }}"
+                                           class="form-control js-moeda"
+                                           inputmode="decimal"
+                                           autocomplete="off"
+                                           required>
+                                    <input type="hidden"
+                                           name="valor"
+                                           value="{{ h.valor }}"
+                                           class="js-moeda-hidden">
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label class="form-label">Data vencimento</label>
+                                    <input type="date" name="data_vencimento" value="{{ h.data_vencimento_input }}" class="form-control">
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label class="form-label">Data pagamento</label>
+                                    <input type="date" name="data_pagamento" value="{{ h.data_pagamento_input }}" class="form-control">
+                                </div>
+
+                                <div class="col-md-2">
+                                    <label class="form-label">Parcela atual</label>
+                                    <input type="number" name="parcela_atual" value="{{ h.parcela_atual }}" class="form-control">
+                                </div>
+
+                                <div class="col-md-2">
+                                    <label class="form-label">Total parcelas</label>
+                                    <input type="number" name="total_parcelas" value="{{ h.total_parcelas }}" class="form-control">
+                                </div>
+
+                                <div class="col-md-12">
+                                    <label class="form-label">Observações</label>
+                                    <textarea name="observacoes" rows="3" class="form-control">{{ h.observacoes }}</textarea>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button class="btn btn-primary">Salvar alterações</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
 
 {% for coluna in colunas %}
     {% if coluna.itens is defined %}
@@ -1191,6 +1248,15 @@
         const selectContaHerdada = document.getElementById("selectContaHerdada");
 
         if (formPagarHerdada && selectContaHerdada) {
+            function atualizarActionPagarHerdada() {
+                const contaId = selectContaHerdada.value;
+                if (contaId) {
+                    formPagarHerdada.action = `/gestao/radar-financeiro/pagar/${contaId}`;
+                }
+            }
+
+            selectContaHerdada.addEventListener("change", atualizarActionPagarHerdada);
+
             formPagarHerdada.addEventListener("submit", function (event) {
                 const contaId = selectContaHerdada.value;
 
@@ -1200,7 +1266,7 @@
                     return;
                 }
 
-                formPagarHerdada.action = `/gestao/radar-financeiro/pagar/${contaId}`;
+                atualizarActionPagarHerdada();
             });
         }
 
@@ -1369,6 +1435,9 @@
                 window.inicializarMascaraMoedaRadar();
             }
 
+            radarInicializarBuscaLocal();
+            radarAbrirHistoricoSeSolicitado();
+
             if (options.atualizarUrl !== false && resposta.url) {
                 window.history.pushState({}, "", resposta.url);
             }
@@ -1385,6 +1454,109 @@
     }
 
     window.radarAjaxRequest = radarAjaxRequest;
+
+
+    function radarAbrirHistoricoSeSolicitado() {
+        const deveAbrir = sessionStorage.getItem("radarAbrirHistorico") === "1";
+        const modalEl = document.getElementById("modalHistoricoHerdada");
+
+        if (!deveAbrir || !modalEl || typeof bootstrap === "undefined") {
+            return;
+        }
+
+        sessionStorage.removeItem("radarAbrirHistorico");
+
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+
+        modalEl.addEventListener("hidden.bs.modal", function () {
+            const url = new URL(window.location.href);
+
+            if (!url.searchParams.has("grupo")) {
+                return;
+            }
+
+            url.searchParams.delete("grupo");
+
+            radarAjaxRequest(url.toString(), {
+                method: "GET",
+                atualizarUrl: true
+            });
+        }, { once: true });
+    }
+
+    function radarTextoBuscaNormalizado(valor) {
+        return String(valor || "")
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .trim();
+    }
+
+    function radarFiltrarCardsLocalmente() {
+        const inputBusca = document.querySelector(".radar-search");
+        const termo = radarTextoBuscaNormalizado(inputBusca ? inputBusca.value : "");
+
+        document.querySelectorAll(".radar-herdadas-coluna").forEach(function (coluna) {
+            let visiveis = 0;
+
+            coluna.querySelectorAll(".radar-normal-card, .radar-herdada-card").forEach(function (card) {
+                const textoCard = radarTextoBuscaNormalizado(card.innerText);
+                const mostrar = !termo || textoCard.includes(termo);
+
+                card.classList.toggle("radar-card-filtrado", !mostrar);
+
+                if (mostrar) {
+                    visiveis += 1;
+                }
+            });
+
+            let vazioBusca = coluna.querySelector(".radar-empty-busca-local");
+
+            if (!vazioBusca) {
+                vazioBusca = document.createElement("div");
+                vazioBusca.className = "radar-empty-busca-local";
+                vazioBusca.textContent = "Nenhum resultado para essa busca";
+                const body = coluna.querySelector(".radar-herdadas-coluna-body");
+                if (body) {
+                    body.appendChild(vazioBusca);
+                }
+            }
+
+            vazioBusca.style.display = termo && visiveis === 0 ? "flex" : "none";
+        });
+    }
+
+    function radarInicializarBuscaLocal() {
+        const inputBusca = document.querySelector(".radar-search");
+
+        if (!inputBusca || inputBusca.dataset.buscaLocalInicializada === "true") {
+            return;
+        }
+
+        inputBusca.dataset.buscaLocalInicializada = "true";
+        inputBusca.setAttribute("autocomplete", "off");
+
+        inputBusca.addEventListener("input", function () {
+            radarFiltrarCardsLocalmente();
+        });
+
+        inputBusca.addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                radarFiltrarCardsLocalmente();
+            }
+        });
+
+        radarFiltrarCardsLocalmente();
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        radarInicializarBuscaLocal();
+        /* Não abre histórico automaticamente no carregamento da página.
+           O modal só abre depois do clique em uma dívida herdada. */
+    });
+
 
     function formParaAjax(form) {
         if (!form) {
@@ -1454,6 +1626,19 @@
     document.addEventListener("submit", function (event) {
         const form = event.target;
 
+        if (form && form.id === "formPagarHerdada") {
+            const selectContaHerdada = document.getElementById("selectContaHerdada");
+            const contaId = selectContaHerdada ? selectContaHerdada.value : "";
+
+            if (!contaId) {
+                event.preventDefault();
+                alert("Selecione o mês/conta que deseja pagar.");
+                return;
+            }
+
+            form.action = `/gestao/radar-financeiro/pagar/${contaId}`;
+        }
+
         if (!formParaAjax(form)) {
             return;
         }
@@ -1506,6 +1691,10 @@
 
         if (!linkParaAjax(link)) {
             return;
+        }
+
+        if (link.classList.contains("js-abrir-historico") || link.closest(".radar-herdada-card")) {
+            sessionStorage.setItem("radarAbrirHistorico", "1");
         }
 
         event.preventDefault();

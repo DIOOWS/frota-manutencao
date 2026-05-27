@@ -91,7 +91,10 @@ def salvar_foto_membro(arquivo):
     #   cloud_name, api_key e api_secret automaticamente.
     if os.getenv("CLOUDINARY_URL"):
         try:
+            import cloudinary
             import cloudinary.uploader
+
+            cloudinary.config(secure=True)
 
             try:
                 arquivo.stream.seek(0)
@@ -119,10 +122,24 @@ def salvar_foto_membro(arquivo):
             raise ValueError(f"Erro ao salvar imagem no Cloudinary: {str(e)}")
 
     # =========================================================
+    # PRODUÇÃO SEM CLOUDINARY: BLOQUEIA SALVAMENTO LOCAL
+    # =========================================================
+    # Se a aplicação estiver em produção e não houver CLOUDINARY_URL,
+    # não salvamos em static/uploads, porque esse arquivo some em deploy,
+    # restart ou troca de instância.
+    debug_ativo = bool(current_app.config.get("DEBUG"))
+    ambiente = (os.getenv("FLASK_ENV") or os.getenv("ENV") or "").lower()
+    producao = (not debug_ativo) or ambiente in ["production", "prod"]
+
+    if producao:
+        raise ValueError(
+            "CLOUDINARY_URL não está configurado. Configure o Cloudinary na produção para a foto permanecer salva."
+        )
+
+    # =========================================================
     # DESENVOLVIMENTO: FALLBACK LOCAL
     # =========================================================
     # Esse fallback é só para rodar local sem Cloudinary.
-    # Na produção, configure CLOUDINARY_URL para a foto permanecer.
     pasta = os.path.join(
         current_app.root_path,
         "static",

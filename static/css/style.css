@@ -20518,3 +20518,214 @@ body {
   background: #f1f5f9;
   color: #dc2626;
 }
+
+/* =========================================================
+   RADAR - CSS RETIRADO DO HTML + AJUSTES DE PRODUÇÃO
+========================================================= */
+/* Ajuste para o Radar ficar organizado em zoom 100% */
+.radar-herdadas-page {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+@media (min-width: 1200px) {
+  .radar-herdadas-layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .radar-herdadas-board {
+    grid-template-columns: repeat(6, minmax(185px, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .radar-herdadas-coluna-header {
+    padding: 10px 8px !important;
+  }
+
+  .radar-herdadas-coluna-header strong {
+    font-size: 12px !important;
+  }
+
+  .radar-herdadas-coluna-header small {
+    font-size: 9px !important;
+  }
+
+  .radar-herdadas-coluna-total {
+    font-size: 17px !important;
+    padding-bottom: 9px !important;
+  }
+
+  .radar-herdadas-coluna-body {
+    padding: 7px !important;
+    gap: 7px !important;
+    max-height: 610px !important;
+  }
+
+  .radar-normal-card,
+  .radar-herdada-card a {
+    padding: 9px !important;
+  }
+
+  .radar-normal-card-top strong,
+  .radar-herdada-card-top strong {
+    font-size: 11px !important;
+  }
+
+  .radar-normal-valor,
+  .radar-herdada-valor {
+    font-size: 14px !important;
+  }
+
+  .radar-historico-table {
+    font-size: 9px !important;
+  }
+
+  .radar-historico-table th,
+  .radar-historico-table td {
+    padding: 5px 2px !important;
+  }
+}
+
+@media (max-width: 1199px) {
+  .radar-herdadas-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .radar-historico-panel {
+    position: static !important;
+    width: 100% !important;
+  }
+}
+
+.radar-historico-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.radar-historico-action-btn {
+  border: 1px solid #dbe4f0;
+  background: #ffffff;
+  color: #1d4ed8;
+  min-width: 28px;
+  height: 26px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+}
+.radar-historico-action-btn.pagar {
+  color: #16a34a;
+  border-color: #bbf7d0;
+}
+.radar-historico-action-btn.editar {
+  color: #2563eb;
+  border-color: #bfdbfe;
+}
+.radar-historico-action-btn:hover {
+  filter: brightness(0.98);
+  transform: translateY(-1px);
+}
+
+
+
+/* Histórico agora abre em modal para liberar espaço das colunas */
+.radar-herdadas-layout {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.radar-historico-modal .modal-dialog {
+  max-width: min(1180px, calc(100vw - 32px));
+}
+
+.radar-historico-modal .modal-body {
+  background: #f8fafc;
+}
+
+.radar-historico-modal-grid {
+  display: grid;
+  grid-template-columns: 310px minmax(0, 1fr);
+  gap: 16px;
+}
+
+.radar-historico-modal-left,
+.radar-historico-modal-right {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.radar-historico-table-wrap {
+  overflow-x: auto;
+}
+
+.radar-historico-table {
+  min-width: 760px;
+}
+
+@media (max-width: 900px) {
+  .radar-historico-modal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Radar em modal: mantém colunas respirando no zoom 100% */
+.radar-herdadas-layout {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.radar-herdada-card a.js-abrir-historico {
+  cursor: pointer;
+}
+
+.radar-historico-modal .modal-dialog {
+  max-width: min(1180px, calc(100vw - 32px));
+}
+
+.radar-historico-modal-grid {
+  display: grid;
+  grid-template-columns: 310px minmax(0, 1fr);
+  gap: 16px;
+}
+
+.radar-historico-table-wrap {
+  overflow-x: auto;
+}
+
+.radar-historico-table {
+  min-width: 760px;
+}
+
+@media (max-width: 900px) {
+  .radar-historico-modal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================
+   RADAR - BUSCA LOCAL SEM RELOAD
+========================================================= */
+.radar-card-filtrado {
+  display: none !important;
+}
+
+.radar-empty-busca-local {
+  min-height: 74px;
+  border: 1px dashed #cbd5e1;
+  background: #f8fafc;
+  color: #64748b;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 800;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px;
+  display: none;
+}
+
+.radar-herdada-valor::after {
+  content: "";
+}
