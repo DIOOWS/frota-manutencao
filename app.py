@@ -96,6 +96,7 @@ from models.membro_agenda_equipe import MembroAgendaEquipe
 from models.agenda_mes_equipe import AgendaMesEquipe
 from models.tarefa_equipe import TarefaEquipe, ExecucaoTarefaEquipe
 from models.conta_recorrente import ContaRecorrente
+from models.conta_radar_financeiro import ContaRadarFinanceiro
 from models.causa_manutencao import CausaManutencao
 from models.problema_manutencao import ProblemaManutencao
 
@@ -208,8 +209,8 @@ from routes.admin import admin_bp
 from routes.frotas import frotas_bp
 from routes.assistente import assistente_bp
 from routes.gestao import gestao_bp
-from routes.importacoes import importacoes_bp
 from routes.radar_financeiro import radar_financeiro_bp
+from routes.importacoes import importacoes_bp
 from routes.agenda_equipe import agenda_equipe_bp
 
 app.register_blueprint(dashboard_bp)
@@ -219,9 +220,9 @@ app.register_blueprint(cliente_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(frotas_bp)
 app.register_blueprint(assistente_bp)
+app.register_blueprint(radar_financeiro_bp)
 app.register_blueprint(gestao_bp)
 app.register_blueprint(importacoes_bp)
-app.register_blueprint(radar_financeiro_bp)
 app.register_blueprint(agenda_equipe_bp)
 
 
