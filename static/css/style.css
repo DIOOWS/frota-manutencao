@@ -21118,3 +21118,20 @@ body {
 .radar-recorrencia-info b {
   color: #0f172a;
 }
+
+
+/* =========================
+   RADAR - JUROS NO MODAL
+========================= */
+.radar-juros-help {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.25;
+}
+
+.radar-conta-edit-grid .radar-juros-help,
+.radar-inline-edit-grid .radar-juros-help {
+  grid-column: auto;
+}

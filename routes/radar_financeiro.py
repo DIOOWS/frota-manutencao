@@ -412,6 +412,36 @@ def atualizar_conta_por_form(conta):
     return data_vencimento
 
 
+def aplicar_juros_modal_na_conta(conta):
+    """
+    Aplica juros/acréscimo informado em formulários de modal sem mudar o banco.
+    Se o campo vier vazio ou zero, não altera nada.
+    O acréscimo é somado ao valor atual salvo no formulário e registrado em observações.
+    """
+    juros_valor = normalizar_decimal(request.form.get("juros_valor"))
+
+    if juros_valor <= Decimal("0.00"):
+        return False
+
+    valor_atual = normalizar_decimal(getattr(conta, "valor", None))
+    valor_final = valor_atual + juros_valor
+    conta.valor = valor_final
+
+    observacoes = texto(getattr(conta, "observacoes", ""))
+    detalhe = (
+        f"Juros/acréscimo aplicado no modal: {moeda(juros_valor)} | "
+        f"Valor antes do acréscimo: {moeda(valor_atual)} | "
+        f"Valor final: {moeda(valor_final)}"
+    )
+
+    if observacoes:
+        conta.observacoes = observacoes + "\n" + detalhe
+    else:
+        conta.observacoes = detalhe
+
+    return True
+
+
 # =========================================================
 # SERIALIZAÇÃO PARA TEMPLATE
 # =========================================================
@@ -947,6 +977,7 @@ def editar(id):
 
     try:
         data_vencimento = atualizar_conta_por_form(conta)
+        aplicar_juros_modal_na_conta(conta)
         db.session.commit()
         flash("Conta atualizada com sucesso.", "success")
         return redirect_contexto_form(data_vencimento)

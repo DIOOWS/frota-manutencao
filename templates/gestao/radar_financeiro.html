@@ -687,6 +687,16 @@
                                                                     <input type="hidden" name="valor" value="{{ h.valor }}" class="js-moeda-hidden">
                                                                 </div>
                                                                 <div>
+                                                                    <label>Juros/acréscimo</label>
+                                                                    <input type="text"
+                                                                           name="juros_valor"
+                                                                           class="form-control js-moeda"
+                                                                           placeholder="R$ 0,00"
+                                                                           inputmode="decimal"
+                                                                           autocomplete="off">
+                                                                    <small class="radar-juros-help">Opcional. Soma somente nesta parcela.</small>
+                                                                </div>
+                                                                <div>
                                                                     <label>Vencimento</label>
                                                                     <input type="date" name="data_vencimento" value="{{ h.data_vencimento_input }}" class="form-control">
                                                                 </div>
@@ -1208,6 +1218,17 @@
                                                                autocomplete="off"
                                                                required>
                                                         <input type="hidden" name="valor" value="{{ item.valor }}" class="js-moeda-hidden">
+                                                    </div>
+
+                                                    <div>
+                                                        <label>Juros/acréscimo</label>
+                                                        <input type="text"
+                                                               name="juros_valor"
+                                                               class="form-control js-moeda"
+                                                               placeholder="R$ 0,00"
+                                                               inputmode="decimal"
+                                                               autocomplete="off">
+                                                        <small class="radar-juros-help">Opcional. Soma somente nesta conta/parcela.</small>
                                                     </div>
 
                                                     <div>
