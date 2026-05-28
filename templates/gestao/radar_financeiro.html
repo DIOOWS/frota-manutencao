@@ -326,72 +326,13 @@
                                                 <small>{{ item.fornecedor }}</small>
                                             </div>
 
-                                            <div class="dropdown">
-                                                <button class="radar-card-menu"
-                                                        data-bs-toggle="dropdown"
-                                                        type="button">
-                                                    <i class="bi bi-three-dots-vertical"></i>
-                                                </button>
-
-                                                <ul class="dropdown-menu dropdown-menu-end radar-card-dropdown">
-                                                    {% if not item.pago and item.status != "CANCELADO" %}
-                                                        <li>
-                                                            <button type="button"
-                                                                    class="dropdown-item"
-                                                                    data-bs-toggle="modal"
-                                                                    data-bs-target="#modalPagar{{ item.id }}">
-                                                                Marcar como paga
-                                                            </button>
-                                                        </li>
-                                                    {% endif %}
-
-                                                    <li>
-                                                        <button type="button"
-                                                                class="dropdown-item"
-                                                                data-bs-toggle="modal"
-                                                                data-bs-target="#modalEditar{{ item.id }}">
-                                                            Editar
-                                                        </button>
-                                                    </li>
-
-                                                    {% if item.pago %}
-                                                        <li>
-                                                            <button type="button"
-                                                                    class="dropdown-item"
-                                                                    data-bs-toggle="modal"
-                                                                    data-bs-target="#modalTransportar{{ item.id }}">
-                                                                Transportar
-                                                            </button>
-                                                        </li>
-                                                    {% endif %}
-
-                                                    {% if item.status != "CANCELADO" %}
-                                                        <li>
-                                                            <form method="POST"
-                                                                  action="/gestao/radar-financeiro/cancelar/{{ item.id }}"
-                                                                  onsubmit="return confirm('Cancelar esta conta?');">
-                                                                <input type="hidden" name="mes_contexto" value="{{ mes }}">
-                                                                <input type="hidden" name="ano_contexto" value="{{ ano }}">
-                                                                <button type="submit" class="dropdown-item text-warning">
-                                                                    Cancelar
-                                                                </button>
-                                                            </form>
-                                                        </li>
-                                                    {% endif %}
-
-                                                    <li>
-                                                        <form method="POST"
-                                                              action="/gestao/radar-financeiro/excluir/{{ item.id }}"
-                                                              onsubmit="return confirm('Excluir definitivamente esta conta?');">
-                                                            <input type="hidden" name="mes_contexto" value="{{ mes }}">
-                                                            <input type="hidden" name="ano_contexto" value="{{ ano }}">
-                                                            <button type="submit" class="dropdown-item text-danger">
-                                                                Excluir
-                                                            </button>
-                                                        </form>
-                                                    </li>
-                                                </ul>
-                                            </div>
+                                            <button type="button"
+                                                    class="radar-card-menu radar-card-open-modal"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#modalContaNormal{{ item.id }}"
+                                                    title="Abrir detalhes da conta">
+                                                <i class="bi bi-eye-fill"></i>
+                                            </button>
                                         </div>
 
                                         <div class="radar-normal-valor">
@@ -424,10 +365,17 @@
                                             </div>
                                         {% endif %}
 
-                                        <div class="radar-normal-footer">
+                                        <div class="radar-normal-footer radar-normal-footer-actions">
                                             <span class="radar-status-pill {{ item.status_classe }}">
                                                 {{ item.status_label }}
                                             </span>
+
+                                            <button type="button"
+                                                    class="radar-card-detail-btn"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#modalContaNormal{{ item.id }}">
+                                                Gerenciar
+                                            </button>
                                         </div>
 
                                     </article>
@@ -851,6 +799,25 @@
                         </div>
 
                         <div class="col-md-3">
+                            <label class="form-label">Juros/acréscimo</label>
+                            <input type="text"
+                                   name="juros_valor"
+                                   class="form-control"
+                                   placeholder="R$ 0,00"
+                                   inputmode="decimal"
+                                   autocomplete="off">
+                            <small class="radar-juros-help">Opcional. Use só quando houver acréscimo.</small>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Aplicar juros em</label>
+                            <select name="juros_aplicar" class="form-control">
+                                <option value="PRIMEIRA">Somente na primeira parcela cadastrada</option>
+                                <option value="TODAS">Todas as parcelas geradas</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
                             <label class="form-label">Data vencimento</label>
                             <input type="date" name="data_vencimento" class="form-control" required>
                         </div>
@@ -911,7 +878,7 @@
                         <div class="col-md-12">
                             <div class="radar-recorrencia-info">
                                 <strong>Como funciona?</strong>
-                                <span><b>Recorrente mensal:</b> cria uma conta mensal. <b>Parcelada:</b> gera da primeira parcela informada para frente. Ex.: primeira 4/6 com vencimento em maio cria 4/6 maio, 5/6 junho e 6/6 julho. O sistema nunca cria parcelas para trás.</span>
+                                <span><b>Recorrente mensal:</b> cria uma conta mensal. <b>Parcelada:</b> gera da primeira parcela informada para frente. Ex.: primeira 4/6 com vencimento em maio cria 4/6 maio, 5/6 junho e 6/6 julho. <b>Juros/acréscimo:</b> pode ser aplicado somente na primeira parcela cadastrada ou em todas as parcelas geradas, sem alterar o restante da lógica.</span>
                             </div>
                         </div>
 
@@ -1049,243 +1016,249 @@
     {% endfor %}
 {% endif %}
 
-{% set radar_modal_ns = namespace(ids=[]) %}
+
+{% set radar_detalhe_ns = namespace(ids=[]) %}
 {% for coluna in colunas %}
     {% if coluna.itens is defined %}
         {% for item in coluna.itens %}
-            {% if item.id not in radar_modal_ns.ids %}
-            <div class="modal fade" id="modalPagar{{ item.id }}" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-md modal-dialog-centered">
-                    <div class="modal-content radar-herdadas-modal">
-                        <form method="POST" action="/gestao/radar-financeiro/pagar/{{ item.id }}">
-                            <input type="hidden" name="mes_contexto" value="{{ mes }}">
-                            <input type="hidden" name="ano_contexto" value="{{ ano }}">
+            {% if item.id not in radar_detalhe_ns.ids %}
+                {% set radar_detalhe_ns.ids = radar_detalhe_ns.ids + [item.id] %}
+
+                <div class="modal fade radar-conta-modal" id="modalContaNormal{{ item.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                        <div class="modal-content radar-herdadas-modal radar-conta-detalhe-modal">
                             <div class="modal-header">
-                                <h5 class="modal-title">Marcar como paga</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                <div>
+                                    <h5 class="modal-title">Conta #{{ item.id }} — {{ item.descricao }}</h5>
+                                    <small class="radar-modal-subtitle">Gestão completa da conta sem sair do radar</small>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                             </div>
 
                             <div class="modal-body">
-                                <p><strong>{{ item.descricao }}</strong></p>
+                                <div class="radar-historico-modal-grid radar-conta-detalhe-grid">
+                                    <div class="radar-historico-modal-left">
+                                        <div class="radar-historico-total">
+                                            <span>Valor da conta</span>
+                                            <strong>{{ item.valor_formatado }}</strong>
+                                            <small>
+                                                {% if item.pago %}
+                                                    Pago em {{ item.data_pagamento_formatada }}
+                                                {% else %}
+                                                    Vencimento {{ item.data_vencimento_formatada }}
+                                                {% endif %}
+                                            </small>
+                                        </div>
 
-                                <label class="form-label">Data de pagamento</label>
-                                <input type="date"
-                                       name="data_pagamento"
-                                       value="{{ hoje.strftime('%Y-%m-%d') }}"
-                                       class="form-control"
-                                       required>
-                            </div>
+                                        <div class="radar-historico-resumo">
+                                            <h3>Resumo</h3>
+                                            <p><span>Status:</span><strong>{{ item.status_label }}</strong></p>
+                                            <p><span>Setor:</span><strong>{{ item.setor }}</strong></p>
+                                            <p><span>Fornecedor:</span><strong>{{ item.fornecedor }}</strong></p>
+                                            <p><span>Categoria:</span><strong>{{ item.categoria }}</strong></p>
+                                            {% if item.parcelada %}
+                                                <p><span>Parcela:</span><strong>{{ item.parcela_label }}</strong></p>
+                                            {% endif %}
+                                        </div>
 
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                    Cancelar
-                                </button>
-                                <button class="btn btn-success">
-                                    Confirmar pagamento
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
+                                        {% if not item.pago and item.status != "CANCELADO" %}
+                                            <div class="radar-pagar-herdada radar-conta-pagamento-box">
+                                                <h3>Pagar esta conta</h3>
+                                                <form method="POST" action="/gestao/radar-financeiro/pagar/{{ item.id }}">
+                                                    <input type="hidden" name="mes_contexto" value="{{ mes }}">
+                                                    <input type="hidden" name="ano_contexto" value="{{ ano }}">
 
-            <div class="modal fade" id="modalEditar{{ item.id }}" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-                    <div class="modal-content radar-herdadas-modal">
-                        <form method="POST" action="/gestao/radar-financeiro/editar/{{ item.id }}">
-                            <input type="hidden" name="mes_contexto" value="{{ mes }}">
-                            <input type="hidden" name="ano_contexto" value="{{ ano }}">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Editar conta #{{ item.id }}</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
+                                                    <label>Data de pagamento</label>
+                                                    <input type="date"
+                                                           name="data_pagamento"
+                                                           value="{{ hoje.strftime('%Y-%m-%d') }}"
+                                                           class="form-control"
+                                                           required>
 
-                            <div class="modal-body">
-                                <div class="row g-3">
+                                                    <button type="submit">
+                                                        Marcar como paga
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        {% endif %}
 
-                                    <div class="col-md-5">
-                                        <label class="form-label">Descrição</label>
-                                        <input type="text"
-                                               name="descricao"
-                                               value="{{ item.descricao }}"
-                                               class="form-control"
-                                               required>
+                                        <div class="radar-historico-info">
+                                            <h3>Ações rápidas</h3>
+
+                                            {% if item.pago %}
+                                                <form method="POST" action="/gestao/radar-financeiro/transportar/{{ item.id }}" class="radar-conta-transporte-inline">
+                                                    <input type="hidden" name="mes_contexto" value="{{ mes }}">
+                                                    <input type="hidden" name="ano_contexto" value="{{ ano }}">
+
+                                                    <label>Transportar para</label>
+                                                    <div class="radar-conta-transporte-grid">
+                                                        <select name="mes_destino" class="form-control" required>
+                                                            {% for m in range(1,13) %}
+                                                                <option value="{{ m }}"
+                                                                        {% if mes == 12 and m == 1 %}
+                                                                            selected
+                                                                        {% elif mes < 12 and m == mes + 1 %}
+                                                                            selected
+                                                                        {% endif %}>
+                                                                    {{ nome_mes(m) }}
+                                                                </option>
+                                                            {% endfor %}
+                                                        </select>
+
+                                                        <input type="number"
+                                                               name="ano_destino"
+                                                               value="{% if mes == 12 %}{{ ano + 1 }}{% else %}{{ ano }}{% endif %}"
+                                                               class="form-control"
+                                                               required>
+                                                    </div>
+
+                                                    <button type="submit" class="radar-herdada-lote-btn success" style="width: 100%; margin-bottom: 8px;">
+                                                        <i class="bi bi-arrow-repeat"></i>
+                                                        Transportar
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+
+                                            {% if item.status != "CANCELADO" %}
+                                                <form method="POST"
+                                                      action="/gestao/radar-financeiro/cancelar/{{ item.id }}"
+                                                      onsubmit="return confirm('Cancelar esta conta?');">
+                                                    <input type="hidden" name="mes_contexto" value="{{ mes }}">
+                                                    <input type="hidden" name="ano_contexto" value="{{ ano }}">
+                                                    <button type="submit" class="radar-herdada-lote-btn warning" style="width: 100%; margin-bottom: 8px;">
+                                                        <i class="bi bi-exclamation-triangle-fill"></i>
+                                                        Cancelar conta
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+
+                                            <form method="POST"
+                                                  action="/gestao/radar-financeiro/excluir/{{ item.id }}"
+                                                  onsubmit="return confirm('Excluir definitivamente esta conta?');">
+                                                <input type="hidden" name="mes_contexto" value="{{ mes }}">
+                                                <input type="hidden" name="ano_contexto" value="{{ ano }}">
+                                                <button type="submit" class="radar-herdada-lote-btn danger" style="width: 100%;">
+                                                    <i class="bi bi-trash3-fill"></i>
+                                                    Excluir conta
+                                                </button>
+                                            </form>
+                                        </div>
                                     </div>
 
-                                    <div class="col-md-4">
-                                        <label class="form-label">Fornecedor</label>
-                                        <input type="text"
-                                               name="fornecedor"
-                                               value="{{ item.fornecedor }}"
-                                               class="form-control">
-                                    </div>
+                                    <div class="radar-historico-modal-right">
+                                        <div class="radar-historico-table-wrap radar-conta-form-wrap">
+                                            <h3>Editar dados da conta</h3>
 
-                                    <div class="col-md-3">
-                                        <label class="form-label">Categoria</label>
-                                        <input type="text"
-                                               name="categoria"
-                                               value="{{ item.categoria }}"
-                                               class="form-control">
-                                    </div>
+                                            <form method="POST" action="/gestao/radar-financeiro/editar/{{ item.id }}" class="radar-conta-edit-form">
+                                                <input type="hidden" name="mes_contexto" value="{{ mes }}">
+                                                <input type="hidden" name="ano_contexto" value="{{ ano }}">
 
-                                    <div class="col-md-3">
-                                        <label class="form-label">Setor</label>
-                                        <select name="setor" class="form-control">
-                                            <option value="ASSISTÊNCIA" {% if item.setor == "ASSISTÊNCIA" %}selected{% endif %}>ASSISTÊNCIA</option>
-                                            <option value="LOGÍSTICA" {% if item.setor == "LOGÍSTICA" %}selected{% endif %}>LOGÍSTICA</option>
-                                            <option value="GERAL" {% if item.setor == "GERAL" %}selected{% endif %}>GERAL</option>
-                                        </select>
-                                    </div>
+                                                <div class="radar-inline-edit-grid radar-conta-edit-grid">
+                                                    <div>
+                                                        <label>Descrição</label>
+                                                        <input type="text" name="descricao" value="{{ item.descricao }}" class="form-control" required>
+                                                    </div>
 
-                                    <div class="col-md-3">
-                                        <label class="form-label">Tipo da conta</label>
-                                        <select name="tipo_obrigacao" class="form-control">
-                                            <option value="UNICA" {% if item.tipo_obrigacao == "UNICA" %}selected{% endif %}>Única</option>
-                                            <option value="RECORRENTE" {% if item.tipo_obrigacao == "RECORRENTE" %}selected{% endif %}>Recorrente mensal</option>
-                                            <option value="PARCELADA" {% if item.tipo_obrigacao == "PARCELADA" %}selected{% endif %}>Parcelada</option>
-                                        </select>
-                                    </div>
+                                                    <div>
+                                                        <label>Fornecedor</label>
+                                                        <input type="text" name="fornecedor" value="{{ item.fornecedor }}" class="form-control">
+                                                    </div>
 
-                                    <div class="col-md-3">
-                                        <label class="form-label">Status</label>
-                                        <select name="status" class="form-control">
-                                            <option value="PENDENTE" {% if item.status == "PENDENTE" %}selected{% endif %}>PENDENTE</option>
-                                            <option value="ADIADO" {% if item.status == "ADIADO" %}selected{% endif %}>ADIADO</option>
-                                            <option value="PAGO" {% if item.status == "PAGO" %}selected{% endif %}>PAGO</option>
-                                            <option value="TRANSPORTADO" {% if item.status == "TRANSPORTADO" %}selected{% endif %}>TRANSPORTADO</option>
-                                            <option value="CANCELADO" {% if item.status == "CANCELADO" %}selected{% endif %}>CANCELADO</option>
-                                        </select>
-                                    </div>
+                                                    <div>
+                                                        <label>Categoria</label>
+                                                        <input type="text" name="categoria" value="{{ item.categoria }}" class="form-control">
+                                                    </div>
 
-                                    <div class="col-md-3">
-                                        <label class="form-label">Valor</label>
-                                        <input type="text"
-                                               name="valor_visual"
-                                               value="{{ item.valor_formatado }}"
-                                               class="form-control js-moeda"
-                                               inputmode="decimal"
-                                               autocomplete="off"
-                                               required>
-                                        <input type="hidden"
-                                               name="valor"
-                                               value="{{ item.valor }}"
-                                               class="js-moeda-hidden">
-                                    </div>
+                                                    <div>
+                                                        <label>Setor</label>
+                                                        <select name="setor" class="form-control">
+                                                            <option value="ASSISTÊNCIA" {% if item.setor == "ASSISTÊNCIA" %}selected{% endif %}>ASSISTÊNCIA</option>
+                                                            <option value="LOGÍSTICA" {% if item.setor == "LOGÍSTICA" %}selected{% endif %}>LOGÍSTICA</option>
+                                                            <option value="GERAL" {% if item.setor == "GERAL" %}selected{% endif %}>GERAL</option>
+                                                        </select>
+                                                    </div>
 
-                                    <div class="col-md-3">
-                                        <label class="form-label">Data vencimento</label>
-                                        <input type="date"
-                                               name="data_vencimento"
-                                               value="{{ item.data_vencimento_input }}"
-                                               class="form-control">
-                                    </div>
+                                                    <div>
+                                                        <label>Tipo</label>
+                                                        <select name="tipo_obrigacao" class="form-control">
+                                                            <option value="UNICA" {% if item.tipo_obrigacao == "UNICA" %}selected{% endif %}>Única</option>
+                                                            <option value="RECORRENTE" {% if item.tipo_obrigacao == "RECORRENTE" %}selected{% endif %}>Recorrente mensal</option>
+                                                            <option value="PARCELADA" {% if item.tipo_obrigacao == "PARCELADA" %}selected{% endif %}>Parcelada</option>
+                                                        </select>
+                                                    </div>
 
-                                    <div class="col-md-3">
-                                        <label class="form-label">Data pagamento</label>
-                                        <input type="date"
-                                               name="data_pagamento"
-                                               value="{{ item.data_pagamento_input }}"
-                                               class="form-control">
-                                    </div>
+                                                    <div>
+                                                        <label>Status</label>
+                                                        <select name="status" class="form-control">
+                                                            <option value="PENDENTE" {% if item.status == "PENDENTE" %}selected{% endif %}>PENDENTE</option>
+                                                            <option value="ADIADO" {% if item.status == "ADIADO" %}selected{% endif %}>ADIADO</option>
+                                                            <option value="PAGO" {% if item.status == "PAGO" %}selected{% endif %}>PAGO</option>
+                                                            <option value="TRANSPORTADO" {% if item.status == "TRANSPORTADO" %}selected{% endif %}>TRANSPORTADO</option>
+                                                            <option value="CANCELADO" {% if item.status == "CANCELADO" %}selected{% endif %}>CANCELADO</option>
+                                                        </select>
+                                                    </div>
 
-                                    <div class="col-md-2">
-                                        <label class="form-label">Parcela atual</label>
-                                        <input type="number"
-                                               name="parcela_atual"
-                                               value="{{ item.parcela_atual }}"
-                                               class="form-control">
-                                    </div>
+                                                    <div>
+                                                        <label>Valor</label>
+                                                        <input type="text"
+                                                               name="valor_visual"
+                                                               value="{{ item.valor_formatado }}"
+                                                               class="form-control js-moeda"
+                                                               inputmode="decimal"
+                                                               autocomplete="off"
+                                                               required>
+                                                        <input type="hidden" name="valor" value="{{ item.valor }}" class="js-moeda-hidden">
+                                                    </div>
 
-                                    <div class="col-md-2">
-                                        <label class="form-label">Total parcelas</label>
-                                        <input type="number"
-                                               name="total_parcelas"
-                                               value="{{ item.total_parcelas }}"
-                                               class="form-control">
-                                    </div>
+                                                    <div>
+                                                        <label>Vencimento</label>
+                                                        <input type="date" name="data_vencimento" value="{{ item.data_vencimento_input }}" class="form-control">
+                                                    </div>
 
-                                    <div class="col-md-12">
-                                        <label class="form-label">Observações</label>
-                                        <textarea name="observacoes"
-                                                  rows="3"
-                                                  class="form-control">{{ item.observacoes }}</textarea>
-                                    </div>
+                                                    <div>
+                                                        <label>Pagamento</label>
+                                                        <input type="date" name="data_pagamento" value="{{ item.data_pagamento_input }}" class="form-control">
+                                                    </div>
 
+                                                    <div>
+                                                        <label>Parcela atual</label>
+                                                        <input type="number" name="parcela_atual" value="{{ item.parcela_atual }}" class="form-control">
+                                                    </div>
+
+                                                    <div>
+                                                        <label>Total parcelas</label>
+                                                        <input type="number" name="total_parcelas" value="{{ item.total_parcelas }}" class="form-control">
+                                                    </div>
+
+                                                    <div class="radar-inline-edit-wide">
+                                                        <label>Observações</label>
+                                                        <textarea name="observacoes" rows="3" class="form-control">{{ item.observacoes }}</textarea>
+                                                    </div>
+                                                </div>
+
+                                                <div class="radar-conta-edit-actions">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                        Fechar
+                                                    </button>
+                                                    <button class="btn btn-primary">
+                                                        Salvar alterações
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                    Cancelar
-                                </button>
-                                <button class="btn btn-primary">
-                                    Salvar alterações
-                                </button>
-                            </div>
-                        </form>
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="modal fade" id="modalTransportar{{ item.id }}" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-md modal-dialog-centered">
-                    <div class="modal-content radar-herdadas-modal">
-                        <form method="POST" action="/gestao/radar-financeiro/transportar/{{ item.id }}">
-                            <input type="hidden" name="mes_contexto" value="{{ mes }}">
-                            <input type="hidden" name="ano_contexto" value="{{ ano }}">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Transportar conta</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-
-                            <div class="modal-body">
-                                <p><strong>{{ item.descricao }}</strong></p>
-
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Mês destino</label>
-                                        <select name="mes_destino" class="form-control" required>
-                                            {% for m in range(1,13) %}
-                                                <option value="{{ m }}"
-                                                        {% if mes == 12 and m == 1 %}
-                                                            selected
-                                                        {% elif mes < 12 and m == mes + 1 %}
-                                                            selected
-                                                        {% endif %}>
-                                                    {{ nome_mes(m) }}
-                                                </option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <label class="form-label">Ano destino</label>
-                                        <input type="number"
-                                               name="ano_destino"
-                                               value="{% if mes == 12 %}{{ ano + 1 }}{% else %}{{ ano }}{% endif %}"
-                                               class="form-control"
-                                               required>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                    Cancelar
-                                </button>
-                                <button class="btn btn-warning">
-                                    Transportar
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            {% set radar_modal_ns.ids = radar_modal_ns.ids + [item.id] %}
             {% endif %}
         {% endfor %}
     {% endif %}
 {% endfor %}
+
+
+{# Modais antigos individuais removidos: todas as colunas usam modalContaNormal por conta. #}
 
 <div class="modal fade" id="modalTransportarLote" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-md modal-dialog-centered">
@@ -2517,6 +2490,39 @@
             }));
         }
     };
+})();
+</script>
+
+
+<script>
+(function () {
+    function abrirModalContaPeloCard(event) {
+        const alvoInterativo = event.target.closest('button, a, input, select, textarea, label, form, .dropdown, .radar-card-check-label');
+        if (alvoInterativo) return;
+
+        const card = event.currentTarget;
+        const contaId = card.getAttribute('data-radar-card-id');
+        if (!contaId || !window.bootstrap) return;
+
+        const modalEl = document.getElementById('modalContaNormal' + contaId);
+        if (!modalEl) return;
+
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+    }
+
+    function ativarCardsModalRadar() {
+        document.querySelectorAll('.radar-normal-card[data-radar-card-id]').forEach(function (card) {
+            if (card.dataset.modalCardAtivo === '1') return;
+            card.dataset.modalCardAtivo = '1';
+            card.classList.add('radar-card-modal-ready');
+            card.addEventListener('click', abrirModalContaPeloCard);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', ativarCardsModalRadar);
+    document.addEventListener('radar:conteudoAtualizado', ativarCardsModalRadar);
+    setTimeout(ativarCardsModalRadar, 200);
 })();
 </script>
 

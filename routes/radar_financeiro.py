@@ -828,7 +828,32 @@ def novo():
         categoria = request.form.get("categoria")
         setor = request.form.get("setor")
         valor = request.form.get("valor")
+        valor_base = normalizar_decimal(valor)
+        juros_valor = normalizar_decimal(request.form.get("juros_valor"))
+        juros_aplicar = texto_upper(request.form.get("juros_aplicar")) or "PRIMEIRA"
         observacoes = request.form.get("observacoes")
+
+        def montar_observacao_juros(obs_original, numero_parcela=None, valor_final=None):
+            obs = texto(obs_original)
+
+            if juros_valor <= Decimal("0.00"):
+                return obs
+
+            linhas = []
+            if obs:
+                linhas.append(obs)
+
+            detalhe = (
+                f"Juros/acréscimo aplicado no cadastro: {moeda(juros_valor)} | "
+                f"Valor original: {moeda(valor_base)} | "
+                f"Valor final: {moeda(valor_final if valor_final is not None else valor_base + juros_valor)}"
+            )
+
+            if numero_parcela:
+                detalhe = f"Parcela {numero_parcela}/{total_parcelas} - " + detalhe
+
+            linhas.append(detalhe)
+            return "\n".join(linhas)
 
         if tipo_obrigacao == "PARCELADA":
             if not parcela_atual or not total_parcelas:
@@ -853,16 +878,25 @@ def novo():
                     status_parcela = "PAGO"
                     pagamento_parcela = data_pagamento
 
+                aplica_juros_parcela = juros_valor > Decimal("0.00") and (
+                    juros_aplicar == "TODAS" or numero_parcela == parcela_atual
+                )
+                valor_parcela = valor_base + juros_valor if aplica_juros_parcela else valor_base
+
                 criar_conta_radar(
                     descricao=descricao,
                     fornecedor=fornecedor,
                     categoria=categoria,
                     setor=setor,
-                    valor=valor,
+                    valor=valor_parcela,
                     data_vencimento=vencimento_parcela,
                     status=status_parcela,
                     data_pagamento=pagamento_parcela,
-                    observacoes=observacoes,
+                    observacoes=montar_observacao_juros(
+                        observacoes,
+                        numero_parcela=numero_parcela,
+                        valor_final=valor_parcela,
+                    ) if aplica_juros_parcela else observacoes,
                     parcela_atual=numero_parcela,
                     total_parcelas=total_parcelas,
                     recorrente=False,
@@ -879,16 +913,18 @@ def novo():
         parcela_atual = None
         total_parcelas = None
 
+        valor_conta = valor_base + juros_valor if juros_valor > Decimal("0.00") else valor_base
+
         criar_conta_radar(
             descricao=descricao,
             fornecedor=fornecedor,
             categoria=categoria,
             setor=setor,
-            valor=valor,
+            valor=valor_conta,
             data_vencimento=data_vencimento,
             status=status_padrao,
             data_pagamento=data_pagamento if status_padrao == "PAGO" else None,
-            observacoes=observacoes,
+            observacoes=montar_observacao_juros(observacoes, valor_final=valor_conta),
             parcela_atual=parcela_atual,
             total_parcelas=total_parcelas,
             recorrente=recorrente,
