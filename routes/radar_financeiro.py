@@ -168,6 +168,37 @@ def redirect_radar(mes=None, ano=None, grupo=None):
     return redirect("/gestao/radar-financeiro/")
 
 
+
+def mes_ano_contexto_form():
+    mes_contexto = (
+        request.form.get("mes_contexto", type=int)
+        or request.form.get("mes_retorno", type=int)
+    )
+    ano_contexto = (
+        request.form.get("ano_contexto", type=int)
+        or request.form.get("ano_retorno", type=int)
+    )
+
+    if mes_contexto and ano_contexto and 1 <= mes_contexto <= 12:
+        return mes_contexto, ano_contexto
+
+    return None, None
+
+
+def redirect_contexto_form(data_fallback=None):
+    mes_contexto, ano_contexto = mes_ano_contexto_form()
+
+    if mes_contexto and ano_contexto:
+        return redirect_radar(mes_contexto, ano_contexto)
+
+    if data_fallback:
+        data_ref = data_para_date(data_fallback)
+        if data_ref:
+            return redirect_radar(data_ref.month, data_ref.year)
+
+    return redirect(request.referrer or "/gestao/radar-financeiro/")
+
+
 def nome_mes(mes):
     nomes = {
         1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril",
@@ -630,10 +661,15 @@ def index():
         item = montar_item(conta, hoje)
 
         if conta_esta_paga(conta):
+            # PAGAS NO MÊS = tudo que saiu do caixa dentro do mês filtrado.
+            # PAGAS DE MESES ANT. = subset das pagas no mês, mas com vencimento anterior
+            # ao mês filtrado. Não aparece em meses seguintes e não soma duas vezes no fluxo.
             if pgto and primeiro_mes <= pgto <= ultimo_mes:
                 pagas_mes_itens.append(item)
-            elif pgto and pgto < primeiro_mes:
-                pagas_antigas_itens.append(item)
+
+                if venc and venc < primeiro_mes:
+                    pagas_antigas_itens.append(item)
+
             continue
 
         if not conta_esta_aberta(conta):
@@ -694,7 +730,7 @@ def index():
     pressao_imediata = total_divida_herdada + total_hoje + total_proximos_7 + total_atrasadas_mes + total_ate_fim_mes
     receitas_realizadas = 0
     receitas_previstas = 0
-    resultado_parcial = receitas_realizadas - total_pagas_mes - total_pagas_meses_anteriores
+    resultado_parcial = receitas_realizadas - total_pagas_mes
     diferenca_estimada = receitas_previstas - pressao_imediata
 
     if pressao_imediata <= 0:
@@ -771,7 +807,7 @@ def novo():
 
         if not data_vencimento:
             flash("Informe uma data de vencimento válida.", "danger")
-            return redirect(request.referrer or "/gestao/radar-financeiro/")
+            return redirect_contexto_form()
 
         status_padrao = "PAGO" if request.form.get("ja_pago") == "on" else "PENDENTE"
 
@@ -779,8 +815,12 @@ def novo():
             data_pagamento = date.today()
 
         tipo_obrigacao = texto_upper(request.form.get("tipo_obrigacao")) or "UNICA"
+
+        # Este campo passa a significar: PRIMEIRA PARCELA A CADASTRAR.
+        # Ex.: primeira=4, total=6, vencimento=Maio/2026 => cria 4/6 Maio, 5/6 Junho, 6/6 Julho.
         parcela_atual = request.form.get("parcela_atual", type=int)
         total_parcelas = request.form.get("total_parcelas", type=int)
+
         recorrente = request.form.get("recorrente") == "on" or tipo_obrigacao == "RECORRENTE"
 
         descricao = request.form.get("descricao")
@@ -790,25 +830,25 @@ def novo():
         valor = request.form.get("valor")
         observacoes = request.form.get("observacoes")
 
-        # Parcelada: gera todas as parcelas reais no banco.
-        # Exemplo: se cadastrar 18/72 com vencimento em Maio, o sistema cria
-        # 1/72 até 17/72 nos meses anteriores, 18/72 no mês informado
-        # e as demais nos meses seguintes. As anteriores aparecem como Dívida Herdada.
-        if tipo_obrigacao == "PARCELADA" and parcela_atual and total_parcelas:
+        if tipo_obrigacao == "PARCELADA":
+            if not parcela_atual or not total_parcelas:
+                flash("Informe a primeira parcela a cadastrar e o total de parcelas.", "danger")
+                return redirect_contexto_form(data_vencimento)
+
             if parcela_atual < 1 or total_parcelas < 1 or parcela_atual > total_parcelas:
-                flash("Informe parcela atual e total de parcelas válidos.", "danger")
-                return redirect(request.referrer or "/gestao/radar-financeiro/")
+                flash("Informe parcela inicial e total de parcelas válidos.", "danger")
+                return redirect_contexto_form(data_vencimento)
 
-            primeira_data = adicionar_meses(data_vencimento, -(parcela_atual - 1))
+            quantidade_criada = 0
 
-            for numero_parcela in range(1, total_parcelas + 1):
-                vencimento_parcela = adicionar_meses(primeira_data, numero_parcela - 1)
+            for numero_parcela in range(parcela_atual, total_parcelas + 1):
+                deslocamento = numero_parcela - parcela_atual
+                vencimento_parcela = adicionar_meses(data_vencimento, deslocamento)
 
                 status_parcela = "PENDENTE"
                 pagamento_parcela = None
 
-                # Se marcou como já paga, considera paga somente a parcela informada no formulário.
-                # As demais continuam em aberto para não apagar o histórico/controle financeiro.
+                # Se marcou como paga, considera paga somente a primeira parcela informada.
                 if status_padrao == "PAGO" and numero_parcela == parcela_atual:
                     status_parcela = "PAGO"
                     pagamento_parcela = data_pagamento
@@ -827,15 +867,17 @@ def novo():
                     total_parcelas=total_parcelas,
                     recorrente=False,
                 )
+                quantidade_criada += 1
 
             db.session.commit()
-            flash(f"Conta parcelada criada com {total_parcelas} parcela(s). Parcelas anteriores em aberto entram como Dívida Herdada.", "success")
-            return redirect_radar(data_vencimento.month, data_vencimento.year)
+            flash(
+                f"Conta parcelada criada com {quantidade_criada} parcela(s), começando em {parcela_atual}/{total_parcelas}.",
+                "success"
+            )
+            return redirect_contexto_form(data_vencimento)
 
-        # Conta única ou recorrente: cria somente o lançamento informado.
-        if tipo_obrigacao != "PARCELADA":
-            parcela_atual = None
-            total_parcelas = None
+        parcela_atual = None
+        total_parcelas = None
 
         criar_conta_radar(
             descricao=descricao,
@@ -854,12 +896,12 @@ def novo():
 
         db.session.commit()
         flash("Conta criada no Radar.", "success")
-        return redirect_radar(data_vencimento.month, data_vencimento.year)
+        return redirect_contexto_form(data_vencimento)
 
     except Exception as e:
         db.session.rollback()
         flash(f"Erro ao criar conta: {str(e)}", "danger")
-        return redirect(request.referrer or "/gestao/radar-financeiro/")
+        return redirect_contexto_form()
 
 
 @radar_financeiro_bp.route("/editar/<int:id>", methods=["POST"])
@@ -871,7 +913,7 @@ def editar(id):
         data_vencimento = atualizar_conta_por_form(conta)
         db.session.commit()
         flash("Conta atualizada com sucesso.", "success")
-        return redirect_radar(data_vencimento.month, data_vencimento.year)
+        return redirect_contexto_form(data_vencimento)
 
     except Exception as e:
         db.session.rollback()
@@ -890,7 +932,7 @@ def pagar(id):
         conta.data_pagamento = inicio_dia_datetime(data_pagamento)
         db.session.commit()
         flash("Conta marcada como paga.", "success")
-        return redirect(request.referrer or "/gestao/radar-financeiro/")
+        return redirect_contexto_form(data_pagamento)
     except Exception as e:
         db.session.rollback()
         flash(f"Erro ao pagar conta: {str(e)}", "danger")
@@ -1130,12 +1172,10 @@ def cancelar(id):
 def excluir(id):
     conta = ContaRadarFinanceiro.query.get_or_404(id)
     try:
-        mes = conta.mes
-        ano = conta.ano
         db.session.delete(conta)
         db.session.commit()
         flash("Conta excluída definitivamente.", "success")
-        return redirect_radar(mes, ano)
+        return redirect_contexto_form()
     except Exception as e:
         db.session.rollback()
         flash(f"Erro ao excluir conta: {str(e)}", "danger")

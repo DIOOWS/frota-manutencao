@@ -268,11 +268,11 @@
                                             </div>
 
                                             <div class="radar-herdada-valor">
-                                                {{ grupo.total_formatado }}
+                                                {{ grupo.valor_parcela_formatado or grupo.total_formatado }}
                                             </div>
 
                                             <div class="radar-herdada-desde">
-                                                Total em aberto • {{ grupo.qtd }} parcela(s) • Desde {{ grupo.desde_label }}
+                                                Valor da parcela • Total {{ grupo.total_formatado }} • {{ grupo.qtd }} em aberto
                                             </div>
 
                                             {% if grupo.parcelas_resumo %}
@@ -370,6 +370,8 @@
                                                             <form method="POST"
                                                                   action="/gestao/radar-financeiro/cancelar/{{ item.id }}"
                                                                   onsubmit="return confirm('Cancelar esta conta?');">
+                                                                <input type="hidden" name="mes_contexto" value="{{ mes }}">
+                                                                <input type="hidden" name="ano_contexto" value="{{ ano }}">
                                                                 <button type="submit" class="dropdown-item text-warning">
                                                                     Cancelar
                                                                 </button>
@@ -381,6 +383,8 @@
                                                         <form method="POST"
                                                               action="/gestao/radar-financeiro/excluir/{{ item.id }}"
                                                               onsubmit="return confirm('Excluir definitivamente esta conta?');">
+                                                            <input type="hidden" name="mes_contexto" value="{{ mes }}">
+                                                            <input type="hidden" name="ano_contexto" value="{{ ano }}">
                                                             <button type="submit" class="dropdown-item text-danger">
                                                                 Excluir
                                                             </button>
@@ -476,7 +480,7 @@
                         </div>
                         <div>
                             <span>Pagamentos até agora</span>
-                            <strong>{{ moeda(total_pagas_mes + total_pagas_meses_anteriores) }}</strong>
+                            <strong>{{ moeda(total_pagas_mes) }}</strong>
                         </div>
                         <div class="{% if resultado_parcial < 0 %}negativo{% else %}positivo{% endif %}">
                             <span>Resultado parcial</span>
@@ -576,7 +580,20 @@
                                     <h3>Informações</h3>
                                     <p>• A dívida herdada mostra somente parcelas reais cadastradas e vencidas.</p>
                                     <p>• Ao pagar ou excluir, a parcela sai deste modal sem fechar a tela.</p>
-                                    <p>• Use editar para corrigir data, valor, parcela ou fornecedor.</p>
+                                    <p>• Para apagar a conta inteira em todos os meses, use o botão abaixo.</p>
+
+                                    {% if grupo_selecionado.historico %}
+                                        <form method="POST"
+                                              action="/gestao/radar-financeiro/excluir-grupo/{{ grupo_selecionado.historico[0].id }}"
+                                              onsubmit="return confirm('Excluir esta conta completa em todos os meses? Essa ação remove todas as parcelas/lançamentos deste grupo.');">
+                                            <input type="hidden" name="mes_retorno" value="{{ mes }}">
+                                            <input type="hidden" name="ano_retorno" value="{{ ano }}">
+                                            <button type="submit" class="radar-herdada-lote-btn danger" style="width: 100%; margin-top: 12px;">
+                                                <i class="bi bi-trash3-fill"></i>
+                                                Excluir conta completa
+                                            </button>
+                                        </form>
+                                    {% endif %}
                                 </div>
                             </div>
 
@@ -640,10 +657,9 @@
                                                     <td>
                                                         <div class="radar-historico-actions">
                                                             <button type="button"
-                                                                    class="radar-historico-action-btn editar"
+                                                                    class="radar-historico-action-btn editar js-toggle-edicao-herdada"
                                                                     title="Editar esta conta"
-                                                                    data-bs-toggle="modal"
-                                                                    data-bs-target="#modalEditarHerdada{{ h.id }}">
+                                                                    data-edit-row="{{ h.id }}">
                                                                 <i class="bi bi-pencil-fill"></i>
                                                             </button>
 
@@ -661,6 +677,94 @@
                                                                 <i class="bi bi-trash3-fill"></i>
                                                             </button>
                                                         </div>
+                                                    </td>
+                                                </tr>
+                                                <tr class="radar-herdada-edit-row" id="linhaEditarHerdada{{ h.id }}" style="display: none;">
+                                                    <td colspan="8">
+                                                        <form method="POST"
+                                                              class="js-form-editar-herdada radar-herdada-inline-form"
+                                                              action="/gestao/radar-financeiro/api/herdadas/editar/{{ h.id }}">
+                                                            <input type="hidden" name="mes_contexto" value="{{ mes }}">
+                                                            <input type="hidden" name="ano_contexto" value="{{ ano }}">
+
+                                                            <div class="radar-inline-edit-head">
+                                                                <strong>Editar parcela herdada #{{ h.id }}</strong>
+                                                                <button type="button" class="radar-inline-edit-close js-toggle-edicao-herdada" data-edit-row="{{ h.id }}">
+                                                                    Fechar
+                                                                </button>
+                                                            </div>
+
+                                                            <div class="radar-inline-edit-grid">
+                                                                <div>
+                                                                    <label>Descrição</label>
+                                                                    <input type="text" name="descricao" value="{{ h.descricao }}" class="form-control" required>
+                                                                </div>
+                                                                <div>
+                                                                    <label>Fornecedor</label>
+                                                                    <input type="text" name="fornecedor" value="{{ h.fornecedor }}" class="form-control">
+                                                                </div>
+                                                                <div>
+                                                                    <label>Categoria</label>
+                                                                    <input type="text" name="categoria" value="{{ h.categoria }}" class="form-control">
+                                                                </div>
+                                                                <div>
+                                                                    <label>Setor</label>
+                                                                    <select name="setor" class="form-control">
+                                                                        <option value="ASSISTÊNCIA" {% if h.setor == "ASSISTÊNCIA" %}selected{% endif %}>ASSISTÊNCIA</option>
+                                                                        <option value="LOGÍSTICA" {% if h.setor == "LOGÍSTICA" %}selected{% endif %}>LOGÍSTICA</option>
+                                                                        <option value="GERAL" {% if h.setor == "GERAL" %}selected{% endif %}>GERAL</option>
+                                                                    </select>
+                                                                </div>
+                                                                <div>
+                                                                    <label>Tipo</label>
+                                                                    <select name="tipo_obrigacao" class="form-control">
+                                                                        <option value="UNICA" {% if h.tipo_obrigacao == "UNICA" %}selected{% endif %}>Única</option>
+                                                                        <option value="RECORRENTE" {% if h.tipo_obrigacao == "RECORRENTE" %}selected{% endif %}>Recorrente mensal</option>
+                                                                        <option value="PARCELADA" {% if h.tipo_obrigacao == "PARCELADA" %}selected{% endif %}>Parcelada</option>
+                                                                    </select>
+                                                                </div>
+                                                                <div>
+                                                                    <label>Status</label>
+                                                                    <select name="status" class="form-control">
+                                                                        <option value="PENDENTE" {% if h.status == "PENDENTE" %}selected{% endif %}>PENDENTE</option>
+                                                                        <option value="ADIADO" {% if h.status == "ADIADO" %}selected{% endif %}>ADIADO</option>
+                                                                        <option value="PAGO" {% if h.status == "PAGO" %}selected{% endif %}>PAGO</option>
+                                                                        <option value="TRANSPORTADO" {% if h.status == "TRANSPORTADO" %}selected{% endif %}>TRANSPORTADO</option>
+                                                                        <option value="CANCELADO" {% if h.status == "CANCELADO" %}selected{% endif %}>CANCELADO</option>
+                                                                    </select>
+                                                                </div>
+                                                                <div>
+                                                                    <label>Valor</label>
+                                                                    <input type="text" name="valor_visual" value="{{ h.valor_formatado }}" class="form-control js-moeda" inputmode="decimal" autocomplete="off" required>
+                                                                    <input type="hidden" name="valor" value="{{ h.valor }}" class="js-moeda-hidden">
+                                                                </div>
+                                                                <div>
+                                                                    <label>Vencimento</label>
+                                                                    <input type="date" name="data_vencimento" value="{{ h.data_vencimento_input }}" class="form-control">
+                                                                </div>
+                                                                <div>
+                                                                    <label>Pagamento</label>
+                                                                    <input type="date" name="data_pagamento" value="{{ h.data_pagamento_input }}" class="form-control">
+                                                                </div>
+                                                                <div>
+                                                                    <label>Parcela atual</label>
+                                                                    <input type="number" name="parcela_atual" value="{{ h.parcela_atual }}" class="form-control">
+                                                                </div>
+                                                                <div>
+                                                                    <label>Total parcelas</label>
+                                                                    <input type="number" name="total_parcelas" value="{{ h.total_parcelas }}" class="form-control">
+                                                                </div>
+                                                                <div class="radar-inline-edit-wide">
+                                                                    <label>Observações</label>
+                                                                    <textarea name="observacoes" rows="2" class="form-control">{{ h.observacoes }}</textarea>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="radar-inline-edit-actions">
+                                                                <button type="button" class="btn btn-secondary js-toggle-edicao-herdada" data-edit-row="{{ h.id }}">Cancelar</button>
+                                                                <button class="btn btn-primary">Salvar alterações</button>
+                                                            </div>
+                                                        </form>
                                                     </td>
                                                 </tr>
                                             {% endfor %}
@@ -689,6 +793,8 @@
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content radar-herdadas-modal">
             <form method="POST" action="/gestao/radar-financeiro/novo">
+                <input type="hidden" name="mes_contexto" value="{{ mes }}">
+                <input type="hidden" name="ano_contexto" value="{{ ano }}">
                 <div class="modal-header">
                     <h5 class="modal-title">Nova conta no Radar Financeiro</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -755,8 +861,8 @@
                         </div>
 
                         <div class="col-md-2">
-                            <label class="form-label">Parcela atual</label>
-                            <input type="number" name="parcela_atual" class="form-control" placeholder="18">
+                            <label class="form-label">Primeira parcela a cadastrar</label>
+                            <input type="number" name="parcela_atual" class="form-control" placeholder="4">
                         </div>
 
                         <div class="col-md-2">
@@ -805,7 +911,7 @@
                         <div class="col-md-12">
                             <div class="radar-recorrencia-info">
                                 <strong>Como funciona?</strong>
-                                <span><b>Recorrente mensal:</b> cria uma conta todo mês automaticamente. <b>Parcelada:</b> gera as próximas parcelas até o total informado, exemplo 18/72 até 72/72. Se não pagar, as parcelas antigas entram na Dívida Herdada.</span>
+                                <span><b>Recorrente mensal:</b> cria uma conta mensal. <b>Parcelada:</b> gera da primeira parcela informada para frente. Ex.: primeira 4/6 com vencimento em maio cria 4/6 maio, 5/6 junho e 6/6 julho. O sistema nunca cria parcelas para trás.</span>
                             </div>
                         </div>
 
@@ -915,7 +1021,7 @@
                                 </div>
 
                                 <div class="col-md-2">
-                                    <label class="form-label">Parcela atual</label>
+                                    <label class="form-label">Parcela</label>
                                     <input type="number" name="parcela_atual" value="{{ h.parcela_atual }}" class="form-control">
                                 </div>
 
@@ -943,13 +1049,17 @@
     {% endfor %}
 {% endif %}
 
+{% set radar_modal_ns = namespace(ids=[]) %}
 {% for coluna in colunas %}
     {% if coluna.itens is defined %}
         {% for item in coluna.itens %}
+            {% if item.id not in radar_modal_ns.ids %}
             <div class="modal fade" id="modalPagar{{ item.id }}" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-md modal-dialog-centered">
                     <div class="modal-content radar-herdadas-modal">
                         <form method="POST" action="/gestao/radar-financeiro/pagar/{{ item.id }}">
+                            <input type="hidden" name="mes_contexto" value="{{ mes }}">
+                            <input type="hidden" name="ano_contexto" value="{{ ano }}">
                             <div class="modal-header">
                                 <h5 class="modal-title">Marcar como paga</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -983,6 +1093,8 @@
                 <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
                     <div class="modal-content radar-herdadas-modal">
                         <form method="POST" action="/gestao/radar-financeiro/editar/{{ item.id }}">
+                            <input type="hidden" name="mes_contexto" value="{{ mes }}">
+                            <input type="hidden" name="ano_contexto" value="{{ ano }}">
                             <div class="modal-header">
                                 <h5 class="modal-title">Editar conta #{{ item.id }}</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -1119,6 +1231,8 @@
                 <div class="modal-dialog modal-md modal-dialog-centered">
                     <div class="modal-content radar-herdadas-modal">
                         <form method="POST" action="/gestao/radar-financeiro/transportar/{{ item.id }}">
+                            <input type="hidden" name="mes_contexto" value="{{ mes }}">
+                            <input type="hidden" name="ano_contexto" value="{{ ano }}">
                             <div class="modal-header">
                                 <h5 class="modal-title">Transportar conta</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -1167,6 +1281,8 @@
                     </div>
                 </div>
             </div>
+            {% set radar_modal_ns.ids = radar_modal_ns.ids + [item.id] %}
+            {% endif %}
         {% endfor %}
     {% endif %}
 {% endfor %}
@@ -2116,6 +2232,32 @@
                 radarExcluirHerdadas(radarIdsHerdadasSelecionadas());
             });
         }
+
+        document.querySelectorAll(".js-toggle-edicao-herdada").forEach(function (botao) {
+            if (botao.dataset.inicializadoEditar === "true") {
+                return;
+            }
+
+            botao.dataset.inicializadoEditar = "true";
+            botao.addEventListener("click", function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const id = this.getAttribute("data-edit-row");
+                const linha = id ? document.getElementById("linhaEditarHerdada" + id) : null;
+
+                if (!linha) {
+                    return;
+                }
+
+                const aberta = linha.style.display !== "none";
+                document.querySelectorAll(".radar-herdada-edit-row").forEach(function (outraLinha) {
+                    outraLinha.style.display = "none";
+                });
+
+                linha.style.display = aberta ? "none" : "table-row";
+            });
+        });
 
         document.querySelectorAll(".js-pagar-herdada-unica").forEach(function (botao) {
             if (botao.dataset.inicializado === "true") {
