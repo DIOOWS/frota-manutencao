@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, session, redirect
 from models.manutencao import Manutencao
 from models.afericao_termometro import AfericaoTermometro
+from models.usuario import Usuario
+from database import db
 from collections import Counter, defaultdict
 from datetime import datetime
 import json
@@ -8,11 +10,68 @@ import json
 frotas_bp = Blueprint("frotas", __name__, url_prefix="/frotas")
 
 
+# 🔐 HELPERS MULTI-CLIENTE
+def usuario_eh_admin_ou_gestao():
+    return session.get("user_role") in ["admin", "gestao", "gestor"]
+
+
+def normalizar_texto(valor):
+    if valor is None:
+        return None
+
+    valor = str(valor).strip()
+
+    if not valor:
+        return None
+
+    return " ".join(valor.split()).upper()
+
+
+def usuario_logado():
+    user_id = session.get("user_id")
+
+    if not user_id:
+        return None
+
+    return Usuario.query.get(user_id)
+
+
+def nome_cliente_usuario_logado():
+    usuario = usuario_logado()
+
+    if not usuario:
+        return None
+
+    if usuario.cliente:
+        return normalizar_texto(usuario.cliente.nome)
+
+    return None
+
+
+def aplicar_filtro_cliente(query):
+    """
+    Admin/Gestão/Gestor visualizam tudo.
+    Cliente comum visualiza somente frotas ligadas ao cliente vinculado.
+    """
+
+    if usuario_eh_admin_ou_gestao():
+        return query
+
+    cliente_nome = nome_cliente_usuario_logado()
+
+    if not cliente_nome:
+        return query.filter(Manutencao.id == 0)
+
+    return query.filter(
+        db.func.upper(Manutencao.cliente) == cliente_nome.upper()
+    )
+
+
 # 🔧 PADRONIZA FROTA
 def formatar_frota(valor):
     try:
         return str(int(float(valor)))
-    except:
+    except Exception:
         return "Sem frota"
 
 
@@ -20,7 +79,7 @@ def carregar_lista_imagens(valor):
     try:
         lista = json.loads(valor) if valor else []
         return lista if isinstance(lista, list) else []
-    except:
+    except Exception:
         return []
 
 
@@ -35,23 +94,17 @@ def buscar_afericao(numero_frota, os, tipo_termometro):
     ).first()
 
 
-def montar_status_afericao(status):
-    if not status:
-        return "-"
-    return status
-
-
 def parse_data_segura(data):
     if not data:
-        return None
+        return datetime.min
 
     if isinstance(data, datetime):
         return data
 
     try:
         return datetime.strptime(str(data), "%Y-%m-%d")
-    except:
-        return None
+    except Exception:
+        return datetime.min
 
 
 # 🔥 LISTA DE FROTAS
@@ -61,7 +114,7 @@ def lista_frotas():
     if not session.get("user_id"):
         return redirect("/login")
 
-    registros = Manutencao.query.all()
+    registros = aplicar_filtro_cliente(Manutencao.query).all()
 
     frotas_counter = Counter()
     meses_counter = defaultdict(int)
@@ -77,10 +130,9 @@ def lista_frotas():
             try:
                 mes = r.data.strftime("%m-%Y")
                 meses_counter[mes] += 1
-            except:
+            except Exception:
                 pass
 
-    # Ordena por número da frota
     frotas_ordenadas = sorted(
         frotas_counter.items(),
         key=lambda x: int(x[0]) if str(x[0]).isdigit() else 0
@@ -118,26 +170,19 @@ def detalhe_frota(frota):
     if not session.get("user_id"):
         return redirect("/login")
 
+    registros = aplicar_filtro_cliente(Manutencao.query).all()
+
     registros = [
-        r for r in Manutencao.query.all()
+        r for r in registros
         if formatar_frota(r.numero_frota) == frota
     ]
 
-    def parse_data(data):
-        if isinstance(data, datetime):
-            return data
-        try:
-            return datetime.strptime(str(data), "%Y-%m-%d")
-        except:
-            return datetime.min
-
     registros = sorted(
         registros,
-        key=lambda x: parse_data(x.data),
+        key=lambda x: parse_data_segura(x.data),
         reverse=True
     )
 
-    # Injeta aferições em cada manutenção
     for r in registros:
         afericao_placa = buscar_afericao(r.numero_frota, r.os, "PLACA")
         afericao_ambiente = buscar_afericao(r.numero_frota, r.os, "AMBIENTE")

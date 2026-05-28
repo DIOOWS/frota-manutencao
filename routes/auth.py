@@ -5,7 +5,6 @@ from database import db
 auth_bp = Blueprint("auth", __name__)
 
 
-# 🔐 LOGIN
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
 
@@ -21,8 +20,11 @@ def login():
         if user and user.check_senha(senha):
             session["user_id"] = user.id
             session["user_nome"] = user.nome
-            session["user_role"] = user.role  # 🔥 AQUI ESTÁ O SEGREDO
+            session["user_name"] = user.nome
+            session["user_role"] = user.role
             session["user_foto"] = user.foto
+            session["cliente_id"] = user.cliente_id
+            session["cliente_nome"] = user.cliente.nome if user.cliente else None
 
             return redirect("/")
 
@@ -34,7 +36,6 @@ def login():
     return render_template("auth/login.html")
 
 
-# 🔓 LOGOUT
 @auth_bp.route("/logout")
 def logout():
     session.clear()

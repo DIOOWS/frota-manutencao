@@ -176,6 +176,12 @@ with app.app_context():
         definicao_sql="INTEGER"
     )
 
+    garantir_coluna(
+        nome_tabela="usuarios",
+        nome_coluna="cliente_id",
+        definicao_sql="INTEGER"
+    )
+
 # ==========================================
 # 🔥 CRIAR ADMIN
 # ==========================================

@@ -4,6 +4,7 @@ from models.cliente import Cliente
 from models.afericao_termometro import AfericaoTermometro
 from models.causa_manutencao import CausaManutencao
 from models.problema_manutencao import ProblemaManutencao
+from models.usuario import Usuario
 from database import db
 from datetime import datetime
 import json
@@ -21,10 +22,72 @@ manutencao_bp = Blueprint("manutencao", __name__, url_prefix="/manutencoes")
 
 
 # ==========================================
+# 🔐 HELPERS MULTI-CLIENTE
+# ==========================================
+def usuario_logado():
+    user_id = session.get("user_id")
+
+    if not user_id:
+        return None
+
+    return Usuario.query.get(user_id)
+
+
+def usuario_eh_admin_ou_gestao():
+    return session.get("user_role") in ["admin", "gestao", "gestor"]
+
+
+def nome_cliente_usuario_logado():
+    usuario = usuario_logado()
+
+    if not usuario:
+        return None
+
+    if not usuario.cliente:
+        return None
+
+    return normalizar_texto(usuario.cliente.nome)
+
+
+def aplicar_filtro_cliente(query):
+    """
+    Admin/Gestão/Gestor visualizam tudo.
+    Usuário cliente visualiza somente manutenções do cliente vinculado no cadastro do usuário.
+
+    IMPORTANTE:
+    As manutenções continuam usando o campo Manutencao.cliente já existente.
+    O vínculo profissional fica em Usuario.cliente_id -> Cliente.nome.
+    """
+    if usuario_eh_admin_ou_gestao():
+        return query
+
+    cliente_nome = nome_cliente_usuario_logado()
+
+    if not cliente_nome:
+        return query.filter(Manutencao.id == 0)
+
+    return query.filter(
+        db.func.upper(Manutencao.cliente) == cliente_nome.upper()
+    )
+
+
+def manutencao_pertence_ao_usuario(manutencao):
+    if usuario_eh_admin_ou_gestao():
+        return True
+
+    cliente_nome = nome_cliente_usuario_logado()
+
+    if not cliente_nome:
+        return False
+
+    return normalizar_texto(manutencao.cliente) == cliente_nome
+
+
+# ==========================================
 # 🔥 PERMISSÃO OPERACIONAL
 # ==========================================
 def usuario_tem_permissao_operacional():
-    return session.get("user_role") in ["admin", "gestao"]
+    return session.get("user_role") in ["admin", "gestao", "gestor"]
 
 
 # ==========================================
@@ -559,6 +622,9 @@ def excluir_imagem(id):
 
     m = Manutencao.query.get_or_404(id)
 
+    if not manutencao_pertence_ao_usuario(m):
+        return jsonify({"ok": False, "message": "Sem permissão."}), 403
+
     imagem_url = request.form.get("imagem_url")
     if not imagem_url:
         return jsonify({"ok": False, "message": "Imagem não informada."}), 400
@@ -730,7 +796,7 @@ def lista():
     data_inicio = request.args.get("data_inicio")
     data_fim = request.args.get("data_fim")
 
-    query = Manutencao.query
+    query = aplicar_filtro_cliente(Manutencao.query)
 
     if filtro == "andamento":
         query = query.filter(Manutencao.status.ilike("%ANDAMENTO%"))
@@ -800,6 +866,10 @@ def editar(id):
         return redirect("/")
 
     m = Manutencao.query.get_or_404(id)
+
+    if not manutencao_pertence_ao_usuario(m):
+        flash("Você não tem permissão para acessar esta manutenção.", "danger")
+        return redirect("/manutencoes/lista")
 
     if request.method == "POST":
         numero_frota_antiga = m.numero_frota
@@ -901,6 +971,10 @@ def excluir(id):
 
     m = Manutencao.query.get_or_404(id)
 
+    if not manutencao_pertence_ao_usuario(m):
+        flash("Você não tem permissão para excluir esta manutenção.", "danger")
+        return redirect("/manutencoes/lista")
+
     if m.numero_frota and m.os:
         AfericaoTermometro.query.filter_by(
             numero_frota=str(m.numero_frota).strip(),
@@ -925,7 +999,7 @@ def exportar_excel():
     data_inicio = request.args.get("data_inicio")
     data_fim = request.args.get("data_fim")
 
-    query = Manutencao.query
+    query = aplicar_filtro_cliente(Manutencao.query)
 
     if data_inicio and data_fim:
         try:
