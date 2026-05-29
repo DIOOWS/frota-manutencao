@@ -3,6 +3,109 @@
 
 {% block content %}
 
+{% set categorias_radar = [
+    "ALIMENTAÇÃO",
+    "TRANSPORTE",
+    "IMPOSTOS",
+    "HONORÁRIOS",
+    "RH/PESSOAL",
+    "PASSAGEM",
+    "ADIANTAMENTO",
+    "SALÁRIO",
+    "UNIFORMES/EPIS",
+    "INCENTIVO",
+    "PRÊMIOS",
+    "CAFÉ/LANCHE",
+    "FÉRIAS / 13 SALÁRIO",
+    "RESCISÃO",
+    "BENEFÍCIOS",
+    "PRO-LABORE",
+    "REEMBOLSO",
+    "EMPRÉSTIMOS",
+    "TREINAMENTOS",
+    "MATERIAIS DE SERVIÇO",
+    "ADESIVO",
+    "RODÍZIO",
+    "MAT PINTURA",
+    "GALVANIZAÇÃO",
+    "OUTROS",
+    "ESTRUTURA",
+    "IMOBILIZADO",
+    "OBRAS",
+    "FERRAMENTAS",
+    "COMBUSTÍVEL",
+    "DESPESAS EXTRAS",
+    "TARIFAS",
+    "ALUGUEL",
+    "TELEFONIA/INTERNET",
+    "ENERGIA/ÁGUA",
+    "MATERIAL DE ESCRITÓRIO",
+    "TERCEIRIZAÇÃO MO",
+    "ASSINATURAS",
+    "VENDAS",
+    "SERVIÇOS",
+    "ALUGUÉIS",
+    "RENDIMENTOS",
+    "LOGÍSTICA",
+    "FRETES T",
+    "SERVIÇOS T",
+    "ATIVOS T",
+    "APORTES T",
+    "RENDIMENTOS T",
+    "REEMBOLSO T",
+    "INCENTIVO T",
+    "ALIMENTAÇÃO T",
+    "PASSAGEM T",
+    "FOLHA DE PGTO T",
+    "SALÁRIOS/COMISSÃO T",
+    "ENCARGOS T",
+    "FÉRIAS T",
+    "13° SAL T",
+    "RESCISÕES T",
+    "PRÊMIOS T",
+    "ADIANTAMENTO T",
+    "EMPRÉSTIMOS T",
+    "MKT T",
+    "REDES T",
+    "GRÁFICA T",
+    "MANUTENÇÃO T",
+    "PNEUS T",
+    "PREVENTIVA T",
+    "CORRETIVA T",
+    "MO TERCEIROS T",
+    "PEÇAS T",
+    "PEDÁGIO T",
+    "GERÊNCIA T",
+    "PRO-LABORE T",
+    "DESPESAS EXTRAS T",
+    "IMPOSTOS T",
+    "HONORÁRIOS T",
+    "TARIFAS BANCÁRIAS T",
+    "JUROS/ENCARGOS T",
+    "ESTRUTURA T",
+    "FERRAMENTAS T",
+    "IMOBILIZADO T",
+    "SEGUROS T",
+    "TERCEIRIZAÇÃO T",
+    "AGREGADOS T",
+    "IMPOSTOS MERC T",
+    "APORTES T",
+    "TELEFONIA/INTERNET T"
+] %}
+
+{% macro categoria_select(valor_atual='') %}
+<select name="categoria" class="form-control">
+    <option value="">Selecione</option>
+    {% for categoria in categorias_radar %}
+        <option value="{{ categoria }}" {% if valor_atual and valor_atual|upper == categoria|upper %}selected{% endif %}>{{ categoria }}</option>
+    {% endfor %}
+    {% if valor_atual and valor_atual not in categorias_radar %}
+        <option value="{{ valor_atual }}" selected>{{ valor_atual }}</option>
+    {% endif %}
+</select>
+{% endmacro %}
+
+
 
 <div class="gestao-page radar-herdadas-page">
 
@@ -653,7 +756,7 @@
                                                                 </div>
                                                                 <div>
                                                                     <label>Categoria</label>
-                                                                    <input type="text" name="categoria" value="{{ h.categoria }}" class="form-control">
+                                                                    {{ categoria_select(h.categoria) }}
                                                                 </div>
                                                                 <div>
                                                                     <label>Setor</label>
@@ -667,9 +770,22 @@
                                                                     <label>Tipo</label>
                                                                     <select name="tipo_obrigacao" class="form-control">
                                                                         <option value="UNICA" {% if h.tipo_obrigacao == "UNICA" %}selected{% endif %}>Única</option>
-                                                                        <option value="RECORRENTE" {% if h.tipo_obrigacao == "RECORRENTE" %}selected{% endif %}>Recorrente mensal</option>
+                                                                        <option value="RECORRENTE" {% if h.tipo_obrigacao == "RECORRENTE" %}selected{% endif %}>Recorrente mensal (gera até dezembro)</option>
                                                                         <option value="PARCELADA" {% if h.tipo_obrigacao == "PARCELADA" %}selected{% endif %}>Parcelada</option>
                                                                     </select>
+                                                                </div>
+                                                                <div class="radar-inline-edit-wide">
+                                                                    <div class="form-check radar-recorrencia-check">
+                                                                        <input class="form-check-input"
+                                                                               type="checkbox"
+                                                                               name="recorrente"
+                                                                               id="recorrenteHerdadaInline{{ h.id }}"
+                                                                               {% if h.recorrente or h.tipo_obrigacao == "RECORRENTE" %}checked{% endif %}>
+                                                                        <label class="form-check-label" for="recorrenteHerdadaInline{{ h.id }}">
+                                                                            Repetir todo mês até dezembro ao salvar
+                                                                        </label>
+                                                                        <small>Ao salvar, o sistema cria as próximas competências até dezembro sem duplicar meses já existentes.</small>
+                                                                    </div>
                                                                 </div>
                                                                 <div>
                                                                     <label>Status</label>
@@ -682,19 +798,29 @@
                                                                     </select>
                                                                 </div>
                                                                 <div>
-                                                                    <label>Valor</label>
-                                                                    <input type="text" name="valor_visual" value="{{ h.valor_formatado }}" class="form-control js-moeda" inputmode="decimal" autocomplete="off" required>
+                                                                    <label>Valor original da fatura</label>
+                                                                    <input type="text" name="valor_visual"
+                                   data-hidden-name="valor" value="{{ h.valor_formatado }}" class="form-control js-moeda" inputmode="decimal" autocomplete="off" required>
                                                                     <input type="hidden" name="valor" value="{{ h.valor }}" class="js-moeda-hidden">
                                                                 </div>
                                                                 <div>
-                                                                    <label>Juros/acréscimo</label>
+                                                                    <label>Valor com juros</label>
                                                                     <input type="text"
-                                                                           name="juros_valor"
+                                                                           name="valor_com_juros_visual"
+                                                                           data-hidden-name="valor_com_juros"
                                                                            class="form-control js-moeda"
                                                                            placeholder="R$ 0,00"
                                                                            inputmode="decimal"
                                                                            autocomplete="off">
-                                                                    <small class="radar-juros-help">Opcional. Soma somente nesta parcela.</small>
+                                                                    <input type="hidden" name="valor_com_juros" class="js-moeda-hidden">
+                                                                    <small class="radar-juros-help">Opcional. Informe o valor final com juros; a diferença será calculada automaticamente.</small>
+                                                                </div>
+                                                                <div class="radar-juros-calculado-box">
+                                                                    <label>Juros calculado</label>
+                                                                    <input type="text"
+                                                                           class="form-control js-juros-calculado"
+                                                                           value="R$ 0,00"
+                                                                           readonly>
                                                                 </div>
                                                                 <div>
                                                                     <label>Vencimento</label>
@@ -744,8 +870,6 @@
 
     </section>
 
-</div>
-
 <!-- MODAL NOVA CONTA -->
 <div class="modal fade" id="modalNovaConta" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
@@ -773,7 +897,7 @@
 
                         <div class="col-md-3">
                             <label class="form-label">Categoria</label>
-                            <input type="text" name="categoria" class="form-control">
+                            {{ categoria_select() }}
                         </div>
 
                         <div class="col-md-3">
@@ -789,15 +913,17 @@
                             <label class="form-label">Tipo da conta</label>
                             <select name="tipo_obrigacao" class="form-control">
                                 <option value="UNICA">Única</option>
-                                <option value="RECORRENTE">Recorrente mensal</option>
+                                <option value="RECORRENTE">Recorrente mensal (gera até dezembro)</option>
                                 <option value="PARCELADA">Parcelada</option>
                             </select>
+                            <small class="radar-juros-help">Recorrente cria automaticamente do mês inicial até dezembro.</small>
                         </div>
 
                         <div class="col-md-3">
-                            <label class="form-label">Valor</label>
+                            <label class="form-label">Valor original da fatura</label>
                             <input type="text"
                                    name="valor_visual"
+                                   data-hidden-name="valor"
                                    class="form-control js-moeda"
                                    placeholder="R$ 0,00"
                                    inputmode="decimal"
@@ -809,18 +935,27 @@
                         </div>
 
                         <div class="col-md-3">
-                            <label class="form-label">Juros/acréscimo</label>
+                            <label class="form-label">Valor com juros</label>
                             <input type="text"
-                                   name="juros_valor"
-                                   class="form-control"
+                                   name="valor_com_juros_visual"
+                                   data-hidden-name="valor_com_juros"
+                                   class="form-control js-moeda"
                                    placeholder="R$ 0,00"
                                    inputmode="decimal"
                                    autocomplete="off">
-                            <small class="radar-juros-help">Opcional. Use só quando houver acréscimo.</small>
+                            <input type="hidden" name="valor_com_juros" class="js-moeda-hidden">
+                            <small class="radar-juros-help">Opcional. Informe o valor final com juros; a diferença será calculada automaticamente.</small>
+                        </div>
+                        <div class="col-md-3 radar-juros-calculado-box">
+                            <label class="form-label">Juros calculado</label>
+                            <input type="text"
+                                   class="form-control js-juros-calculado"
+                                   value="R$ 0,00"
+                                   readonly>
                         </div>
 
                         <div class="col-md-3">
-                            <label class="form-label">Aplicar juros em</label>
+                            <label class="form-label">Aplicar valor com juros em</label>
                             <select name="juros_aplicar" class="form-control">
                                 <option value="PRIMEIRA">Somente na primeira parcela cadastrada</option>
                                 <option value="TODAS">Todas as parcelas geradas</option>
@@ -854,9 +989,9 @@
                                        name="recorrente"
                                        id="novaRecorrente">
                                 <label class="form-check-label" for="novaRecorrente">
-                                    Repetir todo mês
+                                    Repetir todo mês até dezembro
                                 </label>
-                                <small>Você também pode escolher “Recorrente mensal” no tipo da conta.</small>
+                                <small>Ao marcar, o sistema cria uma conta para cada mês até dezembro do ano do vencimento.</small>
                             </div>
                         </div>
 
@@ -888,7 +1023,7 @@
                         <div class="col-md-12">
                             <div class="radar-recorrencia-info">
                                 <strong>Como funciona?</strong>
-                                <span><b>Recorrente mensal:</b> cria uma conta mensal. <b>Parcelada:</b> gera da primeira parcela informada para frente. Ex.: primeira 4/6 com vencimento em maio cria 4/6 maio, 5/6 junho e 6/6 julho. <b>Juros/acréscimo:</b> pode ser aplicado somente na primeira parcela cadastrada ou em todas as parcelas geradas, sem alterar o restante da lógica.</span>
+                                <span><b>Recorrente mensal:</b> cria automaticamente contas do mês inicial até dezembro do mesmo ano. <b>Parcelada:</b> gera da primeira parcela informada para frente. Ex.: primeira 4/6 com vencimento em maio cria 4/6 maio, 5/6 junho e 6/6 julho. <b>Valor com juros:</b> informe o valor original e o valor final; o sistema calcula a diferença automaticamente e aplica conforme a opção escolhida.</span>
                             </div>
                         </div>
 
@@ -940,7 +1075,7 @@
 
                                 <div class="col-md-3">
                                     <label class="form-label">Categoria</label>
-                                    <input type="text" name="categoria" value="{{ h.categoria }}" class="form-control">
+                                    {{ categoria_select(h.categoria) }}
                                 </div>
 
                                 <div class="col-md-3">
@@ -956,9 +1091,23 @@
                                     <label class="form-label">Tipo da conta</label>
                                     <select name="tipo_obrigacao" class="form-control">
                                         <option value="UNICA" {% if h.tipo_obrigacao == "UNICA" %}selected{% endif %}>Única</option>
-                                        <option value="RECORRENTE" {% if h.tipo_obrigacao == "RECORRENTE" %}selected{% endif %}>Recorrente mensal</option>
+                                        <option value="RECORRENTE" {% if h.tipo_obrigacao == "RECORRENTE" %}selected{% endif %}>Recorrente mensal (gera até dezembro)</option>
                                         <option value="PARCELADA" {% if h.tipo_obrigacao == "PARCELADA" %}selected{% endif %}>Parcelada</option>
                                     </select>
+                                </div>
+
+                                <div class="col-md-12">
+                                    <div class="form-check radar-recorrencia-check">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               name="recorrente"
+                                               id="recorrenteHerdadaModal{{ h.id }}"
+                                               {% if h.recorrente or h.tipo_obrigacao == "RECORRENTE" %}checked{% endif %}>
+                                        <label class="form-check-label" for="recorrenteHerdadaModal{{ h.id }}">
+                                            Repetir todo mês até dezembro ao salvar
+                                        </label>
+                                        <small>Ao salvar, o sistema cria as próximas competências até dezembro sem duplicar meses já existentes.</small>
+                                    </div>
                                 </div>
 
                                 <div class="col-md-3">
@@ -973,9 +1122,10 @@
                                 </div>
 
                                 <div class="col-md-3">
-                                    <label class="form-label">Valor</label>
+                                    <label class="form-label">Valor original da fatura</label>
                                     <input type="text"
                                            name="valor_visual"
+                                           data-hidden-name="valor"
                                            value="{{ h.valor_formatado }}"
                                            class="form-control js-moeda"
                                            inputmode="decimal"
@@ -985,6 +1135,27 @@
                                            name="valor"
                                            value="{{ h.valor }}"
                                            class="js-moeda-hidden">
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label class="form-label">Valor com juros</label>
+                                    <input type="text"
+                                           name="valor_com_juros_visual"
+                                           data-hidden-name="valor_com_juros"
+                                           class="form-control js-moeda"
+                                           placeholder="R$ 0,00"
+                                           inputmode="decimal"
+                                           autocomplete="off">
+                                    <input type="hidden" name="valor_com_juros" class="js-moeda-hidden">
+                                    <small class="radar-juros-help">Opcional. Informe o valor final com juros; a diferença será calculada automaticamente.</small>
+                                </div>
+
+                                <div class="col-md-3 radar-juros-calculado-box">
+                                    <label class="form-label">Juros calculado</label>
+                                    <input type="text"
+                                           class="form-control js-juros-calculado"
+                                           value="R$ 0,00"
+                                           readonly>
                                 </div>
 
                                 <div class="col-md-3">
@@ -1176,7 +1347,7 @@
 
                                                     <div>
                                                         <label>Categoria</label>
-                                                        <input type="text" name="categoria" value="{{ item.categoria }}" class="form-control">
+                                                        {{ categoria_select(item.categoria) }}
                                                     </div>
 
                                                     <div>
@@ -1192,9 +1363,23 @@
                                                         <label>Tipo</label>
                                                         <select name="tipo_obrigacao" class="form-control">
                                                             <option value="UNICA" {% if item.tipo_obrigacao == "UNICA" %}selected{% endif %}>Única</option>
-                                                            <option value="RECORRENTE" {% if item.tipo_obrigacao == "RECORRENTE" %}selected{% endif %}>Recorrente mensal</option>
+                                                            <option value="RECORRENTE" {% if item.tipo_obrigacao == "RECORRENTE" %}selected{% endif %}>Recorrente mensal (gera até dezembro)</option>
                                                             <option value="PARCELADA" {% if item.tipo_obrigacao == "PARCELADA" %}selected{% endif %}>Parcelada</option>
                                                         </select>
+                                                    </div>
+
+                                                    <div class="radar-inline-edit-wide">
+                                                        <div class="form-check radar-recorrencia-check">
+                                                            <input class="form-check-input"
+                                                                   type="checkbox"
+                                                                   name="recorrente"
+                                                                   id="recorrenteConta{{ item.id }}"
+                                                                   {% if item.recorrente or item.tipo_obrigacao == "RECORRENTE" %}checked{% endif %}>
+                                                            <label class="form-check-label" for="recorrenteConta{{ item.id }}">
+                                                                Repetir todo mês até dezembro ao salvar
+                                                            </label>
+                                                            <small>Ao salvar, o sistema cria as próximas competências até dezembro sem duplicar meses já existentes.</small>
+                                                        </div>
                                                     </div>
 
                                                     <div>
@@ -1209,9 +1394,10 @@
                                                     </div>
 
                                                     <div>
-                                                        <label>Valor</label>
+                                                        <label>Valor original da fatura</label>
                                                         <input type="text"
                                                                name="valor_visual"
+                                   data-hidden-name="valor"
                                                                value="{{ item.valor_formatado }}"
                                                                class="form-control js-moeda"
                                                                inputmode="decimal"
@@ -1221,14 +1407,23 @@
                                                     </div>
 
                                                     <div>
-                                                        <label>Juros/acréscimo</label>
+                                                        <label>Valor com juros</label>
                                                         <input type="text"
-                                                               name="juros_valor"
+                                                               name="valor_com_juros_visual"
+                                                               data-hidden-name="valor_com_juros"
                                                                class="form-control js-moeda"
                                                                placeholder="R$ 0,00"
                                                                inputmode="decimal"
                                                                autocomplete="off">
-                                                        <small class="radar-juros-help">Opcional. Soma somente nesta conta/parcela.</small>
+                                                        <input type="hidden" name="valor_com_juros" class="js-moeda-hidden">
+                                                        <small class="radar-juros-help">Opcional. Informe o valor final com juros; a diferença será calculada automaticamente.</small>
+                                                    </div>
+                                                    <div class="radar-juros-calculado-box">
+                                                        <label>Juros calculado</label>
+                                                        <input type="text"
+                                                               class="form-control js-juros-calculado"
+                                                               value="R$ 0,00"
+                                                               readonly>
                                                     </div>
 
                                                     <div>
@@ -1387,6 +1582,9 @@
     </div>
 </div>
 
+
+</div>
+
 <script>
     function radarHerdadasMudarMes(delta) {
         const mesEl = document.getElementById("radarMes");
@@ -1486,11 +1684,49 @@
             return;
         }
 
-        const hidden = form.querySelector(".js-moeda-hidden");
+        const hiddenName = input.getAttribute("data-hidden-name");
+        let hidden = null;
+
+        if (hiddenName) {
+            hidden = form.querySelector(`[name="${hiddenName}"]`);
+        }
+
+        if (!hidden) {
+            const parent = input.parentElement;
+            hidden = parent ? parent.querySelector(".js-moeda-hidden") : null;
+        }
+
+        if (!hidden) {
+            hidden = input.nextElementSibling && input.nextElementSibling.classList.contains("js-moeda-hidden")
+                ? input.nextElementSibling
+                : null;
+        }
 
         if (hidden) {
             hidden.value = resultado.decimal;
         }
+
+        radarAtualizarJurosCalculado(form);
+    }
+
+    function radarAtualizarJurosCalculado(form) {
+        if (!form) {
+            return;
+        }
+
+        const original = form.querySelector('[name="valor"]');
+        const comJuros = form.querySelector('[name="valor_com_juros"]');
+        const calculado = form.querySelector(".js-juros-calculado");
+
+        if (!original || !comJuros || !calculado) {
+            return;
+        }
+
+        const valorOriginal = parseFloat(original.value || "0") || 0;
+        const valorFinal = parseFloat(comJuros.value || "0") || 0;
+        const juros = Math.max(valorFinal - valorOriginal, 0);
+
+        calculado.value = radarFormatarMoedaBR(juros);
     }
 
     function radarInicializarMascaraMoeda() {
@@ -1509,6 +1745,25 @@
 
             input.addEventListener("blur", function () {
                 radarAplicarMascaraMoeda(input);
+            });
+
+            input.addEventListener("input", function () {
+                const form = input.closest("form");
+
+                const hiddenName = input.getAttribute("data-hidden-name");
+                let hidden = null;
+
+                if (form && hiddenName) {
+                    hidden = form.querySelector(`[name="${hiddenName}"]`);
+                }
+
+                const resultado = radarInterpretarValorDigitado(input.value);
+
+                if (hidden) {
+                    hidden.value = resultado.decimal;
+                }
+
+                radarAtualizarJurosCalculado(form);
             });
 
             input.addEventListener("keydown", function (event) {
@@ -1530,6 +1785,10 @@
                     radarAplicarMascaraMoeda(input);
                 });
             });
+        });
+
+        document.querySelectorAll("form").forEach(function (form) {
+            radarAtualizarJurosCalculado(form);
         });
     }
 
@@ -1562,6 +1821,40 @@
 
         radarInicializarMascaraMoeda();
     });
+
+
+    function radarSincronizarRecorrenteModal() {
+        document.querySelectorAll('form').forEach(function (form) {
+            if (form.dataset.recorrenteSyncInicializado === "true") {
+                return;
+            }
+
+            const tipo = form.querySelector('[name="tipo_obrigacao"]');
+            const recorrente = form.querySelector('input[name="recorrente"]');
+
+            if (!tipo || !recorrente) {
+                return;
+            }
+
+            form.dataset.recorrenteSyncInicializado = "true";
+
+            tipo.addEventListener("change", function () {
+                if (tipo.value === "RECORRENTE") {
+                    recorrente.checked = true;
+                }
+            });
+
+            recorrente.addEventListener("change", function () {
+                if (recorrente.checked) {
+                    tipo.value = "RECORRENTE";
+                } else if (tipo.value === "RECORRENTE") {
+                    tipo.value = "UNICA";
+                }
+            });
+        });
+    }
+
+    radarSincronizarRecorrenteModal();
 
     window.inicializarMascaraMoedaRadar = radarInicializarMascaraMoeda;
 </script>
@@ -1723,6 +2016,10 @@
 
             if (window.inicializarMascaraMoedaRadar) {
                 window.inicializarMascaraMoedaRadar();
+            }
+
+            if (typeof radarSincronizarRecorrenteModal === "function") {
+                radarSincronizarRecorrenteModal();
             }
 
             radarInicializarBuscaLocal();

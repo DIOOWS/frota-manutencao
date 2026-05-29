@@ -412,34 +412,146 @@ def atualizar_conta_por_form(conta):
     return data_vencimento
 
 
-def aplicar_juros_modal_na_conta(conta):
+def calcular_valor_final_com_juros(valor_original, valor_final_informado):
     """
-    Aplica juros/acréscimo informado em formulários de modal sem mudar o banco.
-    Se o campo vier vazio ou zero, não altera nada.
-    O acréscimo é somado ao valor atual salvo no formulário e registrado em observações.
+    Recebe o valor original da fatura e, se informado, o valor final com juros.
+    Retorna: valor_original, valor_final, juros_calculado.
+    Não muda estrutura do banco: o campo valor continua recebendo o valor final.
     """
-    juros_valor = normalizar_decimal(request.form.get("juros_valor"))
+    valor_original = normalizar_decimal(valor_original)
+    valor_final = normalizar_decimal(valor_final_informado)
 
-    if juros_valor <= Decimal("0.00"):
-        return False
+    if valor_final <= Decimal("0.00"):
+        return valor_original, valor_original, Decimal("0.00")
 
-    valor_atual = normalizar_decimal(getattr(conta, "valor", None))
-    valor_final = valor_atual + juros_valor
-    conta.valor = valor_final
+    if valor_final < valor_original:
+        raise ValueError("O valor com juros não pode ser menor que o valor original da fatura.")
 
-    observacoes = texto(getattr(conta, "observacoes", ""))
+    juros_calculado = (valor_final - valor_original).quantize(Decimal("0.01"))
+    return valor_original, valor_final, juros_calculado
+
+
+def montar_observacao_valor_com_juros(obs_original, valor_original, valor_final, juros_calculado, contexto="cadastro", numero_parcela=None, total_parcelas=None):
+    obs = texto(obs_original)
+
+    if juros_calculado <= Decimal("0.00"):
+        return obs
+
+    linhas = []
+
+    if obs:
+        linhas.append(obs)
+
     detalhe = (
-        f"Juros/acréscimo aplicado no modal: {moeda(juros_valor)} | "
-        f"Valor antes do acréscimo: {moeda(valor_atual)} | "
+        f"Valor com juros calculado automaticamente no {contexto}: "
+        f"Valor original: {moeda(valor_original)} | "
+        f"Juros/acréscimo: {moeda(juros_calculado)} | "
         f"Valor final: {moeda(valor_final)}"
     )
 
-    if observacoes:
-        conta.observacoes = observacoes + "\n" + detalhe
-    else:
-        conta.observacoes = detalhe
+    if numero_parcela and total_parcelas:
+        detalhe = f"Parcela {numero_parcela}/{total_parcelas} - " + detalhe
+
+    linhas.append(detalhe)
+    return "\n".join(linhas)
+
+
+def aplicar_juros_modal_na_conta(conta):
+    """
+    No modal, o usuário informa o valor original e opcionalmente o valor com juros.
+    A diferença é calculada automaticamente e o valor final fica salvo em conta.valor.
+    """
+    valor_original, valor_final, juros_calculado = calcular_valor_final_com_juros(
+        request.form.get("valor"),
+        request.form.get("valor_com_juros")
+    )
+
+    if juros_calculado <= Decimal("0.00"):
+        return False
+
+    conta.valor = valor_final
+
+    conta.observacoes = montar_observacao_valor_com_juros(
+        getattr(conta, "observacoes", ""),
+        valor_original=valor_original,
+        valor_final=valor_final,
+        juros_calculado=juros_calculado,
+        contexto="modal"
+    )
 
     return True
+
+
+def conta_recorrente_ja_existe(conta_origem, data_destino):
+    """
+    Evita duplicar recorrências do mesmo mês/ano quando uma conta é editada.
+    Primeiro procura pelo vínculo de origem; depois confere os dados principais da conta.
+    """
+    if not conta_origem or not data_destino:
+        return None
+
+    return ContaRadarFinanceiro.query.filter(
+        ContaRadarFinanceiro.status != "CANCELADO",
+        ContaRadarFinanceiro.mes == data_destino.month,
+        ContaRadarFinanceiro.ano == data_destino.year,
+        or_(
+            ContaRadarFinanceiro.conta_origem_id == conta_origem.id,
+            and_(
+                ContaRadarFinanceiro.descricao == conta_origem.descricao,
+                ContaRadarFinanceiro.fornecedor == conta_origem.fornecedor,
+                ContaRadarFinanceiro.categoria == conta_origem.categoria,
+                ContaRadarFinanceiro.setor == conta_origem.setor,
+                ContaRadarFinanceiro.data_vencimento >= inicio_dia_datetime(data_destino),
+                ContaRadarFinanceiro.data_vencimento <= fim_dia_datetime(data_destino),
+                ContaRadarFinanceiro.recorrente == True,
+            )
+        )
+    ).first()
+
+
+def gerar_recorrencias_futuras_ate_dezembro(conta, data_vencimento):
+    """
+    Quando uma conta é editada e marcada como recorrente, cria as próximas
+    competências até dezembro do mesmo ano, sem duplicar meses já existentes.
+    """
+    if not conta or not data_vencimento:
+        return 0
+
+    if not getattr(conta, "recorrente", False):
+        return 0
+
+    if getattr(conta, "total_parcelas", None):
+        return 0
+
+    criadas = 0
+    mes_inicial = data_vencimento.month
+
+    for mes_destino in range(mes_inicial + 1, 13):
+        deslocamento = mes_destino - mes_inicial
+        vencimento_recorrente = adicionar_meses(data_vencimento, deslocamento)
+
+        if conta_recorrente_ja_existe(conta, vencimento_recorrente):
+            continue
+
+        criar_conta_radar(
+            descricao=conta.descricao,
+            fornecedor=conta.fornecedor,
+            categoria=conta.categoria,
+            setor=conta.setor,
+            valor=conta.valor,
+            data_vencimento=vencimento_recorrente,
+            status="PENDENTE",
+            data_pagamento=None,
+            observacoes=conta.observacoes,
+            parcela_atual=None,
+            total_parcelas=None,
+            recorrente=True,
+            gerado_por_transporte=True,
+            conta_origem_id=conta.id,
+        )
+        criadas += 1
+
+    return criadas
 
 
 # =========================================================
@@ -857,33 +969,16 @@ def novo():
         fornecedor = request.form.get("fornecedor")
         categoria = request.form.get("categoria")
         setor = request.form.get("setor")
-        valor = request.form.get("valor")
-        valor_base = normalizar_decimal(valor)
-        juros_valor = normalizar_decimal(request.form.get("juros_valor"))
+        valor_original_fatura = request.form.get("valor")
+        valor_com_juros_form = request.form.get("valor_com_juros")
+
+        valor_base, valor_final_informado, juros_valor = calcular_valor_final_com_juros(
+            valor_original_fatura,
+            valor_com_juros_form
+        )
+
         juros_aplicar = texto_upper(request.form.get("juros_aplicar")) or "PRIMEIRA"
         observacoes = request.form.get("observacoes")
-
-        def montar_observacao_juros(obs_original, numero_parcela=None, valor_final=None):
-            obs = texto(obs_original)
-
-            if juros_valor <= Decimal("0.00"):
-                return obs
-
-            linhas = []
-            if obs:
-                linhas.append(obs)
-
-            detalhe = (
-                f"Juros/acréscimo aplicado no cadastro: {moeda(juros_valor)} | "
-                f"Valor original: {moeda(valor_base)} | "
-                f"Valor final: {moeda(valor_final if valor_final is not None else valor_base + juros_valor)}"
-            )
-
-            if numero_parcela:
-                detalhe = f"Parcela {numero_parcela}/{total_parcelas} - " + detalhe
-
-            linhas.append(detalhe)
-            return "\n".join(linhas)
 
         if tipo_obrigacao == "PARCELADA":
             if not parcela_atual or not total_parcelas:
@@ -922,10 +1017,14 @@ def novo():
                     data_vencimento=vencimento_parcela,
                     status=status_parcela,
                     data_pagamento=pagamento_parcela,
-                    observacoes=montar_observacao_juros(
+                    observacoes=montar_observacao_valor_com_juros(
                         observacoes,
-                        numero_parcela=numero_parcela,
+                        valor_original=valor_base,
                         valor_final=valor_parcela,
+                        juros_calculado=juros_valor,
+                        contexto="cadastro",
+                        numero_parcela=numero_parcela,
+                        total_parcelas=total_parcelas,
                     ) if aplica_juros_parcela else observacoes,
                     parcela_atual=numero_parcela,
                     total_parcelas=total_parcelas,
@@ -943,7 +1042,63 @@ def novo():
         parcela_atual = None
         total_parcelas = None
 
-        valor_conta = valor_base + juros_valor if juros_valor > Decimal("0.00") else valor_base
+        # RECORRENTE MENSAL:
+        # Cria automaticamente uma conta por mês, do vencimento inicial até dezembro do mesmo ano.
+        # Ex.: vencimento 10/05/2026 => cria 10/05, 10/06, 10/07 ... 10/12.
+        # Se marcar como paga, somente a primeira competência entra como PAGO.
+        if recorrente:
+            quantidade_criada = 0
+            mes_inicial = data_vencimento.month
+            ano_inicial = data_vencimento.year
+
+            for mes_destino in range(mes_inicial, 13):
+                deslocamento = mes_destino - mes_inicial
+                vencimento_recorrente = adicionar_meses(data_vencimento, deslocamento)
+
+                status_recorrente = "PENDENTE"
+                pagamento_recorrente = None
+
+                if status_padrao == "PAGO" and mes_destino == mes_inicial:
+                    status_recorrente = "PAGO"
+                    pagamento_recorrente = data_pagamento
+
+                aplica_juros_recorrente = juros_valor > Decimal("0.00") and (
+                    juros_aplicar == "TODAS" or mes_destino == mes_inicial
+                )
+
+                valor_recorrente = valor_base + juros_valor if aplica_juros_recorrente else valor_base
+
+                criar_conta_radar(
+                    descricao=descricao,
+                    fornecedor=fornecedor,
+                    categoria=categoria,
+                    setor=setor,
+                    valor=valor_recorrente,
+                    data_vencimento=vencimento_recorrente,
+                    status=status_recorrente,
+                    data_pagamento=pagamento_recorrente,
+                    observacoes=montar_observacao_valor_com_juros(
+                        observacoes,
+                        valor_original=valor_base,
+                        valor_final=valor_recorrente,
+                        juros_calculado=juros_valor,
+                        contexto="cadastro recorrente",
+                    ) if aplica_juros_recorrente else observacoes,
+                    parcela_atual=None,
+                    total_parcelas=None,
+                    recorrente=True,
+                )
+
+                quantidade_criada += 1
+
+            db.session.commit()
+            flash(
+                f"Conta recorrente criada com {quantidade_criada} competência(s), de {nome_mes(mes_inicial)}/{ano_inicial} até Dezembro/{ano_inicial}.",
+                "success"
+            )
+            return redirect_contexto_form(data_vencimento)
+
+        valor_conta = valor_final_informado if juros_valor > Decimal("0.00") else valor_base
 
         criar_conta_radar(
             descricao=descricao,
@@ -954,10 +1109,16 @@ def novo():
             data_vencimento=data_vencimento,
             status=status_padrao,
             data_pagamento=data_pagamento if status_padrao == "PAGO" else None,
-            observacoes=montar_observacao_juros(observacoes, valor_final=valor_conta),
+            observacoes=montar_observacao_valor_com_juros(
+                observacoes,
+                valor_original=valor_base,
+                valor_final=valor_conta,
+                juros_calculado=juros_valor,
+                contexto="cadastro"
+            ),
             parcela_atual=parcela_atual,
             total_parcelas=total_parcelas,
-            recorrente=recorrente,
+            recorrente=False,
         )
 
         db.session.commit()
@@ -978,8 +1139,17 @@ def editar(id):
     try:
         data_vencimento = atualizar_conta_por_form(conta)
         aplicar_juros_modal_na_conta(conta)
+        db.session.flush()
+
+        recorrencias_criadas = gerar_recorrencias_futuras_ate_dezembro(conta, data_vencimento)
+
         db.session.commit()
-        flash("Conta atualizada com sucesso.", "success")
+
+        if recorrencias_criadas:
+            flash(f"Conta atualizada e {recorrencias_criadas} recorrência(s) futura(s) criada(s) até dezembro.", "success")
+        else:
+            flash("Conta atualizada com sucesso.", "success")
+
         return redirect_contexto_form(data_vencimento)
 
     except Exception as e:
@@ -1070,14 +1240,19 @@ def api_herdadas_editar(id):
     ano_contexto = request.form.get("ano_contexto", type=int)
 
     try:
-        atualizar_conta_por_form(conta)
+        data_vencimento = atualizar_conta_por_form(conta)
+        aplicar_juros_modal_na_conta(conta)
+        db.session.flush()
+
+        recorrencias_criadas = gerar_recorrencias_futuras_ate_dezembro(conta, data_vencimento)
+
         db.session.commit()
 
         item = montar_item(conta, date.today())
 
         return jsonify({
             "ok": True,
-            "message": "Parcela atualizada com sucesso.",
+            "message": "Parcela atualizada com sucesso." + (f" {recorrencias_criadas} recorrência(s) futura(s) criada(s) até dezembro." if recorrencias_criadas else ""),
             "id": conta.id,
             "continua_herdada": conta_continua_herdada(conta, mes_contexto, ano_contexto),
             "item": {
