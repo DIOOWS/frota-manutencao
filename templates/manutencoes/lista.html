@@ -41,7 +41,7 @@
   </div>
 
   <div class="col-md-4 mb-2 mb-md-0">
-    <input type="text" id="filtroFrota" class="form-control" placeholder="Buscar frota...">
+    <input type="text" id="filtroFrota" class="form-control" placeholder="Buscar frota ou placa...">
   </div>
 
   <div class="col-md-4">
@@ -64,7 +64,7 @@
         <th>Data Saída</th>
         <th>ATM</th>
         <th>Cliente</th>
-        <th>Frota</th>
+        <th>Frota/Placa</th>
         <th>Baú</th>
         <th>Veículo</th>
         <th>Serviço</th>
@@ -85,7 +85,15 @@
           <td>{{ m.data_saida.strftime('%d-%m-%Y') if m.data_saida else '-' }}</td>
           <td>{{ m.dtm if m.dtm is not none else '-' }}</td>
           <td>{{ m.cliente or '-' }}</td>
-          <td>{{ m.numero_frota or '-' }}</td>
+          <td>
+            {% if m.numero_frota %}
+              {{ m.numero_frota }}
+            {% elif m.placa %}
+              <span class="badge bg-warning text-dark">PLACA {{ m.placa }}</span>
+            {% else %}
+              -
+            {% endif %}
+          </td>
           <td>{{ m.bau or '-' }}</td>
           <td>{{ m.tipo_veiculo or '-' }}</td>
           <td>{{ m.tipo_servico or '-' }}</td>
@@ -102,7 +110,7 @@
                 class="btn btn-info btn-sm"
                 onclick='abrirModal(
                   {{ m.cliente|tojson }},
-                  {{ m.numero_frota|tojson }},
+                  {{ (m.numero_frota or m.placa)|tojson }},
                   {{ m.os|tojson }},
                   {{ m.tipo_servico|tojson }},
                   {{ m.tipo_atendimento|tojson }},

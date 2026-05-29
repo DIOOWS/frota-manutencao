@@ -3,7 +3,7 @@ from models.manutencao import Manutencao
 from models.afericao_termometro import AfericaoTermometro
 from models.usuario import Usuario
 from database import db
-from collections import Counter, defaultdict
+from collections import defaultdict
 from datetime import datetime
 import json
 
@@ -51,7 +51,7 @@ def nome_cliente_usuario_logado():
 def aplicar_filtro_cliente(query):
     """
     Admin/Gestão/Gestor visualizam tudo.
-    Cliente comum visualiza somente frotas ligadas ao cliente vinculado.
+    Cliente comum visualiza somente frotas/placas ligadas ao cliente vinculado.
     """
 
     if usuario_eh_admin_ou_gestao():
@@ -67,12 +67,47 @@ def aplicar_filtro_cliente(query):
     )
 
 
-# 🔧 PADRONIZA FROTA
+# 🔧 PADRONIZA FROTA / PLACA
 def formatar_frota(valor):
     try:
         return str(int(float(valor)))
     except Exception:
-        return "Sem frota"
+        return None
+
+
+def formatar_placa(valor):
+    valor = normalizar_texto(valor)
+    if not valor:
+        return None
+    return valor.replace("-", "").replace(" ", "")
+
+
+def identificador_veiculo(registro):
+    """
+    Prioridade: número da frota.
+    Se não houver frota, usa a placa do veículo.
+    """
+    frota = formatar_frota(getattr(registro, "numero_frota", None))
+
+    if frota:
+        return {
+            "codigo": frota,
+            "tipo": "FROTA",
+            "label": f"Frota {frota}",
+            "classe": "frota-normal",
+        }
+
+    placa = formatar_placa(getattr(registro, "placa", None))
+
+    if placa:
+        return {
+            "codigo": placa,
+            "tipo": "PLACA",
+            "label": f"Placa {placa}",
+            "classe": "frota-placa",
+        }
+
+    return None
 
 
 def carregar_lista_imagens(valor):
@@ -83,12 +118,12 @@ def carregar_lista_imagens(valor):
         return []
 
 
-def buscar_afericao(numero_frota, os, tipo_termometro):
-    if not numero_frota or not os:
+def buscar_afericao(identificador, os, tipo_termometro):
+    if not identificador or not os:
         return None
 
     return AfericaoTermometro.query.filter_by(
-        numero_frota=str(numero_frota).strip(),
+        numero_frota=str(identificador).strip(),
         os=str(os).strip(),
         tipo_termometro=tipo_termometro
     ).first()
@@ -107,7 +142,7 @@ def parse_data_segura(data):
         return datetime.min
 
 
-# 🔥 LISTA DE FROTAS
+# 🔥 LISTA DE FROTAS / PLACAS
 @frotas_bp.route("/")
 def lista_frotas():
 
@@ -116,15 +151,25 @@ def lista_frotas():
 
     registros = aplicar_filtro_cliente(Manutencao.query).all()
 
-    frotas_counter = Counter()
+    veiculos_map = {}
     meses_counter = defaultdict(int)
 
     for r in registros:
+        ident = identificador_veiculo(r)
 
-        frota_formatada = formatar_frota(r.numero_frota)
+        if ident:
+            codigo = ident["codigo"]
 
-        if frota_formatada and frota_formatada != "Sem frota":
-            frotas_counter[frota_formatada] += 1
+            if codigo not in veiculos_map:
+                veiculos_map[codigo] = {
+                    "codigo": codigo,
+                    "tipo": ident["tipo"],
+                    "label": ident["label"],
+                    "classe": ident["classe"],
+                    "qtd": 0,
+                }
+
+            veiculos_map[codigo]["qtd"] += 1
 
         if r.data:
             try:
@@ -134,12 +179,16 @@ def lista_frotas():
                 pass
 
     frotas_ordenadas = sorted(
-        frotas_counter.items(),
-        key=lambda x: int(x[0]) if str(x[0]).isdigit() else 0
+        veiculos_map.values(),
+        key=lambda item: (
+            0 if item["tipo"] == "FROTA" else 1,
+            int(item["codigo"]) if str(item["codigo"]).isdigit() else 999999,
+            str(item["codigo"])
+        )
     )
 
     total_frotas = len(frotas_ordenadas)
-    total_manutencoes = sum(frotas_counter.values())
+    total_manutencoes = sum(item["qtd"] for item in frotas_ordenadas)
 
     media_por_frota = round(total_manutencoes / total_frotas, 1) if total_frotas else 0
 
@@ -163,29 +212,40 @@ def lista_frotas():
     )
 
 
-# 🔥 DETALHE DA FROTA
-@frotas_bp.route("/<frota>")
-def detalhe_frota(frota):
+# 🔥 DETALHE DA FROTA / PLACA
+@frotas_bp.route("/<veiculo>")
+def detalhe_frota(veiculo):
 
     if not session.get("user_id"):
         return redirect("/login")
 
+    veiculo = formatar_placa(veiculo)
     registros = aplicar_filtro_cliente(Manutencao.query).all()
 
-    registros = [
-        r for r in registros
-        if formatar_frota(r.numero_frota) == frota
-    ]
+    registros_filtrados = []
+    tipo_identificador = "FROTA"
+
+    for r in registros:
+        ident = identificador_veiculo(r)
+        if not ident:
+            continue
+
+        if ident["codigo"] == veiculo:
+            registros_filtrados.append(r)
+            tipo_identificador = ident["tipo"]
 
     registros = sorted(
-        registros,
+        registros_filtrados,
         key=lambda x: parse_data_segura(x.data),
         reverse=True
     )
 
     for r in registros:
-        afericao_placa = buscar_afericao(r.numero_frota, r.os, "PLACA")
-        afericao_ambiente = buscar_afericao(r.numero_frota, r.os, "AMBIENTE")
+        ident = identificador_veiculo(r)
+        identificador_afericao = ident["codigo"] if ident else None
+
+        afericao_placa = buscar_afericao(identificador_afericao, r.os, "PLACA")
+        afericao_ambiente = buscar_afericao(identificador_afericao, r.os, "AMBIENTE")
 
         r.placa_afericao = afericao_placa.afericao if afericao_placa else None
         r.placa_data_afericao = (
@@ -207,6 +267,7 @@ def detalhe_frota(frota):
 
     return render_template(
         "frotas_detalhe.html",
-        frota=frota,
+        frota=veiculo,
+        tipo_identificador=tipo_identificador,
         registros=registros
     )

@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 
-{% block title %}Frota {{ frota }}{% endblock %}
+{% block title %}{% if tipo_identificador == "PLACA" %}Placa{% else %}Frota{% endif %} {{ frota }}{% endblock %}
 
 {% block content %}
 
 <div class="d-flex justify-content-between align-items-center mb-4">
 
   <div>
-    <h3 class="mb-1">Frota {{ frota }}</h3>
+    <h3 class="mb-1">{% if tipo_identificador == "PLACA" %}Placa{% else %}Frota{% endif %} {{ frota }}</h3>
     <small class="text-muted">
-      Histórico de manutenções, aferições e evidências da frota.
+      Histórico de manutenções, aferições e evidências do veículo.
     </small>
   </div>
 
@@ -116,7 +116,7 @@
                     class="btn btn-info btn-sm"
                     onclick='abrirModalFrota(
                       {{ m.cliente|tojson }},
-                      {{ m.numero_frota|tojson }},
+                      {{ (m.numero_frota or m.placa)|tojson }},
                       {{ m.os|tojson }},
                       {{ m.tipo_servico|tojson }},
                       {{ m.tipo_atendimento|tojson }},
@@ -187,7 +187,7 @@
 
           <div class="col-md-4">
             <p><strong>Cliente:</strong> <span id="mCliente"></span></p>
-            <p><strong>Frota:</strong> <span id="mFrota"></span></p>
+            <p><strong>Frota/Placa:</strong> <span id="mFrota"></span></p>
             <p><strong>OS:</strong> <span id="mOs"></span></p>
           </div>
 

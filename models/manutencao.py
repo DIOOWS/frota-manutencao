@@ -11,6 +11,7 @@ class Manutencao(db.Model):
     dtm = db.Column(db.Integer)
 
     numero_frota = db.Column(db.String)
+    placa = db.Column(db.String(20))
     os = db.Column(db.String(50))
     bau = db.Column(db.String)
     tipo_veiculo = db.Column(db.String)

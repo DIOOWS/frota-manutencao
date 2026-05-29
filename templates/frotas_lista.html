@@ -15,14 +15,14 @@
       <div>
         <h2 class="titulo-pagina">Frotas</h2>
         <p class="frotas-subtitle">
-          Visualize o histórico de manutenções por frota
+          Visualize o histórico de manutenções por frota ou placa
         </p>
       </div>
     </div>
 
     <div class="frotas-search-box">
       <span>🔎</span>
-      <input type="text" id="buscarFrota" placeholder="Buscar frota...">
+      <input type="text" id="buscarFrota" placeholder="Buscar frota ou placa...">
     </div>
 
   </div>
@@ -36,9 +36,9 @@
       </div>
 
       <div class="frotas-resumo-info">
-        <span>Total de frotas</span>
+        <span>Total de veículos</span>
         <strong>{{ total_frotas or 0 }}</strong>
-        <small>Frotas cadastradas</small>
+        <small>Frotas e placas cadastradas</small>
         <div class="frotas-resumo-line azul"></div>
       </div>
     </div>
@@ -51,7 +51,7 @@
       <div class="frotas-resumo-info">
         <span>Total de manutenções</span>
         <strong>{{ total_manutencoes or 0 }}</strong>
-        <small>Todas as frotas</small>
+        <small>Todas as frotas/placas</small>
         <div class="frotas-resumo-line roxo"></div>
       </div>
     </div>
@@ -64,7 +64,7 @@
       <div class="frotas-resumo-info">
         <span>Média por frota</span>
         <strong>{{ media_por_frota or 0 }}</strong>
-        <small>Manutenções/frota</small>
+        <small>Manutenções/veículo</small>
         <div class="frotas-resumo-line verde"></div>
       </div>
     </div>
@@ -88,22 +88,31 @@
   <div class="frotas-grid" id="frotasGrid">
 
     {% for f in frotas %}
-      <a href="/frotas/{{ f[0] }}" class="frota-card" data-frota="{{ f[0] }}">
+      <a href="/frotas/{{ f.codigo }}"
+         class="frota-card {{ f.classe }}"
+         data-frota="{{ f.codigo }} {{ f.label }} {{ f.tipo }}">
 
         <div class="frota-card-icon">
-          <img src="{{ url_for('static', filename='img/caminhao.png') }}" alt="Caminhão">
+          {% if f.tipo == "PLACA" %}
+            <span style="font-size: 30px;">🚗</span>
+          {% else %}
+            <img src="{{ url_for('static', filename='img/caminhao.png') }}" alt="Caminhão">
+          {% endif %}
         </div>
 
         <div class="frota-card-content">
 
           <div class="frota-numero">
-            {{ f[0] }}
+            {{ f.codigo }}
           </div>
 
           <div class="frota-divider"></div>
 
           <div class="frota-info">
-            {{ f[1] }} manutenção{% if f[1] != 1 %}es{% endif %}
+            <span class="frota-tipo-badge {% if f.tipo == 'PLACA' %}placa{% else %}frota{% endif %}">
+              {{ f.tipo }}
+            </span>
+            {{ f.qtd }} manutenção{% if f.qtd != 1 %}es{% endif %}
           </div>
 
           <div class="frota-link-text">
@@ -118,6 +127,8 @@
   </div>
 
 </div>
+
+
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {

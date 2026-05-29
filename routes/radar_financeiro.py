@@ -1,6 +1,7 @@
 import os
 import calendar
 import hashlib
+import re
 from decimal import Decimal
 from datetime import datetime, date, timedelta
 
@@ -456,6 +457,31 @@ def montar_observacao_valor_com_juros(obs_original, valor_original, valor_final,
     return "\n".join(linhas)
 
 
+def extrair_juros_observacao(observacoes):
+    """
+    Lê o valor de juros gravado nas observações no formato:
+    Juros/acréscimo: R$ 80,00
+
+    Retorna Decimal para somar com segurança no KPI do mês.
+    """
+    obs = texto(observacoes)
+
+    if not obs:
+        return Decimal("0.00")
+
+    total = Decimal("0.00")
+
+    padrao = re.compile(
+        r"Juros/acr[eé]scimo:\s*R?\$?\s*([0-9\.\,]+)",
+        re.IGNORECASE
+    )
+
+    for valor_txt in padrao.findall(obs):
+        total += normalizar_decimal(valor_txt)
+
+    return total.quantize(Decimal("0.01"))
+
+
 def aplicar_juros_modal_na_conta(conta):
     """
     No modal, o usuário informa o valor original e opcionalmente o valor com juros.
@@ -796,6 +822,7 @@ def index():
     pagas_mes_itens = []
     pagas_antigas_itens = []
     ate_fim_mes_itens = []
+    total_juros_mes = Decimal("0.00")
 
     for conta in contas:
         venc = data_para_date(conta.data_vencimento)
@@ -808,6 +835,7 @@ def index():
             # ao mês filtrado. Não aparece em meses seguintes e não soma duas vezes no fluxo.
             if pgto and primeiro_mes <= pgto <= ultimo_mes:
                 pagas_mes_itens.append(item)
+                total_juros_mes += extrair_juros_observacao(conta.observacoes)
 
                 if venc and venc < primeiro_mes:
                     pagas_antigas_itens.append(item)
@@ -920,6 +948,7 @@ def index():
         total_atrasadas_mes=total_atrasadas_mes,
         total_pagas_mes=total_pagas_mes,
         total_pagas_meses_anteriores=total_pagas_meses_anteriores,
+        total_juros_mes=total_juros_mes,
         pressao_imediata=pressao_imediata,
         receitas_realizadas=receitas_realizadas,
         receitas_previstas=receitas_previstas,

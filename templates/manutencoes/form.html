@@ -2,215 +2,332 @@
 
 {% block content %}
 
-<h3>{{ "Editar" if m else "Nova" }} Manutenção</h3>
+<div class="manutencao-form-page">
 
-<form method="POST" enctype="multipart/form-data">
-
-  <label>Data de Entrada</label>
-  <input type="date" name="data" class="form-control mb-2"
-         value="{{ m.data.strftime('%Y-%m-%d') if m and m.data else '' }}">
-
-  <label>Data de Saída</label>
-  <input type="date" name="data_saida" class="form-control mb-2"
-         value="{{ m.data_saida.strftime('%Y-%m-%d') if m and m.data_saida else '' }}">
-
-  <label>Tempo Médio de Atendimento</label>
-  <input type="number" class="form-control mb-2"
-         value="{{ m.dtm if m and m.dtm is not none else '' }}"
-         readonly placeholder="Calculado automaticamente">
-
-  <input name="numero_frota" class="form-control mb-2"
-         value="{{ m.numero_frota if m else '' }}" placeholder="Frota">
-
-  <input type="text" name="os" placeholder="Número da OS" class="form-control mb-2"
-         value="{{ m.os if m else '' }}">
-
-  <input name="bau" class="form-control mb-2"
-         value="{{ m.bau if m else '' }}" placeholder="Baú">
-
-  <input name="tipo_veiculo" class="form-control mb-2"
-         value="{{ m.tipo_veiculo if m else '' }}" placeholder="Tipo Veículo">
-
-  <select name="tipo_servico" class="form-control mb-2" required>
-    <option value="">Tipo Serviço</option>
-    <option value="CORRETIVA" {% if m and m.tipo_servico|upper == "CORRETIVA" %}selected{% endif %}>Corretiva</option>
-    <option value="PREVENTIVA" {% if m and m.tipo_servico|upper == "PREVENTIVA" %}selected{% endif %}>Preventiva</option>
-  </select>
-
-  <select name="tipo_atendimento" class="form-control mb-2" required>
-    <option value="">Tipo Atendimento</option>
-    <option value="INTERNO" {% if m and m.tipo_atendimento|upper == "INTERNO" %}selected{% endif %}>Interno</option>
-    <option value="EXTERNO" {% if m and m.tipo_atendimento|upper == "EXTERNO" %}selected{% endif %}>Externo</option>
-  </select>
-
-  <select name="tipo_manutencao" class="form-control mb-2" required>
-    <option value="">Tipo Manutenção</option>
-    <option value="Estrutura" {% if m and m.tipo_manutencao|upper == "ESTRUTURA" %}selected{% endif %}>Estrutura</option>
-    <option value="Refrigeração" {% if m and m.tipo_manutencao|upper == "REFRIGERAÇÃO" %}selected{% endif %}>Refrigeração</option>
-  </select>
-
-  <select name="status" class="form-control mb-2">
-    <option value="ANDAMENTO" {% if m and m.status|upper == "ANDAMENTO" %}selected{% endif %}>Em andamento</option>
-    <option value="FINALIZADO" {% if m and m.status|upper == "FINALIZADO" %}selected{% endif %}>Finalizado</option>
-  </select>
-
-  <select name="cliente" class="form-control mb-2" required>
-    <option value="">Selecione o Cliente</option>
-    {% for c in clientes %}
-      <option value="{{ c.nome }}" {% if m and m.cliente|upper == c.nome|upper %}selected{% endif %}>
-        {{ c.nome }}
-      </option>
-    {% endfor %}
-  </select>
-
-  <label>Causa</label>
-  <div class="input-group mb-2">
-    <select name="causa" id="causa" class="form-control">
-      <option value="">Selecione a Causa</option>
-      {% for c in causas %}
-        <option value="{{ c.nome }}" data-id="{{ c.id }}"
-          {% if m and m.causa and m.causa|upper == c.nome|upper %}selected{% endif %}>
-          {{ c.nome }}
-        </option>
-      {% endfor %}
-    </select>
-
-    <button type="button" class="btn btn-outline-primary" id="btnNovaCausa">+</button>
-    <button type="button" class="btn btn-outline-secondary" id="btnEditarCausa">Editar</button>
-  </div>
-
-  <label>Problema</label>
-  <div class="input-group mb-2">
-    <select name="problema" id="problema" class="form-control">
-      <option value="">Selecione primeiro a causa</option>
-    </select>
-
-    <button type="button" class="btn btn-outline-primary" id="btnNovoProblema">+</button>
-    <button type="button" class="btn btn-outline-secondary" id="btnEditarProblema">Editar</button>
-  </div>
-
-  <hr>
-  <h5>Aferição dos Termômetros</h5>
-
-  <div class="row">
-    <div class="col-md-6">
-      <div class="border rounded p-3 mb-3">
-        <h6>Termômetro de Placa</h6>
-
-        <label>Aferição</label>
-        <input type="text" name="placa_afericao" class="form-control mb-2"
-               value="{{ afericao_placa.afericao if afericao_placa else '' }}"
-               placeholder="Ex.: 3,5°C">
-
-        <label>Data</label>
-        <input type="date" name="placa_data_afericao" class="form-control mb-2"
-               value="{{ afericao_placa.data_afericao if afericao_placa else '' }}">
-
-        <label>Status</label>
-        <select name="placa_status" class="form-control mb-2">
-          <option value="">Selecione</option>
-          <option value="C" {% if afericao_placa and afericao_placa.status|upper == "C" %}selected{% endif %}>C - Conforme</option>
-          <option value="NC" {% if afericao_placa and afericao_placa.status|upper == "NC" %}selected{% endif %}>NC - Não conforme</option>
-          <option value="NA" {% if afericao_placa and afericao_placa.status|upper == "NA" %}selected{% endif %}>NA - Não se aplica</option>
-        </select>
-
-        <label>Imagens do termômetro de placa (máx. 4)</label>
-        <input type="file" name="placa_imagens" class="form-control mb-2" multiple accept="image/*">
-
-        {% if afericao_placa and afericao_placa.imagens %}
-          <div class="d-flex flex-wrap gap-2 mt-2">
-            {% for img in afericao_placa.imagens %}
-              <div class="imagem-card-afericao" data-url="{{ img }}" style="width: 140px;">
-                <img src="{{ img }}"
-                     style="width: 100%; height: 95px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd;">
-
-                <button type="button"
-                        class="btn btn-danger btn-sm w-100 mt-2 btn-excluir-imagem-afericao"
-                        data-afericao-id="{{ afericao_placa.id }}"
-                        data-imagem-url="{{ img }}">
-                  Excluir imagem
-                </button>
-              </div>
-            {% endfor %}
-          </div>
-        {% endif %}
-      </div>
+  <div class="manutencao-form-header">
+    <div>
+      <h3>{{ "Editar Manutenção" if m else "Nova Manutenção" }}</h3>
+      <p>Preencha todas as informações da manutenção, evidências e aferições.</p>
     </div>
 
-    <div class="col-md-6">
-      <div class="border rounded p-3 mb-3">
-        <h6>Termômetro de Ambiente</h6>
-
-        <label>Aferição</label>
-        <input type="text" name="ambiente_afericao" class="form-control mb-2"
-               value="{{ afericao_ambiente.afericao if afericao_ambiente else '' }}"
-               placeholder="Ex.: 7,2°C">
-
-        <label>Data</label>
-        <input type="date" name="ambiente_data_afericao" class="form-control mb-2"
-               value="{{ afericao_ambiente.data_afericao if afericao_ambiente else '' }}">
-
-        <label>Status</label>
-        <select name="ambiente_status" class="form-control mb-2">
-          <option value="">Selecione</option>
-          <option value="C" {% if afericao_ambiente and afericao_ambiente.status|upper == "C" %}selected{% endif %}>C - Conforme</option>
-          <option value="NC" {% if afericao_ambiente and afericao_ambiente.status|upper == "NC" %}selected{% endif %}>NC - Não conforme</option>
-          <option value="NA" {% if afericao_ambiente and afericao_ambiente.status|upper == "NA" %}selected{% endif %}>NA - Não se aplica</option>
-        </select>
-
-        <label>Imagens do termômetro de ambiente (máx. 4)</label>
-        <input type="file" name="ambiente_imagens" class="form-control mb-2" multiple accept="image/*">
-
-        {% if afericao_ambiente and afericao_ambiente.imagens %}
-          <div class="d-flex flex-wrap gap-2 mt-2">
-            {% for img in afericao_ambiente.imagens %}
-              <div class="imagem-card-afericao" data-url="{{ img }}" style="width: 140px;">
-                <img src="{{ img }}"
-                     style="width: 100%; height: 95px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd;">
-
-                <button type="button"
-                        class="btn btn-danger btn-sm w-100 mt-2 btn-excluir-imagem-afericao"
-                        data-afericao-id="{{ afericao_ambiente.id }}"
-                        data-imagem-url="{{ img }}">
-                  Excluir imagem
-                </button>
-              </div>
-            {% endfor %}
+    {% if m and (m.placa or m.numero_frota) %}
+      {% if m.numero_frota %}
+        <div class="manutencao-identificacao-card frota">
+          <span class="manutencao-identificacao-icon">🚚</span>
+          <div>
+            <strong>{{ m.numero_frota }}</strong>
+            <small>FROTA</small>
           </div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-
-  <label>Imagem</label>
-  <input type="file" name="imagens" class="form-control mb-2" multiple>
-
-  <textarea name="observacao" class="form-control mb-2" placeholder="Observação">{{ m.observacao if m else '' }}</textarea>
-
-  {% if m and imagens_lista %}
-    <hr>
-    <h5>Imagens cadastradas</h5>
-
-    <div id="galeriaImagens" class="d-flex flex-wrap gap-3 mb-3">
-      {% for img in imagens_lista %}
-        <div class="imagem-card" data-url="{{ img }}" style="width: 160px;">
-          <img src="{{ img }}"
-               style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd;">
-
-          <button type="button"
-                  class="btn btn-danger btn-sm w-100 mt-2 btn-excluir-imagem"
-                  data-manutencao-id="{{ m.id }}"
-                  data-imagem-url="{{ img }}">
-            Excluir imagem
-          </button>
         </div>
-      {% endfor %}
+      {% else %}
+        <div class="manutencao-identificacao-card placa">
+          <span class="manutencao-identificacao-icon">🚗</span>
+          <div>
+            <strong>{{ m.placa }}</strong>
+            <small>PLACA</small>
+          </div>
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+
+  <form method="POST" enctype="multipart/form-data" class="manutencao-premium-form">
+
+    <section class="manutencao-section-card">
+      <div class="manutencao-section-title">
+        <span></span>
+        <h5>Informações da Manutenção</h5>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Data de Entrada</label>
+          <input type="date" name="data" class="form-control"
+                 value="{{ m.data.strftime('%Y-%m-%d') if m and m.data else '' }}">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Data de Saída</label>
+          <input type="date" name="data_saida" class="form-control"
+                 value="{{ m.data_saida.strftime('%Y-%m-%d') if m and m.data_saida else '' }}">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Tempo Médio de Atendimento</label>
+          <input type="number" class="form-control"
+                 value="{{ m.dtm if m and m.dtm is not none else '' }}"
+                 readonly placeholder="Calculado automaticamente">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Frota</label>
+          <input name="numero_frota" class="form-control"
+                 value="{{ m.numero_frota if m else '' }}" placeholder="Ex.: 104">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Placa do Veículo</label>
+          <input name="placa" class="form-control"
+                 value="{{ m.placa if m and m.placa else '' }}"
+                 placeholder="Ex.: ABC1D23">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Número da OS</label>
+          <input type="text" name="os" class="form-control"
+                 value="{{ m.os if m else '' }}" placeholder="Número da OS">
+        </div>
+
+        <div class="col-12">
+          <div class="manutencao-info-alert">
+            <strong>ℹ</strong>
+            <span>Informe <b>Frota</b> quando houver número de frota. Use <b>Placa</b> quando for carro/veículo sem frota. Se preencher os dois, a tela de Frotas prioriza a frota.</span>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Baú</label>
+          <input name="bau" class="form-control"
+                 value="{{ m.bau if m else '' }}" placeholder="Baú">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Tipo de Veículo</label>
+          <input name="tipo_veiculo" class="form-control"
+                 value="{{ m.tipo_veiculo if m else '' }}" placeholder="Tipo Veículo">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Cliente</label>
+          <select name="cliente" class="form-control" required>
+            <option value="">Selecione o Cliente</option>
+            {% for c in clientes %}
+              <option value="{{ c.nome }}" {% if m and m.cliente|upper == c.nome|upper %}selected{% endif %}>
+                {{ c.nome }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Tipo de Serviço</label>
+          <select name="tipo_servico" class="form-control" required>
+            <option value="">Selecione</option>
+            <option value="CORRETIVA" {% if m and m.tipo_servico|upper == "CORRETIVA" %}selected{% endif %}>Corretiva</option>
+            <option value="PREVENTIVA" {% if m and m.tipo_servico|upper == "PREVENTIVA" %}selected{% endif %}>Preventiva</option>
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Tipo de Atendimento</label>
+          <select name="tipo_atendimento" class="form-control" required>
+            <option value="">Selecione</option>
+            <option value="INTERNO" {% if m and m.tipo_atendimento|upper == "INTERNO" %}selected{% endif %}>Interno</option>
+            <option value="EXTERNO" {% if m and m.tipo_atendimento|upper == "EXTERNO" %}selected{% endif %}>Externo</option>
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Tipo de Manutenção</label>
+          <select name="tipo_manutencao" class="form-control" required>
+            <option value="">Selecione</option>
+            <option value="Estrutura" {% if m and m.tipo_manutencao|upper == "ESTRUTURA" %}selected{% endif %}>Estrutura</option>
+            <option value="Refrigeração" {% if m and m.tipo_manutencao|upper == "REFRIGERAÇÃO" %}selected{% endif %}>Refrigeração</option>
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Status</label>
+          <select name="status" class="form-control">
+            <option value="ANDAMENTO" {% if m and m.status|upper == "ANDAMENTO" %}selected{% endif %}>Em andamento</option>
+            <option value="FINALIZADO" {% if m and m.status|upper == "FINALIZADO" %}selected{% endif %}>Finalizado</option>
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Causa</label>
+          <div class="input-group">
+            <select name="causa" id="causa" class="form-control">
+              <option value="">Selecione a Causa</option>
+              {% for c in causas %}
+                <option value="{{ c.nome }}" data-id="{{ c.id }}"
+                  {% if m and m.causa and m.causa|upper == c.nome|upper %}selected{% endif %}>
+                  {{ c.nome }}
+                </option>
+              {% endfor %}
+            </select>
+            <button type="button" class="btn btn-outline-primary" id="btnNovaCausa">+</button>
+            <button type="button" class="btn btn-outline-secondary" id="btnEditarCausa">Editar</button>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Problema</label>
+          <div class="input-group">
+            <select name="problema" id="problema" class="form-control">
+              <option value="">Selecione primeiro a causa</option>
+            </select>
+            <button type="button" class="btn btn-outline-primary" id="btnNovoProblema">+</button>
+            <button type="button" class="btn btn-outline-secondary" id="btnEditarProblema">Editar</button>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">Observação</label>
+          <textarea name="observacao" class="form-control" rows="3" placeholder="Observação">{{ m.observacao if m else '' }}</textarea>
+        </div>
+      </div>
+    </section>
+
+    <section class="manutencao-section-card">
+      <div class="manutencao-section-title">
+        <span></span>
+        <h5>Evidências da Manutenção</h5>
+      </div>
+
+      <div class="manutencao-upload-panel">
+        <label class="form-label">Imagens da Manutenção</label>
+        <input type="file" name="imagens" class="form-control" multiple accept="image/*">
+        <small>Você pode adicionar novas imagens sem apagar as imagens já cadastradas.</small>
+
+        {% if m and imagens_lista %}
+          <div id="galeriaImagens" class="manutencao-gallery mt-3">
+            {% for img in imagens_lista %}
+              <div class="manutencao-img-card imagem-card" data-url="{{ img }}">
+                <img src="{{ img }}" alt="Imagem da manutenção">
+                <button type="button"
+                        class="manutencao-img-remove btn-excluir-imagem"
+                        data-manutencao-id="{{ m.id }}"
+                        data-imagem-url="{{ img }}">
+                  ×
+                </button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="manutencao-section-card">
+      <div class="manutencao-section-title">
+        <span></span>
+        <h5>Aferição dos Termômetros</h5>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="termometro-card">
+            <h6>Termômetro de Placa</h6>
+
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">Aferição</label>
+                <input type="text" name="placa_afericao" class="form-control"
+                       value="{{ afericao_placa.afericao if afericao_placa else '' }}"
+                       placeholder="Ex.: 3,5°C">
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Data da Aferição</label>
+                <input type="date" name="placa_data_afericao" class="form-control"
+                       value="{{ afericao_placa.data_afericao if afericao_placa else '' }}">
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Status</label>
+                <select name="placa_status" class="form-control">
+                  <option value="">Selecione</option>
+                  <option value="C" {% if afericao_placa and afericao_placa.status|upper == "C" %}selected{% endif %}>C - Conforme</option>
+                  <option value="NC" {% if afericao_placa and afericao_placa.status|upper == "NC" %}selected{% endif %}>NC - Não conforme</option>
+                  <option value="NA" {% if afericao_placa and afericao_placa.status|upper == "NA" %}selected{% endif %}>NA - Não se aplica</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <label class="form-label">Imagens do Termômetro de Placa</label>
+              <input type="file" name="placa_imagens" class="form-control" multiple accept="image/*">
+
+              {% if afericao_placa and afericao_placa.imagens %}
+                <div class="manutencao-gallery mt-3">
+                  {% for img in afericao_placa.imagens %}
+                    <div class="manutencao-img-card imagem-card-afericao" data-url="{{ img }}">
+                      <img src="{{ img }}" alt="Imagem termômetro placa">
+                      <button type="button"
+                              class="manutencao-img-remove btn-excluir-imagem-afericao"
+                              data-afericao-id="{{ afericao_placa.id }}"
+                              data-imagem-url="{{ img }}">
+                        ×
+                      </button>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="termometro-card">
+            <h6>Termômetro de Ambiente</h6>
+
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">Aferição</label>
+                <input type="text" name="ambiente_afericao" class="form-control"
+                       value="{{ afericao_ambiente.afericao if afericao_ambiente else '' }}"
+                       placeholder="Ex.: 7,2°C">
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Data da Aferição</label>
+                <input type="date" name="ambiente_data_afericao" class="form-control"
+                       value="{{ afericao_ambiente.data_afericao if afericao_ambiente else '' }}">
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Status</label>
+                <select name="ambiente_status" class="form-control">
+                  <option value="">Selecione</option>
+                  <option value="C" {% if afericao_ambiente and afericao_ambiente.status|upper == "C" %}selected{% endif %}>C - Conforme</option>
+                  <option value="NC" {% if afericao_ambiente and afericao_ambiente.status|upper == "NC" %}selected{% endif %}>NC - Não conforme</option>
+                  <option value="NA" {% if afericao_ambiente and afericao_ambiente.status|upper == "NA" %}selected{% endif %}>NA - Não se aplica</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <label class="form-label">Imagens do Termômetro de Ambiente</label>
+              <input type="file" name="ambiente_imagens" class="form-control" multiple accept="image/*">
+
+              {% if afericao_ambiente and afericao_ambiente.imagens %}
+                <div class="manutencao-gallery mt-3">
+                  {% for img in afericao_ambiente.imagens %}
+                    <div class="manutencao-img-card imagem-card-afericao" data-url="{{ img }}">
+                      <img src="{{ img }}" alt="Imagem termômetro ambiente">
+                      <button type="button"
+                              class="manutencao-img-remove btn-excluir-imagem-afericao"
+                              data-afericao-id="{{ afericao_ambiente.id }}"
+                              data-imagem-url="{{ img }}">
+                        ×
+                      </button>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="manutencao-form-actions">
+      <a href="/manutencoes/lista" class="btn btn-light">Cancelar</a>
+      <button class="btn manutencao-save-btn">Salvar Manutenção</button>
     </div>
-  {% endif %}
 
-  <button class="btn btn-primary">Salvar</button>
-
-</form>
+  </form>
+</div>
 
 <div class="modal fade" id="modalCausa" tabindex="-1">
   <div class="modal-dialog">

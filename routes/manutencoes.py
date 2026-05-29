@@ -191,6 +191,18 @@ def normalizar_simples(valor):
     return " ".join(valor.split())
 
 
+
+
+def identificador_veiculo(numero_frota=None, placa=None):
+    """Usa a frota quando existir; se não existir, usa a placa como identificador do veículo."""
+    frota = normalizar_simples(numero_frota)
+    placa_norm = normalizar_texto(placa)
+
+    if frota:
+        return frota
+
+    return placa_norm
+
 def calcular_dtm(data_entrada, data_saida):
     if not data_entrada or not data_saida:
         return None
@@ -712,7 +724,9 @@ def nova():
         caminhos_imagens = salvar_imagens()
 
         numero_frota = normalizar_simples(request.form.get("numero_frota"))
+        placa = normalizar_texto(request.form.get("placa"))
         os_numero = normalizar_simples(request.form.get("os"))
+        identificador_afericao = identificador_veiculo(numero_frota, placa)
 
         placa_novas_imagens = salvar_imagens_arquivos(request.files.getlist("placa_imagens"))
         ambiente_novas_imagens = salvar_imagens_arquivos(request.files.getlist("ambiente_imagens"))
@@ -722,6 +736,7 @@ def nova():
             data_saida=data_saida_convertida,
             dtm=dtm_calculado,
             numero_frota=numero_frota,
+            placa=placa,
             bau=normalizar_texto(request.form.get("bau")),
             tipo_veiculo=normalizar_texto(request.form.get("tipo_veiculo")),
             tipo_servico=normalizar_texto(request.form.get("tipo_servico")),
@@ -740,7 +755,7 @@ def nova():
             db.session.add(nova_manutencao)
 
             salvar_ou_atualizar_afericao(
-                numero_frota=numero_frota,
+                numero_frota=identificador_afericao,
                 os=os_numero,
                 tipo_termometro="PLACA",
                 afericao=request.form.get("placa_afericao"),
@@ -750,7 +765,7 @@ def nova():
             )
 
             salvar_ou_atualizar_afericao(
-                numero_frota=numero_frota,
+                numero_frota=identificador_afericao,
                 os=os_numero,
                 tipo_termometro="AMBIENTE",
                 afericao=request.form.get("ambiente_afericao"),
@@ -818,14 +833,16 @@ def lista():
     ).all()
 
     for r in registros:
+        identificador_afericao = identificador_veiculo(r.numero_frota, getattr(r, "placa", None))
+
         afericao_placa = AfericaoTermometro.query.filter_by(
-            numero_frota=str(r.numero_frota).strip() if r.numero_frota else "",
+            numero_frota=str(identificador_afericao).strip() if identificador_afericao else "",
             os=str(r.os).strip() if r.os else "",
             tipo_termometro="PLACA"
         ).first()
 
         afericao_ambiente = AfericaoTermometro.query.filter_by(
-            numero_frota=str(r.numero_frota).strip() if r.numero_frota else "",
+            numero_frota=str(identificador_afericao).strip() if identificador_afericao else "",
             os=str(r.os).strip() if r.os else "",
             tipo_termometro="AMBIENTE"
         ).first()
@@ -872,7 +889,7 @@ def editar(id):
         return redirect("/manutencoes/lista")
 
     if request.method == "POST":
-        numero_frota_antiga = m.numero_frota
+        numero_frota_antiga = identificador_veiculo(m.numero_frota, getattr(m, "placa", None))
         os_antiga = m.os
 
         m.data = parse_data(request.form.get("data"))
@@ -886,6 +903,8 @@ def editar(id):
             m.imagens = json.dumps(imagens_atuais + novas_imagens)
 
         m.numero_frota = normalizar_simples(request.form.get("numero_frota"))
+        m.placa = normalizar_texto(request.form.get("placa"))
+        identificador_afericao_novo = identificador_veiculo(m.numero_frota, m.placa)
         m.bau = normalizar_texto(request.form.get("bau"))
         m.tipo_veiculo = normalizar_texto(request.form.get("tipo_veiculo"))
         m.tipo_servico = normalizar_texto(request.form.get("tipo_servico"))
@@ -905,12 +924,12 @@ def editar(id):
             mover_afericoes_se_trocar_frota_ou_os(
                 numero_frota_antiga=numero_frota_antiga,
                 os_antiga=os_antiga,
-                numero_frota_nova=m.numero_frota,
+                numero_frota_nova=identificador_afericao_novo,
                 os_nova=m.os
             )
 
             salvar_ou_atualizar_afericao(
-                numero_frota=m.numero_frota,
+                numero_frota=identificador_afericao_novo,
                 os=m.os,
                 tipo_termometro="PLACA",
                 afericao=request.form.get("placa_afericao"),
@@ -920,7 +939,7 @@ def editar(id):
             )
 
             salvar_ou_atualizar_afericao(
-                numero_frota=m.numero_frota,
+                numero_frota=identificador_afericao_novo,
                 os=m.os,
                 tipo_termometro="AMBIENTE",
                 afericao=request.form.get("ambiente_afericao"),
@@ -932,7 +951,7 @@ def editar(id):
             db.session.commit()
 
             flash("Manutenção atualizada com sucesso!", "success")
-            return redirect("/frotas/" + str(m.numero_frota))
+            return redirect("/frotas/" + str(identificador_veiculo(m.numero_frota, m.placa)))
 
         except ValueError as e:
             db.session.rollback()
@@ -943,8 +962,9 @@ def editar(id):
     imagens_lista = carregar_lista_imagens(m.imagens)
     causas = CausaManutencao.query.filter_by(ativo=True).order_by(CausaManutencao.nome).all()
 
-    afericao_placa = carregar_afericao(m.numero_frota, m.os, "PLACA")
-    afericao_ambiente = carregar_afericao(m.numero_frota, m.os, "AMBIENTE")
+    identificador_afericao = identificador_veiculo(m.numero_frota, getattr(m, "placa", None))
+    afericao_placa = carregar_afericao(identificador_afericao, m.os, "PLACA")
+    afericao_ambiente = carregar_afericao(identificador_afericao, m.os, "AMBIENTE")
 
     return render_template(
         "manutencoes/form.html",
@@ -975,9 +995,11 @@ def excluir(id):
         flash("Você não tem permissão para excluir esta manutenção.", "danger")
         return redirect("/manutencoes/lista")
 
-    if m.numero_frota and m.os:
+    identificador_afericao = identificador_veiculo(m.numero_frota, getattr(m, "placa", None))
+
+    if identificador_afericao and m.os:
         AfericaoTermometro.query.filter_by(
-            numero_frota=str(m.numero_frota).strip(),
+            numero_frota=str(identificador_afericao).strip(),
             os=str(m.os).strip()
         ).delete()
 
@@ -1027,6 +1049,7 @@ def exportar_excel():
         "DATA SAÍDA",
         "ATM",
         "FROTA",
+        "PLACA",
         "OS",
         "BAÚ",
         "TIPO VEÍCULO",
@@ -1057,14 +1080,16 @@ def exportar_excel():
         cell.fill = fill
 
     for r in registros:
+        identificador_afericao = identificador_veiculo(r.numero_frota, getattr(r, "placa", None))
+
         afericao_placa = AfericaoTermometro.query.filter_by(
-            numero_frota=str(r.numero_frota).strip() if r.numero_frota else "",
+            numero_frota=str(identificador_afericao).strip() if identificador_afericao else "",
             os=str(r.os).strip() if r.os else "",
             tipo_termometro="PLACA"
         ).first()
 
         afericao_ambiente = AfericaoTermometro.query.filter_by(
-            numero_frota=str(r.numero_frota).strip() if r.numero_frota else "",
+            numero_frota=str(identificador_afericao).strip() if identificador_afericao else "",
             os=str(r.os).strip() if r.os else "",
             tipo_termometro="AMBIENTE"
         ).first()
@@ -1074,6 +1099,7 @@ def exportar_excel():
             r.data_saida.strftime("%d/%m/%Y") if r.data_saida else "",
             r.dtm if r.dtm is not None else "",
             r.numero_frota or "",
+            getattr(r, "placa", None) or "",
             r.os or "",
             r.bau or "",
             r.tipo_veiculo or "",
