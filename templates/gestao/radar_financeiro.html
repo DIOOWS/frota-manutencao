@@ -90,7 +90,8 @@
     "AGREGADOS T",
     "IMPOSTOS MERC T",
     "APORTES T",
-    "TELEFONIA/INTERNET T"
+    "TELEFONIA/INTERNET T",
+    "BENEFICIOS T"
 ] %}
 
 {% macro categoria_select(valor_atual='') %}
@@ -300,11 +301,39 @@
 
         <div class="radar-herdadas-main">
 
-            <section class="radar-herdadas-board">
+            <section class="radar-visao-executiva">
+                <div class="radar-visao-executiva-texto">
+                    <strong>Visualização do Radar</strong>
+                    <span>Escolha uma visão para trabalhar sem poluir a tela. As ações, modais e regras continuam iguais.</span>
+                </div>
+
+                <div class="radar-visao-tabs" role="tablist" aria-label="Visualização do Radar Financeiro">
+                    <button type="button" class="radar-visao-tab ativo" data-radar-view="atencao">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        Atenção
+                    </button>
+                    <button type="button" class="radar-visao-tab" data-radar-view="planejamento">
+                        <i class="bi bi-calendar2-week-fill"></i>
+                        Planejamento
+                    </button>
+                    <button type="button" class="radar-visao-tab" data-radar-view="resolvidas">
+                        <i class="bi bi-check-circle-fill"></i>
+                        Resolvidas
+                    </button>
+                    <button type="button" class="radar-visao-tab" data-radar-view="todas">
+                        <i class="bi bi-kanban-fill"></i>
+                        Todas
+                    </button>
+                </div>
+            </section>
+
+            <section class="radar-herdadas-board" data-radar-board-view="atencao">
 
                 {% for coluna in colunas %}
 
-                    <div class="radar-herdadas-coluna {{ coluna.cor }}">
+                    <div class="radar-herdadas-coluna {{ coluna.cor }}"
+                         data-radar-coluna-slug="{{ coluna.slug }}"
+                         data-radar-view-grupo="{% if coluna.slug in ['herdada', 'vence_hoje', 'atrasadas_mes'] %}atencao{% elif coluna.slug in ['proximos_7', 'ate_fim_mes'] %}planejamento{% elif coluna.slug in ['pagas_mes', 'pagas_antigas'] %}resolvidas{% else %}todas{% endif %}">
 
                         <div class="radar-herdadas-coluna-header">
                             <div>
@@ -2040,6 +2069,10 @@
             radarInicializarHerdadasModal();
             radarAbrirHistoricoSeSolicitado();
 
+            if (typeof radarInicializarVisaoExecutiva === "function") {
+                radarInicializarVisaoExecutiva();
+            }
+
             if (options.atualizarUrl !== false && resposta.url) {
                 window.history.pushState({}, "", resposta.url);
             }
@@ -2857,4 +2890,56 @@
 })();
 </script>
 
+
+
+<script>
+(function () {
+    function radarAplicarVisaoExecutiva(visao) {
+        const board = document.querySelector(".radar-herdadas-board");
+        const tabs = document.querySelectorAll(".radar-visao-tab");
+
+        if (!board) {
+            return;
+        }
+
+        const visaoFinal = visao || sessionStorage.getItem("radarVisaoExecutiva") || "atencao";
+
+        board.dataset.radarBoardView = visaoFinal;
+        sessionStorage.setItem("radarVisaoExecutiva", visaoFinal);
+
+        document.querySelectorAll(".radar-herdadas-coluna").forEach(function (coluna) {
+            const grupo = coluna.dataset.radarViewGrupo || "todas";
+            const mostrar = visaoFinal === "todas" || grupo === visaoFinal;
+            coluna.classList.toggle("radar-coluna-oculta-por-visao", !mostrar);
+        });
+
+        tabs.forEach(function (tab) {
+            tab.classList.toggle("ativo", tab.dataset.radarView === visaoFinal);
+        });
+    }
+
+    function radarInicializarVisaoExecutiva() {
+        document.querySelectorAll(".radar-visao-tab").forEach(function (tab) {
+            if (tab.dataset.visaoInicializada === "true") {
+                return;
+            }
+
+            tab.dataset.visaoInicializada = "true";
+            tab.addEventListener("click", function () {
+                radarAplicarVisaoExecutiva(tab.dataset.radarView || "atencao");
+            });
+        });
+
+        radarAplicarVisaoExecutiva();
+    }
+
+    window.radarInicializarVisaoExecutiva = radarInicializarVisaoExecutiva;
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", radarInicializarVisaoExecutiva);
+    } else {
+        radarInicializarVisaoExecutiva();
+    }
+})();
+</script>
 {% endblock %}
