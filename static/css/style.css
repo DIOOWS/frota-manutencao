@@ -22421,3 +22421,431 @@ body {
     max-height: none !important;
   }
 }
+
+/* =========================================================
+   RADAR FINANCEIRO - CENÁRIO 100% PERFEITO
+   Mantém backend, rotas, modais, botões, ações e JS.
+   Ajuste visual: KPIs médios, filtros finos, abas compactas,
+   7 colunas visíveis e cards menores em zoom 100%.
+========================================================= */
+
+.radar-herdadas-page {
+  padding: 12px 18px 34px !important;
+  overflow-x: hidden !important;
+}
+
+.radar-herdadas-header {
+  min-height: 54px !important;
+  padding: 10px 14px !important;
+  border-radius: 18px !important;
+  margin-bottom: 10px !important;
+}
+
+.radar-herdadas-title {
+  gap: 10px !important;
+}
+
+.radar-herdadas-title-icon {
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  border-radius: 14px !important;
+  font-size: 20px !important;
+}
+
+.radar-herdadas-title h1 {
+  font-size: 18px !important;
+  margin: 0 !important;
+}
+
+.radar-herdadas-title p {
+  font-size: 11px !important;
+  margin: 1px 0 0 !important;
+}
+
+.radar-herdadas-user-actions {
+  gap: 8px !important;
+}
+
+.radar-herdadas-alert-btn,
+.radar-herdadas-new-btn {
+  min-height: 34px !important;
+  padding: 7px 12px !important;
+  border-radius: 12px !important;
+  font-size: 11px !important;
+}
+
+.radar-herdadas-kpis {
+  grid-template-columns: repeat(4, minmax(190px, 1fr)) !important;
+  gap: 10px !important;
+  margin: 10px 0 12px !important;
+}
+
+.radar-herdadas-kpi {
+  min-height: 74px !important;
+  padding: 12px 14px !important;
+  border-radius: 16px !important;
+  gap: 10px !important;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.065) !important;
+}
+
+.radar-herdadas-kpi-icon {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  border-radius: 14px !important;
+  font-size: 18px !important;
+}
+
+.radar-herdadas-kpi span {
+  font-size: 10px !important;
+  line-height: 1.05 !important;
+}
+
+.radar-herdadas-kpi strong {
+  font-size: 17px !important;
+  line-height: 1.05 !important;
+  margin-top: 2px !important;
+}
+
+.radar-herdadas-kpi small {
+  font-size: 10px !important;
+  line-height: 1.1 !important;
+}
+
+.radar-herdadas-kpi.risk {
+  align-items: center !important;
+}
+
+.radar-risk-bar {
+  height: 5px !important;
+  margin-top: 6px !important;
+}
+
+.radar-herdadas-filters {
+  top: 58px !important;
+  padding: 9px 12px !important;
+  border-radius: 16px !important;
+  margin-bottom: 12px !important;
+}
+
+.radar-herdadas-filters form {
+  gap: 8px !important;
+  align-items: center !important;
+}
+
+.radar-herdadas-filters .form-control {
+  height: 34px !important;
+  min-height: 34px !important;
+  padding: 6px 12px !important;
+  font-size: 11px !important;
+}
+
+.radar-filter-arrow,
+.radar-filter-submit {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  font-size: 13px !important;
+}
+
+.radar-filter-divider {
+  height: 24px !important;
+}
+
+.radar-herdadas-filters label {
+  font-size: 11px !important;
+  margin: 0 !important;
+}
+
+.radar-visao-executiva {
+  margin: 10px 0 10px !important;
+  padding: 10px 12px !important;
+  border-radius: 16px !important;
+  gap: 10px !important;
+}
+
+.radar-visao-executiva-texto strong {
+  font-size: 12px !important;
+}
+
+.radar-visao-executiva-texto span {
+  font-size: 10px !important;
+}
+
+.radar-visao-tabs {
+  gap: 6px !important;
+}
+
+.radar-visao-tab {
+  height: 30px !important;
+  padding: 0 11px !important;
+  border-radius: 999px !important;
+  font-size: 10px !important;
+  gap: 5px !important;
+}
+
+/* A visão TODAS vira o padrão perfeito em 100%: 7 colunas na tela */
+.radar-herdadas-board,
+.radar-herdadas-board[data-radar-board-view="todas"] {
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  overflow-x: hidden !important;
+  padding: 0 0 10px !important;
+  align-items: start !important;
+}
+
+/* Quando o usuário escolher abas menores, mantém compacto e sem colunas gigantes */
+.radar-herdadas-board[data-radar-board-view="atencao"] {
+  grid-template-columns: repeat(3, minmax(250px, 1fr)) !important;
+  overflow-x: hidden !important;
+}
+
+.radar-herdadas-board[data-radar-board-view="planejamento"],
+.radar-herdadas-board[data-radar-board-view="resolvidas"] {
+  grid-template-columns: repeat(2, minmax(250px, 390px)) !important;
+  justify-content: start !important;
+  overflow-x: hidden !important;
+}
+
+.radar-herdadas-coluna {
+  min-width: 0 !important;
+  min-height: 330px !important;
+  border-radius: 14px !important;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06) !important;
+}
+
+.radar-herdadas-coluna-header {
+  padding: 8px 8px 5px !important;
+  min-height: 48px !important;
+}
+
+.radar-herdadas-coluna-header strong {
+  font-size: 10.5px !important;
+  line-height: 1.05 !important;
+  letter-spacing: 0.15px !important;
+}
+
+.radar-herdadas-coluna-header small {
+  font-size: 7.8px !important;
+  line-height: 1.05 !important;
+  margin-top: 2px !important;
+}
+
+.radar-herdadas-coluna-header span {
+  top: 8px !important;
+  right: 7px !important;
+  min-width: 20px !important;
+  height: 20px !important;
+  font-size: 9px !important;
+}
+
+.radar-herdadas-coluna-total {
+  padding: 5px 8px 7px !important;
+  font-size: 15px !important;
+  line-height: 1.05 !important;
+}
+
+.radar-lote-actions {
+  margin: 7px 7px 0 !important;
+  padding: 7px !important;
+  border-radius: 12px !important;
+  gap: 5px !important;
+  grid-template-columns: 1fr 1fr !important;
+}
+
+.radar-lote-check-all {
+  font-size: 8px !important;
+  line-height: 1 !important;
+}
+
+.radar-lote-check-all input,
+.radar-card-check-label input {
+  width: 11px !important;
+  height: 11px !important;
+}
+
+.radar-lote-btn {
+  min-height: 22px !important;
+  padding: 4px 5px !important;
+  border-radius: 999px !important;
+  font-size: 7.5px !important;
+  line-height: 1.05 !important;
+}
+
+.radar-herdadas-coluna-body {
+  max-height: calc(100vh - 360px) !important;
+  min-height: 180px !important;
+  padding: 7px !important;
+  gap: 6px !important;
+}
+
+.radar-herdada-card,
+.radar-normal-card {
+  border-radius: 12px !important;
+  padding: 8px !important;
+  box-shadow: 0 5px 12px rgba(15, 23, 42, 0.04) !important;
+}
+
+.radar-card-select-row {
+  margin-bottom: 4px !important;
+}
+
+.radar-card-check-label {
+  font-size: 7.8px !important;
+  line-height: 1 !important;
+}
+
+.radar-normal-card-top,
+.radar-herdada-card-top {
+  gap: 5px !important;
+}
+
+.radar-normal-card-top strong,
+.radar-herdada-card-top strong {
+  font-size: 9.5px !important;
+  line-height: 1.12 !important;
+}
+
+.radar-normal-card-top small,
+.radar-herdada-card-top small {
+  font-size: 7.5px !important;
+  line-height: 1.05 !important;
+  margin-top: 1px !important;
+}
+
+.radar-herdada-icon {
+  width: 27px !important;
+  height: 27px !important;
+  min-width: 27px !important;
+  border-radius: 10px !important;
+  font-size: 12px !important;
+}
+
+.radar-herdada-card-top span {
+  font-size: 7.5px !important;
+  padding: 3px 5px !important;
+  border-radius: 999px !important;
+}
+
+.radar-card-menu {
+  width: 23px !important;
+  height: 23px !important;
+  min-width: 23px !important;
+  border-radius: 9px !important;
+  font-size: 10px !important;
+}
+
+.radar-herdada-valor,
+.radar-normal-valor {
+  font-size: 13.5px !important;
+  line-height: 1.08 !important;
+  margin: 5px 0 2px !important;
+}
+
+.radar-herdada-desde,
+.radar-normal-info {
+  font-size: 7.8px !important;
+  line-height: 1.18 !important;
+}
+
+.radar-parcela-badge,
+.radar-normal-badge,
+.radar-status-badge {
+  font-size: 7.5px !important;
+  padding: 3px 5px !important;
+  margin-top: 4px !important;
+  border-radius: 999px !important;
+}
+
+.radar-herdada-meses {
+  margin-top: 5px !important;
+  gap: 3px !important;
+}
+
+.radar-herdada-meses div {
+  padding: 3px 4px !important;
+  border-radius: 7px !important;
+}
+
+.radar-herdada-meses span,
+.radar-herdada-meses small {
+  font-size: 7.2px !important;
+  line-height: 1.1 !important;
+}
+
+.radar-herdada-link,
+.radar-card-detail-btn {
+  font-size: 8px !important;
+  padding: 4px 6px !important;
+  border-radius: 999px !important;
+}
+
+.radar-herdadas-empty,
+.radar-empty-busca-local {
+  min-height: 68px !important;
+  border-radius: 12px !important;
+  font-size: 9px !important;
+  padding: 8px !important;
+}
+
+/* Em notebooks/monitores menores, mantém 7 colunas com scroll horizontal, sem quebrar layout */
+@media (max-width: 1450px) {
+  .radar-herdadas-board[data-radar-board-view="todas"] {
+    grid-template-columns: repeat(7, 205px) !important;
+    overflow-x: auto !important;
+  }
+
+  .radar-herdadas-kpis {
+    grid-template-columns: repeat(4, minmax(180px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 1200px) {
+  .radar-herdadas-kpis {
+    grid-template-columns: repeat(2, minmax(210px, 1fr)) !important;
+  }
+
+  .radar-herdadas-board,
+  .radar-herdadas-board[data-radar-board-view="atencao"],
+  .radar-herdadas-board[data-radar-board-view="planejamento"],
+  .radar-herdadas-board[data-radar-board-view="resolvidas"],
+  .radar-herdadas-board[data-radar-board-view="todas"] {
+    grid-template-columns: repeat(4, 220px) !important;
+    overflow-x: auto !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .radar-herdadas-page {
+    padding: 10px 8px 34px !important;
+  }
+
+  .radar-herdadas-kpis {
+    grid-template-columns: 1fr !important;
+  }
+
+  .radar-visao-executiva {
+    align-items: stretch !important;
+  }
+
+  .radar-visao-tabs {
+    justify-content: flex-start !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .radar-herdadas-board,
+  .radar-herdadas-board[data-radar-board-view="atencao"],
+  .radar-herdadas-board[data-radar-board-view="planejamento"],
+  .radar-herdadas-board[data-radar-board-view="resolvidas"],
+  .radar-herdadas-board[data-radar-board-view="todas"] {
+    grid-template-columns: 1fr !important;
+    overflow-x: visible !important;
+  }
+
+  .radar-herdadas-coluna-body {
+    max-height: none !important;
+  }
+}

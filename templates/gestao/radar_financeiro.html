@@ -91,7 +91,7 @@
     "IMPOSTOS MERC T",
     "APORTES T",
     "TELEFONIA/INTERNET T",
-    "BENEFICIOS T"
+	"BENEFÍCIOS T"
 ] %}
 
 {% macro categoria_select(valor_atual='') %}
@@ -308,7 +308,7 @@
                 </div>
 
                 <div class="radar-visao-tabs" role="tablist" aria-label="Visualização do Radar Financeiro">
-                    <button type="button" class="radar-visao-tab ativo" data-radar-view="atencao">
+                    <button type="button" class="radar-visao-tab" data-radar-view="atencao">
                         <i class="bi bi-exclamation-triangle-fill"></i>
                         Atenção
                     </button>
@@ -320,14 +320,14 @@
                         <i class="bi bi-check-circle-fill"></i>
                         Resolvidas
                     </button>
-                    <button type="button" class="radar-visao-tab" data-radar-view="todas">
+                    <button type="button" class="radar-visao-tab ativo" data-radar-view="todas">
                         <i class="bi bi-kanban-fill"></i>
                         Todas
                     </button>
                 </div>
             </section>
 
-            <section class="radar-herdadas-board" data-radar-board-view="atencao">
+            <section class="radar-herdadas-board" data-radar-board-view="todas">
 
                 {% for coluna in colunas %}
 
@@ -2902,7 +2902,7 @@
             return;
         }
 
-        const visaoFinal = visao || sessionStorage.getItem("radarVisaoExecutiva") || "atencao";
+        const visaoFinal = visao || sessionStorage.getItem("radarVisaoExecutiva") || "todas";
 
         board.dataset.radarBoardView = visaoFinal;
         sessionStorage.setItem("radarVisaoExecutiva", visaoFinal);
@@ -2926,7 +2926,7 @@
 
             tab.dataset.visaoInicializada = "true";
             tab.addEventListener("click", function () {
-                radarAplicarVisaoExecutiva(tab.dataset.radarView || "atencao");
+                radarAplicarVisaoExecutiva(tab.dataset.radarView || "todas");
             });
         });
 
