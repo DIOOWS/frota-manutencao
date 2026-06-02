@@ -4867,7 +4867,7 @@ body {
 .importacao-form-info small {
   display: block;
   font-size: 12px;
-  color: #64748b;
+  color: #010812;
   line-height: 1.35;
 }
 
@@ -23416,5 +23416,1598 @@ body:has(.importacoes-page) {
   .importacoes-page .importacao-form,
   .importacoes-page .importacao-resumo-grid {
     grid-template-columns: 1fr !important;
+  }
+}
+
+
+
+/* =========================================================
+   IMPORTAÇÕES FINANCEIRAS - PREMIUM FINAL + LOADING
+   Mantém lógica, forms, botões, filtros e tabelas.
+   Cole/garanta este bloco no FINAL do style.css.
+========================================================= */
+
+body:has(.importacoes-page) {
+  background: #eef3f9 !important;
+}
+
+.content-top:has(.importacoes-page) {
+  padding: 18px 22px 28px !important;
+  background:
+    radial-gradient(circle at top right, rgba(0, 82, 224, 0.08), transparent 32%),
+    #eef3f9 !important;
+}
+
+.importacoes-page {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+}
+
+/* Topo mais limpo */
+.importacoes-page .gestao-header {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 4px 2px !important;
+  margin: 0 !important;
+}
+
+.importacoes-page .gestao-header h2 {
+  margin: 0 0 5px !important;
+  color: #07143d !important;
+  font-size: clamp(24px, 1.55vw, 34px) !important;
+  line-height: 1.1 !important;
+  font-weight: 950 !important;
+  letter-spacing: -0.5px !important;
+}
+
+.importacoes-page .gestao-header p {
+  margin: 0 !important;
+  color: #334155 !important;
+  font-size: 14px !important;
+  font-weight: 650 !important;
+}
+
+.importacoes-page > .alert-info {
+  display: none !important;
+}
+
+/* Competência */
+.importacoes-page .importacoes-competencia-inline {
+  align-self: flex-end !important;
+  width: auto !important;
+  min-width: 360px !important;
+  max-width: 100% !important;
+  background: #ffffff !important;
+  border: 1px solid #dbe4f0 !important;
+  border-radius: 16px !important;
+  padding: 10px 12px !important;
+  margin: -52px 0 6px auto !important;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.10) !important;
+}
+
+.importacoes-page .competencia-inline-form {
+  display: flex !important;
+  align-items: end !important;
+  gap: 12px !important;
+  margin: 0 !important;
+}
+
+.importacoes-page .competencia-inline-text {
+  display: none !important;
+}
+
+.importacoes-page .competencia-inline-fields {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.importacoes-page .competencia-inline-fields::before {
+  content: "MÊS / ANO";
+  color: #0f172a;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .05em;
+  margin-right: 2px;
+  white-space: nowrap;
+}
+
+.importacoes-page .competencia-inline-fields .form-control {
+  width: 82px !important;
+  min-width: 82px !important;
+  height: 42px !important;
+  border-radius: 10px !important;
+  border: 1px solid #cbd5e1 !important;
+  background: #fff !important;
+  color: #0f172a !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  text-align: center !important;
+  box-shadow: none !important;
+}
+
+.importacoes-page .btn-visualizar-mes {
+  height: 42px !important;
+  min-width: 150px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  padding: 0 16px !important;
+  background: linear-gradient(135deg, #003bb8, #0052e0) !important;
+  color: #ffffff !important;
+  font-size: 13px !important;
+  font-weight: 950 !important;
+  box-shadow: 0 10px 22px rgba(0, 82, 224, 0.28) !important;
+  white-space: nowrap !important;
+}
+
+/* Card base das seções */
+.importacoes-page .gestao-card {
+  --section-main: #0f172a;
+  --section-deep: #020617;
+  --section-soft: rgba(255,255,255,.12);
+  --section-text: #ffffff;
+  --section-table-head: #0f172a;
+  border: 0 !important;
+  border-radius: 18px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  color: var(--section-text) !important;
+  background: var(--section-main) !important;
+  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.18) !important;
+}
+
+/* Cabeçalho do card */
+.importacoes-page .gestao-card > .d-flex:first-child {
+  padding: 18px 20px 10px !important;
+  margin: 0 !important;
+  align-items: flex-start !important;
+  gap: 14px !important;
+}
+
+.importacoes-page .gestao-card > .d-flex:first-child > div:first-child {
+  min-width: 260px !important;
+}
+
+.importacoes-page .gestao-card h5 {
+  margin: 0 0 3px !important;
+  color: var(--section-text) !important;
+  font-size: clamp(18px, 1.08vw, 24px) !important;
+  line-height: 1.1 !important;
+  font-weight: 950 !important;
+  text-transform: uppercase !important;
+  letter-spacing: .01em !important;
+}
+
+.importacoes-page .gestao-card p,
+.importacoes-page .gestao-card .text-muted {
+  color: var(--section-text) !important;
+  opacity: .95 !important;
+  font-size: 13px !important;
+  line-height: 1.25 !important;
+  font-weight: 750 !important;
+}
+
+/* Botões de limpar no topo */
+.importacoes-page .gestao-card > .d-flex:first-child form {
+  margin-left: auto !important;
+  flex: 0 0 auto !important;
+}
+
+.importacoes-page .gestao-card > .d-flex:first-child .btn-outline-danger {
+  height: 42px !important;
+  min-width: 230px !important;
+  max-width: 100% !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  padding: 0 16px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+  line-height: 1.1 !important;
+  white-space: nowrap !important;
+  box-shadow: 0 10px 22px rgba(2, 6, 23, 0.14) !important;
+}
+
+#contas-pagas > .d-flex:first-child .btn-outline-danger {
+  background: #ffffff !important;
+  color: #d90429 !important;
+}
+
+#despesas-completo > .d-flex:first-child .btn-outline-danger {
+  background: #111827 !important;
+  color: #ffffff !important;
+}
+
+#contas-receber > .d-flex:first-child .btn-outline-danger {
+  background: #ffffff !important;
+  color: #047857 !important;
+}
+
+/* Caixa interna */
+.importacoes-page .importacao-box {
+  background: transparent !important;
+  padding: 0 14px 14px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* Alertas internos */
+.importacoes-page #despesas-completo .alert-warning {
+  margin: 0 !important;
+  border: 0 !important;
+  border-top: 1px solid rgba(0,0,0,.10) !important;
+  border-bottom: 1px solid rgba(0,0,0,.10) !important;
+  border-radius: 0 !important;
+  background: rgba(255,255,255,.42) !important;
+  color: #111827 !important;
+  font-size: 12px !important;
+  font-weight: 750 !important;
+}
+
+/* Upload/importação: visível, legível e sem botão espremido */
+.importacoes-page .importacao-form {
+  display: grid !important;
+  grid-template-columns: minmax(260px, 1.2fr) 92px 108px minmax(300px, 2fr) minmax(190px, 230px) !important;
+  gap: 12px !important;
+  align-items: end !important;
+  width: 100% !important;
+  margin: 0 0 12px !important;
+  padding: 13px !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  border: 1px solid rgba(255,255,255,.22) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.10) !important;
+}
+
+/* Como Despesas Completo usa mês/ano hidden, o grid fica melhor */
+#despesas-completo .importacao-form {
+  grid-template-columns: minmax(300px, 1.1fr) minmax(360px, 2fr) minmax(220px, 260px) !important;
+}
+
+/* Se algum campo hidden estiver dentro do grid, ele não ocupa espaço */
+.importacoes-page .importacao-form input[type="hidden"] {
+  display: none !important;
+}
+
+.importacoes-page .importacao-form-info {
+  min-width: 0 !important;
+}
+
+.importacoes-page .importacao-form-info strong {
+  display: block !important;
+  color: #0f172a !important;
+  font-size: 14px !important;
+  line-height: 1.15 !important;
+  font-weight: 950 !important;
+  margin-bottom: 4px !important;
+}
+
+.importacoes-page .importacao-form-info small {
+  display: block !important;
+  color: #000000!important;
+  font-size: 11px !important;
+  line-height: 1.25 !important;
+  font-weight: 650 !important;
+}
+
+.importacoes-page .importacao-field {
+  min-width: 0 !important;
+}
+
+.importacoes-page .importacao-field label {
+  display: block !important;
+  color: #0f172a !important;
+  font-size: 10px !important;
+  font-weight: 950 !important;
+  text-transform: uppercase !important;
+  letter-spacing: .04em !important;
+  margin: 0 0 4px !important;
+}
+
+.importacoes-page .importacao-form .form-control {
+  width: 100% !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  border-radius: 9px !important;
+  border: 1px solid #cbd5e1 !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  font-size: 12px !important;
+  font-weight: 750 !important;
+  box-shadow: none !important;
+}
+
+.importacoes-page .importacao-form input[type="file"] {
+  padding: 7px 10px !important;
+}
+
+.importacoes-page .btn-importacao {
+  width: 100% !important;
+  min-width: 190px !important;
+  height: 38px !important;
+  border: 0 !important;
+  border-radius: 9px !important;
+  padding: 0 14px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  color: #ffffff !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+  line-height: 1.1 !important;
+  white-space: nowrap !important;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.22) !important;
+  transition: .18s ease !important;
+}
+
+.importacoes-page .btn-importacao:disabled {
+  opacity: .82 !important;
+  cursor: wait !important;
+}
+
+/* KPIs */
+.importacoes-page .importacao-resumo-grid {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(160px, 1fr)) !important;
+  gap: 10px !important;
+  margin: 0 0 12px !important;
+}
+
+#despesas-completo .importacao-resumo-grid {
+  grid-template-columns: repeat(6, minmax(140px, 1fr)) !important;
+}
+
+#contas-receber .importacao-resumo-grid {
+  grid-template-columns: repeat(5, minmax(150px, 1fr)) !important;
+}
+
+.importacoes-page .importacao-resumo-card {
+  min-height: 68px !important;
+  padding: 13px 14px !important;
+  border-radius: 11px !important;
+  background: rgba(255,255,255,.14) !important;
+  border: 1px solid rgba(255,255,255,.20) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14) !important;
+  color: var(--section-text) !important;
+  overflow: hidden !important;
+}
+
+#despesas-completo .importacao-resumo-card {
+  background: rgba(255,255,255,.30) !important;
+  border-color: rgba(0,0,0,.10) !important;
+}
+
+.importacoes-page .importacao-resumo-card span {
+  display: block !important;
+  color: var(--section-text) !important;
+  opacity: .94 !important;
+  font-size: 10px !important;
+  font-weight: 950 !important;
+  text-transform: uppercase !important;
+  letter-spacing: .035em !important;
+  margin: 0 0 5px !important;
+  white-space: nowrap !important;
+}
+
+.importacoes-page .importacao-resumo-card strong {
+  display: block !important;
+  color: var(--section-text) !important;
+  font-size: clamp(15px, .95vw, 20px) !important;
+  line-height: 1.1 !important;
+  font-weight: 950 !important;
+  white-space: nowrap !important;
+}
+
+#despesas-completo .importacao-resumo-card span,
+#despesas-completo .importacao-resumo-card strong {
+  color: #111827 !important;
+}
+
+/* Filtros */
+.importacoes-page .importacao-box > form.row {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  gap: 10px !important;
+  width: 100% !important;
+  margin: 0 0 10px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.importacoes-page .importacao-box > form.row > [class*="col-"] {
+  padding: 0 !important;
+}
+
+.importacoes-page .importacao-box > form.row .col-lg-5 {
+  flex: 1 1 auto !important;
+  max-width: none !important;
+}
+
+.importacoes-page .importacao-box > form.row .col-lg-2 {
+  flex: 0 0 190px !important;
+  max-width: 190px !important;
+}
+
+.importacoes-page .importacao-box > form.row .col-lg-3 {
+  flex: 0 0 320px !important;
+  max-width: 320px !important;
+}
+
+.importacoes-page .importacao-box > form.row .form-control {
+  width: 100% !important;
+  height: 38px !important;
+  border-radius: 9px !important;
+  border: 1px solid #d7deea !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  font-size: 12px !important;
+  font-weight: 720 !important;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.06) !important;
+}
+
+.importacoes-page .importacao-box > form.row .d-flex {
+  gap: 10px !important;
+}
+
+.importacoes-page .importacao-box > form.row .btn {
+  height: 38px !important;
+  min-width: 120px !important;
+  border-radius: 9px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+  white-space: nowrap !important;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08) !important;
+}
+
+.importacoes-page .importacao-box > form.row .btn-primary {
+  background: #004bd6 !important;
+  border-color: #004bd6 !important;
+  color: #ffffff !important;
+}
+
+.importacoes-page .importacao-box > form.row .btn-outline-secondary {
+  background: #ffffff !important;
+  border-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Tabelas legíveis */
+.importacoes-page .importacao-table-wrap {
+  width: 100% !important;
+  max-height: 365px !important;
+  overflow: auto !important;
+  background: #ffffff !important;
+  border: 0 !important;
+  border-radius: 11px !important;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, .08) !important;
+}
+
+.importacoes-page .importacao-table-wrap table {
+  margin: 0 !important;
+  min-width: 1280px !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+.importacoes-page .importacao-table-wrap thead th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 4 !important;
+  background: var(--section-table-head) !important;
+  color: #ffffff !important;
+  border: 0 !important;
+  padding: 9px 10px !important;
+  font-size: 11px !important;
+  line-height: 1.1 !important;
+  font-weight: 950 !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+}
+
+.importacoes-page .importacao-table-wrap tbody td {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-top: 1px solid #e5eaf2 !important;
+  padding: 8px 10px !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+  font-weight: 650 !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+}
+
+.importacoes-page .table-striped > tbody > tr:nth-of-type(odd) > * {
+  background: #ffffff !important;
+}
+
+.importacoes-page .table-striped > tbody > tr:nth-of-type(even) > * {
+  background: #f8fafc !important;
+}
+
+.importacoes-page .importacao-obs {
+  max-width: 360px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Coluna ações sem espremer */
+.importacoes-page .table th:last-child,
+.importacoes-page .table td:last-child {
+  min-width: 92px !important;
+  width: 92px !important;
+  max-width: 92px !important;
+  text-align: center !important;
+}
+
+.importacoes-page .table td:last-child .d-flex {
+  justify-content: center !important;
+  gap: 6px !important;
+  flex-wrap: nowrap !important;
+}
+
+.importacoes-page .table td:last-child .btn {
+  width: 28px !important;
+  min-width: 28px !important;
+  height: 28px !important;
+  padding: 0 !important;
+  border-radius: 7px !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Badges */
+.importacoes-page .badge {
+  border-radius: 999px !important;
+  padding: 5px 8px !important;
+  font-size: 10px !important;
+  font-weight: 950 !important;
+}
+
+/* Cores das seções */
+#contas-pagas {
+  --section-main: linear-gradient(135deg, #b00000 0%, #d90429 48%, #ff2b3c 100%);
+  --section-deep: #8f0000;
+  --section-text: #ffffff;
+  --section-table-head: #b00000;
+}
+
+#contas-pagas .btn-importacao {
+  background: linear-gradient(135deg, #9f1239, #dc2626) !important;
+}
+
+#despesas-completo {
+  --section-main: linear-gradient(135deg, #f4b400 0%, #ffd60a 50%, #ffea61 100%);
+  --section-deep: #111827;
+  --section-text: #111827;
+  --section-table-head: #111827;
+}
+
+#despesas-completo .btn-importacao {
+  background: linear-gradient(135deg, #111827, #3b2f00) !important;
+}
+
+#contas-receber {
+  --section-main: linear-gradient(135deg, #006b2f 0%, #008f3f 50%, #16a34a 100%);
+  --section-deep: #064e3b;
+  --section-text: #ffffff;
+  --section-table-head: #006b2f;
+}
+
+#contas-receber .btn-importacao {
+  background: linear-gradient(135deg, #064e3b, #16a34a) !important;
+}
+
+/* Loading */
+.import-loading-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  background: rgba(2, 6, 23, 0.74);
+  backdrop-filter: blur(5px);
+}
+
+.import-loading-overlay.show {
+  display: flex;
+}
+
+.import-loading-card {
+  width: 390px;
+  max-width: calc(100vw - 32px);
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 34px 30px 30px;
+  text-align: center;
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, .38),
+    inset 0 0 0 1px rgba(255,255,255,.5);
+  animation: importLoadingIn .22s ease;
+}
+
+.import-loading-spinner {
+  width: 66px;
+  height: 66px;
+  margin: 0 auto 18px;
+  border-radius: 999px;
+  border: 6px solid #e5e7eb;
+  border-top-color: #0052e0;
+  animation: importSpin .85s linear infinite;
+}
+
+.import-loading-card h4 {
+  margin: 0 0 8px;
+  color: #07143d;
+  font-size: 22px;
+  line-height: 1.15;
+  font-weight: 950;
+}
+
+.import-loading-card p {
+  margin: 0 0 6px;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 720;
+}
+
+.import-loading-card small {
+  display: block;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@keyframes importSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes importLoadingIn {
+  from { opacity: 0; transform: translateY(12px) scale(.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Responsividade */
+@media (max-width: 1500px) {
+  .importacoes-page .importacao-form {
+    grid-template-columns: minmax(240px, 1fr) 82px 96px minmax(260px, 1.5fr) minmax(180px, 220px) !important;
+  }
+
+  #despesas-completo .importacao-form {
+    grid-template-columns: minmax(260px, 1fr) minmax(320px, 2fr) minmax(200px, 240px) !important;
+  }
+
+  .importacoes-page .importacao-box > form.row .col-lg-2 {
+    flex-basis: 170px !important;
+    max-width: 170px !important;
+  }
+
+  .importacoes-page .importacao-box > form.row .col-lg-3 {
+    flex-basis: 290px !important;
+    max-width: 290px !important;
+  }
+}
+
+@media (max-width: 1200px) {
+  .importacoes-page .importacoes-competencia-inline {
+    margin: 0 0 6px 0 !important;
+    align-self: stretch !important;
+    min-width: 0 !important;
+  }
+
+  .importacoes-page .competencia-inline-form,
+  .importacoes-page .competencia-inline-fields {
+    width: 100% !important;
+    flex-wrap: wrap !important;
+  }
+
+  .importacoes-page .importacao-form,
+  #despesas-completo .importacao-form {
+    grid-template-columns: 1fr 90px 105px !important;
+  }
+
+  .importacoes-page .importacao-file {
+    grid-column: span 2 !important;
+  }
+
+  #despesas-completo .importacao-file {
+    grid-column: span 2 !important;
+  }
+
+  .importacoes-page .btn-importacao {
+    grid-column: span 1 !important;
+  }
+
+  .importacoes-page .importacao-resumo-grid,
+  #despesas-completo .importacao-resumo-grid,
+  #contas-receber .importacao-resumo-grid {
+    grid-template-columns: repeat(2, minmax(150px, 1fr)) !important;
+  }
+
+  .importacoes-page .importacao-box > form.row {
+    flex-wrap: wrap !important;
+  }
+
+  .importacoes-page .importacao-box > form.row .col-lg-5,
+  .importacoes-page .importacao-box > form.row .col-lg-2,
+  .importacoes-page .importacao-box > form.row .col-lg-3 {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .content-top:has(.importacoes-page) {
+    padding: 10px !important;
+  }
+
+  .importacoes-page .gestao-card > .d-flex:first-child {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .importacoes-page .gestao-card > .d-flex:first-child form {
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+
+  .importacoes-page .gestao-card > .d-flex:first-child .btn-outline-danger {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .importacoes-page .importacao-form,
+  #despesas-completo .importacao-form {
+    grid-template-columns: 1fr !important;
+  }
+
+  .importacoes-page .importacao-file,
+  #despesas-completo .importacao-file,
+  .importacoes-page .btn-importacao {
+    grid-column: auto !important;
+  }
+
+  .importacoes-page .importacao-resumo-grid,
+  #despesas-completo .importacao-resumo-grid,
+  #contas-receber .importacao-resumo-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .importacoes-page .competencia-inline-fields .form-control,
+  .importacoes-page .btn-visualizar-mes {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+  }
+}
+
+
+
+/* =========================================================
+   IMPORTAÇÕES FINANCEIRAS - CORREÇÃO FINAL LEGÍVEL
+   Mantém toda a lógica: forms, rotas, filtros, botões e tabelas.
+   Este bloco deve ficar no FINAL do style.css.
+========================================================= */
+
+body:has(.importacoes-page) {
+  background: #eef3f9 !important;
+}
+
+.content-top:has(.importacoes-page) {
+  padding: 18px 22px 32px !important;
+  background:
+    radial-gradient(circle at top right, rgba(0, 82, 224, 0.08), transparent 30%),
+    #eef3f9 !important;
+}
+
+.importacoes-page {
+  width: 100% !important;
+  max-width: 100% !important;
+  color: #0f172a !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+}
+
+/* =========================
+   TOPO DA PÁGINA
+========================= */
+
+.importacoes-page .gestao-header {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 4px 4px !important;
+  margin: 0 !important;
+}
+
+.importacoes-page .gestao-header h2 {
+  color: #07143d !important;
+  font-size: clamp(25px, 1.7vw, 34px) !important;
+  line-height: 1.08 !important;
+  font-weight: 950 !important;
+  margin: 0 0 6px !important;
+  letter-spacing: -0.5px !important;
+}
+
+.importacoes-page .gestao-header p {
+  color: #334155 !important;
+  font-size: 14px !important;
+  line-height: 1.35 !important;
+  font-weight: 650 !important;
+  margin: 0 !important;
+}
+
+.importacoes-page .alert-info {
+  background: #ffffff !important;
+  border: 1px solid #dbeafe !important;
+  color: #0f172a !important;
+  border-radius: 14px !important;
+  padding: 12px 16px !important;
+  margin: 0 !important;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, .06) !important;
+}
+
+.importacoes-page .alert-info strong,
+.importacoes-page .alert-info b {
+  color: #0b3fb8 !important;
+}
+
+/* Competência */
+.importacoes-page .importacoes-competencia-inline {
+  background: #ffffff !important;
+  border: 1px solid #dbe3ef !important;
+  border-radius: 16px !important;
+  padding: 13px 16px !important;
+  margin: 0 !important;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .07) !important;
+}
+
+.importacoes-page .competencia-inline-form {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  flex-wrap: wrap !important;
+  margin: 0 !important;
+}
+
+.importacoes-page .competencia-inline-text strong {
+  display: block !important;
+  color: #07143d !important;
+  font-size: 15px !important;
+  font-weight: 950 !important;
+}
+
+.importacoes-page .competencia-inline-text small {
+  display: block !important;
+  color: #64748b !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+}
+
+.importacoes-page .competencia-inline-fields {
+  display: flex !important;
+  align-items: center !important;
+  gap: 9px !important;
+  flex-wrap: wrap !important;
+}
+
+.importacoes-page .competencia-inline-fields .form-control {
+  width: 82px !important;
+  min-width: 82px !important;
+  height: 38px !important;
+}
+
+.importacoes-page .btn-visualizar-mes {
+  height: 38px !important;
+  min-width: 138px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  padding: 0 16px !important;
+  background: linear-gradient(135deg, #003db5, #0052e0) !important;
+  color: #ffffff !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+  box-shadow: 0 8px 18px rgba(0, 82, 224, .25) !important;
+}
+
+/* =========================
+   CARDS COLORIDOS
+========================= */
+
+.importacoes-page .gestao-card {
+  --section-bg: #0f172a;
+  --section-bg-2: #1e293b;
+  --section-text: #ffffff;
+  --section-muted: rgba(255,255,255,.88);
+  --section-table-head: #111827;
+  --section-button: #ffffff;
+  --section-button-text: #111827;
+  background: linear-gradient(135deg, var(--section-bg), var(--section-bg-2)) !important;
+  color: var(--section-text) !important;
+  border: 0 !important;
+  border-radius: 18px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  margin: 0 0 8px !important;
+  box-shadow:
+    0 15px 34px rgba(15, 23, 42, .18),
+    inset 0 1px 0 rgba(255,255,255,.14) !important;
+}
+
+.importacoes-page #contas-pagas {
+  --section-bg: #b00000;
+  --section-bg-2: #ff2332;
+  --section-table-head: #b00000;
+  --section-button: #ffffff;
+  --section-button-text: #d90429;
+}
+
+.importacoes-page #despesas-completo {
+  --section-bg: #ffc300;
+  --section-bg-2: #ffed70;
+  --section-text: #111827;
+  --section-muted: #111827;
+  --section-table-head: #111827;
+  --section-button: #111827;
+  --section-button-text: #ffffff;
+}
+
+.importacoes-page #contas-receber {
+  --section-bg: #006b2f;
+  --section-bg-2: #16a34a;
+  --section-table-head: #006b2f;
+  --section-button: #ffffff;
+  --section-button-text: #047857;
+}
+
+/* Cabeçalho do card */
+.importacoes-page .gestao-card > .d-flex:first-child {
+  margin: 0 !important;
+  padding: 16px 18px 10px !important;
+  align-items: center !important;
+}
+
+.importacoes-page .gestao-card > .d-flex:first-child h5 {
+  color: var(--section-text) !important;
+  font-size: clamp(18px, 1.18vw, 24px) !important;
+  line-height: 1.1 !important;
+  font-weight: 950 !important;
+  text-transform: uppercase !important;
+  letter-spacing: -0.25px !important;
+  margin: 0 0 4px !important;
+}
+
+.importacoes-page .gestao-card > .d-flex:first-child p,
+.importacoes-page .gestao-card > .d-flex:first-child .text-muted {
+  color: var(--section-muted) !important;
+  font-size: 12.5px !important;
+  line-height: 1.3 !important;
+  font-weight: 750 !important;
+  margin: 0 !important;
+}
+
+.importacoes-page .gestao-card > .d-flex:first-child form {
+  margin-left: auto !important;
+}
+
+.importacoes-page .gestao-card > .d-flex:first-child .btn-outline-danger {
+  min-height: 38px !important;
+  min-width: 230px !important;
+  border: 0 !important;
+  border-radius: 11px !important;
+  padding: 0 15px !important;
+  background: var(--section-button) !important;
+  color: var(--section-button-text) !important;
+  font-size: 12px !important;
+  line-height: 1.15 !important;
+  font-weight: 950 !important;
+  white-space: normal !important;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, .16) !important;
+}
+
+.importacoes-page #despesas-completo > .d-flex:first-child .btn-outline-danger {
+  min-width: 225px !important;
+}
+
+/* Alerta do bloco amarelo */
+.importacoes-page #despesas-completo .alert-warning {
+  margin: 0 14px 10px !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(17,24,39,.12) !important;
+  background: rgba(255,255,255,.68) !important;
+  color: #111827 !important;
+  padding: 10px 13px !important;
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+  font-weight: 700 !important;
+}
+
+.importacoes-page #despesas-completo .alert-warning strong,
+.importacoes-page #despesas-completo .alert-warning b {
+  color: #000000 !important;
+  font-weight: 950 !important;
+}
+
+/* Conteúdo do card */
+.importacoes-page .importacao-box {
+  padding: 0 14px 14px !important;
+  background: transparent !important;
+}
+
+/* =========================
+   FORM DE IMPORTAÇÃO
+========================= */
+
+.importacoes-page .importacao-form {
+  display: grid !important;
+  grid-template-columns: minmax(260px, 1.15fr) 86px 106px minmax(260px, 1.35fr) minmax(190px, .7fr) !important;
+  gap: 10px !important;
+  align-items: end !important;
+  margin: 0 0 12px !important;
+  padding: 12px !important;
+  border-radius: 14px !important;
+  background: rgba(255,255,255,.14) !important;
+  border: 1px solid rgba(255,255,255,.18) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12) !important;
+}
+
+.importacoes-page #despesas-completo .importacao-form {
+  grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.5fr) minmax(220px, .65fr) !important;
+  background: rgba(255,255,255,.42) !important;
+  border-color: rgba(17,24,39,.12) !important;
+}
+
+.importacoes-page .importacao-form-info strong,
+.importacoes-page .importacao-field label {
+  display: block !important;
+  color: var(--section-text) !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+  font-weight: 950 !important;
+  margin: 0 0 4px !important;
+}
+
+.importacoes-page #despesas-completo .importacao-form-info strong,
+.importacoes-page #despesas-completo .importacao-field label {
+  color: #111827 !important;
+}
+
+.importacoes-page .importacao-form-info small {
+  display: block !important;
+  color: var(--section-muted) !important;
+  font-size: 11px !important;
+  line-height: 1.3 !important;
+  font-weight: 650 !important;
+  max-width: 680px !important;
+}
+
+.importacoes-page #despesas-completo .importacao-form-info small {
+  color: #374151 !important;
+}
+
+.importacoes-page .importacao-field {
+  min-width: 0 !important;
+}
+
+.importacoes-page .importacao-file {
+  min-width: 260px !important;
+}
+
+.importacoes-page #despesas-completo .importacao-file {
+  min-width: 320px !important;
+}
+
+/* Inputs sempre legíveis */
+.importacoes-page .form-control,
+.importacoes-page select.form-control {
+  height: 38px !important;
+  min-height: 38px !important;
+  width: 100% !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  line-height: 1.15 !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,.4) !important;
+}
+
+.importacoes-page .form-control::placeholder {
+  color: #64748b !important;
+  opacity: 1 !important;
+}
+
+.importacoes-page input[type="file"].form-control {
+  padding: 7px 10px !important;
+  font-size: 11.5px !important;
+  line-height: 1.2 !important;
+}
+
+.importacoes-page .form-control:focus {
+  border-color: #0052e0 !important;
+  box-shadow: 0 0 0 3px rgba(0,82,224,.16) !important;
+  outline: none !important;
+}
+
+.importacoes-page .btn-importacao {
+  min-height: 38px !important;
+  width: 100% !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  padding: 0 12px !important;
+  background: var(--section-table-head) !important;
+  color: #ffffff !important;
+  font-size: 12px !important;
+  line-height: 1.15 !important;
+  font-weight: 950 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  white-space: normal !important;
+  text-align: center !important;
+  box-shadow: 0 9px 18px rgba(15, 23, 42, .18) !important;
+}
+
+.importacoes-page #despesas-completo .btn-importacao {
+  background: #111827 !important;
+  color: #ffffff !important;
+}
+
+/* =========================
+   KPIs
+========================= */
+
+.importacoes-page .importacao-resumo-grid {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(145px, 1fr)) !important;
+  gap: 10px !important;
+  margin: 0 0 12px !important;
+}
+
+.importacoes-page #despesas-completo .importacao-resumo-grid {
+  grid-template-columns: repeat(6, minmax(130px, 1fr)) !important;
+}
+
+.importacoes-page #contas-receber .importacao-resumo-grid {
+  grid-template-columns: repeat(5, minmax(145px, 1fr)) !important;
+}
+
+.importacoes-page .importacao-resumo-card {
+  min-height: 68px !important;
+  padding: 12px 13px !important;
+  border-radius: 13px !important;
+  background: rgba(255,255,255,.14) !important;
+  border: 1px solid rgba(255,255,255,.18) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12) !important;
+}
+
+.importacoes-page #despesas-completo .importacao-resumo-card {
+  background: rgba(255,255,255,.38) !important;
+  border-color: rgba(17,24,39,.11) !important;
+}
+
+.importacoes-page .importacao-resumo-card span {
+  display: block !important;
+  color: var(--section-muted) !important;
+  font-size: 10px !important;
+  line-height: 1.1 !important;
+  font-weight: 950 !important;
+  text-transform: uppercase !important;
+  letter-spacing: .2px !important;
+  margin: 0 0 5px !important;
+}
+
+.importacoes-page .importacao-resumo-card strong {
+  display: block !important;
+  color: var(--section-text) !important;
+  font-size: clamp(15px, .95vw, 19px) !important;
+  line-height: 1.12 !important;
+  font-weight: 950 !important;
+  letter-spacing: -.2px !important;
+  overflow-wrap: anywhere !important;
+}
+
+.importacoes-page #despesas-completo .importacao-resumo-card span,
+.importacoes-page #despesas-completo .importacao-resumo-card strong {
+  color: #111827 !important;
+}
+
+/* =========================
+   FILTROS
+========================= */
+
+.importacoes-page .importacao-box > form.row {
+  margin: 0 0 10px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  align-items: center !important;
+}
+
+.importacoes-page .importacao-box > form.row .col-lg-5,
+.importacoes-page .importacao-box > form.row .col-lg-2,
+.importacoes-page .importacao-box > form.row .col-lg-3 {
+  padding-left: 4px !important;
+  padding-right: 4px !important;
+}
+
+.importacoes-page .importacao-box > form.row .d-flex {
+  min-width: 230px !important;
+}
+
+.importacoes-page .btn-primary,
+.importacoes-page .btn-outline-secondary {
+  min-height: 38px !important;
+  border-radius: 10px !important;
+  padding: 0 14px !important;
+  font-size: 12px !important;
+  line-height: 1.15 !important;
+  font-weight: 950 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+}
+
+.importacoes-page .btn-primary {
+  background: linear-gradient(135deg, #003db5, #0052e0) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 18px rgba(0,82,224,.20) !important;
+}
+
+.importacoes-page .btn-outline-secondary {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+/* =========================
+   TABELAS - SEM TEXTO BRANCO EM FUNDO BRANCO
+========================= */
+
+.importacoes-page .importacao-table-wrap {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 100% !important;
+  max-height: 370px !important;
+  overflow: auto !important;
+  background: #ffffff !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, .08) !important;
+}
+
+.importacoes-page .importacao-table-wrap table,
+.importacoes-page .importacao-table-wrap .table {
+  display: table !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 100% !important;
+  min-width: 1280px !important;
+  margin: 0 !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.importacoes-page .importacao-table-wrap thead {
+  display: table-header-group !important;
+}
+
+.importacoes-page .importacao-table-wrap tbody {
+  display: table-row-group !important;
+}
+
+.importacoes-page .importacao-table-wrap tr {
+  display: table-row !important;
+}
+
+.importacoes-page .importacao-table-wrap thead th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 5 !important;
+  background: var(--section-table-head) !important;
+  color: #ffffff !important;
+  border: 0 !important;
+  padding: 9px 10px !important;
+  font-size: 11px !important;
+  line-height: 1.1 !important;
+  font-weight: 950 !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+}
+
+.importacoes-page #despesas-completo .importacao-table-wrap thead th {
+  background: #111827 !important;
+  color: #ffffff !important;
+}
+
+.importacoes-page .importacao-table-wrap tbody td {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-top: 1px solid #e5eaf2 !important;
+  padding: 8px 10px !important;
+  font-size: 12px !important;
+  line-height: 1.22 !important;
+  font-weight: 650 !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+}
+
+.importacoes-page .table-striped > tbody > tr:nth-of-type(odd) > *,
+.importacoes-page .table-striped > tbody > tr:nth-of-type(even) > * {
+  color: #0f172a !important;
+}
+
+.importacoes-page .table-striped > tbody > tr:nth-of-type(odd) > * {
+  background: #ffffff !important;
+}
+
+.importacoes-page .table-striped > tbody > tr:nth-of-type(even) > * {
+  background: #f7f9fc !important;
+}
+
+.importacoes-page .importacao-table-wrap tbody tr:hover > * {
+  background: #eef6ff !important;
+  color: #0f172a !important;
+}
+
+/* Observações com leitura e sem estourar */
+.importacoes-page .importacao-obs {
+  max-width: 390px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: #1e293b !important;
+}
+
+/* Linha vazia precisa aparecer */
+.importacoes-page .importacao-table-wrap tbody td.text-center,
+.importacoes-page .importacao-table-wrap tbody td.text-muted {
+  color: #64748b !important;
+  background: #ffffff !important;
+  font-size: 13px !important;
+  font-weight: 750 !important;
+  padding: 20px 12px !important;
+}
+
+/* Badges legíveis */
+.importacoes-page .badge {
+  border-radius: 999px !important;
+  padding: 5px 8px !important;
+  font-size: 10px !important;
+  line-height: 1 !important;
+  font-weight: 950 !important;
+  letter-spacing: .1px !important;
+}
+
+.importacoes-page .badge.bg-warning,
+.importacoes-page .badge.text-dark {
+  color: #111827 !important;
+}
+
+/* Botões de ação da tabela sem espremimento */
+.importacoes-page .table td:last-child,
+.importacoes-page .table th:last-child {
+  width: 92px !important;
+  min-width: 92px !important;
+  max-width: 92px !important;
+  text-align: center !important;
+}
+
+.importacoes-page .table td:last-child .d-flex {
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-wrap: nowrap !important;
+}
+
+.importacoes-page .table td:last-child .btn {
+  width: 28px !important;
+  min-width: 28px !important;
+  height: 27px !important;
+  padding: 0 !important;
+  border-radius: 7px !important;
+  font-size: 11px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Modal não herda cores do card */
+.importacoes-page .modal,
+.importacoes-page .modal * {
+  color: #111827 !important;
+}
+
+.importacoes-page .modal .btn-primary {
+  color: #ffffff !important;
+}
+
+/* =========================
+   LOADING IMPORTAÇÃO
+========================= */
+
+.import-loading-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 99999 !important;
+  display: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(2, 6, 23, .74) !important;
+  backdrop-filter: blur(5px) !important;
+}
+
+.import-loading-overlay.show {
+  display: flex !important;
+}
+
+.import-loading-card {
+  width: 390px !important;
+  max-width: calc(100vw - 32px) !important;
+  background: #ffffff !important;
+  border-radius: 24px !important;
+  padding: 34px 28px !important;
+  text-align: center !important;
+  box-shadow: 0 28px 80px rgba(0,0,0,.38) !important;
+}
+
+.import-loading-spinner {
+  width: 64px !important;
+  height: 64px !important;
+  border-radius: 50% !important;
+  border: 6px solid #e5e7eb !important;
+  border-top-color: #0052e0 !important;
+  margin: 0 auto 18px !important;
+  animation: importSpin .85s linear infinite !important;
+}
+
+.import-loading-card h4 {
+  margin: 0 0 8px !important;
+  color: #07143d !important;
+  font-size: 23px !important;
+  font-weight: 950 !important;
+}
+
+.import-loading-card p {
+  margin: 0 0 6px !important;
+  color: #475569 !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+}
+
+.import-loading-card small {
+  color: #64748b !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+@keyframes importSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================
+   RESPONSIVO
+========================= */
+
+@media (max-width: 1400px) {
+  .importacoes-page .importacao-form {
+    grid-template-columns: 1fr 82px 100px !important;
+  }
+
+  .importacoes-page .importacao-file {
+    grid-column: span 2 !important;
+    min-width: 0 !important;
+  }
+
+  .importacoes-page .btn-importacao {
+    grid-column: span 1 !important;
+  }
+
+  .importacoes-page #despesas-completo .importacao-form {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .importacoes-page #despesas-completo .btn-importacao {
+    grid-column: span 2 !important;
+  }
+
+  .importacoes-page .importacao-resumo-grid,
+  .importacoes-page #despesas-completo .importacao-resumo-grid,
+  .importacoes-page #contas-receber .importacao-resumo-grid {
+    grid-template-columns: repeat(2, minmax(160px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 991px) {
+  .importacoes-page .gestao-card > .d-flex:first-child {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .importacoes-page .gestao-card > .d-flex:first-child form {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  .importacoes-page .gestao-card > .d-flex:first-child .btn-outline-danger {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .importacoes-page .importacao-box > form.row .col-lg-5,
+  .importacoes-page .importacao-box > form.row .col-lg-2,
+  .importacoes-page .importacao-box > form.row .col-lg-3 {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+  }
+
+  .importacoes-page .importacao-box > form.row .d-flex {
+    min-width: 0 !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .content-top:has(.importacoes-page) {
+    padding: 12px !important;
+  }
+
+  .importacoes-page .gestao-header h2 {
+    font-size: 24px !important;
+  }
+
+  .importacoes-page .importacao-form,
+  .importacoes-page #despesas-completo .importacao-form {
+    grid-template-columns: 1fr !important;
+  }
+
+  .importacoes-page .importacao-file,
+  .importacoes-page #despesas-completo .importacao-file,
+  .importacoes-page .btn-importacao,
+  .importacoes-page #despesas-completo .btn-importacao {
+    grid-column: auto !important;
+  }
+
+  .importacoes-page .importacao-resumo-grid,
+  .importacoes-page #despesas-completo .importacao-resumo-grid,
+  .importacoes-page #contas-receber .importacao-resumo-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .importacoes-page .competencia-inline-fields,
+  .importacoes-page .competencia-inline-fields .form-control,
+  .importacoes-page .btn-visualizar-mes {
+    width: 100% !important;
+  }
+
+  .importacoes-page .competencia-inline-fields .form-control {
+    min-width: 0 !important;
   }
 }

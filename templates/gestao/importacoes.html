@@ -909,4 +909,41 @@
 
 </div>
 
+<!-- ===================================================== -->
+<!-- LOADING IMPORTAÇÃO -->
+<!-- ===================================================== -->
+<div id="import-loading-overlay" class="import-loading-overlay" aria-hidden="true">
+  <div class="import-loading-card" role="status" aria-live="polite">
+    <div class="import-loading-spinner"></div>
+    <h4>Importando arquivo...</h4>
+    <p>Aguarde, arquivos grandes podem levar alguns segundos.</p>
+    <small>Não feche esta página até finalizar.</small>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const overlay = document.getElementById("import-loading-overlay");
+
+    if (!overlay) {
+      return;
+    }
+
+    document.querySelectorAll(".importacoes-page form[enctype='multipart/form-data']").forEach(function (form) {
+      form.addEventListener("submit", function () {
+        const submitButton = form.querySelector("button[type='submit'], .btn-importacao");
+
+        if (submitButton) {
+          submitButton.disabled = true;
+          submitButton.dataset.originalText = submitButton.innerHTML;
+          submitButton.innerHTML = "Importando...";
+        }
+
+        overlay.classList.add("show");
+        overlay.setAttribute("aria-hidden", "false");
+      });
+    });
+  });
+</script>
+
 {% endblock %}
