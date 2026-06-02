@@ -369,6 +369,49 @@ def buscar_conta_pagar_existente(
     return query.first()
 
 
+
+
+def buscar_despesa_completa_existente(
+    chave_conciliacao,
+    numero_fatura,
+    fornecedor_funcionario,
+    valor,
+    data_vencimento,
+    plano_contas
+):
+    """
+    Busca somente registros da nova importação completa de despesas.
+
+    Importante: não cruza com origem_importacao=PAGAMENTO para não mexer
+    nos registros atuais que alimentam Fluxo/Dashboard durante o teste local.
+    """
+    conta = None
+
+    if chave_conciliacao:
+        conta = ContaPagarImportada.query.filter(
+            ContaPagarImportada.chave_conciliacao == chave_conciliacao,
+            ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA"
+        ).first()
+
+    if conta:
+        return conta
+
+    query = ContaPagarImportada.query.filter(
+        ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA",
+        ContaPagarImportada.numero_fatura == numero_fatura,
+        ContaPagarImportada.fornecedor_funcionario == fornecedor_funcionario,
+        ContaPagarImportada.valor == valor,
+        ContaPagarImportada.plano_contas == plano_contas
+    )
+
+    if data_vencimento:
+        query = query.filter(
+            ContaPagarImportada.data_vencimento == data_vencimento
+        )
+
+    return query.first()
+
+
 def buscar_conta_receber_existente(
     chave_conciliacao,
     numero_fatura,
@@ -667,6 +710,10 @@ def index():
     busca_receber = texto(request.args.get("busca_receber"))
     status_receber = texto(request.args.get("status_receber")).upper()
 
+    busca_despesas_completo = texto(request.args.get("busca_despesas_completo"))
+    status_despesas_completo = texto(request.args.get("status_despesas_completo")).upper()
+    setor_despesas_completo = texto(request.args.get("setor_despesas_completo")).upper()
+
     # Agora a tela trabalha com o cenário novo:
     # 1. Contas Pagas = saídas já realizadas
     # 2. Contas a Receber = entradas/recebíveis importados
@@ -745,6 +792,44 @@ def index():
         ContaReceberImportada.id.asc()
     ).all()
 
+    despesas_completo_query = ContaPagarImportada.query.filter_by(
+        mes=mes,
+        ano=ano
+    ).filter(
+        ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA"
+    )
+
+    if busca_despesas_completo:
+        like = f"%{busca_despesas_completo}%"
+        despesas_completo_query = despesas_completo_query.filter(
+            or_(
+                ContaPagarImportada.numero_fatura.ilike(like),
+                ContaPagarImportada.fornecedor_funcionario.ilike(like),
+                ContaPagarImportada.telefone.ilike(like),
+                ContaPagarImportada.email.ilike(like),
+                ContaPagarImportada.plano_contas.ilike(like),
+                ContaPagarImportada.categoria.ilike(like),
+                ContaPagarImportada.setor.ilike(like),
+                ContaPagarImportada.status.ilike(like),
+                ContaPagarImportada.observacoes.ilike(like),
+            )
+        )
+
+    if status_despesas_completo in ["PAGO", "PENDENTE"]:
+        despesas_completo_query = despesas_completo_query.filter(
+            ContaPagarImportada.status == status_despesas_completo
+        )
+
+    if setor_despesas_completo in ["ASSISTÊNCIA", "LOGÍSTICA"]:
+        despesas_completo_query = despesas_completo_query.filter(
+            ContaPagarImportada.setor == setor_despesas_completo
+        )
+
+    despesas_completo = despesas_completo_query.order_by(
+        ContaPagarImportada.data_vencimento.asc(),
+        ContaPagarImportada.id.asc()
+    ).all()
+
     total_pagar = sum([float(c.valor or 0) for c in contas_pagar])
     total_pagar_pago = sum([float(c.valor or 0) for c in contas_pagar if c.pago])
     total_pagar_pendente = sum([float(c.valor or 0) for c in contas_pagar if not c.pago])
@@ -771,6 +856,24 @@ def index():
         if not c.pago
     ])
 
+    total_despesas_completo = sum([float(c.valor or 0) for c in despesas_completo])
+    total_despesas_completo_pago = sum([
+        float(c.valor or 0) for c in despesas_completo
+        if c.pago
+    ])
+    total_despesas_completo_pendente = sum([
+        float(c.valor or 0) for c in despesas_completo
+        if not c.pago
+    ])
+    total_despesas_completo_assistencia = sum([
+        float(c.valor or 0) for c in despesas_completo
+        if c.setor == "ASSISTÊNCIA"
+    ])
+    total_despesas_completo_logistica = sum([
+        float(c.valor or 0) for c in despesas_completo
+        if c.setor == "LOGÍSTICA"
+    ])
+
     return render_template(
         "gestao/importacoes.html",
 
@@ -779,6 +882,7 @@ def index():
 
         contas_pagar=contas_pagar,
         contas_receber=contas_receber,
+        despesas_completo=despesas_completo,
 
         total_pagar=total_pagar,
         total_pagar_pago=total_pagar_pago,
@@ -790,11 +894,20 @@ def index():
         total_receber_pago=total_receber_pago,
         total_receber_pendente=total_receber_pendente,
 
+        total_despesas_completo=total_despesas_completo,
+        total_despesas_completo_pago=total_despesas_completo_pago,
+        total_despesas_completo_pendente=total_despesas_completo_pendente,
+        total_despesas_completo_assistencia=total_despesas_completo_assistencia,
+        total_despesas_completo_logistica=total_despesas_completo_logistica,
+
         busca_pagar=busca_pagar,
         status_pagar=status_pagar,
         setor_pagar=setor_pagar,
         busca_receber=busca_receber,
         status_receber=status_receber,
+        busca_despesas_completo=busca_despesas_completo,
+        status_despesas_completo=status_despesas_completo,
+        setor_despesas_completo=setor_despesas_completo,
 
         data_para_input=data_para_input
     )
@@ -942,6 +1055,165 @@ def importar_contas_pagas():
         flash(f"Erro ao importar Contas Pagas: {str(e)}", "danger")
 
     return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
+
+
+# =========================================================
+# IMPORTAR DESPESAS COMPLETO
+# Relatório completo de contas a pagar: pagas + pendentes
+# =========================================================
+
+@importacoes_bp.route("/despesas-completo", methods=["POST"])
+@gestao_required
+def importar_despesas_completo():
+
+    arquivo = request.files.get("arquivo_despesas_completo")
+    mes_retorno = request.form.get("mes_despesas_completo", type=int)
+    ano_retorno = request.form.get("ano_despesas_completo", type=int)
+
+    if not validar_mes_ano(mes_retorno, ano_retorno):
+        flash("Informe mês e ano válidos para Despesas Completo.", "danger")
+        return redirect("/gestao/importacoes/")
+
+    if not arquivo or not arquivo.filename:
+        flash("Selecione uma planilha de Despesas Completo.", "danger")
+        return redirect(f"/gestao/importacoes/?mes={mes_retorno}&ano={ano_retorno}#despesas-completo")
+
+    if not arquivo_excel_valido(arquivo.filename):
+        flash(
+            "Formato não aceito. Envie uma planilha Excel nos formatos .xlsx, .xlsm, .xls ou .xlsb.",
+            "danger"
+        )
+        return redirect(f"/gestao/importacoes/?mes={mes_retorno}&ano={ano_retorno}#despesas-completo")
+
+    try:
+        linhas = ler_linhas_upload(arquivo, "Nº Fatura")
+
+        total_criado = 0
+        total_atualizado = 0
+        total_ignorado = 0
+        total_linhas = 0
+        total_pagas = 0
+        total_pendentes = 0
+
+        for linha in linhas:
+            plano_contas = texto(valor_por_coluna(linha, "Pl. Contas"))
+
+            numero_fatura = texto(valor_por_coluna(linha, "Nº Fatura"))
+            fornecedor_funcionario = texto(valor_por_coluna(linha, "Fornecedor/Funcionário"))
+            telefone = texto(valor_por_coluna(linha, "Telefone"))
+            email = texto(valor_por_coluna(linha, "Email"))
+
+            data_pagamento = normalizar_data(valor_por_coluna(linha, "Dt. Pgto"))
+            data_vencimento = normalizar_data(valor_por_coluna(linha, "Dt. Vencto"))
+            data_documento = normalizar_data(valor_por_coluna(linha, "Dt. Docto"))
+
+            valor = normalizar_decimal(valor_por_coluna(linha, "Valor"))
+            pago = normalizar_bool(valor_por_coluna(linha, "Pg?"))
+
+            if not data_vencimento and not data_pagamento:
+                total_ignorado += 1
+                continue
+
+            observacoes = texto(
+                valor_por_colunas(
+                    linha,
+                    [
+                        "Observações",
+                        "Observacoes",
+                        "Observação",
+                        "Observacao",
+                        "Obs",
+                        "OBS",
+                        "Histórico",
+                        "Historico",
+                        "Descrição",
+                        "Descricao"
+                    ]
+                )
+            )
+
+            chave_conciliacao = gerar_chave_conta_pagar(
+                numero_fatura=numero_fatura,
+                fornecedor_funcionario=fornecedor_funcionario,
+                valor=valor,
+                data_vencimento=data_vencimento,
+                plano_contas=plano_contas
+            )
+
+            conta = buscar_despesa_completa_existente(
+                chave_conciliacao=chave_conciliacao,
+                numero_fatura=numero_fatura,
+                fornecedor_funcionario=fornecedor_funcionario,
+                valor=valor,
+                data_vencimento=data_vencimento,
+                plano_contas=plano_contas
+            )
+
+            if conta:
+                total_atualizado += 1
+            else:
+                conta = ContaPagarImportada()
+                db.session.add(conta)
+                total_criado += 1
+
+            conta.numero_fatura = numero_fatura
+            conta.fornecedor_funcionario = fornecedor_funcionario
+            conta.telefone = telefone
+            conta.email = email
+
+            conta.plano_contas = plano_contas
+            conta.categoria = limpar_categoria(plano_contas)
+            conta.setor = identificar_setor(plano_contas, receita=False)
+
+            conta.data_documento = data_documento
+            conta.data_vencimento = data_vencimento
+
+            if pago:
+                conta.data_pagamento = data_pagamento
+                conta.pago = True
+                conta.status = "PAGO"
+                total_pagas += 1
+            else:
+                conta.data_pagamento = None
+                conta.pago = False
+                conta.status = "PENDENTE"
+                total_pendentes += 1
+
+            conta.valor = valor
+            conta.observacoes = observacoes
+
+            # Para esta base completa, mês/ano seguem o mês do vencimento.
+            # Isso permite o Radar identificar de qual competência a conta ficou em aberto.
+            data_base_competencia = data_vencimento or data_pagamento
+            conta.mes = data_base_competencia.month if data_base_competencia else mes_retorno
+            conta.ano = data_base_competencia.year if data_base_competencia else ano_retorno
+
+            conta.chave_conciliacao = chave_conciliacao
+            conta.origem_importacao = "DESPESA_COMPLETA"
+            conta.importado_em = datetime.utcnow()
+
+            total_linhas += 1
+
+        db.session.commit()
+
+        flash(
+            (
+                f"Despesas Completo importado com sucesso! "
+                f"{total_linhas} linha(s) processada(s). "
+                f"Pagas: {total_pagas}. "
+                f"Pendentes: {total_pendentes}. "
+                f"Criadas: {total_criado}. "
+                f"Atualizadas: {total_atualizado}. "
+                f"Ignoradas: {total_ignorado}."
+            ),
+            "success"
+        )
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao importar Despesas Completo: {str(e)}", "danger")
+
+    return redirect(f"/gestao/importacoes/?mes={mes_retorno}&ano={ano_retorno}#despesas-completo")
 
 
 # =========================================================
@@ -1349,6 +1621,44 @@ def limpar_contas_receber_mes():
         flash(f"Erro ao limpar importação de Contas a Receber: {str(e)}", "danger")
 
     return redirect_importacoes(mes, ano)
+
+
+@importacoes_bp.route("/despesas-completo/limpar", methods=["POST"])
+@gestao_required
+def limpar_despesas_completo_mes():
+
+    mes = request.form.get("mes", type=int)
+    ano = request.form.get("ano", type=int)
+
+    if not validar_mes_ano(mes, ano):
+        flash("Informe mês e ano válidos para limpar Despesas Completo.", "danger")
+        return redirect("/gestao/importacoes/")
+
+    try:
+        registros = ContaPagarImportada.query.filter(
+            ContaPagarImportada.mes == mes,
+            ContaPagarImportada.ano == ano,
+            ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA"
+        ).all()
+
+        total_removido = len(registros)
+
+        for registro in registros:
+            db.session.delete(registro)
+
+        db.session.commit()
+
+        flash(
+            f"Importação de Despesas Completo de {mes:02d}/{ano} limpa com sucesso. "
+            f"{total_removido} registro(s) removido(s).",
+            "success"
+        )
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao limpar Despesas Completo: {str(e)}", "danger")
+
+    return redirect_importacoes(mes, ano, "#despesas-completo")
 
 
 # =========================================================

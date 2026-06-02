@@ -12218,7 +12218,7 @@ body {
 }
 
 .importacao-form-info small {
-  color: #64748b;
+  color: #000;
   font-size: 12px;
   line-height: 1.35;
   font-weight: 600;
@@ -22847,5 +22847,574 @@ body {
 
   .radar-herdadas-coluna-body {
     max-height: none !important;
+  }
+}
+
+/* =========================================================
+   IMPORTAÇÕES FINANCEIRAS - VISUAL COLORIDO MELHORADO
+   Mantém toda a lógica, campos, botões, filtros, tabelas e modais.
+   Aplicar no FINAL do style.css
+========================================================= */
+
+body:has(.importacoes-page) {
+  background: #f3f6fb !important;
+}
+
+.content-top:has(.importacoes-page) {
+  padding: 18px 22px !important;
+  background: #f3f6fb !important;
+}
+
+.importacoes-page {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+}
+
+/* TOPO DA PÁGINA */
+.importacoes-page .gestao-header {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 0 4px !important;
+  margin: 0 !important;
+}
+
+.importacoes-page .gestao-header h2 {
+  margin: 0 !important;
+  color: #07143d !important;
+  font-size: 28px !important;
+  line-height: 1.1 !important;
+  font-weight: 950 !important;
+  letter-spacing: -0.6px !important;
+}
+
+.importacoes-page .gestao-header p {
+  margin: 6px 0 0 !important;
+  color: #334155 !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+.importacoes-page .alert-info {
+  display: none !important;
+}
+
+.importacoes-page .importacoes-competencia-inline {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: -54px 0 10px auto !important;
+  max-width: 520px !important;
+}
+
+.importacoes-page .competencia-inline-form {
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+}
+
+.importacoes-page .competencia-inline-text {
+  display: none !important;
+}
+
+.importacoes-page .competencia-inline-fields {
+  display: flex !important;
+  gap: 10px !important;
+  align-items: center !important;
+}
+
+.importacoes-page .competencia-inline-fields input {
+  width: 96px !important;
+  height: 42px !important;
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 9px !important;
+  color: #07143d !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+}
+
+.importacoes-page .btn-visualizar-mes {
+  height: 42px !important;
+  min-width: 150px !important;
+  border: none !important;
+  border-radius: 9px !important;
+  background: #0047d9 !important;
+  color: #ffffff !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  box-shadow: 0 8px 16px rgba(0, 71, 217, 0.22) !important;
+}
+
+/* CARDS PRINCIPAIS */
+.importacoes-page .gestao-card {
+  position: relative !important;
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 0 !important;
+  margin: 0 0 6px !important;
+  overflow: hidden !important;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.18) !important;
+}
+
+.importacoes-page .gestao-card > .d-flex:first-child {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  padding: 14px 18px 8px !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+.importacoes-page .gestao-card h5 {
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  font-size: 21px !important;
+  line-height: 1.05 !important;
+  font-weight: 950 !important;
+  letter-spacing: -0.4px !important;
+  text-transform: uppercase !important;
+}
+
+.importacoes-page .gestao-card > .d-flex:first-child p {
+  margin: 4px 0 0 !important;
+  font-size: 12px !important;
+  line-height: 1.25 !important;
+  font-weight: 700 !important;
+}
+
+/* BOTÕES DO TOPO DA SEÇÃO */
+.importacoes-page .gestao-card > .d-flex:first-child form {
+  margin: 0 !important;
+}
+
+.importacoes-page .gestao-card > .d-flex:first-child .btn,
+.importacoes-page .gestao-card > .d-flex:first-child button {
+  min-height: 38px !important;
+  border-radius: 7px !important;
+  padding: 0 15px !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+}
+
+/* ÁREA INTERNA */
+.importacoes-page .importacao-box {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  background: transparent !important;
+  padding: 0 14px 12px !important;
+  border: none !important;
+}
+
+/* Ordem visual: KPIs primeiro, upload depois, filtros depois */
+.importacoes-page .importacao-resumo-grid { order: 1 !important; }
+.importacoes-page .importacao-form { order: 2 !important; }
+.importacoes-page .importacao-box > form.row { order: 3 !important; }
+.importacoes-page .importacao-table-wrap { order: 4 !important; }
+
+/* KPI */
+.importacoes-page .importacao-resumo-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)) !important;
+  gap: 10px !important;
+  margin: 0 !important;
+}
+
+.importacoes-page .importacao-resumo-card {
+  min-height: 62px !important;
+  padding: 12px 15px !important;
+  border-radius: 8px !important;
+  background: rgba(255,255,255,0.12) !important;
+  border: 1px solid rgba(255,255,255,0.18) !important;
+  box-shadow: none !important;
+}
+
+.importacoes-page .importacao-resumo-card span {
+  display: block !important;
+  margin: 0 0 4px !important;
+  font-size: 10px !important;
+  line-height: 1 !important;
+  font-weight: 950 !important;
+  text-transform: uppercase !important;
+}
+
+.importacoes-page .importacao-resumo-card strong {
+  display: block !important;
+  font-size: 17px !important;
+  line-height: 1.1 !important;
+  font-weight: 950 !important;
+}
+
+/* FORM DE IMPORTAÇÃO - CONTINUA VISÍVEL E FUNCIONAL */
+.importacoes-page .importacao-form {
+  display: grid !important;
+  grid-template-columns: minmax(230px, 1.1fr) 72px 86px minmax(260px, 2fr) 180px !important;
+  align-items: end !important;
+  gap: 10px !important;
+  padding: 10px !important;
+  margin: 0 !important;
+  background: rgba(255,255,255,0.18) !important;
+  border: 1px solid rgba(255,255,255,0.22) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+.importacoes-page .importacao-form-info strong {
+  display: block !important;
+  margin-bottom: 3px !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+}
+
+.importacoes-page .importacao-form-info small {
+  display: block !important;
+  font-size: 10.5px !important;
+  line-height: 1.25 !important;
+  font-weight: 600 !important;
+  opacity: 0.9 !important;
+}
+
+.importacoes-page .importacao-field label {
+  margin: 0 0 3px !important;
+  font-size: 9px !important;
+  line-height: 1 !important;
+  font-weight: 950 !important;
+  text-transform: uppercase !important;
+}
+
+.importacoes-page .form-control,
+.importacoes-page select {
+  width: 100% !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  border-radius: 6px !important;
+  border: 1px solid #d4dbe8 !important;
+  background: #ffffff !important;
+  color: #07143d !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  box-shadow: none !important
+}
+
+.importacoes-page input[type="file"].form-control {
+  padding: 5px 8px !important;
+}
+
+.importacoes-page .btn-importacao {
+  height: 34px !important;
+  min-height: 34px !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 0 12px !important;
+  color: #ffffff !important;
+  font-size: 11px !important;
+  font-weight: 950 !important;
+  white-space: nowrap !important;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.18) !important;
+}
+
+/* FILTROS */
+.importacoes-page .importacao-box > form.row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.importacoes-page .importacao-box > form.row > [class*="col-"] {
+  padding: 0 !important;
+}
+
+.importacoes-page .importacao-box > form.row .col-lg-5 {
+  flex: 1 1 42% !important;
+  max-width: none !important;
+}
+
+.importacoes-page .importacao-box > form.row .col-lg-2 {
+  flex: 0 0 210px !important;
+  max-width: 210px !important;
+}
+
+.importacoes-page .importacao-box > form.row .col-lg-3 {
+  flex: 0 0 330px !important;
+  max-width: 330px !important;
+}
+
+.importacoes-page .btn-primary,
+.importacoes-page .btn-outline-secondary {
+  height: 34px !important;
+  min-height: 34px !important;
+  border-radius: 6px !important;
+  font-size: 11px !important;
+  font-weight: 950 !important;
+}
+
+.importacoes-page .btn-primary {
+  background: #0047d9 !important;
+  border-color: #0047d9 !important;
+  color: #ffffff !important;
+}
+
+.importacoes-page .btn-outline-secondary {
+  background: #ffffff !important;
+  color: #07143d !important;
+  border-color: #d4dbe8 !important;
+}
+
+/* TABELA */
+.importacoes-page .importacao-table-wrap {
+  width: 100% !important;
+  max-height: 260px !important;
+  overflow: auto !important;
+  background: #ffffff !important;
+  border: none !important;
+  border-radius: 7px !important;
+  box-shadow: none !important;
+}
+
+.importacoes-page .importacao-table-wrap table {
+  min-width: 1320px !important;
+  width: 100% !important;
+  margin: 0 !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+.importacoes-page .importacao-table-wrap thead th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 5 !important;
+  color: #ffffff !important;
+  border: none !important;
+  padding: 8px 10px !important;
+  font-size: 10.5px !important;
+  line-height: 1 !important;
+  font-weight: 950 !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+}
+
+.importacoes-page .importacao-table-wrap tbody td {
+  padding: 7px 10px !important;
+  color: #07143d !important;
+  border-bottom: 1px solid #e5eaf2 !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+}
+
+.importacoes-page .table-striped > tbody > tr:nth-of-type(odd) > * {
+  background: #ffffff !important;
+}
+
+.importacoes-page .table-striped > tbody > tr:nth-of-type(even) > * {
+  background: #f7f9fc !important;
+}
+
+.importacoes-page .importacao-obs {
+  max-width: 320px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.importacoes-page .table td:last-child,
+.importacoes-page .table th:last-child {
+  min-width: 82px !important;
+  width: 82px !important;
+}
+
+.importacoes-page .table td:last-child .btn {
+  width: 25px !important;
+  min-width: 25px !important;
+  height: 24px !important;
+  padding: 0 !important;
+  border-radius: 5px !important;
+  font-size: 10px !important;
+}
+
+/* BADGES */
+.importacoes-page .badge {
+  border-radius: 999px !important;
+  padding: 4px 8px !important;
+  font-size: 9.5px !important;
+  line-height: 1 !important;
+  font-weight: 950 !important;
+}
+
+/* CORES POR SEÇÃO */
+#contas-pagas {
+  background: linear-gradient(135deg, #b00000 0%, #e30613 52%, #ff2332 100%) !important;
+  color: #ffffff !important;
+}
+
+#contas-pagas h5,
+#contas-pagas p,
+#contas-pagas .text-muted,
+#contas-pagas .importacao-form-info,
+#contas-pagas .importacao-field label,
+#contas-pagas .importacao-resumo-card span,
+#contas-pagas .importacao-resumo-card strong {
+  color: #ffffff !important;
+}
+
+#contas-pagas .gestao-card > .d-flex:first-child .btn,
+#contas-pagas > .d-flex:first-child .btn-outline-danger {
+  background: #ffffff !important;
+  color: #d90429 !important;
+  border: none !important;
+}
+
+#contas-pagas .btn-importacao {
+  background: #b00000 !important;
+}
+
+#contas-pagas .importacao-table-wrap thead th {
+  background: #b00000 !important;
+}
+
+#despesas-completo {
+  background: linear-gradient(135deg, #ffc300 0%, #ffd60a 52%, #ffed70 100%) !important;
+  color: #000000 !important;
+}
+
+#despesas-completo h5,
+#despesas-completo p,
+#despesas-completo .text-muted,
+#despesas-completo .importacao-form-info,
+#despesas-completo .importacao-field label,
+#despesas-completo .importacao-resumo-card span,
+#despesas-completo .importacao-resumo-card strong {
+  color: #000000 !important;
+}
+
+#despesas-completo .alert-warning {
+  order: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 8px 18px !important;
+  background: rgba(255,255,255,0.55) !important;
+  color: #000000 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+}
+
+#despesas-completo > .d-flex:first-child .btn-outline-danger {
+  background: #111827 !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+#despesas-completo .btn-importacao {
+  background: #111827 !important;
+}
+
+#despesas-completo .importacao-table-wrap thead th {
+  background: #111827 !important;
+}
+
+#contas-receber {
+  background: linear-gradient(135deg, #006b2f 0%, #008f3f 52%, #16a34a 100%) !important;
+  color: #ffffff !important;
+}
+
+#contas-receber h5,
+#contas-receber p,
+#contas-receber .text-muted,
+#contas-receber .importacao-form-info,
+#contas-receber .importacao-field label,
+#contas-receber .importacao-resumo-card span,
+#contas-receber .importacao-resumo-card strong {
+  color: #ffffff !important;
+}
+
+#contas-receber > .d-flex:first-child .btn-outline-danger {
+  background: #ffffff !important;
+  color: #047857 !important;
+  border: none !important;
+}
+
+#contas-receber .btn-importacao {
+  background: #006b2f !important;
+}
+
+#contas-receber .importacao-table-wrap thead th {
+  background: #006b2f !important;
+}
+
+/* Modal fica normal, sem herdar cores */
+.importacoes-page .modal,
+.importacoes-page .modal * {
+  color: inherit;
+}
+
+.importacoes-page .modal-content {
+  color: #111827 !important;
+}
+
+/* Responsivo */
+@media (max-width: 1300px) {
+  .importacoes-page .importacoes-competencia-inline {
+    margin: 0 0 10px 0 !important;
+    max-width: 100% !important;
+  }
+
+  .importacoes-page .competencia-inline-form,
+  .importacoes-page .competencia-inline-fields {
+    justify-content: flex-start !important;
+    flex-wrap: wrap !important;
+  }
+
+  .importacoes-page .importacao-form {
+    grid-template-columns: 1fr 80px 95px !important;
+  }
+
+  .importacoes-page .importacao-file,
+  .importacoes-page .btn-importacao {
+    grid-column: auto !important;
+  }
+
+  .importacoes-page .importacao-box > form.row .col-lg-5,
+  .importacoes-page .importacao-box > form.row .col-lg-2,
+  .importacoes-page .importacao-box > form.row .col-lg-3 {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .content-top:has(.importacoes-page) {
+    padding: 10px !important;
+  }
+
+  .importacoes-page .gestao-header h2 {
+    font-size: 24px !important;
+  }
+
+  .importacoes-page .gestao-card > .d-flex:first-child {
+    flex-direction: column !important;
+  }
+
+  .importacoes-page .importacao-form,
+  .importacoes-page .importacao-resumo-grid {
+    grid-template-columns: 1fr !important;
   }
 }

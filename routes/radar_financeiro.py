@@ -11,6 +11,7 @@ from sqlalchemy import or_, and_
 from utils.auth import gestao_required
 from database import db
 from models.conta_radar_financeiro import ContaRadarFinanceiro
+from models.conta_pagar_importada import ContaPagarImportada
 from services.telegram_service import (
     enviar_mensagem_telegram,
     montar_mensagem_contas_vencendo_hoje,
@@ -270,6 +271,10 @@ def conta_esta_aberta(conta):
 
 
 def tipo_obrigacao_conta(conta):
+    tipo_salvo = texto_upper(getattr(conta, "tipo_obrigacao", None))
+    if tipo_salvo in ["UNICA", "RECORRENTE", "PARCELADA"]:
+        return tipo_salvo
+
     if getattr(conta, "total_parcelas", None):
         return "PARCELADA"
 
@@ -367,6 +372,11 @@ def conta_deve_entrar_como_herdada(conta, mes_contexto, ano_contexto):
     if not vencimento or not mes_contexto or not ano_contexto:
         return False
 
+    # Na base importada completa, qualquer conta antiga em aberto precisa aparecer
+    # como herdada, mesmo que não seja recorrente ou parcelada.
+    if texto_upper(getattr(conta, "origem_importacao", None)) == "DESPESA_COMPLETA":
+        return vencimento < primeiro_dia_mes(int(mes_contexto), int(ano_contexto))
+
     eh_obrigacao_continua = conta_eh_parcelada(conta) or conta_eh_recorrente(conta)
 
     return eh_obrigacao_continua and vencimento < primeiro_dia_mes(int(mes_contexto), int(ano_contexto))
@@ -376,7 +386,169 @@ def conta_continua_herdada(conta, mes_contexto, ano_contexto):
     return conta_deve_entrar_como_herdada(conta, mes_contexto, ano_contexto)
 
 
+def preparar_conta_importada_para_radar(conta):
+    """
+    Adapta ContaPagarImportada para o template/funções do Radar antigo.
+    Não cria coluna nova no banco; apenas adiciona atributos em memória.
+    """
+    if not conta:
+        return conta
+
+    conta.descricao = (
+        getattr(conta, "plano_contas", None)
+        or getattr(conta, "categoria", None)
+        or getattr(conta, "numero_fatura", None)
+        or "DESPESA IMPORTADA"
+    )
+    conta.fornecedor = getattr(conta, "fornecedor_funcionario", None) or "-"
+    conta.recorrente = False
+    conta.gerado_por_transporte = False
+    conta.conta_origem_id = None
+
+    if getattr(conta, "pago", False):
+        conta.status = "PAGO"
+    elif texto_upper(getattr(conta, "status", None)) in ["CANCELADO", "CANCELADA"]:
+        conta.status = "CANCELADO"
+    else:
+        conta.status = "PENDENTE"
+
+    return conta
+
+
+def conta_eh_importada_completa(conta):
+    return isinstance(conta, ContaPagarImportada) and texto_upper(getattr(conta, "origem_importacao", None)) == "DESPESA_COMPLETA"
+
+
+def buscar_conta_operacional(id):
+    """
+    O Radar novo mostra contas vindas de ContaPagarImportada (DESPESA_COMPLETA),
+    mas ainda mantém compatibilidade com contas manuais antigas em ContaRadarFinanceiro.
+    Preferimos a importada porque os cards atuais do Radar vêm dessa base.
+    """
+    conta_importada = ContaPagarImportada.query.filter(
+        ContaPagarImportada.id == id,
+        ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA"
+    ).first()
+
+    if conta_importada:
+        return preparar_conta_importada_para_radar(conta_importada)
+
+    return ContaRadarFinanceiro.query.get_or_404(id)
+
+
+def atualizar_conta_importada_por_form(conta):
+    data_vencimento = parse_data(request.form.get("data_vencimento"))
+    data_pagamento = parse_data(request.form.get("data_pagamento"))
+    status = texto_upper(request.form.get("status")) or "PENDENTE"
+    tipo_obrigacao = texto_upper(request.form.get("tipo_obrigacao")) or "UNICA"
+
+    if not data_vencimento:
+        raise ValueError("Informe uma data de vencimento válida.")
+
+    descricao = texto(request.form.get("descricao")) or getattr(conta, "plano_contas", None) or "DESPESA IMPORTADA"
+
+    conta.plano_contas = descricao
+    conta.categoria = texto(request.form.get("categoria")) or conta.categoria
+    conta.fornecedor_funcionario = texto(request.form.get("fornecedor")) or conta.fornecedor_funcionario
+    conta.setor = texto_upper(request.form.get("setor")) or "ASSISTÊNCIA"
+    conta.valor = normalizar_decimal(request.form.get("valor"))
+    conta.data_vencimento = inicio_dia_datetime(data_vencimento)
+    conta.status = status
+    conta.pago = status == "PAGO"
+
+    observacoes_form = texto(request.form.get("observacoes"))
+    marcador_ajuste = "[AJUSTE EMERGENCIAL RADAR]"
+    if marcador_ajuste not in observacoes_form:
+        data_ajuste = datetime.now().strftime("%d/%m/%Y %H:%M")
+        linha_ajuste = f"{marcador_ajuste} Conta importada ajustada manualmente no Radar em {data_ajuste}. Reimportações futuras podem atualizar novamente os dados oficiais."
+        observacoes_form = (observacoes_form + "\n" + linha_ajuste).strip() if observacoes_form else linha_ajuste
+
+    conta.observacoes = observacoes_form
+    conta.tipo_obrigacao = tipo_obrigacao
+
+    if status == "PAGO":
+        conta.data_pagamento = inicio_dia_datetime(data_pagamento or date.today())
+    else:
+        conta.data_pagamento = None
+
+    if tipo_obrigacao == "PARCELADA":
+        conta.parcela_atual = request.form.get("parcela_atual", type=int)
+        conta.total_parcelas = request.form.get("total_parcelas", type=int)
+    else:
+        conta.parcela_atual = None
+        conta.total_parcelas = None
+
+    conta.mes = data_vencimento.month
+    conta.ano = data_vencimento.year
+
+    return data_vencimento
+
+
+def criar_conta_importada_transportada(conta, mes_destino, ano_destino, observacao_extra=""):
+    data_base = data_para_date(getattr(conta, "data_vencimento", None)) or date.today()
+    nova_data = ajustar_data_para_mes_ano(data_base, mes_destino, ano_destino)
+
+    observacoes = texto(getattr(conta, "observacoes", ""))
+    texto_transporte = (
+        f"Conta transportada pelo Radar a partir de {competencia_label(data_base)}. "
+        f"Vencimento original: {data_br(data_base)}."
+    )
+
+    if observacao_extra:
+        texto_transporte += f" {texto(observacao_extra)}"
+
+    if observacoes:
+        observacoes = f"{observacoes}\n{texto_transporte}"
+    else:
+        observacoes = texto_transporte
+
+    nova_conta = ContaPagarImportada(
+        numero_fatura=getattr(conta, "numero_fatura", None),
+        fornecedor_funcionario=getattr(conta, "fornecedor_funcionario", None) or getattr(conta, "fornecedor", None),
+        plano_contas=getattr(conta, "plano_contas", None) or getattr(conta, "descricao", None),
+        categoria=getattr(conta, "categoria", None),
+        setor=getattr(conta, "setor", None) or "ASSISTÊNCIA",
+        data_documento=inicio_dia_datetime(date.today()),
+        data_vencimento=inicio_dia_datetime(nova_data),
+        data_pagamento=None,
+        valor=getattr(conta, "valor", 0),
+        pago=False,
+        status="PENDENTE",
+        observacoes=observacoes,
+        tipo_obrigacao=getattr(conta, "tipo_obrigacao", None) or tipo_obrigacao_conta(conta),
+        parcela_atual=getattr(conta, "parcela_atual", None),
+        total_parcelas=getattr(conta, "total_parcelas", None),
+        mes=mes_destino,
+        ano=ano_destino,
+        chave_conciliacao=None,
+        origem_importacao="DESPESA_COMPLETA",
+    )
+
+    db.session.add(nova_conta)
+    return nova_conta
+
+
+def conta_importada_transportada_ja_existe(conta, mes_destino, ano_destino):
+    data_base = data_para_date(getattr(conta, "data_vencimento", None)) or date.today()
+    nova_data = ajustar_data_para_mes_ano(data_base, mes_destino, ano_destino)
+
+    return ContaPagarImportada.query.filter(
+        ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA",
+        ContaPagarImportada.status != "CANCELADO",
+        ContaPagarImportada.mes == mes_destino,
+        ContaPagarImportada.ano == ano_destino,
+        ContaPagarImportada.data_vencimento >= inicio_dia_datetime(nova_data),
+        ContaPagarImportada.data_vencimento <= fim_dia_datetime(nova_data),
+        ContaPagarImportada.valor == getattr(conta, "valor", 0),
+        ContaPagarImportada.fornecedor_funcionario == (getattr(conta, "fornecedor_funcionario", None) or getattr(conta, "fornecedor", None)),
+        ContaPagarImportada.plano_contas == (getattr(conta, "plano_contas", None) or getattr(conta, "descricao", None)),
+    ).first()
+
+
 def atualizar_conta_por_form(conta):
+    if conta_eh_importada_completa(conta):
+        return atualizar_conta_importada_por_form(conta)
+
     data_vencimento = parse_data(request.form.get("data_vencimento"))
     data_pagamento = parse_data(request.form.get("data_pagamento"))
     status = texto_upper(request.form.get("status")) or "PENDENTE"
@@ -619,20 +791,36 @@ def montar_item(conta, hoje):
         else:
             dias_para_vencer = (venc - hoje).days
 
+    origem_importada = texto_upper(getattr(conta, "origem_importacao", None)) == "DESPESA_COMPLETA"
+
     return {
         "id": conta.id,
-        "descricao": conta.descricao or "SEM DESCRIÇÃO",
-        "fornecedor": conta.fornecedor or "-",
+        "origem_importada": origem_importada,
+        "numero_fatura": getattr(conta, "numero_fatura", None) or "-",
+        "fornecedor_funcionario": getattr(conta, "fornecedor_funcionario", None) or getattr(conta, "fornecedor", None) or "-",
+        "telefone": getattr(conta, "telefone", None) or "-",
+        "email": getattr(conta, "email", None) or "-",
+        "plano_contas": getattr(conta, "plano_contas", None) or getattr(conta, "descricao", None) or "-",
+        "descricao": conta.descricao or getattr(conta, "plano_contas", None) or "SEM DESCRIÇÃO",
+        "fornecedor": conta.fornecedor or getattr(conta, "fornecedor_funcionario", None) or "-",
         "categoria": conta.categoria or "-",
         "setor": conta.setor or "GERAL",
         "valor": dinheiro(conta.valor),
         "valor_formatado": moeda(conta.valor),
+        "data_documento": data_para_date(getattr(conta, "data_documento", None)),
+        "data_documento_formatada": data_br(getattr(conta, "data_documento", None)),
         "data_vencimento": venc,
         "data_vencimento_input": data_para_input(conta.data_vencimento),
         "data_vencimento_formatada": data_br(conta.data_vencimento),
         "data_pagamento": pgto,
         "data_pagamento_input": data_para_input(conta.data_pagamento),
         "data_pagamento_formatada": data_br(conta.data_pagamento),
+        "origem_importacao": getattr(conta, "origem_importacao", None) or "RADAR",
+        "chave_conciliacao": getattr(conta, "chave_conciliacao", None) or "-",
+        "importado_em": data_para_date(getattr(conta, "importado_em", None)),
+        "importado_em_formatado": data_br(getattr(conta, "importado_em", None)),
+        "mes_origem": getattr(conta, "mes", None) or (venc.month if venc else None),
+        "ano_origem": getattr(conta, "ano", None) or (venc.year if venc else None),
         "pago": conta_esta_paga(conta),
         "status": texto_upper(conta.status) or "PENDENTE",
         "status_label": status_label,
@@ -673,6 +861,7 @@ def coluna(slug, titulo, subtitulo, cor, itens=None, grupos=None, vazia="Sem con
         "total": total,
         "total_formatado": moeda(total),
         "vazia": vazia,
+        "tem_acoes": any(not item.get("origem_importada") for item in itens),
     }
 
 
@@ -720,6 +909,7 @@ def montar_grupos_herdados(contas_herdadas, hoje):
             "atraso_medio": atraso_medio,
             "parcelas_resumo": ", ".join(parcelas[:4]) + ("..." if len(parcelas) > 4 else ""),
             "tipo_grupo": "PARCELADA" if any(item.get("parcelada") for item in grupo["historico"]) else "RECORRENTE",
+            "origem_importada": any(item.get("origem_importada") for item in grupo["historico"]),
         })
         grupos.append(grupo)
 
@@ -735,14 +925,17 @@ def buscar_contas_vencendo_hoje(data_ref=None):
     inicio = inicio_dia_datetime(data_ref)
     fim = fim_dia_datetime(data_ref)
 
-    return ContaRadarFinanceiro.query.filter(
-        ContaRadarFinanceiro.data_vencimento >= inicio,
-        ContaRadarFinanceiro.data_vencimento <= fim,
-        ContaRadarFinanceiro.status.in_(["PENDENTE", "ADIADO"]),
+    contas = ContaPagarImportada.query.filter(
+        ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA",
+        ContaPagarImportada.pago == False,
+        ContaPagarImportada.data_vencimento >= inicio,
+        ContaPagarImportada.data_vencimento <= fim,
     ).order_by(
-        ContaRadarFinanceiro.data_vencimento.asc(),
-        ContaRadarFinanceiro.id.asc(),
+        ContaPagarImportada.data_vencimento.asc(),
+        ContaPagarImportada.id.asc(),
     ).all()
+
+    return [preparar_conta_importada_para_radar(c) for c in contas]
 
 
 def executar_envio_alerta_telegram_hoje():
@@ -792,28 +985,40 @@ def index():
     primeiro_mes = primeiro_dia_mes(mes, ano)
     ultimo_mes = ultimo_dia_mes(mes, ano)
 
-    query = ContaRadarFinanceiro.query.filter(
-        ContaRadarFinanceiro.status != "CANCELADO"
+    # NOVA BASE DO RADAR:
+    # Despesas Completo importadas em ContaPagarImportada.
+    # O Radar lê por vencimento/status; Fluxo/Dashboard continuam lendo pagamento real.
+    query = ContaPagarImportada.query.filter(
+        ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA",
+        ContaPagarImportada.ano <= ano,
+    ).filter(
+        or_(
+            ContaPagarImportada.status.is_(None),
+            ContaPagarImportada.status != "CANCELADO"
+        )
     )
 
     if setor:
-        query = query.filter(ContaRadarFinanceiro.setor == setor)
+        query = query.filter(ContaPagarImportada.setor == setor)
 
     if busca:
         like = f"%{busca}%"
         query = query.filter(
             or_(
-                ContaRadarFinanceiro.descricao.ilike(like),
-                ContaRadarFinanceiro.fornecedor.ilike(like),
-                ContaRadarFinanceiro.categoria.ilike(like),
-                ContaRadarFinanceiro.observacoes.ilike(like),
+                ContaPagarImportada.numero_fatura.ilike(like),
+                ContaPagarImportada.fornecedor_funcionario.ilike(like),
+                ContaPagarImportada.plano_contas.ilike(like),
+                ContaPagarImportada.categoria.ilike(like),
+                ContaPagarImportada.observacoes.ilike(like),
             )
         )
 
     contas = query.order_by(
-        ContaRadarFinanceiro.data_vencimento.asc().nullslast(),
-        ContaRadarFinanceiro.id.asc(),
+        ContaPagarImportada.data_vencimento.asc().nullslast(),
+        ContaPagarImportada.id.asc(),
     ).all()
+
+    contas = [preparar_conta_importada_para_radar(conta) for conta in contas]
 
     herdadas_contas = []
     hoje_itens = []
@@ -928,8 +1133,8 @@ def index():
         for item in top_despesas
     ]
 
-    insight = "Dívida herdada mostra parcelas/recorrências antigas em aberto. Ao pagar, a obrigação sai automaticamente da coluna herdada."
-    recomendacao = "Priorize as parcelas herdadas mais antigas e mantenha o mês atual separado das dívidas anteriores."
+    insight = "Dívida herdada mostra despesas importadas antigas em aberto, separadas pelo mês de vencimento."
+    recomendacao = "Priorize as contas importadas mais antigas e mantenha o mês atual separado das dívidas anteriores."
 
     return render_template(
         "gestao/radar_financeiro.html",
@@ -1163,14 +1368,16 @@ def novo():
 @radar_financeiro_bp.route("/editar/<int:id>", methods=["POST"])
 @gestao_required
 def editar(id):
-    conta = ContaRadarFinanceiro.query.get_or_404(id)
+    conta = buscar_conta_operacional(id)
 
     try:
         data_vencimento = atualizar_conta_por_form(conta)
         aplicar_juros_modal_na_conta(conta)
         db.session.flush()
 
-        recorrencias_criadas = gerar_recorrencias_futuras_ate_dezembro(conta, data_vencimento)
+        recorrencias_criadas = 0
+        if not conta_eh_importada_completa(conta):
+            recorrencias_criadas = gerar_recorrencias_futuras_ate_dezembro(conta, data_vencimento)
 
         db.session.commit()
 
@@ -1190,11 +1397,13 @@ def editar(id):
 @radar_financeiro_bp.route("/pagar/<int:id>", methods=["POST"])
 @gestao_required
 def pagar(id):
-    conta = ContaRadarFinanceiro.query.get_or_404(id)
+    conta = buscar_conta_operacional(id)
 
     try:
         data_pagamento = parse_data(request.form.get("data_pagamento")) or date.today()
         conta.status = "PAGO"
+        if conta_eh_importada_completa(conta):
+            conta.pago = True
         conta.data_pagamento = inicio_dia_datetime(data_pagamento)
         db.session.commit()
         flash("Conta marcada como paga.", "success")
@@ -1215,10 +1424,17 @@ def api_herdadas_pagar():
         return jsonify({"ok": False, "message": "Selecione ao menos uma parcela."}), 400
 
     try:
-        contas = ContaRadarFinanceiro.query.filter(ContaRadarFinanceiro.id.in_(ids)).all()
+        contas = []
+        for conta_id in ids:
+            try:
+                contas.append(buscar_conta_operacional(conta_id))
+            except Exception:
+                pass
 
         for conta in contas:
             conta.status = "PAGO"
+            if conta_eh_importada_completa(conta):
+                conta.pago = True
             conta.data_pagamento = inicio_dia_datetime(data_pagamento)
 
         db.session.commit()
@@ -1243,7 +1459,12 @@ def api_herdadas_excluir():
         return jsonify({"ok": False, "message": "Selecione ao menos uma parcela."}), 400
 
     try:
-        contas = ContaRadarFinanceiro.query.filter(ContaRadarFinanceiro.id.in_(ids)).all()
+        contas = []
+        for conta_id in ids:
+            try:
+                contas.append(buscar_conta_operacional(conta_id))
+            except Exception:
+                pass
 
         for conta in contas:
             db.session.delete(conta)
@@ -1264,7 +1485,7 @@ def api_herdadas_excluir():
 @radar_financeiro_bp.route("/api/herdadas/editar/<int:id>", methods=["POST"])
 @gestao_required
 def api_herdadas_editar(id):
-    conta = ContaRadarFinanceiro.query.get_or_404(id)
+    conta = buscar_conta_operacional(id)
     mes_contexto = request.form.get("mes_contexto", type=int)
     ano_contexto = request.form.get("ano_contexto", type=int)
 
@@ -1273,7 +1494,9 @@ def api_herdadas_editar(id):
         aplicar_juros_modal_na_conta(conta)
         db.session.flush()
 
-        recorrencias_criadas = gerar_recorrencias_futuras_ate_dezembro(conta, data_vencimento)
+        recorrencias_criadas = 0
+        if not conta_eh_importada_completa(conta):
+            recorrencias_criadas = gerar_recorrencias_futuras_ate_dezembro(conta, data_vencimento)
 
         db.session.commit()
 
@@ -1304,7 +1527,7 @@ def api_herdadas_editar(id):
 @radar_financeiro_bp.route("/transportar/<int:id>", methods=["POST"])
 @gestao_required
 def transportar(id):
-    conta = ContaRadarFinanceiro.query.get_or_404(id)
+    conta = buscar_conta_operacional(id)
 
     try:
         if not conta_esta_paga(conta):
@@ -1318,29 +1541,35 @@ def transportar(id):
             flash("Informe mês e ano de destino válidos.", "danger")
             return redirect(request.referrer or "/gestao/radar-financeiro/")
 
-        if conta_transportada_ja_existe(conta, mes_destino, ano_destino):
-            flash("Essa conta já foi transportada para o mês selecionado.", "warning")
-            return redirect_radar(mes_destino, ano_destino)
+        if conta_eh_importada_completa(conta):
+            if conta_importada_transportada_ja_existe(conta, mes_destino, ano_destino):
+                flash("Essa conta já foi transportada para o mês selecionado.", "warning")
+                return redirect_radar(mes_destino, ano_destino)
+            criar_conta_importada_transportada(conta, mes_destino, ano_destino)
+        else:
+            if conta_transportada_ja_existe(conta, mes_destino, ano_destino):
+                flash("Essa conta já foi transportada para o mês selecionado.", "warning")
+                return redirect_radar(mes_destino, ano_destino)
 
-        data_base = data_para_date(conta.data_vencimento) or date.today()
-        nova_data = ajustar_data_para_mes_ano(data_base, mes_destino, ano_destino)
+            data_base = data_para_date(conta.data_vencimento) or date.today()
+            nova_data = ajustar_data_para_mes_ano(data_base, mes_destino, ano_destino)
 
-        criar_conta_radar(
-            descricao=conta.descricao,
-            fornecedor=conta.fornecedor,
-            categoria=conta.categoria,
-            setor=conta.setor,
-            valor=conta.valor,
-            data_vencimento=nova_data,
-            status="PENDENTE",
-            data_pagamento=None,
-            observacoes=conta.observacoes,
-            parcela_atual=conta.parcela_atual,
-            total_parcelas=conta.total_parcelas,
-            recorrente=conta.recorrente,
-            gerado_por_transporte=True,
-            conta_origem_id=conta.id,
-        )
+            criar_conta_radar(
+                descricao=conta.descricao,
+                fornecedor=conta.fornecedor,
+                categoria=conta.categoria,
+                setor=conta.setor,
+                valor=conta.valor,
+                data_vencimento=nova_data,
+                status="PENDENTE",
+                data_pagamento=None,
+                observacoes=conta.observacoes,
+                parcela_atual=conta.parcela_atual,
+                total_parcelas=conta.total_parcelas,
+                recorrente=conta.recorrente,
+                gerado_por_transporte=True,
+                conta_origem_id=conta.id,
+            )
 
         db.session.commit()
         flash("Conta transportada para o mês destino.", "success")
@@ -1373,11 +1602,24 @@ def transportar_lote():
     nao_pagas = 0
 
     try:
-        contas = ContaRadarFinanceiro.query.filter(ContaRadarFinanceiro.id.in_(ids)).all()
+        contas = []
+        for conta_id in ids:
+            try:
+                contas.append(buscar_conta_operacional(conta_id))
+            except Exception:
+                pass
 
         for conta in contas:
             if not conta_esta_paga(conta):
                 nao_pagas += 1
+                continue
+
+            if conta_eh_importada_completa(conta):
+                if conta_importada_transportada_ja_existe(conta, mes_destino, ano_destino):
+                    duplicadas += 1
+                    continue
+                criar_conta_importada_transportada(conta, mes_destino, ano_destino, observacao_extra)
+                total += 1
                 continue
 
             if conta_transportada_ja_existe(conta, mes_destino, ano_destino):
@@ -1427,7 +1669,7 @@ def transportar_pagas_lote():
 @radar_financeiro_bp.route("/cancelar/<int:id>", methods=["POST"])
 @gestao_required
 def cancelar(id):
-    conta = ContaRadarFinanceiro.query.get_or_404(id)
+    conta = buscar_conta_operacional(id)
     try:
         conta.status = "CANCELADO"
         db.session.commit()
@@ -1441,7 +1683,7 @@ def cancelar(id):
 @radar_financeiro_bp.route("/excluir/<int:id>", methods=["POST"])
 @gestao_required
 def excluir(id):
-    conta = ContaRadarFinanceiro.query.get_or_404(id)
+    conta = buscar_conta_operacional(id)
     try:
         db.session.delete(conta)
         db.session.commit()
@@ -1465,7 +1707,13 @@ def excluir_lote():
         return redirect(request.referrer or "/gestao/radar-financeiro/")
 
     try:
-        contas = ContaRadarFinanceiro.query.filter(ContaRadarFinanceiro.id.in_(ids)).all()
+        contas = []
+        for conta_id in ids:
+            try:
+                contas.append(buscar_conta_operacional(conta_id))
+            except Exception:
+                pass
+
         total = len(contas)
 
         for conta in contas:

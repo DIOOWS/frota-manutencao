@@ -347,7 +347,7 @@
                             {{ coluna.total_formatado }}
                         </div>
 
-                        {% if coluna.slug != "herdada" and coluna.itens is defined and coluna.itens %}
+                        {% if coluna.slug != "herdada" and coluna.itens is defined and coluna.itens and coluna.tem_acoes %}
                             <div class="radar-lote-actions" data-coluna-slug="{{ coluna.slug }}">
                                 <label class="radar-lote-check-all">
                                     <input type="checkbox"
@@ -495,6 +495,13 @@
                                         <div class="radar-normal-info">
                                             Setor: {{ item.setor }}
                                         </div>
+
+                                        {% if item.origem_importada %}
+                                            <div class="radar-recorrente-badge">
+                                                <i class="bi bi-cloud-arrow-down-fill"></i>
+                                                IMPORTADA COMPLETA
+                                            </div>
+                                        {% endif %}
 
                                         {% if item.recorrente %}
                                             <div class="radar-recorrente-badge">
@@ -654,6 +661,7 @@
                                     <p><span>Maior atraso:</span><strong>{{ grupo_selecionado.maior_atraso }} dias</strong></p>
                                 </div>
 
+                                {% if not grupo_selecionado.origem_importada %}
                                 <div class="radar-pagar-herdada">
                                     <h3>Pagar parcelas herdadas</h3>
 
@@ -669,13 +677,16 @@
                                     </button>
                                 </div>
 
+                                </div>
+                                {% endif %}
+
                                 <div class="radar-historico-info">
                                     <h3>Informações</h3>
                                     <p>• A dívida herdada mostra somente parcelas reais cadastradas e vencidas.</p>
                                     <p>• Ao pagar ou excluir, a parcela sai deste modal sem fechar a tela.</p>
                                     <p>• Para apagar a conta inteira em todos os meses, use o botão abaixo.</p>
 
-                                    {% if grupo_selecionado.historico %}
+                                    {% if grupo_selecionado.historico and not grupo_selecionado.origem_importada %}
                                         <form method="POST"
                                               action="/gestao/radar-financeiro/excluir-grupo/{{ grupo_selecionado.historico[0].id }}"
                                               onsubmit="return confirm('Excluir esta conta completa em todos os meses? Essa ação remove todas as parcelas/lançamentos deste grupo.');">
@@ -694,6 +705,7 @@
                                 <div class="radar-historico-table-wrap">
                                     <h3>Histórico por mês</h3>
 
+                                    {% if not grupo_selecionado.origem_importada %}
                                     <div class="radar-herdada-lote-actions">
                                         <label class="radar-herdada-check-all">
                                             <input type="checkbox" id="checkTodasHerdadas">
@@ -714,6 +726,7 @@
                                             Excluir selecionadas
                                         </button>
                                     </div>
+                                    {% endif %}
 
                                     <table class="radar-historico-table" id="tabelaHerdadasPendentes">
                                         <thead>
@@ -735,7 +748,8 @@
                                                         <input type="checkbox"
                                                                class="radar-herdada-check"
                                                                value="{{ h.id }}"
-                                                               aria-label="Selecionar parcela herdada {{ h.id }}">
+                                                               aria-label="Selecionar parcela herdada {{ h.id }}"
+                                                               {% if grupo_selecionado.origem_importada %}disabled{% endif %}>
                                                     </td>
                                                     <td data-herdada-cell="competencia">{{ h.competencia }}</td>
                                                     <td data-herdada-cell="parcela">{{ h.parcela_label }}</td>
@@ -748,6 +762,9 @@
                                                         </span>
                                                     </td>
                                                     <td>
+                                                        {% if grupo_selecionado.origem_importada %}
+                                                            <span class="text-muted">Importada</span>
+                                                        {% else %}
                                                         <div class="radar-historico-actions">
                                                             <button type="button"
                                                                     class="radar-historico-action-btn editar js-toggle-edicao-herdada"
@@ -770,6 +787,7 @@
                                                                 <i class="bi bi-trash3-fill"></i>
                                                             </button>
                                                         </div>
+                                                        {% endif %}
                                                     </td>
                                                 </tr>
                                                 <tr class="radar-herdada-edit-row" id="linhaEditarHerdada{{ h.id }}" style="display: none;">
@@ -840,7 +858,7 @@
                                                                     </select>
                                                                 </div>
                                                                 <div>
-                                                                    <label>Valor original da fatura</label>
+                                                                    <label>Valor da conta</label>
                                                                     <input type="text" name="valor_visual"
                                    data-hidden-name="valor" value="{{ h.valor_formatado }}" class="form-control js-moeda" inputmode="decimal" autocomplete="off" required>
                                                                     <input type="hidden" name="valor" value="{{ h.valor }}" class="js-moeda-hidden">
@@ -1253,7 +1271,7 @@
                             <div class="modal-header">
                                 <div>
                                     <h5 class="modal-title">Conta #{{ item.id }} — {{ item.descricao }}</h5>
-                                    <small class="radar-modal-subtitle">Gestão completa da conta sem sair do radar</small>
+                                    <small class="radar-modal-subtitle">{% if item.origem_importada %}Conta importada do relatório completo — leitura do Radar{% else %}Gestão completa da conta sem sair do radar{% endif %}</small>
                                 </div>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                             </div>
@@ -1284,9 +1302,29 @@
                                             {% endif %}
                                         </div>
 
+                                        <div class="radar-historico-resumo">
+                                            <h3>Dados completos da conta</h3>
+                                            <p><span>Nº fatura:</span><strong>{{ item.numero_fatura }}</strong></p>
+                                            <p><span>Plano de contas:</span><strong>{{ item.plano_contas }}</strong></p>
+                                            <p><span>Fornecedor/Funcionário:</span><strong>{{ item.fornecedor_funcionario }}</strong></p>
+                                            <p><span>Telefone:</span><strong>{{ item.telefone }}</strong></p>
+                                            <p><span>Email:</span><strong>{{ item.email }}</strong></p>
+                                            <p><span>Data documento:</span><strong>{{ item.data_documento_formatada }}</strong></p>
+                                            <p><span>Data vencimento:</span><strong>{{ item.data_vencimento_formatada }}</strong></p>
+                                            <p><span>Data pagamento:</span><strong>{{ item.data_pagamento_formatada }}</strong></p>
+                                            <p><span>Origem:</span><strong>{{ item.origem_importacao }}</strong></p>
+                                            <p><span>Competência:</span><strong>{{ item.competencia }}</strong></p>
+                                            {% if item.importado_em_formatado and item.importado_em_formatado != '-' %}
+                                                <p><span>Importado em:</span><strong>{{ item.importado_em_formatado }}</strong></p>
+                                            {% endif %}
+                                        </div>
+
                                         {% if not item.pago and item.status != "CANCELADO" %}
                                             <div class="radar-pagar-herdada radar-conta-pagamento-box">
                                                 <h3>Pagar esta conta</h3>
+                                                {% if item.origem_importada %}
+                                                    <p class="text-warning small mb-2"><strong>Atenção:</strong> baixa emergencial no Radar. O caixa real continua dependendo da importação oficial.</p>
+                                                {% endif %}
                                                 <form method="POST" action="/gestao/radar-financeiro/pagar/{{ item.id }}">
                                                     <input type="hidden" name="mes_contexto" value="{{ mes }}">
                                                     <input type="hidden" name="ano_contexto" value="{{ ano }}">
@@ -1307,6 +1345,13 @@
 
                                         <div class="radar-historico-info">
                                             <h3>Ações rápidas</h3>
+
+                                            {% if item.origem_importada %}
+                                                <div class="alert alert-warning py-2 mb-3">
+                                                    <strong>Conta importada.</strong><br>
+                                                    Ações abaixo são emergenciais para o Radar. O relatório completo continua sendo a base oficial e uma nova importação pode atualizar estes dados novamente.
+                                                </div>
+                                            {% endif %}
 
                                             {% if item.pago %}
                                                 <form method="POST" action="/gestao/radar-financeiro/transportar/{{ item.id }}" class="radar-conta-transporte-inline">
@@ -1370,7 +1415,14 @@
 
                                     <div class="radar-historico-modal-right">
                                         <div class="radar-historico-table-wrap radar-conta-form-wrap">
-                                            <h3>Editar dados da conta</h3>
+                                            <h3>{% if item.origem_importada %}Editar conta importada — emergência{% else %}Editar dados da conta{% endif %}</h3>
+
+                                            {% if item.origem_importada %}
+                                                <div class="alert alert-warning mb-3">
+                                                    <strong>Edição emergencial no Radar:</strong>
+                                                    use apenas quando precisar ajustar uma conta rapidamente. O relatório completo continua sendo a fonte oficial; se importar novamente, os dados podem ser atualizados pelo arquivo.
+                                                </div>
+                                            {% endif %}
 
                                             <form method="POST" action="/gestao/radar-financeiro/editar/{{ item.id }}" class="radar-conta-edit-form">
                                                 <input type="hidden" name="mes_contexto" value="{{ mes }}">
@@ -1410,6 +1462,7 @@
                                                         </select>
                                                     </div>
 
+                                                    {% if not item.origem_importada %}
                                                     <div class="radar-inline-edit-wide">
                                                         <div class="form-check radar-recorrencia-check">
                                                             <input class="form-check-input"
@@ -1423,6 +1476,7 @@
                                                             <small>Ao salvar, o sistema cria as próximas competências até dezembro sem duplicar meses já existentes.</small>
                                                         </div>
                                                     </div>
+                                                    {% endif %}
 
                                                     <div>
                                                         <label>Status</label>
@@ -1436,7 +1490,7 @@
                                                     </div>
 
                                                     <div>
-                                                        <label>Valor original da fatura</label>
+                                                        <label>Valor da conta</label>
                                                         <input type="text"
                                                                name="valor_visual"
                                    data-hidden-name="valor"
@@ -1446,26 +1500,6 @@
                                                                autocomplete="off"
                                                                required>
                                                         <input type="hidden" name="valor" value="{{ item.valor }}" class="js-moeda-hidden">
-                                                    </div>
-
-                                                    <div>
-                                                        <label>Valor com juros</label>
-                                                        <input type="text"
-                                                               name="valor_com_juros_visual"
-                                                               data-hidden-name="valor_com_juros"
-                                                               class="form-control js-moeda"
-                                                               placeholder="R$ 0,00"
-                                                               inputmode="decimal"
-                                                               autocomplete="off">
-                                                        <input type="hidden" name="valor_com_juros" class="js-moeda-hidden">
-                                                        <small class="radar-juros-help">Opcional. Informe o valor final com juros; a diferença será calculada automaticamente.</small>
-                                                    </div>
-                                                    <div class="radar-juros-calculado-box">
-                                                        <label>Juros calculado</label>
-                                                        <input type="text"
-                                                               class="form-control js-juros-calculado"
-                                                               value="R$ 0,00"
-                                                               readonly>
                                                     </div>
 
                                                     <div>
