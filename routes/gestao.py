@@ -817,6 +817,346 @@ def calcular_inteligencia_financeira(totais, evolucao_mensal, mes, ano, saldo_in
     }
 
 
+
+
+# =========================================================
+# DASHBOARD HÍBRIDO - OBRIGAÇÕES + MODAIS DE KPI
+# =========================================================
+
+def formatar_moeda_json(valor):
+    return moeda(valor) if "moeda" in globals() else f"R$ {dinheiro(valor):,.2f}"
+
+
+def status_aberto_importado(conta):
+    if getattr(conta, "pago", False):
+        return False
+
+    status = normalizar_texto(getattr(conta, "status", None))
+    return status not in ["PAGO", "RECEBIDO", "OK", "QUITADO", "BAIXADO", "CANCELADO", "CANCELADA"]
+
+
+def linha_conta_pagar_dashboard(conta, origem="OBRIGAÇÃO"):
+    return {
+        "tipo": "DESPESA",
+        "origem": origem,
+        "data": formatar_data_json(getattr(conta, "data_pagamento", None) or getattr(conta, "data_vencimento", None)),
+        "documento": str(getattr(conta, "numero_fatura", None) or "-"),
+        "nome": str(getattr(conta, "fornecedor_funcionario", None) or getattr(conta, "fornecedor", None) or "-"),
+        "categoria": str(getattr(conta, "categoria", None) or getattr(conta, "plano_contas", None) or "SEM CATEGORIA"),
+        "setor": str(getattr(conta, "setor", None) or "-"),
+        "vencimento": formatar_data_json(getattr(conta, "data_vencimento", None)),
+        "pagamento": formatar_data_json(getattr(conta, "data_pagamento", None)),
+        "status": str(getattr(conta, "status", None) or ("PAGO" if getattr(conta, "pago", False) else "PENDENTE")),
+        "observacao": str(getattr(conta, "observacoes", None) or "-"),
+        "valor": dinheiro(getattr(conta, "valor", 0)),
+    }
+
+
+def linha_conta_receber_dashboard(conta, origem="RECEBIMENTO"):
+    return {
+        "tipo": "RECEITA",
+        "origem": origem,
+        "data": formatar_data_json(getattr(conta, "data_pagamento", None) or getattr(conta, "data_vencimento", None)),
+        "documento": str(getattr(conta, "numero_fatura", None) or "-"),
+        "nome": str(getattr(conta, "cliente", None) or "-"),
+        "categoria": str(getattr(conta, "categoria", None) or getattr(conta, "plano_contas", None) or "SEM CATEGORIA"),
+        "setor": str(getattr(conta, "setor", None) or "-"),
+        "vencimento": formatar_data_json(getattr(conta, "data_vencimento", None)),
+        "pagamento": formatar_data_json(getattr(conta, "data_pagamento", None)),
+        "status": str(getattr(conta, "status", None) or ("RECEBIDO" if getattr(conta, "pago", False) else "PENDENTE")),
+        "observacao": str(getattr(conta, "observacoes", None) or "-"),
+        "valor": valor_conta_receber(conta),
+    }
+
+
+def linha_lancamento_dashboard(lancamento):
+    tipo = normalizar_texto(getattr(lancamento, "tipo", None)) or "-"
+    return {
+        "tipo": tipo,
+        "origem": str(getattr(lancamento, "origem", None) or "MANUAL"),
+        "data": formatar_data_json(getattr(lancamento, "data", None)),
+        "documento": "-",
+        "nome": str(getattr(lancamento, "cliente", None) or getattr(lancamento, "descricao", None) or "-"),
+        "categoria": str(getattr(lancamento, "categoria", None) or "SEM CATEGORIA"),
+        "setor": str(getattr(lancamento, "setor", None) or "GERAL"),
+        "vencimento": formatar_data_json(getattr(lancamento, "data", None)),
+        "pagamento": formatar_data_json(getattr(lancamento, "data", None)),
+        "status": str(getattr(lancamento, "status", None) or "-"),
+        "observacao": str(getattr(lancamento, "descricao", None) or getattr(lancamento, "observacoes", None) or "-"),
+        "valor": dinheiro(getattr(lancamento, "valor", 0)),
+    }
+
+
+def resumo_lista_dashboard(itens):
+    valores = [dinheiro(item.get("valor", 0)) for item in itens]
+    total = sum(valores)
+    quantidade = len(valores)
+
+    return {
+        "quantidade": quantidade,
+        "total": total,
+        "maior": max(valores) if valores else 0,
+        "menor": min(valores) if valores else 0,
+        "media": (total / quantidade) if quantidade else 0,
+    }
+
+
+def calcular_obrigacoes_dashboard(mes, ano):
+    inicio_dt = inicio_mes_datetime(mes, ano)
+    fim_dt = fim_mes_datetime(mes, ano)
+    inicio_dia = primeiro_dia_mes(mes, ano)
+    fim_dia = ultimo_dia_mes(mes, ano)
+    hoje = date.today()
+
+    # Referência usada para vencer hoje/próximos 7/até fim do mês.
+    # Mês atual: usa hoje. Mês passado: considera o fim do mês. Mês futuro: considera o início do mês.
+    if hoje.year == ano and hoje.month == mes:
+        data_referencia = hoje
+    elif date(ano, mes, 1) < date(hoje.year, hoje.month, 1):
+        data_referencia = fim_dia
+    else:
+        data_referencia = inicio_dia
+
+    ref_inicio_dt = datetime.combine(data_referencia, datetime.min.time())
+    ref_fim_dt = datetime.combine(data_referencia, datetime.max.time())
+    prox_7_dt = datetime.combine(data_referencia + timedelta(days=7), datetime.max.time())
+
+    base_query = ContaPagarImportada.query.filter(
+        ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA",
+        ContaPagarImportada.pago == False
+    )
+
+    # Total do mês = somente contas com vencimento dentro do mês filtrado.
+    a_pagar_mes = base_query.filter(
+        ContaPagarImportada.data_vencimento >= inicio_dt,
+        ContaPagarImportada.data_vencimento <= fim_dt
+    ).all()
+
+    # Atrasadas do mês = venceu dentro do mês filtrado e antes da data de referência.
+    atrasadas_mes = base_query.filter(
+        ContaPagarImportada.data_vencimento >= inicio_dt,
+        ContaPagarImportada.data_vencimento < ref_inicio_dt
+    ).all()
+
+    vence_hoje = base_query.filter(
+        ContaPagarImportada.data_vencimento >= ref_inicio_dt,
+        ContaPagarImportada.data_vencimento <= ref_fim_dt
+    ).all()
+
+    proximos_7 = base_query.filter(
+        ContaPagarImportada.data_vencimento > ref_fim_dt,
+        ContaPagarImportada.data_vencimento <= prox_7_dt,
+        ContaPagarImportada.data_vencimento <= fim_dt
+    ).all()
+
+    # Restante até o fim do mês = depois dos próximos 7 dias.
+    # Assim os cartões não se sobrepõem:
+    # Total do mês = Atrasadas do mês + Vence hoje + Próximos 7 dias + Restante até fim do mês.
+    ate_fim_mes = base_query.filter(
+        ContaPagarImportada.data_vencimento > prox_7_dt,
+        ContaPagarImportada.data_vencimento <= fim_dt
+    ).all()
+
+    pagas_mes = ContaPagarImportada.query.filter(
+        ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA",
+        ContaPagarImportada.pago == True,
+        ContaPagarImportada.data_pagamento >= inicio_dt,
+        ContaPagarImportada.data_pagamento <= fim_dt
+    ).all()
+
+    def total(lista):
+        return sum(dinheiro(getattr(item, "valor", 0)) for item in lista)
+
+    return {
+        "referencia": data_referencia,
+        "a_pagar_total": total(a_pagar_mes),
+        "a_pagar_qtd": len(a_pagar_mes),
+        "atrasadas": total(atrasadas_mes),
+        "atrasadas_qtd": len(atrasadas_mes),
+        "vence_hoje": total(vence_hoje),
+        "vence_hoje_qtd": len(vence_hoje),
+        "proximos_7": total(proximos_7),
+        "proximos_7_qtd": len(proximos_7),
+        "ate_fim_mes": total(ate_fim_mes),
+        "ate_fim_mes_qtd": len(ate_fim_mes),
+        "pagas_mes": total(pagas_mes),
+        "pagas_mes_qtd": len(pagas_mes),
+    }
+
+
+def montar_itens_dashboard_kpi(tipo, mes, ano):
+    inicio_dt = inicio_mes_datetime(mes, ano)
+    fim_dt = fim_mes_datetime(mes, ano)
+    inicio_dia = primeiro_dia_mes(mes, ano)
+    fim_dia = ultimo_dia_mes(mes, ano)
+    hoje = date.today()
+
+    if hoje.year == ano and hoje.month == mes:
+        data_referencia = hoje
+    elif date(ano, mes, 1) < date(hoje.year, hoje.month, 1):
+        data_referencia = fim_dia
+    else:
+        data_referencia = inicio_dia
+
+    ref_inicio_dt = datetime.combine(data_referencia, datetime.min.time())
+    ref_fim_dt = datetime.combine(data_referencia, datetime.max.time())
+    prox_7_dt = datetime.combine(data_referencia + timedelta(days=7), datetime.max.time())
+
+    itens = []
+    titulo = "Detalhes"
+
+    if tipo == "saidas":
+        titulo = "Saídas realizadas no mês"
+        contas = ContaPagarImportada.query.filter(
+            ContaPagarImportada.pago == True,
+            ContaPagarImportada.origem_importacao == "PAGAMENTO",
+            ContaPagarImportada.data_pagamento >= inicio_dt,
+            ContaPagarImportada.data_pagamento <= fim_dt
+        ).all()
+        itens.extend(linha_conta_pagar_dashboard(c, "PAGAMENTO") for c in contas)
+
+        lancamentos = LancamentoFinanceiro.query.filter(
+            LancamentoFinanceiro.mes == mes,
+            LancamentoFinanceiro.ano == ano
+        ).all()
+        for l in lancamentos:
+            if status_cancelado(getattr(l, "status", None)) or not status_pago(getattr(l, "status", None)):
+                continue
+            if normalizar_texto(getattr(l, "tipo", None)) == "DESPESA":
+                itens.append(linha_lancamento_dashboard(l))
+
+    elif tipo == "entradas":
+        titulo = "Entradas realizadas no mês"
+        contas = ContaReceberImportada.query.filter(
+            ContaReceberImportada.pago == True,
+            ContaReceberImportada.origem_importacao == "RECEBIMENTO",
+            ContaReceberImportada.data_pagamento >= inicio_dt,
+            ContaReceberImportada.data_pagamento <= fim_dt
+        ).all()
+        itens.extend(linha_conta_receber_dashboard(c, "RECEBIMENTO") for c in contas)
+
+        lancamentos = LancamentoFinanceiro.query.filter(
+            LancamentoFinanceiro.mes == mes,
+            LancamentoFinanceiro.ano == ano
+        ).all()
+        for l in lancamentos:
+            if status_cancelado(getattr(l, "status", None)) or not status_pago(getattr(l, "status", None)):
+                continue
+            if normalizar_texto(getattr(l, "tipo", None)) == "RECEITA":
+                itens.append(linha_lancamento_dashboard(l))
+
+    elif tipo in ["a_pagar", "obrigacoes_total"]:
+        titulo = "Total a pagar do mês"
+        contas = ContaPagarImportada.query.filter(
+            ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA",
+            ContaPagarImportada.pago == False,
+            ContaPagarImportada.data_vencimento >= inicio_dt,
+            ContaPagarImportada.data_vencimento <= fim_dt
+        ).all()
+        itens.extend(linha_conta_pagar_dashboard(c, "DESPESA_COMPLETA") for c in contas)
+
+    elif tipo == "a_receber":
+        titulo = "A receber até o fim do mês"
+        contas = ContaReceberImportada.query.filter(
+            ContaReceberImportada.pago == False,
+            ContaReceberImportada.origem_importacao == "RECEBIMENTO",
+            ContaReceberImportada.data_vencimento <= fim_dt
+        ).all()
+        itens.extend(linha_conta_receber_dashboard(c, "RECEBIMENTO") for c in contas)
+
+        lancamentos = LancamentoFinanceiro.query.filter(
+            LancamentoFinanceiro.mes == mes,
+            LancamentoFinanceiro.ano == ano
+        ).all()
+        for l in lancamentos:
+            if status_cancelado(getattr(l, "status", None)):
+                continue
+            if normalizar_texto(getattr(l, "tipo", None)) == "RECEITA" and not status_pago(getattr(l, "status", None)):
+                itens.append(linha_lancamento_dashboard(l))
+
+    elif tipo == "obrigacoes_atrasadas":
+        titulo = "Atrasadas do mês"
+        contas = ContaPagarImportada.query.filter(
+            ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA",
+            ContaPagarImportada.pago == False,
+            ContaPagarImportada.data_vencimento >= inicio_dt,
+            ContaPagarImportada.data_vencimento < ref_inicio_dt
+        ).all()
+        itens.extend(linha_conta_pagar_dashboard(c, "DESPESA_COMPLETA") for c in contas)
+
+    elif tipo == "obrigacoes_hoje":
+        titulo = "Obrigações vencendo na referência"
+        contas = ContaPagarImportada.query.filter(
+            ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA",
+            ContaPagarImportada.pago == False,
+            ContaPagarImportada.data_vencimento >= ref_inicio_dt,
+            ContaPagarImportada.data_vencimento <= ref_fim_dt
+        ).all()
+        itens.extend(linha_conta_pagar_dashboard(c, "DESPESA_COMPLETA") for c in contas)
+
+    elif tipo == "obrigacoes_proximos_7":
+        titulo = "Próximos 7 dias do mês"
+        contas = ContaPagarImportada.query.filter(
+            ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA",
+            ContaPagarImportada.pago == False,
+            ContaPagarImportada.data_vencimento > ref_fim_dt,
+            ContaPagarImportada.data_vencimento <= prox_7_dt,
+            ContaPagarImportada.data_vencimento <= fim_dt
+        ).all()
+        itens.extend(linha_conta_pagar_dashboard(c, "DESPESA_COMPLETA") for c in contas)
+
+    elif tipo == "obrigacoes_ate_fim_mes":
+        titulo = "Restante até o fim do mês"
+        contas = ContaPagarImportada.query.filter(
+            ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA",
+            ContaPagarImportada.pago == False,
+            ContaPagarImportada.data_vencimento > prox_7_dt,
+            ContaPagarImportada.data_vencimento <= fim_dt
+        ).all()
+        itens.extend(linha_conta_pagar_dashboard(c, "DESPESA_COMPLETA") for c in contas)
+
+    elif tipo == "obrigacoes_pagas_mes":
+        titulo = "Obrigações pagas no mês"
+        contas = ContaPagarImportada.query.filter(
+            ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA",
+            ContaPagarImportada.pago == True,
+            ContaPagarImportada.data_pagamento >= inicio_dt,
+            ContaPagarImportada.data_pagamento <= fim_dt
+        ).all()
+        itens.extend(linha_conta_pagar_dashboard(c, "DESPESA_COMPLETA") for c in contas)
+
+    itens = sorted(itens, key=lambda item: (item.get("vencimento") or "99/99/9999", item.get("nome") or ""))
+    return titulo, itens
+
+
+@gestao_bp.route("/api/dashboard-kpi-detalhes")
+@gestao_required
+def api_dashboard_kpi_detalhes():
+    tipo = request.args.get("tipo", "").strip()
+    mes = request.args.get("mes", type=int)
+    ano = request.args.get("ano", type=int)
+
+    if not tipo or not mes or not ano:
+        return jsonify({
+            "ok": False,
+            "mensagem": "Tipo, mês e ano são obrigatórios.",
+            "itens": [],
+        }), 400
+
+    titulo, itens = montar_itens_dashboard_kpi(tipo, mes, ano)
+    resumo = resumo_lista_dashboard(itens)
+
+    return jsonify({
+        "ok": True,
+        "tipo": tipo,
+        "titulo": titulo,
+        "mes": mes,
+        "ano": ano,
+        "resumo": resumo,
+        "itens": itens,
+    })
+
+
 # =========================================================
 # DASHBOARD FINANCEIRO
 # =========================================================
@@ -853,6 +1193,8 @@ def dashboard():
         saldo_inicial=saldo_inicial
     )
 
+    obrigacoes_dashboard = calcular_obrigacoes_dashboard(mes, ano)
+
     return render_template(
         "gestao/dashboard.html",
         mes=mes,
@@ -867,6 +1209,7 @@ def dashboard():
         total_a_pagar=totais["total_a_pagar"],
         total_a_receber=totais["total_a_receber"],
         margem_operacional=totais["margem_operacional"],
+        obrigacoes_dashboard=obrigacoes_dashboard,
 
         evolucao_mensal=evolucao_mensal,
         inteligencia_financeira=inteligencia_financeira,

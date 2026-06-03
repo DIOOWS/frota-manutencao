@@ -3,521 +3,158 @@
 
 {% block content %}
 
-<div class="gestao-page">
+{% macro moeda(valor) %}
+  R$ {{ "{:,.2f}".format(valor or 0).replace(",", "X").replace(".", ",").replace("X", ".") }}
+{% endmacro %}
 
+{% set total_pagar_mes = obrigacoes_dashboard.a_pagar_total if obrigacoes_dashboard else total_a_pagar %}
+{% set qtd_pagar_mes = obrigacoes_dashboard.a_pagar_qtd if obrigacoes_dashboard else 0 %}
+{% set saldo_pos_pagar_mes = saldo_final - total_pagar_mes %}
+{% set saldo_pos_cenario = saldo_final - total_pagar_mes + total_a_receber %}
+{% set resultado_classe = 'danger' if lucro_mes < 0 else 'success' %}
+{% set saldo_pagar_classe = 'danger' if saldo_pos_pagar_mes < 0 else 'success' %}
+{% set saldo_cenario_classe = 'danger' if saldo_pos_cenario < 0 else 'success' %}
 
+<div class="gestao-page dashboard-decisao-page dashboard-limpo-page">
 
-  <form method="GET" class="gestao-filtro">
-    <input
-      type="number"
-      name="mes"
-      min="1"
-      max="12"
-      value="{{ mes }}"
-      class="form-control"
-      placeholder="Mês"
-    >
-
-    <input
-      type="number"
-      name="ano"
-      value="{{ ano }}"
-      class="form-control"
-      placeholder="Ano"
-    >
-
-    <button class="btn btn-primary">
-      Filtrar
-    </button>
-  </form>
-
-  <div class="gestao-kpis mt-3">
-
-    <div class="gestao-kpi">
-      <span>Saldo Inicial</span>
-      <strong>R$ {{ "%.2f"|format(saldo_inicial) }}</strong>
+  <section class="dash-topo-limpo">
+    <div>
+      <span class="dash-eyebrow">Dashboard financeiro</span>
+      <h1>Tomada de decisão do mês</h1>
+      <p>
+        {{ "%02d"|format(mes) }}/{{ ano }} • Caixa realizado + contas a pagar do mês pela base do Radar.
+      </p>
     </div>
 
-    <div class="gestao-kpi danger">
-      <span>Saídas</span>
-      <strong>R$ {{ "%.2f"|format(total_saidas) }}</strong>
-    </div>
+    <form method="GET" class="dash-filtro-limpo" id="dashFiltroCompetencia">
+      <button type="button" class="dash-btn-mais" aria-label="Mais opções">•••</button>
+      <input type="hidden" name="mes" id="dashFiltroMes" value="{{ mes }}">
+      <input type="hidden" name="ano" id="dashFiltroAno" value="{{ ano }}">
+      <input type="month" id="dashCompetencia" value="{{ ano }}-{{ '%02d'|format(mes) }}" class="form-control dash-month-input" aria-label="Competência">
+      <button class="btn btn-primary">Filtrar</button>
+    </form>
+  </section>
 
-    <div class="gestao-kpi success">
-      <span>Entradas</span>
-      <strong>R$ {{ "%.2f"|format(total_entradas) }}</strong>
-    </div>
-
-    <div class="gestao-kpi {% if lucro_mes < 0 %}danger{% else %}success{% endif %}">
-      <span>Lucro do Mês</span>
-      <strong>R$ {{ "%.2f"|format(lucro_mes) }}</strong>
-    </div>
-
-    <div class="gestao-kpi">
-      <span>Saldo Final</span>
-      <strong>R$ {{ "%.2f"|format(saldo_final) }}</strong>
-    </div>
-
-    <div class="gestao-kpi danger">
-      <span>A Pagar</span>
-      <strong>R$ {{ "%.2f"|format(total_a_pagar) }}</strong>
-    </div>
-
-    <div class="gestao-kpi success">
-      <span>A Receber</span>
-      <strong>R$ {{ "%.2f"|format(total_a_receber) }}</strong>
-    </div>
-
-    <div class="gestao-kpi {% if margem_operacional < 0 %}danger{% else %}success{% endif %}">
-      <span>Margem Operacional</span>
-      <strong>{{ "%.2f"|format(margem_operacional) }}%</strong>
-    </div>
-
-  </div>
-
-  <!-- =======================================================
-       CENTRAL DE DECISÃO FINANCEIRA
-  ======================================================== -->
-  <div class="decisao-financeira mt-4">
-
-    <div class="decisao-hero {{ inteligencia_financeira.nivel }}">
+  <section class="dash-bloco-limpo">
+    <div class="dash-section-head compacto">
       <div>
-        <span class="decisao-label">Central de Decisão Financeira</span>
-        <h3>{{ inteligencia_financeira.titulo_situacao }}</h3>
-        <p>{{ inteligencia_financeira.resumo_situacao }}</p>
-      </div>
-
-      <div class="decisao-hero-number">
-        <span>Resultado do mês</span>
-        <strong class="{% if lucro_mes < 0 %}text-danger{% else %}text-success{% endif %}">
-          R$ {{ "%.2f"|format(lucro_mes) }}
-        </strong>
+        <span>1. Caixa realizado</span>
+        <h2>O que entrou e saiu no mês</h2>
       </div>
     </div>
 
-    <div class="decisao-grid mt-4">
+    <div class="dash-grid-caixa-limpo">
+      <button type="button" class="dash-card-limpo neutral">
+        <i class="dash-kpi-icon dash-icon-saldo">↓</i>
+        <span>Saldo inicial</span>
+        <strong>{{ moeda(saldo_inicial) }}</strong>
+        <small>Base inicial da competência</small>
+      </button>
 
-      <div class="decisao-card">
-        <span>Saídas sobre entradas</span>
-        <strong>{{ "%.2f"|format(inteligencia_financeira.percentual_saidas) }}%</strong>
+      <button type="button" class="dash-card-limpo success dashboard-clickable-kpi" data-dashboard-kpi="entradas">
+        <i class="dash-kpi-icon dash-icon-recebido">↑</i>
+        <span>Recebido no mês</span>
+        <strong>{{ moeda(total_entradas) }}</strong>
+        <small>Clique para ver detalhes</small>
+      </button>
 
-        <small>
-          {% if inteligencia_financeira.percentual_saidas >= 80 %}
-            As despesas estão pressionando a operação.
-          {% elif inteligencia_financeira.percentual_saidas == 0 %}
-            Não há base suficiente para leitura.
-          {% else %}
-            A relação entre entradas e saídas está controlada.
-          {% endif %}
-        </small>
+      <button type="button" class="dash-card-limpo danger dashboard-clickable-kpi" data-dashboard-kpi="saidas">
+        <i class="dash-kpi-icon dash-icon-pago">↓</i>
+        <span>Pago no mês</span>
+        <strong>{{ moeda(total_saidas) }}</strong>
+        <small>Clique para ver detalhes</small>
+      </button>
+
+      <button type="button" class="dash-card-limpo purple">
+        <i class="dash-kpi-icon dash-icon-resultado">▣</i>
+        <span>Restituído no mês</span>
+        <strong>{{ moeda(lucro_mes) }}</strong>
+        <small>Transfer. + Pago</small>
+      </button>
+
+      <button type="button" class="dash-card-limpo cyan">
+        <i class="dash-kpi-icon dash-icon-atual">✓</i>
+        <span>Saldo final</span>
+        <strong>{{ moeda(saldo_final) }}</strong>
+        <small>Saldo inicial + resultado</small>
+      </button>
+
+      <button type="button" class="dash-card-limpo percent {% if margem_operacional < 0 %}danger{% else %}success{% endif %}">
+        <i class="dash-kpi-icon dash-icon-margem">%</i>
+        <span>Margem operacional</span>
+        <strong>{{ "%.2f"|format(margem_operacional) }}%</strong>
+        <small>Eficiência do mês</small>
+      </button>
+    </div>
+  </section>
+
+  <section class="dash-bloco-limpo dash-bloco-prioridade">
+    <div class="dash-section-head compacto">
+      <div>
+        <span>2. Contas do mês</span>
+        <h2>O que precisa pagar na competência</h2>
       </div>
-
-      <div class="decisao-card {% if inteligencia_financeira.saldo_projetado_pos_obrigacoes < 0 %}danger{% else %}success{% endif %}">
-        <span>Caixa após obrigações</span>
-        <strong>R$ {{ "%.2f"|format(inteligencia_financeira.saldo_projetado_pos_obrigacoes) }}</strong>
-        <small>Saldo final + a receber - a pagar</small>
-      </div>
-
-      <div class="decisao-card {% if inteligencia_financeira.faltante_equilibrio > 0 %}danger{% else %}success{% endif %}">
-        <span>Ponto de equilíbrio</span>
-
-        {% if inteligencia_financeira.faltante_equilibrio > 0 %}
-          <strong>Faltam R$ {{ "%.2f"|format(inteligencia_financeira.faltante_equilibrio) }}</strong>
-          <small>Valor necessário para empatar o mês.</small>
-        {% else %}
-          <strong>Acima em R$ {{ "%.2f"|format(inteligencia_financeira.sobra_equilibrio) }}</strong>
-          <small>O mês passou do ponto de equilíbrio.</small>
-        {% endif %}
-      </div>
-
-      <div class="decisao-card">
-        <span>Economia potencial</span>
-        <strong>R$ {{ "%.2f"|format(inteligencia_financeira.economia_10_top3) }}</strong>
-        <small>Impacto de reduzir 10% nas 3 maiores despesas.</small>
-      </div>
-
+      <small>Base DESPESA_COMPLETA • vencimentos de {{ "%02d"|format(mes) }}/{{ ano }}</small>
     </div>
 
-    <!-- ALERTAS + AÇÕES -->
-    <div class="row g-4 mt-3 align-items-stretch">
+    <div class="dash-prioridade-grid">
+      <button type="button" class="dash-card-principal danger dashboard-clickable-kpi" data-dashboard-kpi="obrigacoes_total">
+        <span>Total a pagar (competência)</span>
+        <strong>{{ moeda(total_pagar_mes) }}</strong>
+        <small>{{ qtd_pagar_mes }} conta(s) com vencimento neste mês</small>
+      </button>
 
-      <div class="col-lg-6">
-        <div class="gestao-card decisao-card-lista h-100">
-          <h5>Alertas Inteligentes</h5>
+      <button type="button" class="dash-card-principal {{ saldo_pagar_classe }}">
+        <span>Saldo disponível do mês</span>
+        <strong>{{ moeda(saldo_pos_pagar_mes) }}</strong>
+        <small>Saldo atual • o que posso pagar do mês.</small>
+      </button>
 
-          {% for alerta in inteligencia_financeira.alertas %}
-            <div class="alerta-financeiro {{ alerta.nivel }}">
-              <div>
-                <strong>{{ alerta.titulo }}</strong>
-                <p>{{ alerta.descricao }}</p>
-                <small>Ação: {{ alerta.acao }}</small>
-              </div>
-            </div>
-          {% endfor %}
-
-        </div>
-      </div>
-
-      <div class="col-lg-6">
-        <div class="gestao-card decisao-card-lista h-100">
-          <h5>Ações Recomendadas</h5>
-
-          {% for acao in inteligencia_financeira.acoes_recomendadas %}
-            <div class="acao-recomendada">
-              <span>{{ loop.index }}</span>
-              <p>{{ acao }}</p>
-            </div>
-          {% endfor %}
-
-        </div>
-      </div>
-
+      <button type="button" class="dash-card-principal {{ saldo_cenario_classe }}">
+        <span>Caixa projetado</span>
+        <strong>{{ moeda(saldo_pos_cenario) }}</strong>
+        <small>Caixa livre projetado • pagar x receber</small>
+      </button>
     </div>
 
-    <!-- VAZAMENTOS + ANO + PROJEÇÃO -->
-    <div class="row g-4 mt-3 align-items-stretch">
+    <div class="dash-obrigacoes-grid-limpo">
+      <button type="button" class="dash-mini-obrigacao red dashboard-clickable-kpi" data-dashboard-kpi="obrigacoes_atrasadas">
+        <span>Atrasadas do mês</span>
+        <strong>{{ moeda(obrigacoes_dashboard.atrasadas if obrigacoes_dashboard else 0) }}</strong>
+        <small>{{ obrigacoes_dashboard.atrasadas_qtd if obrigacoes_dashboard else 0 }} conta(s)</small>
+      </button>
 
-      <div class="col-lg-4">
-        <div class="gestao-card decisao-card-lista vazamento-card h-100">
-          <h5>Maiores Vazamentos Financeiros</h5>
+      <button type="button" class="dash-mini-obrigacao orange dashboard-clickable-kpi" data-dashboard-kpi="obrigacoes_hoje">
+        <span>Vence hoje</span>
+        <strong>{{ moeda(obrigacoes_dashboard.vence_hoje if obrigacoes_dashboard else 0) }}</strong>
+        <small>{{ obrigacoes_dashboard.vence_hoje_qtd if obrigacoes_dashboard else 0 }} conta(s)</small>
+      </button>
 
-          <div class="diagnostico-mini {{ inteligencia_financeira.prioridade_corte_classe }}">
-            <strong>{{ inteligencia_financeira.prioridade_corte }}</strong>
-            <p>{{ inteligencia_financeira.leitura_vazamentos }}</p>
-          </div>
-          {% for nome, valor in inteligencia_financeira.despesas_top %}
-            <button
-              type="button"
-              class="impacto-item impacto-item-estrategico impacto-click js-abrir-modal-despesa"
-              data-categoria="{{ nome }}"
-              data-mes="{{ mes }}"
-              data-ano="{{ ano }}"
-            >
-              <div>
-                <strong>{{ nome }}</strong>
+      <button type="button" class="dash-mini-obrigacao purple dashboard-clickable-kpi" data-dashboard-kpi="obrigacoes_proximos_7">
+        <span>Próximos 7 dias</span>
+        <strong>{{ moeda(obrigacoes_dashboard.proximos_7 if obrigacoes_dashboard else 0) }}</strong>
+        <small>{{ obrigacoes_dashboard.proximos_7_qtd if obrigacoes_dashboard else 0 }} conta(s)</small>
+      </button>
 
-                <small>
-                  {% if total_saidas > 0 %}
-                    {{ "%.2f"|format((valor / total_saidas) * 100) }}% das saídas
-                  {% else %}
-                    Sem base percentual
-                  {% endif %}
-                </small>
+      <button type="button" class="dash-mini-obrigacao blue dashboard-clickable-kpi" data-dashboard-kpi="obrigacoes_ate_fim_mes">
+        <span>Até fim do mês</span>
+        <strong>{{ moeda(obrigacoes_dashboard.ate_fim_mes if obrigacoes_dashboard else 0) }}</strong>
+        <small>{{ obrigacoes_dashboard.ate_fim_mes_qtd if obrigacoes_dashboard else 0 }} conta(s)</small>
+      </button>
 
-                {% if total_saidas > 0 %}
-                  <div class="impacto-barra">
-                    <span style="width: {{ ((valor / total_saidas) * 100)|round(2) }}%;"></span>
-                  </div>
-                {% endif %}
-              </div>
-
-              <span>R$ {{ "%.2f"|format(valor) }}</span>
-            </button>
-          {% else %}
-            <p class="text-muted p-3">Sem despesas no período.</p>
-          {% endfor %}
-
-          {% if inteligencia_financeira.total_top5 > 0 %}
-            <div class="vazamento-resumo">
-              <small>Top 5 consumiu</small>
-              <strong>
-                R$ {{ "%.2f"|format(inteligencia_financeira.total_top5) }}
-                • {{ "%.2f"|format(inteligencia_financeira.percentual_top5_saidas) }}%
-              </strong>
-            </div>
-          {% endif %}
-
-        </div>
-      </div>
-
-      <div class="col-lg-4">
-        <div class="gestao-card decisao-card-lista leitura-ano-card h-100">
-          <h5>Diagnóstico Estratégico do Ano</h5>
-
-          <div class="diagnostico-mini {{ inteligencia_financeira.tendencia_ano_classe }}">
-            <strong>{{ inteligencia_financeira.tendencia_ano }}</strong>
-            <p>{{ inteligencia_financeira.leitura_ano_resumo }}</p>
-          </div>
-
-          <div class="leitura-ano-item">
-            <span>Meses com movimento</span>
-            <strong>{{ inteligencia_financeira.meses_com_movimento }}</strong>
-          </div>
-
-          <div class="leitura-ano-item">
-            <span>Meses positivos</span>
-            <strong class="text-success">{{ inteligencia_financeira.meses_positivos }}</strong>
-          </div>
-
-          <div class="leitura-ano-item">
-            <span>Meses negativos</span>
-            <strong class="text-danger">{{ inteligencia_financeira.meses_negativos }}</strong>
-          </div>
-
-          <div class="leitura-ano-item">
-            <span>Resultado acumulado</span>
-            <strong class="{% if inteligencia_financeira.resultado_acumulado_ano < 0 %}text-danger{% else %}text-success{% endif %}">
-              R$ {{ "%.2f"|format(inteligencia_financeira.resultado_acumulado_ano) }}
-            </strong>
-          </div>
-
-          <div class="leitura-ano-item">
-            <span>Média de resultado</span>
-            <strong>R$ {{ "%.2f"|format(inteligencia_financeira.media_resultado) }}</strong>
-          </div>
-
-          <div class="leitura-ano-item">
-            <span>Aproveitamento</span>
-            <strong>{{ "%.2f"|format(inteligencia_financeira.aproveitamento_ano) }}%</strong>
-          </div>
-
-          {% if inteligencia_financeira.melhor_mes %}
-            <div class="leitura-ano-destaque success">
-              <small>Melhor mês</small>
-              <strong>
-                {{ inteligencia_financeira.melhor_mes.nome_mes }} —
-                R$ {{ "%.2f"|format(inteligencia_financeira.melhor_mes.lucro) }}
-              </strong>
-            </div>
-          {% endif %}
-
-          {% if inteligencia_financeira.pior_mes %}
-            <div class="leitura-ano-destaque danger">
-              <small>Pior mês</small>
-              <strong>
-                {{ inteligencia_financeira.pior_mes.nome_mes }} —
-                R$ {{ "%.2f"|format(inteligencia_financeira.pior_mes.lucro) }}
-              </strong>
-            </div>
-          {% endif %}
-
-          <div class="diagnostico-lista">
-            {% for item in inteligencia_financeira.diagnostico_ano %}
-              <p>{{ item }}</p>
-            {% endfor %}
-          </div>
-
-        </div>
-      </div>
-
-      <div class="col-lg-4">
-        <div class="gestao-card decisao-card-lista projecao-card h-100">
-          <h5>Projeção de Fechamento</h5>
-
-          {% if inteligencia_financeira.projecao %}
-            <div class="projecao-status {{ inteligencia_financeira.projecao.risco_classe }}">
-              <small>Risco de fechamento</small>
-              <strong>{{ inteligencia_financeira.projecao.risco }}</strong>
-              <p>{{ inteligencia_financeira.projecao.leitura }}</p>
-            </div>
-
-            <div class="projecao-box">
-              <span>
-                Base: dia {{ inteligencia_financeira.projecao.dia_atual }}
-                de {{ inteligencia_financeira.projecao.dias_no_mes }}
-                • Restam {{ inteligencia_financeira.projecao.dias_restantes }} dia(s)
-              </span>
-
-              <div>
-                <small>Média diária de resultado</small>
-                <strong class="{% if inteligencia_financeira.projecao.media_diaria_resultado < 0 %}text-danger{% else %}text-success{% endif %}">
-                  R$ {{ "%.2f"|format(inteligencia_financeira.projecao.media_diaria_resultado) }}
-                </strong>
-              </div>
-
-              <div>
-                <small>Entradas projetadas</small>
-                <strong class="text-success">
-                  R$ {{ "%.2f"|format(inteligencia_financeira.projecao.entradas_projetadas) }}
-                </strong>
-              </div>
-
-              <div>
-                <small>Saídas projetadas</small>
-                <strong class="text-danger">
-                  R$ {{ "%.2f"|format(inteligencia_financeira.projecao.saidas_projetadas) }}
-                </strong>
-              </div>
-
-              <div class="projecao-resultado">
-                <small>Resultado projetado</small>
-                <strong class="{% if inteligencia_financeira.projecao.resultado_projetado < 0 %}text-danger{% else %}text-success{% endif %}">
-                  R$ {{ "%.2f"|format(inteligencia_financeira.projecao.resultado_projetado) }}
-                </strong>
-              </div>
-
-              <div class="projecao-resultado">
-                <small>Caixa projetado após obrigações</small>
-                <strong class="{% if inteligencia_financeira.projecao.caixa_projetado_pos_obrigacoes < 0 %}text-danger{% else %}text-success{% endif %}">
-                  R$ {{ "%.2f"|format(inteligencia_financeira.projecao.caixa_projetado_pos_obrigacoes) }}
-                </strong>
-              </div>
-
-              {% if inteligencia_financeira.projecao.necessario_equilibrio_projetado > 0 %}
-                <div class="projecao-chamada">
-                  <small>Para fechar no zero</small>
-                  <strong>
-                    Precisa melhorar R$ {{ "%.2f"|format(inteligencia_financeira.projecao.necessario_equilibrio_projetado) }}
-                  </strong>
-                </div>
-              {% endif %}
-            </div>
-          {% else %}
-            <div class="projecao-box sem-projecao">
-              <strong>Mês encerrado ou fora do mês atual</strong>
-              <p>
-                Para meses já encerrados, use o resultado final do fechamento.
-                A projeção automática aparece somente no mês em andamento.
-              </p>
-            </div>
-
-            <div class="projecao-historica">
-              <small>Resultado real do período</small>
-              <strong class="{% if lucro_mes < 0 %}text-danger{% else %}text-success{% endif %}">
-                R$ {{ "%.2f"|format(lucro_mes) }}
-              </strong>
-              <p>Esse valor já é a base correta para análise, comparação e tomada de decisão.</p>
-            </div>
-          {% endif %}
-
-        </div>
-      </div>
-
+      <button type="button" class="dash-mini-obrigacao success dashboard-clickable-kpi" data-dashboard-kpi="a_receber">
+        <span>A receber</span>
+        <strong>{{ moeda(total_a_receber) }}</strong>
+        <small>Recebíveis em aberto</small>
+      </button>
     </div>
+  </section>
 
-  </div>
-
-  <!-- =======================================================
-       RANKINGS
-  ======================================================== -->
-  <div class="row g-4 mt-4">
-
-  <div class="col-12 col-md-6 col-xl-3">
-    <div class="gestao-card ranking-card">
-      <h5>Despesas Assistência</h5>
-
-      <div class="ranking-scroll">
-
-        {% for nome, valor in ranking_despesas_assistencia %}
-          <div class="gestao-ranking-item">
-
-            <span class="ranking-nome">
-              {{ nome }}
-            </span>
-
-            <strong class="ranking-valor">
-              R$ {{ "%.2f"|format(valor) }}
-            </strong>
-
-          </div>
-        {% else %}
-          <p class="text-muted p-3">
-            Sem despesas de assistência no período.
-          </p>
-        {% endfor %}
-
-      </div>
-    </div>
-  </div>
-
-
-  <div class="col-12 col-md-6 col-xl-3">
-    <div class="gestao-card ranking-card">
-      <h5>Despesas Logística</h5>
-
-      <div class="ranking-scroll">
-
-        {% for nome, valor in ranking_despesas_logistica %}
-          <div class="gestao-ranking-item">
-
-            <span class="ranking-nome">
-              {{ nome }}
-            </span>
-
-            <strong class="ranking-valor">
-              R$ {{ "%.2f"|format(valor) }}
-            </strong>
-
-          </div>
-        {% else %}
-          <p class="text-muted p-3">
-            Sem despesas de logística no período.
-          </p>
-        {% endfor %}
-
-      </div>
-    </div>
-  </div>
-
-
-  <div class="col-12 col-md-6 col-xl-3">
-    <div class="gestao-card ranking-card">
-      <h5>Receitas</h5>
-
-      <div class="ranking-scroll">
-
-        {% for nome, valor in ranking_receitas %}
-          <div class="gestao-ranking-item">
-
-            <span class="ranking-nome">
-              {{ nome }}
-            </span>
-
-            <strong class="ranking-valor">
-              R$ {{ "%.2f"|format(valor) }}
-            </strong>
-
-          </div>
-        {% else %}
-          <p class="text-muted p-3">
-            Sem receitas no período.
-          </p>
-        {% endfor %}
-
-      </div>
-    </div>
-  </div>
-
-
-  <div class="col-12 col-md-6 col-xl-3">
-    <div class="gestao-card ranking-card">
-      <h5>Clientes</h5>
-
-      <div class="ranking-scroll">
-
-        {% for nome, valor in ranking_clientes %}
-          <div class="gestao-ranking-item">
-
-            <span class="ranking-nome">
-              {{ nome }}
-            </span>
-
-            <strong class="ranking-valor">
-              R$ {{ "%.2f"|format(valor) }}
-            </strong>
-
-          </div>
-        {% else %}
-          <p class="text-muted p-3">
-            Sem clientes no período.
-          </p>
-        {% endfor %}
-
-      </div>
-    </div>
-  </div>
-
-</div>
-
-  <!-- =======================================================
-       EVOLUÇÃO FINANCEIRA MENSAL
-  ======================================================== -->
-  <div class="gestao-evolucao mt-4">
-
+  <section class="gestao-evolucao mt-4">
     <div class="gestao-section-title">
       <div>
-        <h4>Evolução Anual Enxuta</h4>
-        <p>Use essa área apenas para enxergar tendência. A decisão está na central acima.</p>
+        <h4>Evolução anual</h4>
+        <p>Use apenas para enxergar tendência geral.</p>
       </div>
     </div>
 
@@ -526,34 +163,223 @@
     </script>
 
     <div class="row g-4">
-
       <div class="col-lg-6">
         <div class="gestao-card gestao-chart-card">
           <h5>Entradas x Saídas por Mês</h5>
-
-          <div class="gestao-chart-box">
-            <canvas id="graficoEvolucaoEntradasSaidas"></canvas>
-          </div>
+          <div class="gestao-chart-box"><canvas id="graficoEvolucaoEntradasSaidas"></canvas></div>
         </div>
       </div>
-
       <div class="col-lg-6">
         <div class="gestao-card gestao-chart-card">
-          <h5>Resultado Mensal</h5>
-
-          <div class="gestao-chart-box">
-            <canvas id="graficoEvolucaoLucro"></canvas>
-          </div>
+          <h5>Saldo acumulado</h5>
+          <div class="gestao-chart-box"><canvas id="graficoEvolucaoLucro"></canvas></div>
         </div>
       </div>
-
     </div>
-
-  </div>
+  </section>
 
 </div>
 
+<!-- =======================================================
+     MODAL DETALHADO DOS KPIs DO DASHBOARD
+======================================================== -->
+<div class="dashboard-kpi-modal" id="dashboardKpiModal" aria-hidden="true">
+  <div class="dashboard-kpi-modal-backdrop" data-dashboard-modal-close></div>
 
+  <div class="dashboard-kpi-modal-dialog" role="dialog" aria-modal="true">
+    <div class="dashboard-kpi-modal-header">
+      <div>
+        <h3 id="dashboardKpiModalTitulo">Detalhes do KPI</h3>
+        <p id="dashboardKpiModalSubtitulo">Tabela analítica das movimentações</p>
+      </div>
+      <button type="button" class="dashboard-kpi-modal-close" data-dashboard-modal-close>×</button>
+    </div>
+
+    <div class="dashboard-kpi-modal-resumo">
+      <div><span>Quantidade</span><strong id="dashboardResumoQuantidade">0</strong></div>
+      <div><span>Total</span><strong id="dashboardResumoTotal">R$ 0,00</strong></div>
+      <div><span>Maior valor</span><strong id="dashboardResumoMaior">R$ 0,00</strong></div>
+      <div><span>Menor valor</span><strong id="dashboardResumoMenor">R$ 0,00</strong></div>
+      <div><span>Média</span><strong id="dashboardResumoMedia">R$ 0,00</strong></div>
+    </div>
+
+    <div class="dashboard-kpi-modal-toolbar">
+      <input type="text" id="dashboardKpiBusca" placeholder="Buscar por fornecedor, cliente, categoria, setor, observação...">
+      <select id="dashboardKpiFiltroTipo">
+        <option value="">Todos os tipos</option>
+        <option value="DESPESA">Despesas</option>
+        <option value="RECEITA">Receitas</option>
+      </select>
+      <select id="dashboardKpiFiltroStatus">
+        <option value="">Todos os status</option>
+        <option value="PAGO">Pago</option>
+        <option value="RECEBIDO">Recebido</option>
+        <option value="PENDENTE">Pendente</option>
+        <option value="EM ABERTO">Em aberto</option>
+      </select>
+      <button type="button" id="dashboardKpiLimparFiltros">Limpar filtros</button>
+    </div>
+
+    <div class="dashboard-kpi-loading" id="dashboardKpiLoading">Carregando detalhes...</div>
+    <div class="dashboard-kpi-empty d-none" id="dashboardKpiEmpty">Nenhuma movimentação encontrada para este KPI.</div>
+
+    <div class="dashboard-kpi-table-wrap d-none" id="dashboardKpiTableWrap">
+      <table class="dashboard-kpi-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Tipo</th><th>Origem</th><th>Data</th><th>Documento</th><th>Fornecedor / Cliente</th>
+            <th>Categoria</th><th>Setor</th><th>Vencimento</th><th>Pagamento</th><th>Status</th><th>Valor</th><th>Observação</th>
+          </tr>
+        </thead>
+        <tbody id="dashboardKpiTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const formCompetencia = document.getElementById("dashFiltroCompetencia");
+  const inputCompetencia = document.getElementById("dashCompetencia");
+  const inputMes = document.getElementById("dashFiltroMes");
+  const inputAno = document.getElementById("dashFiltroAno");
+
+  if (formCompetencia && inputCompetencia && inputMes && inputAno) {
+    formCompetencia.addEventListener("submit", function () {
+      const valor = inputCompetencia.value || "{{ ano }}-{{ '%02d'|format(mes) }}";
+      const partes = valor.split("-");
+      if (partes.length === 2) {
+        inputAno.value = partes[0];
+        inputMes.value = String(Number(partes[1] || {{ mes }}));
+      }
+    });
+  }
+})();
+</script>
+
+<script>
+(function () {
+  const mesAtual = {{ mes }};
+  const anoAtual = {{ ano }};
+  const modal = document.getElementById("dashboardKpiModal");
+  const titulo = document.getElementById("dashboardKpiModalTitulo");
+  const subtitulo = document.getElementById("dashboardKpiModalSubtitulo");
+  const loading = document.getElementById("dashboardKpiLoading");
+  const empty = document.getElementById("dashboardKpiEmpty");
+  const wrap = document.getElementById("dashboardKpiTableWrap");
+  const tbody = document.getElementById("dashboardKpiTableBody");
+  const busca = document.getElementById("dashboardKpiBusca");
+  const filtroTipo = document.getElementById("dashboardKpiFiltroTipo");
+  const filtroStatus = document.getElementById("dashboardKpiFiltroStatus");
+  const limpar = document.getElementById("dashboardKpiLimparFiltros");
+  let itensAtuais = [];
+
+  function dinheiro(valor) {
+    const numero = Number(valor || 0);
+    return numero.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  }
+
+  function abrirModal() {
+    modal.classList.add("show");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("dashboard-modal-open");
+  }
+
+  function fecharModal() {
+    modal.classList.remove("show");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("dashboard-modal-open");
+  }
+
+  function atualizarResumo(itens) {
+    const valores = itens.map(item => Number(item.valor || 0));
+    const total = valores.reduce((acc, val) => acc + val, 0);
+    const qtd = valores.length;
+    document.getElementById("dashboardResumoQuantidade").textContent = qtd;
+    document.getElementById("dashboardResumoTotal").textContent = dinheiro(total);
+    document.getElementById("dashboardResumoMaior").textContent = dinheiro(qtd ? Math.max(...valores) : 0);
+    document.getElementById("dashboardResumoMenor").textContent = dinheiro(qtd ? Math.min(...valores) : 0);
+    document.getElementById("dashboardResumoMedia").textContent = dinheiro(qtd ? total / qtd : 0);
+  }
+
+  function itemPassaFiltros(item) {
+    const termo = (busca.value || "").trim().toLowerCase();
+    const tipo = filtroTipo.value;
+    const status = filtroStatus.value;
+    if (tipo && item.tipo !== tipo) return false;
+    if (status && String(item.status || "").toUpperCase() !== status) return false;
+    if (!termo) return true;
+    return [item.tipo, item.origem, item.data, item.documento, item.nome, item.categoria, item.setor, item.vencimento, item.pagamento, item.status, item.observacao, item.valor].join(" ").toLowerCase().includes(termo);
+  }
+
+  function renderizarTabela() {
+    const filtrados = itensAtuais.filter(itemPassaFiltros);
+    tbody.innerHTML = "";
+    atualizarResumo(filtrados);
+    if (!filtrados.length) {
+      empty.classList.remove("d-none");
+      wrap.classList.add("d-none");
+      return;
+    }
+    empty.classList.add("d-none");
+    wrap.classList.remove("d-none");
+    filtrados.forEach((item, index) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${index + 1}</td>
+        <td><span class="dash-badge ${item.tipo === "RECEITA" ? "success" : "danger"}">${item.tipo || "-"}</span></td>
+        <td>${item.origem || "-"}</td>
+        <td>${item.data || "-"}</td>
+        <td>${item.documento || "-"}</td>
+        <td>${item.nome || "-"}</td>
+        <td>${item.categoria || "-"}</td>
+        <td>${item.setor || "-"}</td>
+        <td>${item.vencimento || "-"}</td>
+        <td>${item.pagamento || "-"}</td>
+        <td><span class="dash-status">${item.status || "-"}</span></td>
+        <td class="dash-money">${dinheiro(item.valor)}</td>
+        <td class="dash-observacao">${item.observacao || "-"}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function carregarKpi(tipo) {
+    abrirModal();
+    loading.classList.remove("d-none");
+    empty.classList.add("d-none");
+    wrap.classList.add("d-none");
+    tbody.innerHTML = "";
+    itensAtuais = [];
+    busca.value = "";
+    filtroTipo.value = "";
+    filtroStatus.value = "";
+    try {
+      const url = `/gestao/api/dashboard-kpi-detalhes?tipo=${encodeURIComponent(tipo)}&mes=${mesAtual}&ano=${anoAtual}`;
+      const resp = await fetch(url);
+      const data = await resp.json();
+      if (!data.ok) throw new Error(data.mensagem || "Erro ao carregar detalhes.");
+      titulo.textContent = data.titulo || "Detalhes do KPI";
+      subtitulo.textContent = `${String(mesAtual).padStart(2, "0")}/${anoAtual} • ${data.itens.length} registro(s)`;
+      itensAtuais = data.itens || [];
+      loading.classList.add("d-none");
+      renderizarTabela();
+    } catch (error) {
+      loading.classList.add("d-none");
+      empty.classList.remove("d-none");
+      empty.textContent = error.message || "Erro ao carregar detalhes.";
+    }
+  }
+
+  document.querySelectorAll("[data-dashboard-kpi]").forEach(el => el.addEventListener("click", () => carregarKpi(el.dataset.dashboardKpi)));
+  document.querySelectorAll("[data-dashboard-modal-close]").forEach(el => el.addEventListener("click", fecharModal));
+  busca.addEventListener("input", renderizarTabela);
+  filtroTipo.addEventListener("change", renderizarTabela);
+  filtroStatus.addEventListener("change", renderizarTabela);
+  limpar.addEventListener("click", () => { busca.value = ""; filtroTipo.value = ""; filtroStatus.value = ""; renderizarTabela(); });
+  document.addEventListener("keydown", event => { if (event.key === "Escape" && modal.classList.contains("show")) fecharModal(); });
+})();
+</script>
 
 <!-- =========================================
      🔥 MODAL DETALHE CATEGORIA
@@ -745,5 +571,6 @@
     </div>
 
 </div>
+
 
 {% endblock %}
