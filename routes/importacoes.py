@@ -916,6 +916,8 @@ def index():
 # =========================================================
 # IMPORTAR CONTAS PAGAS
 # Relatório de pagamentos realizados
+# Agora aceita arquivo com vários meses/ano inteiro.
+# O mês/ano são definidos automaticamente pela Dt. Pgto de cada linha.
 # =========================================================
 
 @importacoes_bp.route("/contas-pagas", methods=["POST"])
@@ -923,23 +925,22 @@ def index():
 def importar_contas_pagas():
 
     arquivo = request.files.get("arquivo_pagas")
-    mes_importacao = request.form.get("mes_pagas", type=int)
-    ano_importacao = request.form.get("ano_pagas", type=int)
 
-    if not validar_mes_ano(mes_importacao, ano_importacao):
-        flash("Informe mês e ano válidos para Contas Pagas.", "danger")
-        return redirect("/gestao/importacoes/")
+    # Usado apenas para voltar para a competência que o usuário estava visualizando.
+    hoje = datetime.now()
+    mes_retorno = request.form.get("mes_retorno", type=int) or hoje.month
+    ano_retorno = request.form.get("ano_retorno", type=int) or hoje.year
 
     if not arquivo or not arquivo.filename:
         flash("Selecione uma planilha de Contas Pagas.", "danger")
-        return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
+        return redirect(f"/gestao/importacoes/?mes={mes_retorno}&ano={ano_retorno}")
 
     if not arquivo_excel_valido(arquivo.filename):
         flash(
             "Formato não aceito. Envie uma planilha Excel nos formatos .xlsx, .xlsm, .xls ou .xlsb.",
             "danger"
         )
-        return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
+        return redirect(f"/gestao/importacoes/?mes={mes_retorno}&ano={ano_retorno}")
 
     try:
         linhas = ler_linhas_upload(arquivo, "Nº Fatura")
@@ -948,6 +949,7 @@ def importar_contas_pagas():
         total_atualizado = 0
         total_ignorado = 0
         total_linhas = 0
+        competencias_importadas = set()
 
         for linha in linhas:
             plano_contas = texto(valor_por_coluna(linha, "Pl. Contas"))
@@ -963,6 +965,8 @@ def importar_contas_pagas():
 
             valor = normalizar_decimal(valor_por_coluna(linha, "Valor"))
 
+            # Contas Pagas só entram quando existe Dt. Pgto.
+            # É essa data que define automaticamente mês/ano no banco.
             if not data_pagamento:
                 total_ignorado += 1
                 continue
@@ -1029,20 +1033,28 @@ def importar_contas_pagas():
 
             conta.observacoes = observacoes
 
-            conta.mes = mes_importacao
-            conta.ano = ano_importacao
+            # NOVO CENÁRIO:
+            # Não força mais tudo para o mês escolhido na tela.
+            # A competência vem da data real de pagamento da linha.
+            conta.mes = data_pagamento.month
+            conta.ano = data_pagamento.year
+            competencias_importadas.add(f"{data_pagamento.month:02d}/{data_pagamento.year}")
 
             conta.chave_conciliacao = chave_conciliacao
             conta.origem_importacao = "PAGAMENTO"
+            conta.importado_em = datetime.utcnow()
 
             total_linhas += 1
 
         db.session.commit()
 
+        competencias_txt = ", ".join(sorted(competencias_importadas)) or "nenhuma competência"
+
         flash(
             (
-                f"Contas Pagas de {mes_importacao:02d}/{ano_importacao} importadas com sucesso! "
-                f"{total_linhas} linha(s). "
+                f"Contas Pagas importadas com sucesso! "
+                f"{total_linhas} linha(s) processada(s). "
+                f"Competências identificadas: {competencias_txt}. "
                 f"Criadas: {total_criado}. "
                 f"Atualizadas: {total_atualizado}. "
                 f"Ignoradas sem Dt. Pgto: {total_ignorado}."
@@ -1054,7 +1066,7 @@ def importar_contas_pagas():
         db.session.rollback()
         flash(f"Erro ao importar Contas Pagas: {str(e)}", "danger")
 
-    return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
+    return redirect(f"/gestao/importacoes/?mes={mes_retorno}&ano={ano_retorno}")
 
 
 # =========================================================
@@ -1218,6 +1230,10 @@ def importar_despesas_completo():
 
 # =========================================================
 # IMPORTAR CONTAS A RECEBER
+# Agora aceita arquivo com vários meses/ano inteiro.
+# A competência é definida automaticamente pela data da linha:
+# - recebido com Dt. Pgto: usa Dt. Pgto
+# - pendente: usa Dt. Vencto
 # =========================================================
 
 @importacoes_bp.route("/contas-a-receber", methods=["POST"])
@@ -1225,30 +1241,33 @@ def importar_despesas_completo():
 def importar_contas_receber():
 
     arquivo = request.files.get("arquivo_receber")
-    mes_importacao = request.form.get("mes_receber", type=int)
-    ano_importacao = request.form.get("ano_receber", type=int)
 
-    if not validar_mes_ano(mes_importacao, ano_importacao):
-        flash("Informe mês e ano válidos para Contas a Receber.", "danger")
-        return redirect("/gestao/importacoes/")
+    # Usado apenas para voltar para a competência que o usuário estava visualizando.
+    hoje = datetime.now()
+    mes_retorno = request.form.get("mes_retorno", type=int) or hoje.month
+    ano_retorno = request.form.get("ano_retorno", type=int) or hoje.year
 
     if not arquivo or not arquivo.filename:
         flash("Selecione uma planilha de Contas a Receber.", "danger")
-        return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
+        return redirect(f"/gestao/importacoes/?mes={mes_retorno}&ano={ano_retorno}#contas-receber")
 
     if not arquivo_excel_valido(arquivo.filename):
         flash(
             "Formato não aceito. Envie uma planilha Excel nos formatos .xlsx, .xlsm, .xls ou .xlsb.",
             "danger"
         )
-        return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
+        return redirect(f"/gestao/importacoes/?mes={mes_retorno}&ano={ano_retorno}#contas-receber")
 
     try:
         linhas = ler_linhas_upload(arquivo, "Nº Fatura")
 
         total_criado = 0
         total_atualizado = 0
+        total_ignorado = 0
         total_linhas = 0
+        total_recebidas = 0
+        total_pendentes = 0
+        competencias_importadas = set()
 
         for linha in linhas:
             plano_contas = texto(valor_por_coluna(linha, "Pl. Contas"))
@@ -1269,6 +1288,15 @@ def importar_contas_receber():
 
             if total == Decimal("0.00"):
                 total = valor + juros
+
+            # Define a competência automaticamente.
+            # Se já recebeu e existe Dt. Pgto, entra no mês do recebimento real.
+            # Se ainda está pendente, entra no mês de vencimento.
+            data_base_competencia = data_pagamento if data_pagamento else data_vencimento
+
+            if not data_base_competencia:
+                total_ignorado += 1
+                continue
 
             cobranca = texto(valor_por_coluna(linha, "Cobrança"))
 
@@ -1342,24 +1370,40 @@ def importar_contas_receber():
             conta.pago = pago
             conta.status = "RECEBIDO" if pago else "PENDENTE"
 
+            if pago:
+                total_recebidas += 1
+            else:
+                total_pendentes += 1
+
             conta.observacoes = observacoes
 
-            conta.mes = mes_importacao
-            conta.ano = ano_importacao
+            # NOVO CENÁRIO:
+            # Não força mais tudo para o mês escolhido na tela.
+            # A competência vem da data real da linha.
+            conta.mes = data_base_competencia.month
+            conta.ano = data_base_competencia.year
+            competencias_importadas.add(f"{data_base_competencia.month:02d}/{data_base_competencia.year}")
 
             conta.chave_conciliacao = chave_conciliacao
             conta.origem_importacao = "RECEBIMENTO"
+            conta.importado_em = datetime.utcnow()
 
             total_linhas += 1
 
         db.session.commit()
 
+        competencias_txt = ", ".join(sorted(competencias_importadas)) or "nenhuma competência"
+
         flash(
             (
-                f"Contas a Receber de {mes_importacao:02d}/{ano_importacao} importadas com sucesso! "
-                f"{total_linhas} linha(s). "
+                f"Contas a Receber importadas com sucesso! "
+                f"{total_linhas} linha(s) processada(s). "
+                f"Competências identificadas: {competencias_txt}. "
+                f"Recebidas: {total_recebidas}. "
+                f"Pendentes: {total_pendentes}. "
                 f"Criadas: {total_criado}. "
-                f"Atualizadas: {total_atualizado}."
+                f"Atualizadas: {total_atualizado}. "
+                f"Ignoradas sem data: {total_ignorado}."
             ),
             "success"
         )
@@ -1368,7 +1412,7 @@ def importar_contas_receber():
         db.session.rollback()
         flash(f"Erro ao importar Contas a Receber: {str(e)}", "danger")
 
-    return redirect(f"/gestao/importacoes/?mes={mes_importacao}&ano={ano_importacao}")
+    return redirect(f"/gestao/importacoes/?mes={mes_retorno}&ano={ano_retorno}#contas-receber")
 
 
 # =========================================================
@@ -1548,17 +1592,12 @@ def excluir_conta_receber(id):
 @gestao_required
 def limpar_contas_pagas_mes():
 
-    mes = request.form.get("mes", type=int)
-    ano = request.form.get("ano", type=int)
-
-    if not validar_mes_ano(mes, ano):
-        flash("Informe mês e ano válidos para limpar Contas Pagas.", "danger")
-        return redirect("/gestao/importacoes/")
+    hoje = datetime.now()
+    mes_redirect = request.form.get("mes", type=int) or hoje.month
+    ano_redirect = request.form.get("ano", type=int) or hoje.year
 
     try:
         registros = ContaPagarImportada.query.filter(
-            ContaPagarImportada.mes == mes,
-            ContaPagarImportada.ano == ano,
             ContaPagarImportada.origem_importacao == "PAGAMENTO"
         ).all()
 
@@ -1570,36 +1609,32 @@ def limpar_contas_pagas_mes():
         db.session.commit()
 
         flash(
-            f"Importação de Contas Pagas de {mes:02d}/{ano} limpa com sucesso. "
-            f"{total_removido} registro(s) importado(s) removido(s).",
+            f"Toda a importação de Contas Pagas foi limpa com sucesso. "
+            f"{total_removido} registro(s) importado(s) removido(s) de todos os meses.",
             "success"
         )
 
     except Exception as e:
         db.session.rollback()
-        flash(f"Erro ao limpar importação de Contas Pagas: {str(e)}", "danger")
+        flash(f"Erro ao limpar toda a importação de Contas Pagas: {str(e)}", "danger")
 
-    return redirect_importacoes(mes, ano)
+    return redirect_importacoes(mes_redirect, ano_redirect)
 
 
 @importacoes_bp.route("/contas-a-receber/limpar", methods=["POST"])
 @gestao_required
 def limpar_contas_receber_mes():
 
-    mes = request.form.get("mes", type=int)
-    ano = request.form.get("ano", type=int)
-
-    if not validar_mes_ano(mes, ano):
-        flash("Informe mês e ano válidos para limpar Contas a Receber.", "danger")
-        return redirect("/gestao/importacoes/")
+    hoje = datetime.now()
+    mes_redirect = request.form.get("mes", type=int) or hoje.month
+    ano_redirect = request.form.get("ano", type=int) or hoje.year
 
     try:
         registros = ContaReceberImportada.query.filter(
-            ContaReceberImportada.mes == mes,
-            ContaReceberImportada.ano == ano,
             or_(
+                ContaReceberImportada.origem_importacao == "RECEBIMENTO",
+                ContaReceberImportada.origem_importacao == "VENCIMENTO",
                 ContaReceberImportada.origem_importacao.is_(None),
-                ContaReceberImportada.origem_importacao != "MANUAL"
             )
         ).all()
 
@@ -1611,33 +1646,28 @@ def limpar_contas_receber_mes():
         db.session.commit()
 
         flash(
-            f"Importação de Contas a Receber de {mes:02d}/{ano} limpa com sucesso. "
-            f"{total_removido} registro(s) importado(s) removido(s).",
+            f"Toda a importação de Contas a Receber foi limpa com sucesso. "
+            f"{total_removido} registro(s) importado(s) removido(s) de todos os meses.",
             "success"
         )
 
     except Exception as e:
         db.session.rollback()
-        flash(f"Erro ao limpar importação de Contas a Receber: {str(e)}", "danger")
+        flash(f"Erro ao limpar toda a importação de Contas a Receber: {str(e)}", "danger")
 
-    return redirect_importacoes(mes, ano)
+    return redirect_importacoes(mes_redirect, ano_redirect, "#contas-receber")
 
 
 @importacoes_bp.route("/despesas-completo/limpar", methods=["POST"])
 @gestao_required
 def limpar_despesas_completo_mes():
 
-    mes = request.form.get("mes", type=int)
-    ano = request.form.get("ano", type=int)
-
-    if not validar_mes_ano(mes, ano):
-        flash("Informe mês e ano válidos para limpar Despesas Completo.", "danger")
-        return redirect("/gestao/importacoes/")
+    hoje = datetime.now()
+    mes_redirect = request.form.get("mes", type=int) or hoje.month
+    ano_redirect = request.form.get("ano", type=int) or hoje.year
 
     try:
         registros = ContaPagarImportada.query.filter(
-            ContaPagarImportada.mes == mes,
-            ContaPagarImportada.ano == ano,
             ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA"
         ).all()
 
@@ -1649,16 +1679,16 @@ def limpar_despesas_completo_mes():
         db.session.commit()
 
         flash(
-            f"Importação de Despesas Completo de {mes:02d}/{ano} limpa com sucesso. "
-            f"{total_removido} registro(s) removido(s).",
+            f"Toda a importação de Despesas Completo/Radar foi limpa com sucesso. "
+            f"{total_removido} registro(s) removido(s) de todos os meses.",
             "success"
         )
 
     except Exception as e:
         db.session.rollback()
-        flash(f"Erro ao limpar Despesas Completo: {str(e)}", "danger")
+        flash(f"Erro ao limpar toda a importação de Despesas Completo: {str(e)}", "danger")
 
-    return redirect_importacoes(mes, ano, "#despesas-completo")
+    return redirect_importacoes(mes_redirect, ano_redirect, "#despesas-completo")
 
 
 # =========================================================

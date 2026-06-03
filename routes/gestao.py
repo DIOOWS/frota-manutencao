@@ -1567,6 +1567,183 @@ def fluxo_diario():
 
 
 # =========================================================
+# API - DETALHES DO FLUXO POR DIA
+# =========================================================
+
+def moeda_json(valor):
+    return round(dinheiro(valor), 2)
+
+
+def texto_json(valor, padrao="-"):
+    if valor is None:
+        return padrao
+
+    valor = str(valor).strip()
+
+    return valor if valor else padrao
+
+
+@gestao_bp.route("/api/fluxo-diario/dia")
+@gestao_required
+def api_fluxo_diario_dia():
+
+    data_str = request.args.get("data", "").strip()
+
+    try:
+        data_ref = datetime.strptime(data_str, "%Y-%m-%d").date()
+    except Exception:
+        return jsonify({
+            "ok": False,
+            "mensagem": "Data inválida. Use o formato YYYY-MM-DD."
+        }), 400
+
+    inicio_dt = datetime.combine(data_ref, datetime.min.time())
+    fim_dt = datetime.combine(data_ref, datetime.max.time())
+
+    despesas = []
+    receitas = []
+    manuais = []
+
+    total_despesas = 0
+    total_receitas = 0
+
+    contas_pagar = ContaPagarImportada.query.filter(
+        ContaPagarImportada.pago == True,
+        ContaPagarImportada.origem_importacao == "PAGAMENTO",
+        ContaPagarImportada.data_pagamento >= inicio_dt,
+        ContaPagarImportada.data_pagamento <= fim_dt
+    ).order_by(
+        ContaPagarImportada.valor.desc(),
+        ContaPagarImportada.id.desc()
+    ).all()
+
+    for conta in contas_pagar:
+        valor = dinheiro(getattr(conta, "valor", 0))
+        total_despesas += valor
+
+        despesas.append({
+            "id": conta.id,
+            "origem": "IMPORTADA",
+            "tipo": "DESPESA",
+            "titulo": texto_json(conta.fornecedor_funcionario, "Fornecedor não informado"),
+            "fornecedor_funcionario": texto_json(conta.fornecedor_funcionario),
+            "numero_fatura": texto_json(conta.numero_fatura),
+            "plano_contas": texto_json(conta.plano_contas),
+            "categoria": texto_json(conta.categoria),
+            "setor": texto_json(conta.setor),
+            "data_documento": formatar_data_json(conta.data_documento),
+            "data_vencimento": formatar_data_json(conta.data_vencimento),
+            "data_pagamento": formatar_data_json(conta.data_pagamento),
+            "valor": moeda_json(valor),
+            "status": texto_json(conta.status, "PAGO"),
+            "observacoes": texto_json(conta.observacoes)
+        })
+
+    contas_receber = ContaReceberImportada.query.filter(
+        ContaReceberImportada.pago == True,
+        ContaReceberImportada.origem_importacao == "RECEBIMENTO",
+        ContaReceberImportada.data_pagamento >= inicio_dt,
+        ContaReceberImportada.data_pagamento <= fim_dt
+    ).order_by(
+        ContaReceberImportada.total.desc(),
+        ContaReceberImportada.valor.desc(),
+        ContaReceberImportada.id.desc()
+    ).all()
+
+    for conta in contas_receber:
+        valor_base = dinheiro(getattr(conta, "valor", 0))
+        juros = dinheiro(getattr(conta, "juros", 0))
+        total = valor_conta_receber(conta)
+        total_receitas += total
+
+        receitas.append({
+            "id": conta.id,
+            "origem": "IMPORTADA",
+            "tipo": "RECEITA",
+            "titulo": texto_json(conta.cliente, "Cliente não informado"),
+            "cliente": texto_json(conta.cliente),
+            "numero_fatura": texto_json(conta.numero_fatura),
+            "plano_contas": texto_json(conta.plano_contas),
+            "categoria": texto_json(conta.categoria),
+            "setor": texto_json(conta.setor),
+            "cobranca": texto_json(conta.cobranca),
+            "data_documento": formatar_data_json(conta.data_documento),
+            "data_vencimento": formatar_data_json(conta.data_vencimento),
+            "data_pagamento": formatar_data_json(conta.data_pagamento),
+            "valor": moeda_json(valor_base),
+            "juros": moeda_json(juros),
+            "total": moeda_json(total),
+            "status": texto_json(conta.status, "RECEBIDO"),
+            "observacoes": texto_json(conta.observacoes)
+        })
+
+    lancamentos = LancamentoFinanceiro.query.filter(
+        LancamentoFinanceiro.data == data_ref
+    ).order_by(
+        LancamentoFinanceiro.valor.desc(),
+        LancamentoFinanceiro.id.desc()
+    ).all()
+
+    for lancamento in lancamentos:
+        if status_cancelado(getattr(lancamento, "status", None)):
+            continue
+
+        if not status_pago(getattr(lancamento, "status", None)):
+            continue
+
+        tipo = normalizar_texto(getattr(lancamento, "tipo", None))
+        valor = dinheiro(getattr(lancamento, "valor", 0))
+
+        if tipo == "RECEITA":
+            total_receitas += valor
+            tipo_visual = "RECEITA"
+        elif tipo == "DESPESA":
+            total_despesas += valor
+            tipo_visual = "DESPESA"
+        else:
+            continue
+
+        manuais.append({
+            "id": lancamento.id,
+            "origem": "MANUAL",
+            "tipo": tipo_visual,
+            "titulo": texto_json(
+                getattr(lancamento, "descricao", None)
+                or getattr(lancamento, "subcategoria", None)
+                or getattr(lancamento, "categoria", None),
+                "Lançamento manual"
+            ),
+            "categoria": texto_json(getattr(lancamento, "categoria", None)),
+            "subcategoria": texto_json(getattr(lancamento, "subcategoria", None)),
+            "setor": texto_json(getattr(lancamento, "setor", None)),
+            "cliente": texto_json(getattr(lancamento, "cliente", None)),
+            "descricao": texto_json(getattr(lancamento, "descricao", None)),
+            "origem_lancamento": texto_json(getattr(lancamento, "origem", None)),
+            "data": formatar_data_json(getattr(lancamento, "data", None)),
+            "valor": moeda_json(valor),
+            "status": texto_json(getattr(lancamento, "status", None))
+        })
+
+    saldo = dinheiro(total_receitas) - dinheiro(total_despesas)
+
+    return jsonify({
+        "ok": True,
+        "data": data_ref.strftime("%d/%m/%Y"),
+        "data_iso": data_ref.strftime("%Y-%m-%d"),
+        "dia_semana": nome_dia_semana(data_ref),
+        "resumo": {
+            "total_receitas": moeda_json(total_receitas),
+            "total_despesas": moeda_json(total_despesas),
+            "saldo": moeda_json(saldo),
+            "quantidade": len(receitas) + len(despesas) + len(manuais)
+        },
+        "receitas": receitas,
+        "despesas": despesas,
+        "manuais": manuais
+    })
+
+
+# =========================================================
 # RADAR DE PAGAMENTOS
 # SOMENTE DESPESAS - PAGAS E PENDENTES
 # =========================================================

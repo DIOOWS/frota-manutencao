@@ -67,12 +67,12 @@
 
       <form method="POST"
             action="/gestao/importacoes/contas-pagas/limpar"
-            onsubmit="return confirm('ATENÇÃO!\n\nVocê tem certeza que deseja limpar a importação de Contas Pagas deste mês?\n\nIsso vai remover apenas os dados importados do mês atual.\nLançamentos manuais não serão removidos.\n\nEssa ação não pode ser desfeita.');">
+            onsubmit="return confirm('ATENÇÃO!\n\nVocê tem certeza que deseja limpar TODA a importação de Contas Pagas?\n\nIsso vai remover todos os registros importados de Contas Pagas de todos os meses.\nLançamentos manuais não serão removidos.\n\nEssa ação não pode ser desfeita.');">
         <input type="hidden" name="mes" value="{{ mes }}">
         <input type="hidden" name="ano" value="{{ ano }}">
 
         <button type="submit" class="btn btn-outline-danger">
-          Limpar importação de Contas Pagas do mês
+          Limpar toda importação de Contas Pagas
         </button>
       </form>
     </div>
@@ -87,30 +87,15 @@
         <div class="importacao-form-info">
           <strong>Importar Contas Pagas</strong>
           <small>
-            Esse arquivo alimenta as saídas realizadas do Fluxo e do Dashboard.
-            O sistema usa a <b>Dt. Pgto</b> para considerar o dinheiro que realmente saiu.
+            Esse arquivo pode conter vários meses ou o ano inteiro.
+            O sistema usa a <b>Dt. Pgto</b> para separar automaticamente cada conta no mês correto.
           </small>
         </div>
 
-        <div class="importacao-field">
-          <label>Mês</label>
-          <input type="number"
-                 name="mes_pagas"
-                 min="1"
-                 max="12"
-                 value="{{ mes }}"
-                 class="form-control"
-                 required>
-        </div>
-
-        <div class="importacao-field">
-          <label>Ano</label>
-          <input type="number"
-                 name="ano_pagas"
-                 value="{{ ano }}"
-                 class="form-control"
-                 required>
-        </div>
+        <!-- A competência agora é definida automaticamente pela Dt. Pgto de cada linha.
+             Esses campos servem apenas para voltar ao mês/ano que está sendo visualizado. -->
+        <input type="hidden" name="mes_retorno" value="{{ mes }}">
+        <input type="hidden" name="ano_retorno" value="{{ ano }}">
 
         <div class="importacao-field importacao-file">
           <label>Arquivo Excel</label>
@@ -383,12 +368,12 @@
 
       <form method="POST"
             action="/gestao/importacoes/despesas-completo/limpar"
-            onsubmit="return confirm('ATENÇÃO!\n\nVocê tem certeza que deseja limpar a importação de Despesas Completo deste mês?\n\nIsso remove apenas os registros de Despesas Completo da competência visualizada.\nNão remove Contas Pagas, Contas a Receber nem lançamentos manuais.\n\nEssa ação não pode ser desfeita.');">
+            onsubmit="return confirm('ATENÇÃO!\n\nVocê tem certeza que deseja limpar TODA a importação de Despesas Completo?\n\nIsso remove todos os registros importados de Despesas Completo/Radar de todos os meses.\nNão remove Contas Pagas, Contas a Receber nem lançamentos manuais.\n\nEssa ação não pode ser desfeita.');">
         <input type="hidden" name="mes" value="{{ mes }}">
         <input type="hidden" name="ano" value="{{ ano }}">
 
         <button type="submit" class="btn btn-outline-danger">
-          Limpar Despesas Completo do mês
+          Limpar toda importação de Despesas Completo
         </button>
       </form>
     </div>
@@ -586,12 +571,12 @@
 
       <form method="POST"
             action="/gestao/importacoes/contas-a-receber/limpar"
-            onsubmit="return confirm('ATENÇÃO!\n\nVocê tem certeza que deseja limpar a importação de Contas a Receber deste mês?\n\nIsso vai remover apenas os dados importados do mês atual.\nLançamentos manuais não serão removidos.\n\nEssa ação não pode ser desfeita.');">
+            onsubmit="return confirm('ATENÇÃO!\n\nVocê tem certeza que deseja limpar TODA a importação de Contas a Receber?\n\nIsso vai remover todos os registros importados de Contas a Receber de todos os meses.\nLançamentos manuais não serão removidos.\n\nEssa ação não pode ser desfeita.');">
         <input type="hidden" name="mes" value="{{ mes }}">
         <input type="hidden" name="ano" value="{{ ano }}">
 
         <button type="submit" class="btn btn-outline-danger">
-          Limpar importação de Contas a Receber do mês
+          Limpar toda importação de Contas a Receber
         </button>
       </form>
     </div>
@@ -606,30 +591,15 @@
         <div class="importacao-form-info">
           <strong>Importar Contas a Receber</strong>
           <small>
-            Esse arquivo alimenta as entradas, recebíveis, ranking de receitas e clientes.
-            Quando estiver recebido, o sistema usa a <b>Dt. Pgto</b> para considerar entrada realizada.
+            Esse arquivo pode conter vários meses ou o ano inteiro.
+            O sistema separa automaticamente por <b>Dt. Pgto</b> quando recebido ou <b>Dt. Vencto</b> quando pendente.
           </small>
         </div>
 
-        <div class="importacao-field">
-          <label>Mês</label>
-          <input type="number"
-                 name="mes_receber"
-                 min="1"
-                 max="12"
-                 value="{{ mes }}"
-                 class="form-control"
-                 required>
-        </div>
-
-        <div class="importacao-field">
-          <label>Ano</label>
-          <input type="number"
-                 name="ano_receber"
-                 value="{{ ano }}"
-                 class="form-control"
-                 required>
-        </div>
+        <!-- A competência agora é definida automaticamente pela Dt. Pgto ou Dt. Vencto de cada linha.
+             Esses campos servem apenas para voltar ao mês/ano que está sendo visualizado. -->
+        <input type="hidden" name="mes_retorno" value="{{ mes }}">
+        <input type="hidden" name="ano_retorno" value="{{ ano }}">
 
         <div class="importacao-field importacao-file">
           <label>Arquivo Excel</label>

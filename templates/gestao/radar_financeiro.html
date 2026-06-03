@@ -343,8 +343,16 @@
                             <span>{{ coluna.badge }}</span>
                         </div>
 
-                        <div class="radar-herdadas-coluna-total">
-                            {{ coluna.total_formatado }}
+                        <div class="radar-herdadas-coluna-total radar-coluna-total-com-tabela">
+                            <span>{{ coluna.total_formatado }}</span>
+                            <button type="button"
+                                    class="radar-btn-ver-tabela-coluna"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalTabelaColuna{{ coluna.slug }}"
+                                    title="Ver todas as contas desta coluna em tabela">
+                                <i class="bi bi-table"></i>
+                                Ver tabela
+                            </button>
                         </div>
 
                         {% if coluna.slug != "herdada" and coluna.itens is defined and coluna.itens and coluna.tem_acoes %}
@@ -545,7 +553,205 @@
 
                 {% endfor %}
 
+
             </section>
+
+            {# =====================================================
+               MODAIS DE TABELA POR COLUNA - VISÃO EXCEL COMPACTA
+               Mantém os cards e ações existentes; adiciona leitura analítica.
+            ===================================================== #}
+            {% for coluna in colunas %}
+                <div class="modal fade radar-excel-modal" id="modalTabelaColuna{{ coluna.slug }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-fullscreen-xxl-down modal-dialog-centered modal-dialog-scrollable radar-excel-dialog">
+                        <div class="modal-content radar-excel-content">
+
+                            <div class="modal-header radar-excel-header">
+                                <div class="radar-excel-titlebox">
+                                    <h5 class="modal-title">{{ coluna.titulo }}</h5>
+                                    <small>{{ coluna.subtitulo }}</small>
+                                </div>
+
+                                <div class="radar-excel-summary">
+                                    <div>
+                                        <span>Quantidade</span>
+                                        <strong data-radar-excel-qtd>{{ coluna.badge }}</strong>
+                                    </div>
+                                    <div>
+                                        <span>Total</span>
+                                        <strong class="radar-excel-total">{{ coluna.total_formatado }}</strong>
+                                    </div>
+                                    <div>
+                                        <span>Maior valor</span>
+                                        <strong class="radar-excel-maior" data-radar-excel-maior>R$ 0,00</strong>
+                                    </div>
+                                    <div>
+                                        <span>Menor valor</span>
+                                        <strong class="radar-excel-menor" data-radar-excel-menor>R$ 0,00</strong>
+                                    </div>
+                                    <div>
+                                        <span>Média</span>
+                                        <strong data-radar-excel-media>R$ 0,00</strong>
+                                    </div>
+                                </div>
+
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                            </div>
+
+                            <div class="modal-body radar-excel-body">
+                                <div class="radar-excel-toolbar">
+                                    <div class="radar-excel-searchbox">
+                                        <i class="bi bi-search"></i>
+                                        <input type="search"
+                                               class="form-control radar-excel-search"
+                                               placeholder="Buscar por categoria, fornecedor, fatura, status, observação..."
+                                               data-radar-excel-search>
+                                    </div>
+
+                                    <select class="form-control radar-excel-filter" data-radar-excel-filter="categoria">
+                                        <option value="">Todas categorias</option>
+                                    </select>
+
+                                    <select class="form-control radar-excel-filter" data-radar-excel-filter="setor">
+                                        <option value="">Todos setores</option>
+                                    </select>
+
+                                    <select class="form-control radar-excel-filter" data-radar-excel-filter="status">
+                                        <option value="">Todos status</option>
+                                    </select>
+
+                                    <button type="button" class="radar-excel-btn light" data-radar-excel-clear>
+                                        Limpar filtros
+                                    </button>
+
+                                    <button type="button" class="radar-excel-btn" data-radar-excel-export>
+                                        <i class="bi bi-download"></i>
+                                        Exportar CSV
+                                    </button>
+                                </div>
+
+                                <div class="radar-excel-table-shell">
+                                    <table class="radar-excel-table" data-radar-excel-table>
+                                        <thead>
+                                            <tr>
+                                                <th class="radar-excel-col-num">#</th>
+                                                <th>Categoria</th>
+                                                <th>Setor</th>
+                                                <th>Fatura</th>
+                                                <th>Vencimento</th>
+                                                <th>Pagamento</th>
+                                                <th>Fornecedor / Descrição</th>
+                                                <th>Status</th>
+                                                <th>Valor</th>
+                                                <th>Observações</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% if coluna.slug == "herdada" %}
+                                                {% for grupo in coluna.grupos %}
+                                                    <tr data-radar-excel-row
+                                                        data-categoria="{{ grupo.descricao }}"
+                                                        data-setor="{{ grupo.setor if grupo.setor is defined else '' }}"
+                                                        data-status="HERDADA"
+                                                        data-valor="{{ grupo.total or 0 }}">
+                                                        <td class="radar-excel-col-num">{{ loop.index }}</td>
+                                                        <td title="{{ grupo.descricao }}">{{ grupo.descricao }}</td>
+                                                        <td>{{ grupo.setor if grupo.setor is defined else '-' }}</td>
+                                                        <td>-</td>
+                                                        <td>{{ grupo.desde_label }}</td>
+                                                        <td>-</td>
+                                                        <td title="{{ grupo.fornecedor }}">{{ grupo.fornecedor }}</td>
+                                                        <td><span class="radar-excel-status danger">HERDADA</span></td>
+                                                        <td class="radar-excel-money">{{ grupo.total_formatado }}</td>
+                                                        <td>{{ grupo.qtd }} em aberto • Valor parcela {{ grupo.valor_parcela_formatado or '-' }}</td>
+                                                        <td>
+                                                            <a class="radar-excel-action view"
+                                                               href="/gestao/radar-financeiro/?mes={{ mes }}&ano={{ ano }}&setor={{ setor }}&busca={{ busca }}&visao={{ visao }}&grupo={{ grupo.grupo_key }}">
+                                                                <i class="bi bi-eye-fill"></i>
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                {% else %}
+                                                    <tr data-radar-excel-empty>
+                                                        <td colspan="11">{{ coluna.vazia }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            {% else %}
+                                                {% for item in coluna.itens %}
+                                                    <tr data-radar-excel-row
+                                                        data-categoria="{{ item.categoria }}"
+                                                        data-setor="{{ item.setor }}"
+                                                        data-status="{{ item.status_label }}"
+                                                        data-valor="{{ item.valor or 0 }}">
+                                                        <td class="radar-excel-col-num">{{ loop.index }}</td>
+                                                        <td title="{{ item.categoria }}">{{ item.categoria }}</td>
+                                                        <td>{{ item.setor }}</td>
+                                                        <td>{{ item.numero_fatura }}</td>
+                                                        <td>{{ item.data_vencimento_formatada }}</td>
+                                                        <td>{{ item.data_pagamento_formatada }}</td>
+                                                        <td title="{{ item.fornecedor }} — {{ item.descricao }}">
+                                                            <strong>{{ item.fornecedor }}</strong>
+                                                            <small>{{ item.descricao }}</small>
+                                                        </td>
+                                                        <td>
+                                                            <span class="radar-excel-status {{ item.status_classe }}">{{ item.status_label }}</span>
+                                                        </td>
+                                                        <td class="radar-excel-money">{{ item.valor_formatado }}</td>
+                                                        <td title="{{ item.observacoes }}">{{ item.observacoes or '-' }}</td>
+                                                        <td>
+                                                            <div class="radar-excel-actions">
+                                                                <button type="button"
+                                                                        class="radar-excel-action view"
+                                                                        data-bs-toggle="modal"
+                                                                        data-bs-target="#modalContaNormal{{ item.id }}"
+                                                                        title="Ver detalhes">
+                                                                    <i class="bi bi-eye-fill"></i>
+                                                                </button>
+
+                                                                {% if not item.pago and item.status != "CANCELADO" %}
+                                                                    <form method="POST" action="/gestao/radar-financeiro/pagar/{{ item.id }}">
+                                                                        <input type="hidden" name="mes_contexto" value="{{ mes }}">
+                                                                        <input type="hidden" name="ano_contexto" value="{{ ano }}">
+                                                                        <input type="hidden" name="data_pagamento" value="{{ hoje.strftime('%Y-%m-%d') }}">
+                                                                        <button type="submit" class="radar-excel-action pay" title="Marcar como paga">
+                                                                            <i class="bi bi-check2-circle"></i>
+                                                                        </button>
+                                                                    </form>
+                                                                {% endif %}
+
+                                                                <form method="POST"
+                                                                      action="/gestao/radar-financeiro/excluir/{{ item.id }}"
+                                                                      onsubmit="return confirm('Excluir definitivamente esta conta?');">
+                                                                    <input type="hidden" name="mes_contexto" value="{{ mes }}">
+                                                                    <input type="hidden" name="ano_contexto" value="{{ ano }}">
+                                                                    <button type="submit" class="radar-excel-action delete" title="Excluir">
+                                                                        <i class="bi bi-trash3-fill"></i>
+                                                                    </button>
+                                                                </form>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                {% else %}
+                                                    <tr data-radar-excel-empty>
+                                                        <td colspan="11">{{ coluna.vazia }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="radar-excel-footer">
+                                    <span data-radar-excel-count>Mostrando {{ coluna.badge }} registro(s)</span>
+                                    <div>
+                                        Linhas compactas estilo planilha • use a busca para filtrar sem recarregar.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
 
             <section class="radar-herdadas-info-grid">
 
@@ -2976,4 +3182,150 @@
     }
 })();
 </script>
+
+<script>
+(function () {
+    function moedaBR(valor) {
+        const numero = Number(valor || 0);
+        return numero.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function textoLimpo(valor) {
+        return String(valor || '').trim();
+    }
+
+    function popularSelect(select, valores) {
+        if (!select || select.dataset.populado === '1') return;
+        const primeiro = select.options[0] ? select.options[0].outerHTML : '<option value="">Todos</option>';
+        select.innerHTML = primeiro;
+        Array.from(valores).sort().forEach(function (valor) {
+            if (!valor) return;
+            const opt = document.createElement('option');
+            opt.value = valor.toLowerCase();
+            opt.textContent = valor;
+            select.appendChild(opt);
+        });
+        select.dataset.populado = '1';
+    }
+
+    function atualizarResumo(modal, linhasVisiveis) {
+        const valores = linhasVisiveis.map(function (row) {
+            return Number(row.dataset.valor || 0);
+        }).filter(function (v) { return !Number.isNaN(v); });
+
+        const qtd = linhasVisiveis.length;
+        const total = valores.reduce(function (acc, v) { return acc + v; }, 0);
+        const maior = valores.length ? Math.max.apply(null, valores) : 0;
+        const menor = valores.length ? Math.min.apply(null, valores) : 0;
+        const media = qtd ? total / qtd : 0;
+
+        const qtdEl = modal.querySelector('[data-radar-excel-qtd]');
+        const totalEl = modal.querySelector('.radar-excel-total');
+        const maiorEl = modal.querySelector('[data-radar-excel-maior]');
+        const menorEl = modal.querySelector('[data-radar-excel-menor]');
+        const mediaEl = modal.querySelector('[data-radar-excel-media]');
+        const countEl = modal.querySelector('[data-radar-excel-count]');
+
+        if (qtdEl) qtdEl.textContent = qtd;
+        if (totalEl) totalEl.textContent = moedaBR(total);
+        if (maiorEl) maiorEl.textContent = moedaBR(maior);
+        if (menorEl) menorEl.textContent = moedaBR(menor);
+        if (mediaEl) mediaEl.textContent = moedaBR(media);
+        if (countEl) countEl.textContent = 'Mostrando ' + qtd + ' registro(s)';
+    }
+
+    function aplicarFiltros(modal) {
+        const busca = (modal.querySelector('[data-radar-excel-search]')?.value || '').toLowerCase();
+        const categoria = modal.querySelector('[data-radar-excel-filter="categoria"]')?.value || '';
+        const setor = modal.querySelector('[data-radar-excel-filter="setor"]')?.value || '';
+        const status = modal.querySelector('[data-radar-excel-filter="status"]')?.value || '';
+        const rows = Array.from(modal.querySelectorAll('[data-radar-excel-row]'));
+        const visiveis = [];
+
+        rows.forEach(function (row) {
+            const textoRow = row.textContent.toLowerCase();
+            const okBusca = !busca || textoRow.includes(busca);
+            const okCategoria = !categoria || textoLimpo(row.dataset.categoria).toLowerCase() === categoria;
+            const okSetor = !setor || textoLimpo(row.dataset.setor).toLowerCase() === setor;
+            const okStatus = !status || textoLimpo(row.dataset.status).toLowerCase() === status;
+            const mostrar = okBusca && okCategoria && okSetor && okStatus;
+            row.style.display = mostrar ? '' : 'none';
+            if (mostrar) visiveis.push(row);
+        });
+
+        atualizarResumo(modal, visiveis);
+    }
+
+    function inicializarModalExcel(modal) {
+        if (!modal || modal.dataset.excelInit === '1') return;
+        modal.dataset.excelInit = '1';
+
+        const rows = Array.from(modal.querySelectorAll('[data-radar-excel-row]'));
+        const categorias = new Set();
+        const setores = new Set();
+        const statuses = new Set();
+
+        rows.forEach(function (row) {
+            if (row.dataset.categoria) categorias.add(row.dataset.categoria);
+            if (row.dataset.setor) setores.add(row.dataset.setor);
+            if (row.dataset.status) statuses.add(row.dataset.status);
+        });
+
+        popularSelect(modal.querySelector('[data-radar-excel-filter="categoria"]'), categorias);
+        popularSelect(modal.querySelector('[data-radar-excel-filter="setor"]'), setores);
+        popularSelect(modal.querySelector('[data-radar-excel-filter="status"]'), statuses);
+
+        modal.querySelectorAll('[data-radar-excel-search], [data-radar-excel-filter]').forEach(function (el) {
+            el.addEventListener('input', function () { aplicarFiltros(modal); });
+            el.addEventListener('change', function () { aplicarFiltros(modal); });
+        });
+
+        const clear = modal.querySelector('[data-radar-excel-clear]');
+        if (clear) {
+            clear.addEventListener('click', function () {
+                const search = modal.querySelector('[data-radar-excel-search]');
+                if (search) search.value = '';
+                modal.querySelectorAll('[data-radar-excel-filter]').forEach(function (sel) { sel.value = ''; });
+                aplicarFiltros(modal);
+            });
+        }
+
+        const exportBtn = modal.querySelector('[data-radar-excel-export]');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', function () {
+                const table = modal.querySelector('[data-radar-excel-table]');
+                if (!table) return;
+                const rowsCsv = [];
+                table.querySelectorAll('tr').forEach(function (tr) {
+                    if (tr.style.display === 'none') return;
+                    const cells = Array.from(tr.querySelectorAll('th, td')).slice(0, 10).map(function (cell) {
+                        return '"' + cell.innerText.replace(/"/g, '""').replace(/\n/g, ' ').trim() + '"';
+                    });
+                    rowsCsv.push(cells.join(';'));
+                });
+                const blob = new Blob(['\ufeff' + rowsCsv.join('\n')], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'radar-coluna.csv';
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+        }
+
+        aplicarFiltros(modal);
+    }
+
+    document.addEventListener('shown.bs.modal', function (event) {
+        if (event.target && event.target.classList.contains('radar-excel-modal')) {
+            inicializarModalExcel(event.target);
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.radar-excel-modal').forEach(inicializarModalExcel);
+    });
+})();
+</script>
+
 {% endblock %}
