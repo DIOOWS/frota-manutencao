@@ -371,8 +371,35 @@
     }
   }
 
-  document.querySelectorAll("[data-dashboard-kpi]").forEach(el => el.addEventListener("click", () => carregarKpi(el.dataset.dashboardKpi)));
-  document.querySelectorAll("[data-dashboard-modal-close]").forEach(el => el.addEventListener("click", fecharModal));
+  document.querySelectorAll("[data-dashboard-kpi]").forEach(el => {
+    el.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      carregarKpi(el.dataset.dashboardKpi);
+    });
+  });
+  document.querySelectorAll("[data-dashboard-modal-close]").forEach(el => {
+    el.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      fecharModal();
+    });
+  });
+
+  const modalDialog = modal ? modal.querySelector(".dashboard-kpi-modal-dialog") : null;
+  if (modalDialog) {
+    modalDialog.addEventListener("click", (event) => {
+      event.stopPropagation();
+    });
+  }
+
+  document.querySelectorAll(
+    ".btn-ver-detalhes, .btn-detalhe-categoria, [data-categoria-detalhe], [data-bs-toggle='modal']"
+  ).forEach(el => {
+    el.addEventListener("click", (event) => {
+      event.stopPropagation();
+    });
+  });
   busca.addEventListener("input", renderizarTabela);
   filtroTipo.addEventListener("change", renderizarTabela);
   filtroStatus.addEventListener("change", renderizarTabela);

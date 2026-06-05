@@ -382,34 +382,36 @@ def buscar_despesa_completa_existente(
     """
     Busca somente registros da nova importação completa de despesas.
 
-    Importante: não cruza com origem_importacao=PAGAMENTO para não mexer
-    nos registros atuais que alimentam Fluxo/Dashboard durante o teste local.
+    Protegido com no_autoflush para evitar que o SQLAlchemy tente salvar
+    objetos incompletos no meio da importação quando uma consulta .first()
+    é executada dentro do loop.
     """
-    conta = None
+    with db.session.no_autoflush:
+        conta = None
 
-    if chave_conciliacao:
-        conta = ContaPagarImportada.query.filter(
-            ContaPagarImportada.chave_conciliacao == chave_conciliacao,
-            ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA"
-        ).first()
+        if chave_conciliacao:
+            conta = ContaPagarImportada.query.filter(
+                ContaPagarImportada.chave_conciliacao == chave_conciliacao,
+                ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA"
+            ).first()
 
-    if conta:
-        return conta
+        if conta:
+            return conta
 
-    query = ContaPagarImportada.query.filter(
-        ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA",
-        ContaPagarImportada.numero_fatura == numero_fatura,
-        ContaPagarImportada.fornecedor_funcionario == fornecedor_funcionario,
-        ContaPagarImportada.valor == valor,
-        ContaPagarImportada.plano_contas == plano_contas
-    )
-
-    if data_vencimento:
-        query = query.filter(
-            ContaPagarImportada.data_vencimento == data_vencimento
+        query = ContaPagarImportada.query.filter(
+            ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA",
+            ContaPagarImportada.numero_fatura == numero_fatura,
+            ContaPagarImportada.fornecedor_funcionario == fornecedor_funcionario,
+            ContaPagarImportada.valor == valor,
+            ContaPagarImportada.plano_contas == plano_contas
         )
 
-    return query.first()
+        if data_vencimento:
+            query = query.filter(
+                ContaPagarImportada.data_vencimento == data_vencimento
+            )
+
+        return query.first()
 
 
 def buscar_conta_receber_existente(
@@ -1107,6 +1109,16 @@ def importar_despesas_completo():
         total_pagas = 0
         total_pendentes = 0
 
+        # =====================================================
+        # OTIMIZAÇÃO PRODUÇÃO / RENDER
+        # =====================================================
+        # Antes o sistema fazia 1 SELECT no banco para cada linha do Excel.
+        # Com 1.500+ linhas isso pode estourar memória/tempo no Render.
+        # Agora primeiro montamos os dados em memória, coletamos as chaves
+        # e buscamos as contas já existentes em UMA consulta só.
+        registros_processados = []
+        chaves_conciliacao = set()
+
         for linha in linhas:
             plano_contas = texto(valor_por_coluna(linha, "Pl. Contas"))
 
@@ -1152,14 +1164,61 @@ def importar_despesas_completo():
                 plano_contas=plano_contas
             )
 
-            conta = buscar_despesa_completa_existente(
-                chave_conciliacao=chave_conciliacao,
-                numero_fatura=numero_fatura,
-                fornecedor_funcionario=fornecedor_funcionario,
-                valor=valor,
-                data_vencimento=data_vencimento,
-                plano_contas=plano_contas
-            )
+            data_base_competencia = data_vencimento or data_pagamento
+
+            registros_processados.append({
+                "chave_conciliacao": chave_conciliacao,
+                "numero_fatura": numero_fatura,
+                "fornecedor_funcionario": fornecedor_funcionario,
+                "telefone": telefone,
+                "email": email,
+                "plano_contas": plano_contas,
+                "categoria": limpar_categoria(plano_contas),
+                "setor": identificar_setor(plano_contas, receita=False),
+                "data_documento": data_documento,
+                "data_vencimento": data_vencimento,
+                "data_pagamento": data_pagamento if pago else None,
+                "valor": valor,
+                "pago": bool(pago),
+                "status": "PAGO" if pago else "PENDENTE",
+                "observacoes": observacoes,
+                "mes": data_base_competencia.month if data_base_competencia else mes_retorno,
+                "ano": data_base_competencia.year if data_base_competencia else ano_retorno,
+            })
+
+            if chave_conciliacao:
+                chaves_conciliacao.add(chave_conciliacao)
+
+        contas_existentes = {}
+
+        if chaves_conciliacao:
+            chaves_lista = list(chaves_conciliacao)
+            tamanho_lote = 500
+
+            with db.session.no_autoflush:
+                for inicio in range(0, len(chaves_lista), tamanho_lote):
+                    lote = chaves_lista[inicio:inicio + tamanho_lote]
+
+                    existentes_lote = ContaPagarImportada.query.filter(
+                        ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA",
+                        ContaPagarImportada.chave_conciliacao.in_(lote)
+                    ).all()
+
+                    for conta_existente in existentes_lote:
+                        if conta_existente.chave_conciliacao:
+                            contas_existentes[conta_existente.chave_conciliacao] = conta_existente
+
+        # Evita processar a mesma chave duas vezes na mesma importação.
+        # Se a planilha vier duplicada, prevalece a última ocorrência.
+        contas_criadas_nesta_importacao = {}
+
+        for dados in registros_processados:
+            chave_conciliacao = dados["chave_conciliacao"]
+
+            conta = contas_criadas_nesta_importacao.get(chave_conciliacao)
+
+            if not conta:
+                conta = contas_existentes.get(chave_conciliacao)
 
             if conta:
                 total_atualizado += 1
@@ -1168,41 +1227,38 @@ def importar_despesas_completo():
                 db.session.add(conta)
                 total_criado += 1
 
-            conta.numero_fatura = numero_fatura
-            conta.fornecedor_funcionario = fornecedor_funcionario
-            conta.telefone = telefone
-            conta.email = email
+                if chave_conciliacao:
+                    contas_criadas_nesta_importacao[chave_conciliacao] = conta
 
-            conta.plano_contas = plano_contas
-            conta.categoria = limpar_categoria(plano_contas)
-            conta.setor = identificar_setor(plano_contas, receita=False)
+            conta.numero_fatura = dados["numero_fatura"]
+            conta.fornecedor_funcionario = dados["fornecedor_funcionario"]
+            conta.telefone = dados["telefone"]
+            conta.email = dados["email"]
 
-            conta.data_documento = data_documento
-            conta.data_vencimento = data_vencimento
+            conta.plano_contas = dados["plano_contas"]
+            conta.categoria = dados["categoria"]
+            conta.setor = dados["setor"]
 
-            if pago:
-                conta.data_pagamento = data_pagamento
-                conta.pago = True
-                conta.status = "PAGO"
-                total_pagas += 1
-            else:
-                conta.data_pagamento = None
-                conta.pago = False
-                conta.status = "PENDENTE"
-                total_pendentes += 1
+            conta.data_documento = dados["data_documento"]
+            conta.data_vencimento = dados["data_vencimento"]
+            conta.data_pagamento = dados["data_pagamento"]
 
-            conta.valor = valor
-            conta.observacoes = observacoes
+            conta.valor = dados["valor"]
+            conta.pago = dados["pago"]
+            conta.status = dados["status"]
+            conta.observacoes = dados["observacoes"]
 
-            # Para esta base completa, mês/ano seguem o mês do vencimento.
-            # Isso permite o Radar identificar de qual competência a conta ficou em aberto.
-            data_base_competencia = data_vencimento or data_pagamento
-            conta.mes = data_base_competencia.month if data_base_competencia else mes_retorno
-            conta.ano = data_base_competencia.year if data_base_competencia else ano_retorno
+            conta.mes = dados["mes"]
+            conta.ano = dados["ano"]
 
             conta.chave_conciliacao = chave_conciliacao
             conta.origem_importacao = "DESPESA_COMPLETA"
             conta.importado_em = datetime.utcnow()
+
+            if dados["pago"]:
+                total_pagas += 1
+            else:
+                total_pendentes += 1
 
             total_linhas += 1
 
