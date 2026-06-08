@@ -369,6 +369,53 @@ def buscar_conta_pagar_existente(
     return query.first()
 
 
+def buscar_pagamento_existente(
+    chave_conciliacao,
+    numero_fatura,
+    fornecedor_funcionario,
+    valor,
+    data_vencimento,
+    plano_contas
+):
+    """
+    Busca somente registros da importação de Contas Pagas.
+
+    IMPORTANTE:
+    Não pode procurar em qualquer origem, porque isso pode encontrar
+    uma DESPESA_COMPLETA usada pelo Radar e sobrescrever como PAGAMENTO.
+
+    Regra correta:
+    - Contas Pagas / Fluxo / Centro de Custos = origem_importacao PAGAMENTO
+    - Radar / Vencimentos = origem_importacao DESPESA_COMPLETA
+    """
+    with db.session.no_autoflush:
+        base_query = ContaPagarImportada.query.filter(
+            ContaPagarImportada.origem_importacao == "PAGAMENTO"
+        )
+
+        if chave_conciliacao:
+            conta = base_query.filter(
+                ContaPagarImportada.chave_conciliacao == chave_conciliacao
+            ).first()
+
+            if conta:
+                return conta
+
+        query = base_query.filter(
+            ContaPagarImportada.numero_fatura == numero_fatura,
+            ContaPagarImportada.fornecedor_funcionario == fornecedor_funcionario,
+            ContaPagarImportada.valor == valor,
+            ContaPagarImportada.plano_contas == plano_contas
+        )
+
+        if data_vencimento:
+            query = query.filter(
+                ContaPagarImportada.data_vencimento == data_vencimento
+            )
+
+        return query.first()
+
+
 
 
 def buscar_despesa_completa_existente(
@@ -999,7 +1046,7 @@ def importar_contas_pagas():
                 plano_contas=plano_contas
             )
 
-            conta = buscar_conta_pagar_existente(
+            conta = buscar_pagamento_existente(
                 chave_conciliacao=chave_conciliacao,
                 numero_fatura=numero_fatura,
                 fornecedor_funcionario=fornecedor_funcionario,

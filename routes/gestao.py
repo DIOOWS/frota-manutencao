@@ -4624,3 +4624,430 @@ def centro_custos():
         formatar_moeda_br=formatar_moeda_br,
         formatar_numero_br=formatar_numero_br,
     )
+
+
+# =========================================================
+# CENTRO DE RECEITAS
+# Tabela gerencial anual por plano de contas
+# Fonte oficial: Contas Recebidas importadas
+# =========================================================
+
+def periodo_ano_centro_receitas(ano):
+    inicio = datetime(ano, 1, 1, 0, 0, 0)
+    fim = datetime(ano, 12, 31, 23, 59, 59)
+    return inicio, fim
+
+
+def contas_recebidas_centro_receitas_query(ano=None):
+    """
+    Centro de Receitas deve bater com o relatório de Contas Recebidas.
+
+    Fonte restrita a:
+    - pago=True
+    - origem_importacao='RECEBIMENTO'
+    - data_pagamento preenchida
+    """
+    query = ContaReceberImportada.query.filter(
+        ContaReceberImportada.pago == True,
+        ContaReceberImportada.origem_importacao == "RECEBIMENTO",
+        ContaReceberImportada.data_pagamento.isnot(None)
+    )
+
+    if ano:
+        inicio, fim = periodo_ano_centro_receitas(ano)
+        query = query.filter(
+            ContaReceberImportada.data_pagamento >= inicio,
+            ContaReceberImportada.data_pagamento <= fim
+        )
+
+    return query
+
+
+def mes_referencia_centro_receitas(conta):
+    """No Centro de Receitas, a competência é sempre a data real de recebimento."""
+    data_pagamento = data_para_date(getattr(conta, "data_pagamento", None))
+
+    if data_pagamento:
+        return data_pagamento.month, data_pagamento.year
+
+    return None, None
+
+
+def valor_centro_receitas(conta):
+    return dinheiro(
+        getattr(conta, "total", None)
+        or getattr(conta, "valor", 0)
+    )
+
+
+def setor_centro_receitas(conta):
+    setor = normalizar_texto(getattr(conta, "setor", None)) or "ASSISTÊNCIA"
+    plano = normalizar_texto(getattr(conta, "plano_contas", None)) or ""
+    categoria = normalizar_texto(getattr(conta, "categoria", None)) or ""
+
+    if setor == "LOGÍSTICA" or plano.endswith(" T") or categoria.endswith(" T"):
+        return "LOGÍSTICA"
+
+    return "ASSISTÊNCIA"
+
+
+def nome_plano_centro_receitas(conta):
+    return (
+        getattr(conta, "categoria", None)
+        or getattr(conta, "plano_contas", None)
+        or "SEM PLANO DE CONTAS"
+    ).strip()
+
+
+def nome_plano_exibicao_centro_receitas(plano, setor):
+    plano = (plano or "SEM PLANO DE CONTAS").strip()
+
+    if setor == "LOGÍSTICA" and not plano.upper().endswith(" T"):
+        return f"{plano} T"
+
+    return plano
+
+
+def normalizar_plano_comparacao_receitas(valor, setor=None):
+    plano = normalizar_texto(valor) or "SEM PLANO DE CONTAS"
+
+    if setor == "LOGÍSTICA" and plano.endswith(" T"):
+        plano = plano[:-2].strip()
+
+    return plano
+
+
+def montar_linhas_centro_receitas(contas, meses_com_movimento):
+    agrupado = {}
+
+    for conta in contas:
+        mes, _ = mes_referencia_centro_receitas(conta)
+
+        if not mes or mes < 1 or mes > 12:
+            continue
+
+        setor = setor_centro_receitas(conta)
+        plano_base = nome_plano_centro_receitas(conta)
+        plano_chave = normalizar_plano_comparacao_receitas(plano_base, setor)
+        plano_exibicao = nome_plano_exibicao_centro_receitas(plano_base, setor)
+        chave = (setor, plano_chave)
+
+        if chave not in agrupado:
+            agrupado[chave] = {
+                "setor": setor,
+                "plano": plano_exibicao,
+                "plano_base": plano_base,
+                "meses": {i: 0 for i in range(1, 13)},
+                "total": 0,
+                "media": 0,
+            }
+
+        valor = valor_centro_receitas(conta)
+        agrupado[chave]["meses"][mes] += valor
+        agrupado[chave]["total"] += valor
+
+    linhas = list(agrupado.values())
+
+    for linha in linhas:
+        linha["media"] = linha["total"] / meses_com_movimento if meses_com_movimento else 0
+
+    return sorted(linhas, key=lambda x: (x["setor"], x["plano"]))
+
+
+def somar_linhas_centro_receitas(linhas, meses_com_movimento):
+    total_meses = {i: 0 for i in range(1, 13)}
+    total_ano = 0
+
+    for linha in linhas:
+        for mes in range(1, 13):
+            total_meses[mes] += dinheiro(linha["meses"].get(mes, 0))
+
+        total_ano += dinheiro(linha.get("total", 0))
+
+    return {
+        "meses": total_meses,
+        "total": total_ano,
+        "media": total_ano / meses_com_movimento if meses_com_movimento else 0,
+    }
+
+
+@gestao_bp.route("/centro-receitas/detalhes")
+@gestao_required
+def centro_receitas_detalhes():
+    ano = request.args.get("ano", type=int) or datetime.now().year
+    mes_filtro = request.args.get("mes", type=int)
+    setor_filtro = normalizar_texto(request.args.get("setor")) or "ASSISTÊNCIA"
+    plano_filtro = request.args.get("plano", "").strip()
+
+    if setor_filtro not in ["ASSISTÊNCIA", "LOGÍSTICA"]:
+        setor_filtro = "ASSISTÊNCIA"
+
+    plano_comparacao = normalizar_plano_comparacao_receitas(plano_filtro, setor_filtro)
+
+    contas = contas_recebidas_centro_receitas_query(ano).all()
+
+    receitas = []
+    total = 0
+
+    for conta in contas:
+        mes_ref, ano_ref = mes_referencia_centro_receitas(conta)
+
+        if ano_ref != ano:
+            continue
+
+        if mes_filtro and mes_ref != mes_filtro:
+            continue
+
+        setor_conta = setor_centro_receitas(conta)
+
+        if setor_conta != setor_filtro:
+            continue
+
+        plano_conta = nome_plano_centro_receitas(conta)
+
+        if normalizar_plano_comparacao_receitas(plano_conta, setor_conta) != plano_comparacao:
+            continue
+
+        valor = valor_centro_receitas(conta)
+        total += valor
+
+        data_pagamento = data_para_date(getattr(conta, "data_pagamento", None))
+        data_vencimento = data_para_date(getattr(conta, "data_vencimento", None))
+
+        receitas.append({
+            "id": conta.id,
+            "ordem": data_pagamento or date(1900, 1, 1),
+            "cliente": getattr(conta, "cliente", None) or "Sem cliente informado",
+            "numero_fatura": getattr(conta, "numero_fatura", None) or "-",
+            "plano": nome_plano_exibicao_centro_receitas(plano_conta, setor_conta),
+            "setor": setor_conta,
+            "mes": mes_ref,
+            "data_pagamento": data_pagamento.strftime("%d/%m/%Y") if data_pagamento else "-",
+            "data_vencimento": data_vencimento.strftime("%d/%m/%Y") if data_vencimento else "-",
+            "valor": formatar_numero_br(valor),
+            "status": getattr(conta, "status", None) or "RECEBIDO",
+            "observacoes": getattr(conta, "observacoes", None) or "",
+        })
+
+    receitas.sort(key=lambda item: (item["ordem"], item["cliente"]))
+
+    for item in receitas:
+        item.pop("ordem", None)
+
+    nomes_meses = {
+        1: "Jan", 2: "Fev", 3: "Mar", 4: "Abr",
+        5: "Mai", 6: "Jun", 7: "Jul", 8: "Ago",
+        9: "Set", 10: "Out", 11: "Nov", 12: "Dez",
+    }
+
+    return jsonify({
+        "ok": True,
+        "ano": ano,
+        "mes": mes_filtro,
+        "mes_nome": nomes_meses.get(mes_filtro, "Ano completo") if mes_filtro else "Ano completo",
+        "setor": setor_filtro,
+        "plano": nome_plano_exibicao_centro_receitas(plano_filtro, setor_filtro),
+        "total": formatar_numero_br(total),
+        "quantidade": len(receitas),
+        "receitas": receitas,
+    })
+
+
+@gestao_bp.route("/centro-receitas")
+@gestao_required
+def centro_receitas():
+    hoje = datetime.now()
+    ano = request.args.get("ano", type=int) or hoje.year
+
+    contas = contas_recebidas_centro_receitas_query(ano).all()
+
+    meses_ativos = set()
+
+    for conta in contas:
+        mes_ref, ano_ref = mes_referencia_centro_receitas(conta)
+
+        if ano_ref == ano and mes_ref:
+            meses_ativos.add(mes_ref)
+
+    meses_com_movimento = len(meses_ativos)
+
+    linhas = montar_linhas_centro_receitas(contas, meses_com_movimento)
+
+    linhas_assistencia = [l for l in linhas if l["setor"] == "ASSISTÊNCIA"]
+    linhas_logistica = [l for l in linhas if l["setor"] == "LOGÍSTICA"]
+
+    total_assistencia = somar_linhas_centro_receitas(linhas_assistencia, meses_com_movimento)
+    total_logistica = somar_linhas_centro_receitas(linhas_logistica, meses_com_movimento)
+    total_geral = somar_linhas_centro_receitas(linhas, meses_com_movimento)
+
+    maior_conta = max(linhas, key=lambda x: x["total"], default=None)
+
+    anos_disponiveis = set()
+
+    for conta in contas_recebidas_centro_receitas_query().all():
+        _, ano_ref = mes_referencia_centro_receitas(conta)
+        if ano_ref:
+            anos_disponiveis.add(ano_ref)
+
+    if ano not in anos_disponiveis:
+        anos_disponiveis.add(ano)
+
+    nomes_meses = {
+        1: "Jan", 2: "Fev", 3: "Mar", 4: "Abr",
+        5: "Mai", 6: "Jun", 7: "Jul", 8: "Ago",
+        9: "Set", 10: "Out", 11: "Nov", 12: "Dez",
+    }
+
+    return render_template(
+        "gestao/centro_receitas.html",
+        ano=ano,
+        anos_disponiveis=sorted(anos_disponiveis, reverse=True),
+        meses=range(1, 13),
+        nomes_meses=nomes_meses,
+        meses_com_movimento=meses_com_movimento,
+        linhas_assistencia=linhas_assistencia,
+        linhas_logistica=linhas_logistica,
+        total_assistencia=total_assistencia,
+        total_logistica=total_logistica,
+        total_geral=total_geral,
+        maior_conta=maior_conta,
+        formatar_moeda_br=formatar_moeda_br,
+        formatar_numero_br=formatar_numero_br,
+    )
+
+
+@gestao_bp.route("/centro-receitas/exportar")
+@gestao_required
+def exportar_centro_receitas():
+    hoje = datetime.now()
+    ano = request.args.get("ano", type=int) or hoje.year
+
+    contas = contas_recebidas_centro_receitas_query(ano).all()
+
+    meses_ativos = set()
+    for conta in contas:
+        mes_ref, ano_ref = mes_referencia_centro_receitas(conta)
+        if ano_ref == ano and mes_ref:
+            meses_ativos.add(mes_ref)
+
+    meses_com_movimento = len(meses_ativos)
+    linhas = montar_linhas_centro_receitas(contas, meses_com_movimento)
+    linhas_assistencia = [l for l in linhas if l["setor"] == "ASSISTÊNCIA"]
+    linhas_logistica = [l for l in linhas if l["setor"] == "LOGÍSTICA"]
+    total_assistencia = somar_linhas_centro_receitas(linhas_assistencia, meses_com_movimento)
+    total_logistica = somar_linhas_centro_receitas(linhas_logistica, meses_com_movimento)
+    total_geral = somar_linhas_centro_receitas(linhas, meses_com_movimento)
+
+    nomes_meses = {
+        1: "Jan", 2: "Fev", 3: "Mar", 4: "Abr",
+        5: "Mai", 6: "Jun", 7: "Jul", 8: "Ago",
+        9: "Set", 10: "Out", 11: "Nov", 12: "Dez",
+    }
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Centro de Receitas"
+
+    azul = "003B8E"
+    verde = "006B63"
+    cinza = "F8FAFC"
+    borda_cor = "D9E1EA"
+    total_fill = "EAF2FF"
+    geral_fill = "003B8E"
+
+    thin = Side(style="thin", color=borda_cor)
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    headers = ["Plano de Contas"] + [nomes_meses[m] for m in range(1, 13)] + [f"Total {ano}", "Média Mês"]
+
+    def escrever_titulo(row, titulo, cor):
+        ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=len(headers))
+        cell = ws.cell(row=row, column=1)
+        cell.value = titulo
+        cell.fill = PatternFill("solid", fgColor=cor)
+        cell.font = Font(color="FFFFFF", bold=True, size=12)
+        cell.alignment = Alignment(horizontal="left")
+        return row + 1
+
+    def escrever_cabecalho(row):
+        for col, header in enumerate(headers, start=1):
+            cell = ws.cell(row=row, column=col)
+            cell.value = header
+            cell.font = Font(bold=True)
+            cell.fill = PatternFill("solid", fgColor=cinza)
+            cell.border = border
+            cell.alignment = Alignment(horizontal="center")
+        return row + 1
+
+    def escrever_linhas(row, linhas, total, titulo_total):
+        for linha in linhas:
+            ws.cell(row=row, column=1).value = linha["plano"]
+            ws.cell(row=row, column=1).alignment = Alignment(horizontal="left")
+            ws.cell(row=row, column=1).border = border
+            for mes in range(1, 13):
+                cell = ws.cell(row=row, column=mes + 1)
+                cell.value = dinheiro(linha["meses"].get(mes, 0)) or None
+                cell.number_format = '#,##0.00'
+                cell.border = border
+                cell.alignment = Alignment(horizontal="right")
+            ws.cell(row=row, column=14).value = dinheiro(linha["total"])
+            ws.cell(row=row, column=15).value = dinheiro(linha["media"])
+            for col in [14, 15]:
+                ws.cell(row=row, column=col).number_format = '#,##0.00'
+                ws.cell(row=row, column=col).border = border
+                ws.cell(row=row, column=col).alignment = Alignment(horizontal="right")
+            row += 1
+
+        ws.cell(row=row, column=1).value = titulo_total
+        for col in range(1, 16):
+            cell = ws.cell(row=row, column=col)
+            cell.fill = PatternFill("solid", fgColor=total_fill)
+            cell.font = Font(bold=True, color="003B8E")
+            cell.border = border
+        for mes in range(1, 13):
+            ws.cell(row=row, column=mes + 1).value = dinheiro(total["meses"].get(mes, 0)) or None
+            ws.cell(row=row, column=mes + 1).number_format = '#,##0.00'
+        ws.cell(row=row, column=14).value = dinheiro(total["total"])
+        ws.cell(row=row, column=15).value = dinheiro(total["media"])
+        ws.cell(row=row, column=14).number_format = '#,##0.00'
+        ws.cell(row=row, column=15).number_format = '#,##0.00'
+        return row + 2
+
+    row = 1
+    row = escrever_titulo(row, "ASSISTÊNCIA", azul)
+    row = escrever_cabecalho(row)
+    row = escrever_linhas(row, linhas_assistencia, total_assistencia, "TOTAL RECEITA ASSISTÊNCIA MÊS")
+
+    row = escrever_titulo(row, "LOGÍSTICA", verde)
+    row = escrever_cabecalho(row)
+    row = escrever_linhas(row, linhas_logistica, total_logistica, "TOTAL RECEITA LOGÍSTICA MÊS")
+
+    ws.cell(row=row, column=1).value = f"TOTAL RECEITAS {ano}"
+    for col in range(1, 16):
+        cell = ws.cell(row=row, column=col)
+        cell.fill = PatternFill("solid", fgColor=geral_fill if col == 1 else "EEF4FF")
+        cell.font = Font(bold=True, color="FFFFFF" if col == 1 else "0F172A")
+        cell.border = border
+    for mes in range(1, 13):
+        ws.cell(row=row, column=mes + 1).value = dinheiro(total_geral["meses"].get(mes, 0)) or None
+        ws.cell(row=row, column=mes + 1).number_format = '#,##0.00'
+    ws.cell(row=row, column=14).value = dinheiro(total_geral["total"])
+    ws.cell(row=row, column=15).value = dinheiro(total_geral["media"])
+    ws.cell(row=row, column=14).number_format = '#,##0.00'
+    ws.cell(row=row, column=15).number_format = '#,##0.00'
+
+    ws.freeze_panes = "B3"
+    ws.column_dimensions["A"].width = 28
+    for col in range(2, 16):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(col)].width = 13
+
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name=f"centro_receitas_{ano}.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )

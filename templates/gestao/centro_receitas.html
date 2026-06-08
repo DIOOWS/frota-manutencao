@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+
+{% macro valor_tabela(valor) -%}
+  {%- if valor == 0 -%}
+    -
+  {%- else -%}
+    {{ formatar_numero_br(valor) }}
+  {%- endif -%}
+{%- endmacro %}
+
+{% block content %}
+<div class="centro-custos-page" data-ano="{{ ano }}">
+
+  <div class="centro-custos-title-row">
+    <div class="centro-custos-title-main">
+      <i class="bi bi-cash-stack"></i>
+      <h2>Centro de Receitas</h2>
+    </div>
+  </div>
+
+  <div class="centro-custos-toolbar">
+    <form method="GET" action="/gestao/centro-receitas" class="centro-custos-form">
+      <label for="ano">Ano:</label>
+      <select name="ano" id="ano" class="form-select centro-custos-select">
+        {% for ano_opcao in anos_disponiveis %}
+          <option value="{{ ano_opcao }}" {% if ano_opcao == ano %}selected{% endif %}>{{ ano_opcao }}</option>
+        {% endfor %}
+      </select>
+
+      <button type="submit" class="centro-custos-btn-atualizar">
+        <i class="bi bi-arrow-clockwise"></i>
+        Atualizar
+      </button>
+    </form>
+
+    <a href="{{ url_for('gestao.exportar_centro_receitas', ano=ano) }}" class="centro-custos-export">
+      <i class="bi bi-file-earmark-excel-fill"></i>
+      Exportar Excel
+    </a>
+  </div>
+
+  <div class="centro-custos-section-card centro-custos-card-assistencia">
+    <div class="centro-custos-section-title centro-custos-section-title-assistencia">
+      <i class="bi bi-people-fill"></i>
+      <span>Assistência</span>
+    </div>
+
+    <div class="centro-custos-table-wrap">
+      <table class="centro-custos-table centro-custos-table-modern">
+        <colgroup>
+          <col class="col-plano">
+          {% for mes in meses %}<col class="col-mes">{% endfor %}
+          <col class="col-total">
+          <col class="col-media">
+        </colgroup>
+
+        <thead>
+          <tr>
+            <th class="centro-custos-plano">Plano de Contas</th>
+            {% for mes in meses %}
+              <th>{{ nomes_meses[mes] }}</th>
+            {% endfor %}
+            <th>Total {{ ano }}</th>
+            <th>Média Mês</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for linha in linhas_assistencia %}
+            <tr class="centro-custos-linha centro-custos-linha-assistencia"
+                data-setor="{{ linha.setor }}"
+                data-plano="{{ linha.plano }}">
+              <td class="centro-custos-plano centro-custos-clicavel" title="Clique para ver todas as receitas de {{ linha.plano }}">{{ linha.plano }}</td>
+
+              {% for mes in meses %}
+                {% set valor_mes = linha.meses[mes] %}
+                <td class="centro-custos-numero centro-custos-celula-mes {% if valor_mes == 0 %}centro-custos-zero{% endif %}"
+                    data-mes="{{ mes }}"
+                    title="Clique para ver {{ linha.plano }} em {{ nomes_meses[mes] }}">
+                  {{ valor_tabela(valor_mes) }}
+                </td>
+              {% endfor %}
+
+              <td class="centro-custos-numero centro-custos-total-coluna centro-custos-clicavel" title="Clique para ver todas as receitas de {{ linha.plano }}">{{ valor_tabela(linha.total) }}</td>
+              <td class="centro-custos-numero centro-custos-total-coluna">{{ valor_tabela(linha.media) }}</td>
+            </tr>
+          {% else %}
+            <tr>
+              <td class="centro-custos-plano">Sem dados de Assistência</td>
+              {% for mes in meses %}<td class="centro-custos-numero centro-custos-zero">-</td>{% endfor %}
+              <td class="centro-custos-numero centro-custos-zero">-</td>
+              <td class="centro-custos-numero centro-custos-zero">-</td>
+            </tr>
+          {% endfor %}
+
+          <tr class="centro-custos-total-assistencia">
+            <td class="centro-custos-plano">Total Receita Assistência Mês</td>
+            {% for mes in meses %}
+              <td class="centro-custos-numero">{{ valor_tabela(total_assistencia.meses[mes]) }}</td>
+            {% endfor %}
+            <td class="centro-custos-numero">{{ valor_tabela(total_assistencia.total) }}</td>
+            <td class="centro-custos-numero">{{ valor_tabela(total_assistencia.media) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="centro-custos-section-card centro-custos-card-logistica">
+    <div class="centro-custos-section-title centro-custos-section-title-logistica">
+      <i class="bi bi-truck-front-fill"></i>
+      <span>Logística</span>
+    </div>
+
+    <div class="centro-custos-table-wrap">
+      <table class="centro-custos-table centro-custos-table-modern">
+        <colgroup>
+          <col class="col-plano">
+          {% for mes in meses %}<col class="col-mes">{% endfor %}
+          <col class="col-total">
+          <col class="col-media">
+        </colgroup>
+
+        <thead>
+          <tr>
+            <th class="centro-custos-plano">Plano de Contas</th>
+            {% for mes in meses %}
+              <th>{{ nomes_meses[mes] }}</th>
+            {% endfor %}
+            <th>Total {{ ano }}</th>
+            <th>Média Mês</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for linha in linhas_logistica %}
+            <tr class="centro-custos-linha centro-custos-linha-logistica"
+                data-setor="{{ linha.setor }}"
+                data-plano="{{ linha.plano }}">
+              <td class="centro-custos-plano centro-custos-clicavel" title="Clique para ver todas as receitas de {{ linha.plano }}">{{ linha.plano }}</td>
+
+              {% for mes in meses %}
+                {% set valor_mes = linha.meses[mes] %}
+                <td class="centro-custos-numero centro-custos-celula-mes {% if valor_mes == 0 %}centro-custos-zero{% endif %}"
+                    data-mes="{{ mes }}"
+                    title="Clique para ver {{ linha.plano }} em {{ nomes_meses[mes] }}">
+                  {{ valor_tabela(valor_mes) }}
+                </td>
+              {% endfor %}
+
+              <td class="centro-custos-numero centro-custos-total-coluna centro-custos-clicavel" title="Clique para ver todas as receitas de {{ linha.plano }}">{{ valor_tabela(linha.total) }}</td>
+              <td class="centro-custos-numero centro-custos-total-coluna">{{ valor_tabela(linha.media) }}</td>
+            </tr>
+          {% else %}
+            <tr>
+              <td class="centro-custos-plano">Sem dados de Logística</td>
+              {% for mes in meses %}<td class="centro-custos-numero centro-custos-zero">-</td>{% endfor %}
+              <td class="centro-custos-numero centro-custos-zero">-</td>
+              <td class="centro-custos-numero centro-custos-zero">-</td>
+            </tr>
+          {% endfor %}
+
+          <tr class="centro-custos-total-logistica">
+            <td class="centro-custos-plano">Total Receita Logística Mês</td>
+            {% for mes in meses %}
+              <td class="centro-custos-numero">{{ valor_tabela(total_logistica.meses[mes]) }}</td>
+            {% endfor %}
+            <td class="centro-custos-numero">{{ valor_tabela(total_logistica.total) }}</td>
+            <td class="centro-custos-numero">{{ valor_tabela(total_logistica.media) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="centro-custos-total-geral-card">
+    <table class="centro-custos-table centro-custos-table-modern centro-custos-table-total-geral">
+      <colgroup>
+        <col class="col-plano">
+        {% for mes in meses %}<col class="col-mes">{% endfor %}
+        <col class="col-total">
+        <col class="col-media">
+      </colgroup>
+      <tbody>
+        <tr class="centro-custos-total-geral">
+          <td class="centro-custos-plano">Total receitas {{ ano }}</td>
+          {% for mes in meses %}
+            <td class="centro-custos-numero">{{ valor_tabela(total_geral.meses[mes]) }}</td>
+          {% endfor %}
+          <td class="centro-custos-numero">{{ valor_tabela(total_geral.total) }}</td>
+          <td class="centro-custos-numero">{{ valor_tabela(total_geral.media) }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<div class="modal fade" id="modalDetalheCentroReceita" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content centro-custos-modal-content">
+      <div class="modal-header centro-custos-modal-header">
+        <div>
+          <h5 class="modal-title" id="modalCentroReceitaTitulo">Detalhamento das receitas</h5>
+          <small id="modalCentroReceitaSubtitulo">Importações recebidas</small>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="centro-custos-modal-resumo">
+          <div>
+            <span>Total</span>
+            <strong id="modalCentroReceitaTotal">R$ 0,00</strong>
+          </div>
+          <div>
+            <span>Quantidade</span>
+            <strong id="modalCentroReceitaQuantidade">0</strong>
+          </div>
+        </div>
+
+        <div id="modalCentroReceitaLoading" class="centro-custos-loading">
+          Carregando receitas...
+        </div>
+
+        <div class="table-responsive centro-custos-modal-table-wrap d-none" id="modalCentroReceitaTabelaWrap">
+          <table class="table table-hover align-middle centro-custos-modal-table">
+            <thead>
+              <tr>
+                <th>Recebimento</th>
+                <th>Vencimento</th>
+                <th>Cliente</th>
+                <th>Fatura</th>
+                <th>Status</th>
+                <th class="text-end">Valor</th>
+              </tr>
+            </thead>
+            <tbody id="modalCentroReceitaTbody"></tbody>
+          </table>
+        </div>
+
+        <div id="modalCentroReceitaVazio" class="centro-custos-vazio d-none">
+          Nenhuma receita encontrada para esse filtro.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const pagina = document.querySelector(".centro-custos-page");
+  const modalEl = document.getElementById("modalDetalheCentroReceita");
+
+  if (!pagina || !modalEl || typeof bootstrap === "undefined") {
+    return;
+  }
+
+  const modal = new bootstrap.Modal(modalEl);
+  const ano = pagina.dataset.ano;
+  const titulo = document.getElementById("modalCentroReceitaTitulo");
+  const subtitulo = document.getElementById("modalCentroReceitaSubtitulo");
+  const total = document.getElementById("modalCentroReceitaTotal");
+  const quantidade = document.getElementById("modalCentroReceitaQuantidade");
+  const loading = document.getElementById("modalCentroReceitaLoading");
+  const tabelaWrap = document.getElementById("modalCentroReceitaTabelaWrap");
+  const tbody = document.getElementById("modalCentroReceitaTbody");
+  const vazio = document.getElementById("modalCentroReceitaVazio");
+
+  function abrirDetalhe(linha, mes) {
+    const setor = linha.dataset.setor;
+    const plano = linha.dataset.plano;
+
+    titulo.textContent = plano;
+    subtitulo.textContent = mes ? `${setor} • mês ${String(mes).padStart(2, "0")}/${ano}` : `${setor} • ano completo ${ano}`;
+    total.textContent = "R$ 0,00";
+    quantidade.textContent = "0";
+    tbody.innerHTML = "";
+    loading.classList.remove("d-none");
+    tabelaWrap.classList.add("d-none");
+    vazio.classList.add("d-none");
+    modal.show();
+
+    const params = new URLSearchParams({
+      ano: ano,
+      setor: setor,
+      plano: plano
+    });
+
+    if (mes) {
+      params.set("mes", mes);
+    }
+
+    fetch(`/gestao/centro-receitas/detalhes?${params.toString()}`)
+      .then(response => response.json())
+      .then(data => {
+        loading.classList.add("d-none");
+
+        if (!data.ok || !data.receitas || data.receitas.length === 0) {
+          vazio.classList.remove("d-none");
+          return;
+        }
+
+        titulo.textContent = `${data.plano} - ${data.mes_nome}`;
+        subtitulo.textContent = `${data.setor} • ${data.ano} • importações recebidas`;
+        total.textContent = `R$ ${data.total}`;
+        quantidade.textContent = data.quantidade;
+
+        data.receitas.forEach(item => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${item.data_pagamento}</td>
+            <td>${item.data_vencimento}</td>
+            <td>
+              <strong>${item.cliente}</strong>
+              ${item.observacoes ? `<small>${item.observacoes}</small>` : ""}
+            </td>
+            <td>${item.numero_fatura}</td>
+            <td><span class="centro-custos-status">${item.status}</span></td>
+            <td class="text-end fw-bold">R$ ${item.valor}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        tabelaWrap.classList.remove("d-none");
+      })
+      .catch(() => {
+        loading.classList.add("d-none");
+        vazio.textContent = "Não foi possível carregar o detalhamento agora.";
+        vazio.classList.remove("d-none");
+      });
+  }
+
+  document.querySelectorAll(".centro-custos-linha").forEach(linha => {
+    linha.addEventListener("click", function () {
+      abrirDetalhe(linha, null);
+    });
+
+    linha.querySelectorAll(".centro-custos-celula-mes").forEach(celula => {
+      celula.addEventListener("click", function (event) {
+        event.stopPropagation();
+        abrirDetalhe(linha, celula.dataset.mes);
+      });
+    });
+  });
+});
+</script>
+{% endblock %}
