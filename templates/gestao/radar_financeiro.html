@@ -665,8 +665,9 @@
                                                         <td class="radar-excel-money">{{ grupo.total_formatado }}</td>
                                                         <td>{{ grupo.qtd }} em aberto • Valor parcela {{ grupo.valor_parcela_formatado or '-' }}</td>
                                                         <td>
-                                                            <a class="radar-excel-action view"
-                                                               href="/gestao/radar-financeiro/?mes={{ mes }}&ano={{ ano }}&setor={{ setor }}&busca={{ busca }}&visao={{ visao }}&grupo={{ grupo.grupo_key }}">
+                                                            <a class="radar-excel-action view js-abrir-historico"
+                                                               href="/gestao/radar-financeiro/?mes={{ mes }}&ano={{ ano }}&setor={{ setor }}&busca={{ busca }}&visao={{ visao }}&grupo={{ grupo.grupo_key }}"
+                                                               title="Ver histórico da conta herdada">
                                                                 <i class="bi bi-eye-fill"></i>
                                                             </a>
                                                         </td>
@@ -2332,32 +2333,52 @@
 
 
     function radarAbrirHistoricoSeSolicitado() {
-        const deveAbrir = sessionStorage.getItem("radarAbrirHistorico") === "1";
         const modalEl = document.getElementById("modalHistoricoHerdada");
 
-        if (!deveAbrir || !modalEl || typeof bootstrap === "undefined") {
+        if (!modalEl || typeof bootstrap === "undefined") {
+            return;
+        }
+
+        const urlAtual = new URL(window.location.href);
+        const deveAbrirPorClique = sessionStorage.getItem("radarAbrirHistorico") === "1";
+        const deveAbrirPorUrl = urlAtual.searchParams.has("grupo");
+
+        if (!deveAbrirPorClique && !deveAbrirPorUrl) {
             return;
         }
 
         sessionStorage.removeItem("radarAbrirHistorico");
 
-        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl, {
+            backdrop: true,
+            keyboard: true,
+            focus: true
+        });
+
         modal.show();
 
-        modalEl.addEventListener("hidden.bs.modal", function () {
-            const url = new URL(window.location.href);
+        if (modalEl.dataset.radarHistoricoHiddenBind !== "1") {
+            modalEl.dataset.radarHistoricoHiddenBind = "1";
 
-            if (!url.searchParams.has("grupo")) {
-                return;
-            }
+            modalEl.addEventListener("hidden.bs.modal", function () {
+                const url = new URL(window.location.href);
 
-            url.searchParams.delete("grupo");
+                if (!url.searchParams.has("grupo")) {
+                    return;
+                }
 
-            radarAjaxRequest(url.toString(), {
-                method: "GET",
-                atualizarUrl: true
+                url.searchParams.delete("grupo");
+
+                if (typeof radarAjaxRequest === "function") {
+                    radarAjaxRequest(url.toString(), {
+                        method: "GET",
+                        atualizarUrl: true
+                    });
+                } else {
+                    window.history.replaceState({}, "", url.toString());
+                }
             });
-        }, { once: true });
+        }
     }
 
     function radarTextoBuscaNormalizado(valor) {
@@ -3041,7 +3062,12 @@
             return;
         }
 
-        if (link.classList.contains("js-abrir-historico") || link.closest(".radar-herdada-card")) {
+        if (
+            link.classList.contains("js-abrir-historico") ||
+            link.closest(".radar-herdada-card") ||
+            (link.href && link.href.includes("grupo="))
+        ) {
+            event.stopPropagation();
             sessionStorage.setItem("radarAbrirHistorico", "1");
         }
 
@@ -3326,6 +3352,19 @@
         document.querySelectorAll('.radar-excel-modal').forEach(inicializarModalExcel);
     });
 })();
+</script>
+
+<script>
+/* =====================================================
+   ✅ AUTOABRIR MODAL DE CONTAS HERDADAS
+   Quando a URL vier com ?grupo=..., o histórico abre sozinho.
+   Também resolve o clique no olhinho da tabela de herdadas.
+===================================================== */
+document.addEventListener("DOMContentLoaded", function () {
+    if (typeof radarAbrirHistoricoSeSolicitado === "function") {
+        radarAbrirHistoricoSeSolicitado();
+    }
+});
 </script>
 
 {% endblock %}

@@ -27155,3 +27155,333 @@ body:has(.dashboard-limpo-page) .sidinho-widget {
     min-height: 90px !important;
   }
 }
+
+/* =========================================================
+   CENTRO DE CUSTOS - VISUAL PREMIUM
+========================================================= */
+.centro-custos-page {
+  width: 100%;
+  padding: 2px 0 28px;
+  color: #0f172a;
+}
+
+.centro-custos-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.centro-custos-title-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.centro-custos-title-main i {
+  font-size: 30px;
+  color: #0b2f6b;
+}
+
+.centro-custos-title-main h2 {
+  margin: 0;
+  font-size: 30px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: -0.8px;
+  color: #0f172a;
+}
+
+.centro-custos-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  padding: 18px;
+  margin-bottom: 14px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.centro-custos-form {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.centro-custos-form label {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 750;
+  color: #0f172a;
+}
+
+.centro-custos-select {
+  width: 96px;
+  min-width: 96px;
+  height: 39px;
+  border-radius: 6px;
+  border-color: #cbd5e1;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.centro-custos-btn-atualizar,
+.centro-custos-export {
+  height: 39px;
+  border-radius: 6px;
+  padding: 0 16px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #0b2f6b;
+  font-size: 14px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: 0.18s ease;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+}
+
+.centro-custos-btn-atualizar:hover,
+.centro-custos-export:hover {
+  transform: translateY(-1px);
+  border-color: #0b3f91;
+  background: #f8fafc;
+}
+
+.centro-custos-export i {
+  color: #15803d;
+}
+
+.centro-custos-export:disabled {
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+.centro-custos-section-card,
+.centro-custos-total-geral-card {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.055);
+}
+
+.centro-custos-section-card + .centro-custos-section-card {
+  margin-top: 22px;
+}
+
+.centro-custos-total-geral-card {
+  margin-top: 16px;
+}
+
+.centro-custos-section-title {
+  min-height: 44px;
+  padding: 0 16px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 15px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+}
+
+.centro-custos-section-title i {
+  font-size: 19px;
+}
+
+.centro-custos-section-title-assistencia {
+  background: linear-gradient(135deg, #05245a, #063f99, #0849ac);
+}
+
+.centro-custos-section-title-logistica {
+  background: linear-gradient(135deg, #064e55, #08706d, #0f766e);
+}
+
+.centro-custos-table-wrap {
+  width: 100%;
+  overflow: auto;
+}
+
+.centro-custos-table {
+  width: 100%;
+  min-width: 1420px;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+}
+
+.centro-custos-table .col-plano {
+  width: 190px;
+}
+
+.centro-custos-table .col-mes {
+  width: 86px;
+}
+
+.centro-custos-table .col-total {
+  width: 112px;
+}
+
+.centro-custos-table .col-media {
+  width: 105px;
+}
+
+.centro-custos-table th,
+.centro-custos-table td {
+  height: 33px;
+  padding: 6px 12px;
+  border-right: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.centro-custos-table th:last-child,
+.centro-custos-table td:last-child {
+  border-right: none;
+}
+
+.centro-custos-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 950;
+  text-align: center;
+}
+
+.centro-custos-table thead th:first-child {
+  left: 0;
+  z-index: 8;
+  text-align: left;
+}
+
+.centro-custos-plano {
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  width: 190px;
+  min-width: 190px;
+  max-width: 190px;
+  background: inherit;
+  color: #0f172a;
+  font-weight: 750;
+  text-align: left !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.centro-custos-numero {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  color: #0f172a;
+}
+
+.centro-custos-linha td {
+  background: #ffffff;
+}
+
+.centro-custos-linha:nth-child(even) td {
+  background: #fbfdff;
+}
+
+.centro-custos-linha:hover td {
+  background: #eef6ff !important;
+  cursor: pointer;
+}
+
+.centro-custos-total-coluna {
+  background: #f8fafc !important;
+  font-weight: 850;
+}
+
+.centro-custos-zero {
+  color: #111827 !important;
+  font-weight: 650;
+}
+
+.centro-custos-total-assistencia td,
+.centro-custos-total-logistica td {
+  height: 39px;
+  background: #f8fafc !important;
+  font-weight: 950;
+  border-top: 1px solid #cbd5e1;
+}
+
+.centro-custos-total-assistencia td {
+  color: #05337a !important;
+}
+
+.centro-custos-total-logistica td {
+  color: #075b5a !important;
+}
+
+.centro-custos-total-assistencia .centro-custos-plano,
+.centro-custos-total-logistica .centro-custos-plano {
+  text-transform: uppercase;
+  letter-spacing: -0.2px;
+}
+
+.centro-custos-total-geral td {
+  height: 54px;
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  font-weight: 950;
+  border-bottom: none;
+}
+
+.centro-custos-total-geral .centro-custos-plano {
+  background: linear-gradient(135deg, #05245a, #063f99, #0849ac) !important;
+  color: #ffffff !important;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+
+.centro-custos-table-total-geral {
+  min-width: 1420px;
+}
+
+@media (max-width: 900px) {
+  .centro-custos-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .centro-custos-form {
+    width: 100%;
+  }
+
+  .centro-custos-export {
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .centro-custos-title-main h2 {
+    font-size: 24px;
+  }
+
+  .centro-custos-form {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .centro-custos-select,
+  .centro-custos-btn-atualizar {
+    width: 100%;
+  }
+}

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, flash, jsonify, send_file
 from utils.auth import gestao_required
 from models.lancamento_financeiro import LancamentoFinanceiro
 from models.fechamento_mensal import FechamentoMensal
@@ -11,6 +11,9 @@ from collections import Counter
 from decimal import Decimal, InvalidOperation
 from sqlalchemy import or_, and_
 import calendar
+from io import BytesIO
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
 
 gestao_bp = Blueprint("gestao", __name__, url_prefix="/gestao")
@@ -4139,4 +4142,485 @@ def radar_financeiro_transportar_pagas_lote():
 
     return redirect(
         f"/gestao/radar-financeiro/?mes={mes_destino}&ano={ano_destino}&visao=vencimento"
+    )
+
+
+# =========================================================
+# CENTRO DE CUSTOS
+# Tabela gerencial anual por plano de contas
+# Fonte oficial: Contas Pagas importadas
+# =========================================================
+
+def formatar_moeda_br(valor):
+    valor = dinheiro(valor)
+    return f"R$ {valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def formatar_numero_br(valor):
+    valor = dinheiro(valor)
+    return f"{valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def periodo_ano_centro_custos(ano):
+    inicio = datetime(ano, 1, 1, 0, 0, 0)
+    fim = datetime(ano, 12, 31, 23, 59, 59)
+    return inicio, fim
+
+
+def contas_pagas_centro_custos_query(ano=None):
+    """
+    Centro de Custos deve bater com o relatório de Contas Pagas.
+
+    Por isso a fonte fica restrita a:
+    - pago=True
+    - origem_importacao='PAGAMENTO'
+    - data_pagamento preenchida
+
+    Não usamos DESPESA_COMPLETA aqui para evitar duplicidade quando os dois
+    relatórios forem importados no mesmo período.
+    """
+    query = ContaPagarImportada.query.filter(
+        ContaPagarImportada.pago == True,
+        ContaPagarImportada.origem_importacao == "PAGAMENTO",
+        ContaPagarImportada.data_pagamento.isnot(None)
+    )
+
+    if ano:
+        inicio, fim = periodo_ano_centro_custos(ano)
+        query = query.filter(
+            ContaPagarImportada.data_pagamento >= inicio,
+            ContaPagarImportada.data_pagamento <= fim
+        )
+
+    return query
+
+
+def mes_referencia_centro_custos(conta):
+    """No Centro de Custos, a competência é sempre a data real de pagamento."""
+    data_pagamento = data_para_date(getattr(conta, "data_pagamento", None))
+
+    if data_pagamento:
+        return data_pagamento.month, data_pagamento.year
+
+    return None, None
+
+
+def nome_plano_centro_custos(conta):
+    return (
+        getattr(conta, "categoria", None)
+        or getattr(conta, "plano_contas", None)
+        or "SEM PLANO DE CONTAS"
+    ).strip()
+
+
+def setor_centro_custos(conta):
+    setor = normalizar_texto(getattr(conta, "setor", None)) or "ASSISTÊNCIA"
+
+    if setor == "LOGÍSTICA":
+        return "LOGÍSTICA"
+
+    return "ASSISTÊNCIA"
+
+
+def nome_plano_exibicao_centro_custos(plano, setor):
+    plano = (plano or "SEM PLANO DE CONTAS").strip()
+
+    if setor == "LOGÍSTICA" and not plano.upper().endswith(" T"):
+        return f"{plano} T"
+
+    return plano
+
+
+def normalizar_plano_comparacao(valor, setor=None):
+    plano = normalizar_texto(valor) or "SEM PLANO DE CONTAS"
+
+    if setor == "LOGÍSTICA" and plano.endswith(" T"):
+        plano = plano[:-2].strip()
+
+    return plano
+
+
+def montar_linhas_centro_custos(contas, meses_com_movimento):
+    agrupado = {}
+
+    for conta in contas:
+        mes, _ = mes_referencia_centro_custos(conta)
+
+        if not mes or mes < 1 or mes > 12:
+            continue
+
+        setor = setor_centro_custos(conta)
+        plano_base = nome_plano_centro_custos(conta)
+        plano_chave = normalizar_plano_comparacao(plano_base, setor)
+        plano_exibicao = nome_plano_exibicao_centro_custos(plano_base, setor)
+        chave = (setor, plano_chave)
+
+        if chave not in agrupado:
+            agrupado[chave] = {
+                "setor": setor,
+                "plano": plano_exibicao,
+                "plano_base": plano_base,
+                "meses": {i: 0 for i in range(1, 13)},
+                "total": 0,
+                "media": 0,
+            }
+
+        valor = dinheiro(getattr(conta, "valor", 0))
+        agrupado[chave]["meses"][mes] += valor
+        agrupado[chave]["total"] += valor
+
+    linhas = list(agrupado.values())
+
+    for linha in linhas:
+        linha["media"] = linha["total"] / meses_com_movimento if meses_com_movimento else 0
+
+    return sorted(linhas, key=lambda x: (x["setor"], x["plano"]))
+
+
+def somar_linhas_centro_custos(linhas, meses_com_movimento):
+    total_meses = {i: 0 for i in range(1, 13)}
+    total_ano = 0
+
+    for linha in linhas:
+        for mes in range(1, 13):
+            total_meses[mes] += dinheiro(linha["meses"].get(mes, 0))
+
+        total_ano += dinheiro(linha.get("total", 0))
+
+    return {
+        "meses": total_meses,
+        "total": total_ano,
+        "media": total_ano / meses_com_movimento if meses_com_movimento else 0,
+    }
+
+
+def formatar_data_br_centro_custos(valor):
+    data = data_para_date(valor)
+    return data.strftime("%d/%m/%Y") if data else "-"
+
+
+@gestao_bp.route("/centro-custos/detalhes")
+@gestao_required
+def centro_custos_detalhes():
+    ano = request.args.get("ano", type=int) or datetime.now().year
+    mes_filtro = request.args.get("mes", type=int)
+    setor_filtro = normalizar_texto(request.args.get("setor")) or "ASSISTÊNCIA"
+    plano_filtro = request.args.get("plano", "").strip()
+
+    if setor_filtro not in ["ASSISTÊNCIA", "LOGÍSTICA"]:
+        setor_filtro = "ASSISTÊNCIA"
+
+    plano_comparacao = normalizar_plano_comparacao(plano_filtro, setor_filtro)
+
+    contas = contas_pagas_centro_custos_query(ano).all()
+
+    despesas = []
+    total = 0
+
+    for conta in contas:
+        mes_ref, ano_ref = mes_referencia_centro_custos(conta)
+
+        if ano_ref != ano:
+            continue
+
+        if mes_filtro and mes_ref != mes_filtro:
+            continue
+
+        setor_conta = setor_centro_custos(conta)
+
+        if setor_conta != setor_filtro:
+            continue
+
+        plano_conta = nome_plano_centro_custos(conta)
+
+        if normalizar_plano_comparacao(plano_conta, setor_conta) != plano_comparacao:
+            continue
+
+        valor = dinheiro(getattr(conta, "valor", 0))
+        total += valor
+
+        data_pagamento = data_para_date(getattr(conta, "data_pagamento", None))
+        data_vencimento = data_para_date(getattr(conta, "data_vencimento", None))
+
+        despesas.append({
+            "id": conta.id,
+            "ordem": data_pagamento or date(1900, 1, 1),
+            "fornecedor": getattr(conta, "fornecedor_funcionario", None) or "Sem fornecedor informado",
+            "numero_fatura": getattr(conta, "numero_fatura", None) or "-",
+            "plano": nome_plano_exibicao_centro_custos(plano_conta, setor_conta),
+            "setor": setor_conta,
+            "mes": mes_ref,
+            "data_pagamento": data_pagamento.strftime("%d/%m/%Y") if data_pagamento else "-",
+            "data_vencimento": data_vencimento.strftime("%d/%m/%Y") if data_vencimento else "-",
+            "valor": formatar_numero_br(valor),
+            "status": getattr(conta, "status", None) or "PAGO",
+            "observacoes": getattr(conta, "observacoes", None) or "",
+        })
+
+    despesas.sort(key=lambda item: (item["ordem"], item["fornecedor"]))
+
+    for item in despesas:
+        item.pop("ordem", None)
+
+    nomes_meses = {
+        1: "Jan", 2: "Fev", 3: "Mar", 4: "Abr",
+        5: "Mai", 6: "Jun", 7: "Jul", 8: "Ago",
+        9: "Set", 10: "Out", 11: "Nov", 12: "Dez",
+    }
+
+    return jsonify({
+        "ok": True,
+        "ano": ano,
+        "mes": mes_filtro,
+        "mes_nome": nomes_meses.get(mes_filtro, "Ano completo") if mes_filtro else "Ano completo",
+        "setor": setor_filtro,
+        "plano": nome_plano_exibicao_centro_custos(plano_filtro, setor_filtro),
+        "total": formatar_numero_br(total),
+        "quantidade": len(despesas),
+        "despesas": despesas,
+    })
+
+
+@gestao_bp.route("/centro-custos/exportar")
+@gestao_required
+def exportar_centro_custos():
+    hoje = datetime.now()
+    ano = request.args.get("ano", type=int) or hoje.year
+
+    contas = contas_pagas_centro_custos_query(ano).all()
+
+    meses_ativos = set()
+    for conta in contas:
+        mes_ref, ano_ref = mes_referencia_centro_custos(conta)
+        if ano_ref == ano and mes_ref:
+            meses_ativos.add(mes_ref)
+
+    meses_com_movimento = len(meses_ativos)
+    linhas = montar_linhas_centro_custos(contas, meses_com_movimento)
+
+    linhas_assistencia = [l for l in linhas if l["setor"] == "ASSISTÊNCIA"]
+    linhas_logistica = [l for l in linhas if l["setor"] == "LOGÍSTICA"]
+
+    total_assistencia = somar_linhas_centro_custos(linhas_assistencia, meses_com_movimento)
+    total_logistica = somar_linhas_centro_custos(linhas_logistica, meses_com_movimento)
+    total_geral = somar_linhas_centro_custos(linhas, meses_com_movimento)
+
+    nomes_meses = {
+        1: "Jan", 2: "Fev", 3: "Mar", 4: "Abr",
+        5: "Mai", 6: "Jun", 7: "Jul", 8: "Ago",
+        9: "Set", 10: "Out", 11: "Nov", 12: "Dez",
+    }
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Centro de Custos"
+
+    azul_escuro = "1E3A8A"
+    azul_medio = "2563EB"
+    verde = "0F766E"
+    cinza_fundo = "F8FAFC"
+    cinza_borda = "D9E2EC"
+    branco = "FFFFFF"
+    preto = "111827"
+
+    fill_titulo = PatternFill("solid", fgColor=azul_escuro)
+    fill_header = PatternFill("solid", fgColor=azul_medio)
+    fill_assistencia = PatternFill("solid", fgColor="EAF2FF")
+    fill_logistica = PatternFill("solid", fgColor="E7F7F3")
+    fill_total = PatternFill("solid", fgColor="DBEAFE")
+    fill_total_geral = PatternFill("solid", fgColor=azul_escuro)
+    fill_zebra = PatternFill("solid", fgColor=cinza_fundo)
+
+    font_titulo = Font(color=branco, bold=True, size=14)
+    font_header = Font(color=branco, bold=True)
+    font_bold = Font(color=preto, bold=True)
+    font_total_geral = Font(color=branco, bold=True)
+    border = Border(
+        left=Side(style="thin", color=cinza_borda),
+        right=Side(style="thin", color=cinza_borda),
+        top=Side(style="thin", color=cinza_borda),
+        bottom=Side(style="thin", color=cinza_borda),
+    )
+
+    colunas = ["Plano de Contas"] + [nomes_meses[m] for m in range(1, 13)] + [f"Total {ano}", "Média Mês"]
+    total_colunas = len(colunas)
+
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=total_colunas)
+    cell = ws.cell(row=1, column=1, value=f"Centro de Custos - {ano}")
+    cell.fill = fill_titulo
+    cell.font = font_titulo
+    cell.alignment = Alignment(horizontal="center")
+
+    ws.append([])
+
+    def aplicar_header(row_idx):
+        for col_idx, titulo in enumerate(colunas, start=1):
+            c = ws.cell(row=row_idx, column=col_idx, value=titulo)
+            c.fill = fill_header
+            c.font = font_header
+            c.alignment = Alignment(horizontal="center")
+            c.border = border
+
+    def escrever_secao(titulo, linhas, totais, fill_secao, label_total):
+        row_secao = ws.max_row + 1
+        ws.merge_cells(start_row=row_secao, start_column=1, end_row=row_secao, end_column=total_colunas)
+        c = ws.cell(row=row_secao, column=1, value=titulo)
+        c.fill = fill_secao
+        c.font = font_bold
+        c.alignment = Alignment(horizontal="left")
+
+        header_row = ws.max_row + 1
+        aplicar_header(header_row)
+
+        for idx, linha in enumerate(linhas, start=1):
+            valores = [linha["plano"]]
+            valores.extend(dinheiro(linha["meses"].get(m, 0)) for m in range(1, 13))
+            valores.append(dinheiro(linha.get("total", 0)))
+            valores.append(dinheiro(linha.get("media", 0)))
+            ws.append(valores)
+            row_idx = ws.max_row
+
+            for col_idx in range(1, total_colunas + 1):
+                c = ws.cell(row=row_idx, column=col_idx)
+                c.border = border
+                c.alignment = Alignment(horizontal="left" if col_idx == 1 else "right")
+                if idx % 2 == 0:
+                    c.fill = fill_zebra
+                if col_idx > 1:
+                    c.number_format = '#,##0.00'
+
+        valores_total = [label_total]
+        valores_total.extend(dinheiro(totais["meses"].get(m, 0)) for m in range(1, 13))
+        valores_total.append(dinheiro(totais.get("total", 0)))
+        valores_total.append(dinheiro(totais.get("media", 0)))
+        ws.append(valores_total)
+        row_idx = ws.max_row
+        for col_idx in range(1, total_colunas + 1):
+            c = ws.cell(row=row_idx, column=col_idx)
+            c.fill = fill_total
+            c.font = font_bold
+            c.border = border
+            c.alignment = Alignment(horizontal="left" if col_idx == 1 else "right")
+            if col_idx > 1:
+                c.number_format = '#,##0.00'
+
+        ws.append([])
+
+    escrever_secao(
+        "Assistência",
+        linhas_assistencia,
+        total_assistencia,
+        fill_assistencia,
+        "Total Assistência Mês",
+    )
+
+    escrever_secao(
+        "Logística",
+        linhas_logistica,
+        total_logistica,
+        fill_logistica,
+        "Total Logística Mês",
+    )
+
+    valores_total_geral = [f"Total despesas {ano}"]
+    valores_total_geral.extend(dinheiro(total_geral["meses"].get(m, 0)) for m in range(1, 13))
+    valores_total_geral.append(dinheiro(total_geral.get("total", 0)))
+    valores_total_geral.append(dinheiro(total_geral.get("media", 0)))
+    ws.append(valores_total_geral)
+    row_idx = ws.max_row
+    for col_idx in range(1, total_colunas + 1):
+        c = ws.cell(row=row_idx, column=col_idx)
+        c.fill = fill_total_geral
+        c.font = font_total_geral
+        c.border = border
+        c.alignment = Alignment(horizontal="left" if col_idx == 1 else "right")
+        if col_idx > 1:
+            c.number_format = '#,##0.00'
+
+    ws.freeze_panes = "B4"
+    ws.column_dimensions["A"].width = 28
+    for col_idx in range(2, total_colunas + 1):
+        letra = openpyxl.utils.get_column_letter(col_idx)
+        ws.column_dimensions[letra].width = 13
+
+    for row in ws.iter_rows():
+        for cell in row:
+            cell.alignment = Alignment(
+                horizontal=cell.alignment.horizontal or "center",
+                vertical="center",
+                wrap_text=False,
+            )
+
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name=f"centro_custos_{ano}.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+
+@gestao_bp.route("/centro-custos")
+@gestao_required
+def centro_custos():
+    hoje = datetime.now()
+    ano = request.args.get("ano", type=int) or hoje.year
+
+    contas = contas_pagas_centro_custos_query(ano).all()
+
+    meses_ativos = set()
+
+    for conta in contas:
+        mes_ref, ano_ref = mes_referencia_centro_custos(conta)
+
+        if ano_ref == ano and mes_ref:
+            meses_ativos.add(mes_ref)
+
+    meses_com_movimento = len(meses_ativos)
+
+    linhas = montar_linhas_centro_custos(contas, meses_com_movimento)
+
+    linhas_assistencia = [l for l in linhas if l["setor"] == "ASSISTÊNCIA"]
+    linhas_logistica = [l for l in linhas if l["setor"] == "LOGÍSTICA"]
+
+    total_assistencia = somar_linhas_centro_custos(linhas_assistencia, meses_com_movimento)
+    total_logistica = somar_linhas_centro_custos(linhas_logistica, meses_com_movimento)
+    total_geral = somar_linhas_centro_custos(linhas, meses_com_movimento)
+
+    maior_conta = max(linhas, key=lambda x: x["total"], default=None)
+
+    anos_disponiveis = set()
+
+    for conta in contas_pagas_centro_custos_query().all():
+        _, ano_ref = mes_referencia_centro_custos(conta)
+        if ano_ref:
+            anos_disponiveis.add(ano_ref)
+
+    if ano not in anos_disponiveis:
+        anos_disponiveis.add(ano)
+
+    nomes_meses = {
+        1: "Jan", 2: "Fev", 3: "Mar", 4: "Abr",
+        5: "Mai", 6: "Jun", 7: "Jul", 8: "Ago",
+        9: "Set", 10: "Out", 11: "Nov", 12: "Dez",
+    }
+
+    return render_template(
+        "gestao/centro_custos.html",
+        ano=ano,
+        anos_disponiveis=sorted(anos_disponiveis, reverse=True),
+        meses=range(1, 13),
+        nomes_meses=nomes_meses,
+        meses_com_movimento=meses_com_movimento,
+        linhas_assistencia=linhas_assistencia,
+        linhas_logistica=linhas_logistica,
+        total_assistencia=total_assistencia,
+        total_logistica=total_logistica,
+        total_geral=total_geral,
+        maior_conta=maior_conta,
+        formatar_moeda_br=formatar_moeda_br,
+        formatar_numero_br=formatar_numero_br,
     )
