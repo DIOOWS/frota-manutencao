@@ -1,0 +1,627 @@
+{% extends "base.html" %}
+{% block title %}Dashboard Operacional{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_operacional.css') }}">
+
+{% set anos_labels = grafico_anual.labels if grafico_anual and grafico_anual.labels else [] %}
+{% set periodo_inicio = anos_labels[0] if anos_labels else '-' %}
+{% set periodo_fim = anos_labels[-1] if anos_labels else '-' %}
+
+<div class="opbi-page">
+
+  <section class="opbi-header">
+    <div class="opbi-logo-box">
+      <img src="{{ url_for('static', filename='css/img/logo.png') }}" alt="Easy" class="opbi-logo">
+    </div>
+
+    <div class="opbi-title-box">
+      <h1>DASHBOARD OPERACIONAL</h1>
+      <div class="opbi-title-line">
+        <span></span>
+        <h2>PERFORMANCE DE ATENDIMENTOS</h2>
+        <span></span>
+      </div>
+    </div>
+
+    <div class="opbi-date-card">
+      <i class="bi bi-calendar3"></i>
+      <div>
+        <small>BASE IMPORTADA</small>
+        <strong>{{ total_base }}</strong>
+      </div>
+    </div>
+  </section>
+
+  <section class="opbi-toolbar no-print">
+    <form method="POST"
+          action="/gestao/dashboard-operacional/importar"
+          enctype="multipart/form-data"
+          class="opbi-import">
+      <input type="file" name="arquivo" accept=".xlsx,.xls" required>
+      <label>
+        <input type="checkbox" name="substituir" value="1" checked>
+        Substituir base atual
+      </label>
+      <button type="submit">Importar Excel</button>
+    </form>
+
+    <form method="POST"
+          action="/gestao/dashboard-operacional/limpar"
+          onsubmit="return confirm('Tem certeza que deseja limpar toda a base importada?');">
+      <button type="submit" class="opbi-clean">Limpar base</button>
+    </form>
+  </section>
+
+  <section class="opbi-filter-panel no-print">
+    <form method="GET" class="opbi-filter" id="opbiFilterForm">
+
+      <select name="ano" id="filtroAno">
+        <option value="">Todos os anos</option>
+        {% for a in anos_disponiveis %}
+          <option value="{{ a }}" {% if filtros.ano == a %}selected{% endif %}>{{ a }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="mes" id="filtroMes">
+        <option value="">Todos os meses</option>
+        {% for m in meses_disponiveis %}
+          <option value="{{ m.numero }}" {% if filtros.mes == m.numero %}selected{% endif %}>{{ m.nome }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="cliente" id="filtroCliente">
+        <option value="">Todos os clientes</option>
+        {% for c in clientes_disponiveis %}
+          <option value="{{ c }}" {% if filtros.cliente == c %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="cidade" id="filtroCidade">
+        <option value="">Todas as cidades</option>
+        {% for c in cidades_disponiveis %}
+          <option value="{{ c }}" {% if filtros.cidade == c %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="frota" id="filtroFrota">
+        <option value="">Todas as frotas</option>
+        {% for f in frotas_disponiveis %}
+          <option value="{{ f }}" {% if filtros.frota == f %}selected{% endif %}>{{ f }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="veiculo" id="filtroVeiculo">
+        <option value="">Todos os veículos</option>
+        {% for v in veiculos_disponiveis %}
+          <option value="{{ v }}" {% if filtros.veiculo == v %}selected{% endif %}>{{ v }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="servico" id="filtroServico">
+        <option value="">Todos os serviços</option>
+        {% for s in servicos_disponiveis %}
+          <option value="{{ s }}" {% if filtros.servico == s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="situacao" id="filtroSituacao">
+        <option value="">Todas as situações</option>
+        {% for s in situacoes_disponiveis %}
+          <option value="{{ s }}" {% if filtros.situacao == s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+
+      <button type="submit">Aplicar</button>
+      <a href="/gestao/dashboard-operacional">Limpar</a>
+      <button type="button" id="opbiAbrirDetalhes">Ver OS filtradas</button>
+    </form>
+
+    <div class="opbi-active-filters">
+      {% if filtros.ano or filtros.mes or filtros.cliente or filtros.cidade or filtros.frota or filtros.veiculo or filtros.servico or filtros.situacao %}
+        <strong>Filtros ativos:</strong>
+        {% if filtros.ano %}<span>Ano: {{ filtros.ano }}</span>{% endif %}
+        {% if filtros.mes %}<span>Mês: {{ filtros.mes }}</span>{% endif %}
+        {% if filtros.cliente %}<span>Cliente: {{ filtros.cliente }}</span>{% endif %}
+        {% if filtros.cidade %}<span>Cidade: {{ filtros.cidade }}</span>{% endif %}
+        {% if filtros.frota %}<span>Frota: {{ filtros.frota }}</span>{% endif %}
+        {% if filtros.veiculo %}<span>Veículo: {{ filtros.veiculo }}</span>{% endif %}
+        {% if filtros.servico %}<span>Serviço: {{ filtros.servico }}</span>{% endif %}
+        {% if filtros.situacao %}<span>Situação: {{ filtros.situacao }}</span>{% endif %}
+      {% else %}
+        <strong>Visão geral:</strong> todos os registros importados
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="opbi-kpi-grid">
+    <article class="opbi-kpi-card opbi-click-card" data-detail="1">
+      <div class="opbi-kpi-icon"><i class="bi bi-clipboard-check"></i></div>
+      <div>
+        <span>TOTAL DE ORDENS<br>DE SERVIÇO</span>
+        <strong>{{ total_os }}</strong>
+        <small>Total no período filtrado</small>
+      </div>
+    </article>
+
+    <article class="opbi-kpi-card">
+      <div class="opbi-kpi-icon"><i class="bi bi-people-fill"></i></div>
+      <div>
+        <span>CLIENTES ATENDIDOS</span>
+        <strong>{{ clientes }}</strong>
+        <small>Total no filtro</small>
+      </div>
+    </article>
+
+    <article class="opbi-kpi-card">
+      <div class="opbi-kpi-icon"><i class="bi bi-truck"></i></div>
+      <div>
+        <span>FROTAS ATENDIDAS<br>(3 PRIMEIROS NÚMEROS)</span>
+        <strong>{{ frotas }}</strong>
+        <small>Total no filtro</small>
+      </div>
+    </article>
+
+    <article class="opbi-kpi-card">
+      <div class="opbi-kpi-icon"><i class="bi bi-geo-alt-fill"></i></div>
+      <div>
+        <span>CIDADES ATENDIDAS</span>
+        <strong>{{ cidades }}</strong>
+        <small>Total no filtro</small>
+      </div>
+    </article>
+
+    <article class="opbi-period-card">
+      <span>PERÍODO ANALISADO</span>
+      <strong>{{ periodo_inicio }} a {{ periodo_fim }}</strong>
+      <small>{{ anos_labels|length }} ANOS NO FILTRO</small>
+    </article>
+  </section>
+
+  <section class="opbi-main-grid">
+
+    <article class="opbi-panel opbi-annual">
+      <div class="opbi-panel-title">COMPARATIVO ANUAL DE ORDENS DE SERVIÇO</div>
+      <div class="opbi-annual-content">
+        <div class="opbi-chart-wrap">
+          <canvas id="opGraficoAnual"></canvas>
+        </div>
+        <div class="opbi-growth-box">
+          <h4>CRESCIMENTO</h4>
+          <div id="opGrowthList" class="opbi-growth-list"></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="opbi-panel opbi-monthly">
+      <div class="opbi-panel-title">EVOLUÇÃO MENSAL DE ORDENS DE SERVIÇO</div>
+      <div class="opbi-monthly-content">
+        <div class="opbi-chart-wrap">
+          <canvas id="opGraficoMensal"></canvas>
+        </div>
+        <div class="opbi-performance-box">
+          <h4>DESEMPENHO</h4>
+          <div id="opPerformance"></div>
+        </div>
+      </div>
+    </article>
+
+  </section>
+
+  <section class="opbi-rank-grid">
+
+    <article class="opbi-rank-card">
+      <div class="opbi-rank-head"><i class="bi bi-building"></i><div><h3>TOP 5 CLIENTES</h3><small>Clique para filtrar</small></div></div>
+      <div class="opbi-bar-list">
+        {% set max_cliente = top_clientes[0][1] if top_clientes else 1 %}
+        {% for nome, qtd in top_clientes[:5] %}
+          <button type="button" class="opbi-bar-row opbi-filter-click" data-filter="cliente" data-value="{{ nome }}">
+            <span>{{ nome }}</span><div class="opbi-bar-track"><div style="width: {{ (qtd / max_cliente * 100)|round(0) }}%"></div></div><strong>{{ qtd }}</strong>
+          </button>
+        {% else %}<div class="opbi-empty">Sem dados</div>{% endfor %}
+      </div>
+    </article>
+
+    <article class="opbi-rank-card">
+      <div class="opbi-rank-head"><i class="bi bi-geo-alt-fill"></i><div><h3>TOP 5 CIDADES</h3><small>Clique para filtrar</small></div></div>
+      <div class="opbi-bar-list">
+        {% set max_cidade = top_cidades[0][1] if top_cidades else 1 %}
+        {% for nome, qtd in top_cidades[:5] %}
+          <button type="button" class="opbi-bar-row opbi-filter-click" data-filter="cidade" data-value="{{ nome }}">
+            <span>{{ nome }}</span><div class="opbi-bar-track"><div style="width: {{ (qtd / max_cidade * 100)|round(0) }}%"></div></div><strong>{{ qtd }}</strong>
+          </button>
+        {% else %}<div class="opbi-empty">Sem dados</div>{% endfor %}
+      </div>
+    </article>
+
+    <article class="opbi-rank-card">
+      <div class="opbi-rank-head"><i class="bi bi-truck"></i><div><h3>TOP 5 FROTAS</h3><small>Clique para filtrar</small></div></div>
+      <div class="opbi-bar-list">
+        {% set max_frota = top_frotas[0][1] if top_frotas else 1 %}
+        {% for nome, qtd in top_frotas[:5] %}
+          <button type="button" class="opbi-bar-row opbi-filter-click" data-filter="frota" data-value="{{ nome }}">
+            <span>{{ nome }}</span><div class="opbi-bar-track"><div style="width: {{ (qtd / max_frota * 100)|round(0) }}%"></div></div><strong>{{ qtd }}</strong>
+          </button>
+        {% else %}<div class="opbi-empty">Sem dados</div>{% endfor %}
+      </div>
+    </article>
+
+    <article class="opbi-rank-card">
+      <div class="opbi-rank-head"><i class="bi bi-car-front-fill"></i><div><h3>TIPO DE VEÍCULO</h3><small>Clique para filtrar</small></div></div>
+      <div class="opbi-bar-list">
+        {% set max_veiculo = top_veiculos[0][1] if top_veiculos else 1 %}
+        {% for nome, qtd in top_veiculos[:5] %}
+          <button type="button" class="opbi-bar-row opbi-filter-click" data-filter="veiculo" data-value="{{ nome }}">
+            <span>{{ nome }}</span><div class="opbi-bar-track"><div style="width: {{ (qtd / max_veiculo * 100)|round(0) }}%"></div></div><strong>{{ qtd }}</strong>
+          </button>
+        {% else %}<div class="opbi-empty">Sem dados</div>{% endfor %}
+      </div>
+    </article>
+
+    <article class="opbi-rank-card">
+      <div class="opbi-rank-head"><i class="bi bi-wrench-adjustable"></i><div><h3>TOP 5 SERVIÇOS</h3><small>Clique para filtrar</small></div></div>
+      <div class="opbi-bar-list">
+        {% set max_servico = top_servicos[0][1] if top_servicos else 1 %}
+        {% for nome, qtd in top_servicos[:5] %}
+          <button type="button" class="opbi-bar-row opbi-filter-click" data-filter="servico" data-value="{{ nome }}">
+            <span>{{ nome }}</span><div class="opbi-bar-track"><div style="width: {{ (qtd / max_servico * 100)|round(0) }}%"></div></div><strong>{{ qtd }}</strong>
+          </button>
+        {% else %}<div class="opbi-empty">Sem dados</div>{% endfor %}
+      </div>
+    </article>
+
+  </section>
+
+  <section class="opbi-bottom-grid">
+
+    <article class="opbi-donut-card">
+      <div class="opbi-small-title">SITUAÇÃO DAS ORDENS DE SERVIÇO</div>
+      <div class="opbi-donut-content">
+        <div class="opbi-donut-chart"><canvas id="opGraficoSituacao"></canvas></div>
+        <div class="opbi-legend-list">
+          {% for nome, qtd in top_situacoes[:4] %}
+            <button type="button" class="opbi-legend-click opbi-filter-click" data-filter="situacao" data-value="{{ nome }}">
+              <span></span><strong>{{ nome }}</strong><em>{{ qtd }}</em>
+            </button>
+          {% else %}<small>Sem dados</small>{% endfor %}
+        </div>
+      </div>
+    </article>
+
+    <article class="opbi-map-card">
+      <div class="opbi-small-title">EXPANSÃO GEOGRÁFICA - CIDADES ATENDIDAS</div>
+      <div class="opbi-map-fake">
+        <div class="opbi-pin p1"></div><div class="opbi-pin p2"></div><div class="opbi-pin p3"></div><div class="opbi-pin p4"></div><div class="opbi-pin p5"></div>
+        <strong>{{ top_cidades[0][0] if top_cidades else 'SEM DADOS' }}</strong>
+      </div>
+    </article>
+
+    <article class="opbi-donut-card">
+      <div class="opbi-small-title">DISTRIBUIÇÃO ANUAL DAS OS</div>
+      <div class="opbi-donut-content">
+        <div class="opbi-donut-chart"><canvas id="opGraficoDistribuicao"></canvas></div>
+        <div class="opbi-legend-list" id="opAnnualLegend"></div>
+      </div>
+    </article>
+
+  </section>
+
+  <footer class="opbi-footer">
+    <div><i class="bi bi-bullseye"></i> FOCO EM EXCELÊNCIA OPERACIONAL</div>
+    <div><i class="bi bi-handshake-fill"></i> CONFIANÇA QUE MOVE</div>
+    <div><i class="bi bi-shield-check"></i> QUALIDADE QUE ENTREGA RESULTADOS</div>
+  </footer>
+
+</div>
+
+<div class="opbi-modal no-print" id="opbiDetalhesModal" aria-hidden="true">
+  <div class="opbi-modal-backdrop"></div>
+  <div class="opbi-modal-dialog">
+    <div class="opbi-modal-head">
+      <div>
+        <h3>OS filtradas</h3>
+        <p id="opbiModalResumo">Carregando...</p>
+      </div>
+      <button type="button" id="opbiFecharModal">×</button>
+    </div>
+
+    <div class="opbi-modal-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Entrada</th>
+            <th>Cliente</th>
+            <th>Cidade</th>
+            <th>Frota</th>
+            <th>Veículo</th>
+            <th>Serviço</th>
+            <th>Situação</th>
+            <th>Defeito</th>
+          </tr>
+        </thead>
+        <tbody id="opbiModalTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="opDadosAnual">{{ grafico_anual|tojson }}</script>
+<script type="application/json" id="opDadosMensal">{{ grafico_mensal|tojson }}</script>
+<script type="application/json" id="opDadosSituacao">{{ {"labels": top_situacoes|map(attribute=0)|list, "valores": top_situacoes|map(attribute=1)|list }|tojson }}</script>
+
+<script>
+window.addEventListener("load", function () {
+  if (!window.Chart) {
+    console.error("Chart.js não carregou.");
+    return;
+  }
+
+  const navy = "#001F5B";
+  const blue = "#0033A0";
+  const blue2 = "#0B4FD9";
+  const gray = "#6B7280";
+  const green = "#3F7D20";
+  const orange = "#F59E0B";
+  const black = "#111827";
+
+  function readJson(id) {
+    const el = document.getElementById(id);
+    if (!el) return {};
+    return JSON.parse(el.textContent || "{}");
+  }
+
+  function currentParams() {
+    return new URLSearchParams(window.location.search);
+  }
+
+  function applyFilter(key, value) {
+    const params = currentParams();
+    if (value === null || value === undefined || value === "") {
+      params.delete(key);
+    } else {
+      params.set(key, value);
+    }
+
+    window.location.href = "/gestao/dashboard-operacional?" + params.toString();
+  }
+
+  function openDetails(extraKey, extraValue) {
+    const params = currentParams();
+    if (extraKey && extraValue) params.set(extraKey, extraValue);
+
+    const modal = document.getElementById("opbiDetalhesModal");
+    const tbody = document.getElementById("opbiModalTbody");
+    const resumo = document.getElementById("opbiModalResumo");
+
+    modal.classList.add("show");
+    modal.setAttribute("aria-hidden", "false");
+    tbody.innerHTML = "";
+    resumo.textContent = "Carregando registros...";
+
+    fetch("/gestao/api/dashboard-operacional-detalhes?" + params.toString())
+      .then(resp => resp.json())
+      .then(data => {
+        resumo.textContent = `${data.total || 0} OS encontrada(s). Exibindo até 500 registros.`;
+
+        if (!data.itens || !data.itens.length) {
+          tbody.innerHTML = `<tr><td colspan="8">Nenhuma OS encontrada.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = data.itens.map(item => `
+          <tr>
+            <td>${item.entrada || "-"}</td>
+            <td>${item.cliente || "-"}</td>
+            <td>${item.cidade || "-"}</td>
+            <td>${item.frota || "-"}</td>
+            <td>${item.veiculo || "-"}</td>
+            <td>${item.servico || "-"}</td>
+            <td>${item.situacao || "-"}</td>
+            <td>${item.defeito || "-"}</td>
+          </tr>
+        `).join("");
+      })
+      .catch(() => {
+        resumo.textContent = "Erro ao carregar detalhes.";
+        tbody.innerHTML = `<tr><td colspan="8">Erro ao carregar detalhes.</td></tr>`;
+      });
+  }
+
+  document.querySelectorAll(".opbi-filter-click").forEach(btn => {
+    btn.addEventListener("click", () => applyFilter(btn.dataset.filter, btn.dataset.value));
+  });
+
+  document.querySelectorAll(".opbi-click-card").forEach(card => {
+    card.addEventListener("click", () => openDetails());
+  });
+
+  const abrirDetalhes = document.getElementById("opbiAbrirDetalhes");
+  if (abrirDetalhes) abrirDetalhes.addEventListener("click", () => openDetails());
+
+  const modal = document.getElementById("opbiDetalhesModal");
+  const fechar = document.getElementById("opbiFecharModal");
+  if (fechar) fechar.addEventListener("click", () => modal.classList.remove("show"));
+  if (modal) modal.querySelector(".opbi-modal-backdrop").addEventListener("click", () => modal.classList.remove("show"));
+
+  const chartPlugins = [];
+  if (window.ChartDataLabels) chartPlugins.push(ChartDataLabels);
+
+  const anual = readJson("opDadosAnual");
+  const mensal = readJson("opDadosMensal");
+  const situacao = readJson("opDadosSituacao");
+
+  function montarCrescimento() {
+    const box = document.getElementById("opGrowthList");
+    if (!box || !anual.labels || !anual.valores) return;
+
+    let html = "";
+    for (let i = 1; i < anual.labels.length; i++) {
+      const ant = Number(anual.valores[i - 1] || 0);
+      const atual = Number(anual.valores[i] || 0);
+      let txt = "-";
+      let cls = "neutral";
+
+      if (ant > 0) {
+        const pct = ((atual - ant) / ant) * 100;
+        txt = (pct > 0 ? "+" : "") + pct.toFixed(1).replace(".", ",") + "%";
+        cls = pct >= 0 ? "positive" : "negative";
+      }
+
+      html += `<button type="button" class="opbi-growth-item ${cls}" data-year="${anual.labels[i]}">
+        <span>${anual.labels[i - 1]} → ${anual.labels[i]}</span>
+        <strong>${txt}</strong>
+      </button>`;
+    }
+
+    box.innerHTML = html || "<small>Sem base</small>";
+
+    box.querySelectorAll("[data-year]").forEach(btn => {
+      btn.addEventListener("click", () => applyFilter("ano", btn.dataset.year));
+    });
+  }
+
+  function montarDesempenho() {
+    const box = document.getElementById("opPerformance");
+    if (!box || !mensal.series) return;
+
+    const anos = Object.keys(mensal.series);
+    if (!anos.length) {
+      box.innerHTML = "<small>Sem comparativo</small>";
+      return;
+    }
+
+    const anoA = anos[0];
+    const anoB = anos[anos.length - 1];
+
+    const totalA = (mensal.series[anoA] || []).reduce((a, b) => a + Number(b || 0), 0);
+    const totalB = (mensal.series[anoB] || []).reduce((a, b) => a + Number(b || 0), 0);
+
+    let pct = 0;
+    if (totalA > 0 && anos.length > 1) pct = ((totalB - totalA) / totalA) * 100;
+
+    box.innerHTML = `<strong>${totalA}</strong><span>${anoA}</span><hr>
+      ${anos.length > 1 ? `<strong>${totalB}</strong><span>${anoB}</span><hr><em>${pct >= 0 ? "▲" : "▼"} ${pct.toFixed(1).replace(".", ",")}%</em><small>vs ${anoA}</small>` : `<small>Total no ano</small>`}`;
+  }
+
+  function montarLegendaAnual() {
+    const box = document.getElementById("opAnnualLegend");
+    if (!box || !anual.labels) return;
+
+    let total = (anual.valores || []).reduce((a, b) => a + Number(b || 0), 0) || 1;
+
+    box.innerHTML = anual.labels.map((label, i) => {
+      const val = Number(anual.valores[i] || 0);
+      const pct = ((val / total) * 100).toFixed(1).replace(".", ",");
+      return `<button type="button" class="opbi-legend-click" data-year="${label}">
+        <span></span><strong>${label}</strong><em>${val} • ${pct}%</em>
+      </button>`;
+    }).join("");
+
+    box.querySelectorAll("[data-year]").forEach(btn => {
+      btn.addEventListener("click", () => applyFilter("ano", btn.dataset.year));
+    });
+  }
+
+  montarCrescimento();
+  montarDesempenho();
+  montarLegendaAnual();
+
+  const ctxAnual = document.getElementById("opGraficoAnual");
+  if (ctxAnual) {
+    const chartAnual = new Chart(ctxAnual, {
+      type: "bar",
+      data: {
+        labels: anual.labels || [],
+        datasets: [{ label: "OS", data: anual.valores || [], backgroundColor: navy, borderColor: navy, borderWidth: 1, barPercentage: .55, categoryPercentage: .72 }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        onClick: function(evt, elements) {
+          if (elements.length) {
+            const index = elements[0].index;
+            applyFilter("ano", anual.labels[index]);
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          datalabels: { anchor: "end", align: "top", color: black, font: { weight: "bold", size: 13 } }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: black, font: { weight: "bold", size: 12 } } },
+          y: { beginAtZero: true, grid: { color: "rgba(0,31,91,.16)" }, ticks: { precision: 0, color: black } }
+        }
+      },
+      plugins: chartPlugins
+    });
+  }
+
+  const ctxMensal = document.getElementById("opGraficoMensal");
+  if (ctxMensal) {
+    const series = mensal.series || {};
+    const anos = Object.keys(series);
+    const colors = [navy, blue2, gray];
+
+    new Chart(ctxMensal, {
+      type: "line",
+      data: {
+        labels: mensal.labels || [],
+        datasets: anos.map((ano, idx) => ({ label: ano, data: series[ano] || [], borderColor: colors[idx % colors.length], backgroundColor: colors[idx % colors.length], borderWidth: 3, tension: .32, pointRadius: 4, pointHoverRadius: 6, borderDash: idx === 1 ? [7, 5] : [] }))
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        onClick: function(evt, elements) {
+          if (elements.length) {
+            const point = elements[0];
+            const anoSelecionado = anos[point.datasetIndex];
+            const mesSelecionado = point.index + 1;
+            const params = currentParams();
+            params.set("ano", anoSelecionado);
+            params.set("mes", mesSelecionado);
+            window.location.href = "/gestao/dashboard-operacional?" + params.toString();
+          }
+        },
+        plugins: {
+          legend: { position: "top", align: "start", labels: { color: black, usePointStyle: true, font: { weight: "bold", size: 12 } } },
+          datalabels: { display: true, align: "top", color: black, font: { weight: "bold", size: 11 }, formatter: (v) => v ? v : "" }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: black, font: { weight: "bold", size: 12 } } },
+          y: { beginAtZero: true, grid: { color: "rgba(0,31,91,.13)" }, ticks: { precision: 0, color: black } }
+        }
+      },
+      plugins: chartPlugins
+    });
+  }
+
+  function donut(id, labels, valores, colors, filterKey) {
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+
+    new Chart(ctx, {
+      type: "doughnut",
+      data: { labels: labels || [], datasets: [{ data: valores || [], backgroundColor: colors, borderColor: "#fff", borderWidth: 2 }] },
+      options: {
+        cutout: "62%",
+        responsive: true,
+        maintainAspectRatio: false,
+        onClick: function(evt, elements) {
+          if (elements.length && filterKey) {
+            const index = elements[0].index;
+            applyFilter(filterKey, labels[index]);
+          }
+        },
+        plugins: { legend: { display: false }, datalabels: { display: false } }
+      },
+      plugins: chartPlugins
+    });
+  }
+
+  donut("opGraficoSituacao", situacao.labels, situacao.valores, [navy, green, orange, gray, blue2], "situacao");
+  donut("opGraficoDistribuicao", anual.labels, anual.valores, [blue2, navy, green, orange, gray, "#5DADE2"], "ano");
+});
+</script>
+
+{% endblock %}

@@ -5,7 +5,6 @@
   <meta charset="UTF-8">
   <title>EASY CONTROL</title>
 
-  <!-- FAVICON / LOGO NA ABA DO NAVEGADOR -->
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='css/img/logo.png') }}">
   <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='css/img/logo.png') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='css/img/logo.png') }}">
@@ -37,19 +36,13 @@
   {% endif %}
 {% endwith %}
 
-<!-- ========================= -->
-<!-- NAVBAR PREMIUM -->
-<!-- ========================= -->
 <header class="easy-navbar">
-
   <div class="easy-navbar-inner">
 
-    <!-- LOGO -->
     <a href="{{ url_for('dashboard.dashboard') }}" class="easy-brand">
       <img src="{{ url_for('static', filename='css/img/logo.png') }}" alt="Logo">
     </a>
 
-    <!-- BOTÃO MOBILE -->
     <button type="button"
             class="easy-mobile-toggle"
             id="mobileMenuToggle"
@@ -58,24 +51,19 @@
       <i class="bi bi-list"></i>
     </button>
 
-    <!-- LINKS -->
     <nav class="easy-nav-links" id="topLinks">
 
-      <!-- DASHBOARD -->
       <a href="{{ url_for('dashboard.dashboard') }}" class="easy-nav-link">
         Dashboard
       </a>
 
-      <!-- OPERAÇÃO -->
       <div class="easy-nav-dropdown">
-
         <button type="button" class="easy-nav-link easy-dropdown-button">
           Operação
           <i class="bi bi-chevron-down"></i>
         </button>
 
         <div class="easy-dropdown-menu">
-
           <a href="{{ url_for('manutencao.lista') }}">
             <i class="bi bi-tools"></i>
             <span>Manutenções</span>
@@ -92,30 +80,26 @@
               <span>Nova manutenção</span>
             </a>
 
-            <a href="/clientes/">
-              <i class="bi bi-people"></i>
-              <span>Clientes</span>
-            </a>
           {% endif %}
-
         </div>
-
       </div>
 
-      <!-- FINANCEIRO -->
       {% if pode_gestao %}
         <div class="easy-nav-dropdown">
-
           <button type="button" class="easy-nav-link easy-dropdown-button">
             Financeiro
             <i class="bi bi-chevron-down"></i>
           </button>
 
           <div class="easy-dropdown-menu">
-
             <a href="/gestao/dashboard">
               <i class="bi bi-speedometer2"></i>
               <span>Dashboard Gestão</span>
+            </a>
+
+            <a href="/gestao/dashboard-operacional">
+              <i class="bi bi-bar-chart-line-fill"></i>
+              <span>Dashboard Operacional</span>
             </a>
 
             <a href="/gestao/radar-financeiro/">
@@ -152,52 +136,54 @@
               <i class="bi bi-journal-plus"></i>
               <span>Lançamentos</span>
             </a>
-
           </div>
-
         </div>
       {% endif %}
 
-      <!-- ADMINISTRAÇÃO -->
-        {% if pode_admin %}
-          <div class="easy-nav-dropdown">
+      {% if pode_admin %}
+        <div class="easy-nav-dropdown">
+          <button type="button" class="easy-nav-link easy-dropdown-button">
+            Administração
+            <i class="bi bi-chevron-down"></i>
+          </button>
 
-            <button type="button" class="easy-nav-link easy-dropdown-button">
-              Administração
-              <i class="bi bi-chevron-down"></i>
-            </button>
+          <div class="easy-dropdown-menu">
+            <a href="/admin/usuarios">
+              <i class="bi bi-person-gear"></i>
+              <span>Gerenciar Usuários</span>
+            </a>
 
-            <div class="easy-dropdown-menu">
+            <a href="/clientes/">
+              <i class="bi bi-building"></i>
+              <span>Gerenciar Clientes</span>
+            </a>
 
-              <a href="/admin/usuarios">
-                <i class="bi bi-person-gear"></i>
-                <span>Gerenciar Usuários</span>
-              </a>
-
-              <a href="/clientes/">
-                <i class="bi bi-building"></i>
-                <span>Gerenciar Clientes</span>
-              </a>
-
-              <a href="/admin/agenda-equipe/">
-                <i class="bi bi-calendar-check"></i>
-                <span>Agenda da Equipe</span>
-              </a>
-
-            </div>
-
+            <a href="/admin/agenda-equipe/">
+              <i class="bi bi-calendar-check"></i>
+              <span>Agenda da Equipe</span>
+            </a>
           </div>
-        {% endif %}
+        </div>
+      {% endif %}
 
-      <!-- ASSISTENTE -->
       <a href="/assistente" class="easy-nav-link">
         Assistente
       </a>
 
     </nav>
 
-    <!-- USUÁRIO -->
     <div class="easy-user-menu">
+
+      {% if pode_gestao %}
+        <button type="button"
+                id="toggleValoresFinanceiros"
+                class="easy-hide-values-toggle"
+                title="Ocultar valores financeiros"
+                aria-pressed="false">
+          <i class="bi bi-eye-fill"></i>
+          <span>Ocultar valores </span>
+        </button>
+      {% endif %}
 
       <button type="button" class="easy-user-button">
         {% if session.get("user_foto") %}
@@ -212,7 +198,6 @@
       </button>
 
       <div class="easy-user-dropdown">
-
         <div class="easy-user-info">
           <strong>{{ session.get("user_nome") or session.get("user_name") or "Usuário" }}</strong>
           <small>{{ role or "cliente" }}</small>
@@ -222,30 +207,22 @@
           <i class="bi bi-box-arrow-right"></i>
           <span>Sair</span>
         </a>
-
       </div>
 
     </div>
 
   </div>
-
 </header>
 
 <div class="content-top p-4">
   {% block content %}{% endblock %}
 </div>
 
-<!-- ========================= -->
-<!-- 🤖 SIDINHO ASSISTENTE -->
-<!-- ========================= -->
 <div class="sidinho-widget">
-
   <div class="sidinho-chat-panel" id="sidinhoChatPanel">
-
     <div class="sidinho-chat-header">
       <div class="sidinho-header-left">
         <img src="{{ url_for('static', filename='css/img/sidinho.png') }}" alt="Sidinho">
-
         <div>
           <strong>Sidinho</strong>
           <small>Assistente Inteligente</small>
@@ -270,13 +247,11 @@
     </div>
 
     <div class="sidinho-messages" id="sidinhoMessages">
-
       <div class="sidinho-message sidinho-bot">
         <div class="sidinho-balloon">
           Olá! Eu sou o Sidinho. Pergunte sobre frotas, OS, TMA, causas, corretivas e manutenções.
         </div>
       </div>
-
     </div>
 
     <div class="sidinho-input-area">
@@ -291,19 +266,15 @@
         ➤
       </button>
     </div>
-
   </div>
 
   <div class="sidinho-bubble" id="sidinhoBubble" onclick="abrirFecharSidinho()">
-
     <div class="sidinho-bubble-alert">
       Pergunte ao Sidinho
     </div>
 
     <img src="{{ url_for('static', filename='css/img/sidinho.png') }}" alt="Sidinho">
-
   </div>
-
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -349,6 +320,40 @@
       });
     });
   }
+</script>
+
+<script>
+  (function () {
+    const STORAGE_KEY = "easy_control_ocultar_valores_financeiros";
+
+    function aplicarEstadoValores() {
+      const ocultar = localStorage.getItem(STORAGE_KEY) === "true";
+      const botao = document.getElementById("toggleValoresFinanceiros");
+
+      document.body.classList.toggle("easy-valores-ocultos", ocultar);
+
+      if (botao) {
+        botao.setAttribute("aria-pressed", ocultar ? "true" : "false");
+        botao.innerHTML = ocultar
+          ? '<i class="bi bi-eye-slash-fill"></i><span>Mostrar valores</span>'
+          : '<i class="bi bi-eye-fill"></i><span>Ocultar valores</span>';
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const botao = document.getElementById("toggleValoresFinanceiros");
+
+      aplicarEstadoValores();
+
+      if (botao) {
+        botao.addEventListener("click", function () {
+          const ocultarAtual = localStorage.getItem(STORAGE_KEY) === "true";
+          localStorage.setItem(STORAGE_KEY, (!ocultarAtual).toString());
+          aplicarEstadoValores();
+        });
+      }
+    });
+  })();
 </script>
 
 <footer class="app-footer">

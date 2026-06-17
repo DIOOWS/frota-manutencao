@@ -153,7 +153,7 @@
             </div>
             <div>
                 <span>DÍVIDA HERDADA</span>
-                <strong>{{ moeda(total_divida_herdada) }}</strong>
+                <strong class="valor-financeiro">{{ moeda(total_divida_herdada) }}</strong>
                 <small>{{ grupos_herdados|length }} tipo(s) • {{ colunas[0].badge }} conta(s)</small>
             </div>
         </div>
@@ -164,7 +164,7 @@
             </div>
             <div>
                 <span>VENCE HOJE</span>
-                <strong>{{ moeda(total_hoje) }}</strong>
+                <strong class="valor-financeiro">{{ moeda(total_hoje) }}</strong>
                 <small>{{ colunas[1].badge }} conta(s)</small>
             </div>
         </div>
@@ -175,7 +175,7 @@
             </div>
             <div>
                 <span>PRÓXIMOS 7 DIAS</span>
-                <strong>{{ moeda(total_proximos_7) }}</strong>
+                <strong class="valor-financeiro">{{ moeda(total_proximos_7) }}</strong>
                 <small>{{ colunas[2].badge }} conta(s)</small>
             </div>
         </div>
@@ -186,7 +186,7 @@
             </div>
             <div>
                 <span>ATRASADAS DO MÊS</span>
-                <strong>{{ moeda(total_atrasadas_mes) }}</strong>
+                <strong class="valor-financeiro">{{ moeda(total_atrasadas_mes) }}</strong>
                 <small>{{ colunas[3].badge }} conta(s)</small>
             </div>
         </div>
@@ -197,7 +197,7 @@
             </div>
             <div>
                 <span>PAGAS NO MÊS</span>
-                <strong>{{ moeda(total_pagas_mes) }}</strong>
+                <strong class="valor-financeiro">{{ moeda(total_pagas_mes) }}</strong>
                 <small>{{ colunas[4].badge }} conta(s)</small>
             </div>
         </div>
@@ -208,7 +208,7 @@
             </div>
             <div>
                 <span>PAGAS DE MESES ANT.</span>
-                <strong>{{ moeda(total_pagas_meses_anteriores) }}</strong>
+                <strong class="valor-financeiro">{{ moeda(total_pagas_meses_anteriores) }}</strong>
                 <small>{{ colunas[5].badge }} conta(s)</small>
             </div>
         </div>
@@ -221,7 +221,7 @@
             </div>
             <div>
                 <span>JUROS PAGOS NO MÊS</span>
-                <strong>{{ moeda(total_juros_mes) }}</strong>
+                <strong class="valor-financeiro">{{ moeda(total_juros_mes) }}</strong>
                 <small>Total de acréscimos pagos</small>
             </div>
         </div>
@@ -783,15 +783,15 @@
                     <div class="radar-fluxo-mini-grid">
                         <div>
                             <span>Receitas até agora</span>
-                            <strong>{{ moeda(receitas_realizadas) }}</strong>
+                            <strong class="valor-financeiro">{{ moeda(receitas_realizadas) }}</strong>
                         </div>
                         <div>
                             <span>Pagamentos até agora</span>
-                            <strong>{{ moeda(total_pagas_mes) }}</strong>
+                            <strong class="valor-financeiro">{{ moeda(total_pagas_mes) }}</strong>
                         </div>
                         <div class="{% if resultado_parcial < 0 %}negativo{% else %}positivo{% endif %}">
                             <span>Resultado parcial</span>
-                            <strong>{{ moeda(resultado_parcial) }}</strong>
+                            <strong class="valor-financeiro">{{ moeda(resultado_parcial) }}</strong>
                         </div>
                     </div>
                 </div>
@@ -802,10 +802,10 @@
 
                 <div class="radar-bottom-card">
                     <h3>Situação Financeira</h3>
-                    <p><span>Receitas realizadas</span><strong>{{ moeda(receitas_realizadas) }}</strong></p>
-                    <p><span>Receitas previstas</span><strong>{{ moeda(receitas_previstas) }}</strong></p>
-                    <p><span>Pressão imediata</span><strong>{{ moeda(pressao_imediata) }}</strong></p>
-                    <p><span>Diferença estimada</span><strong class="{% if diferenca_estimada < 0 %}text-danger{% else %}text-success{% endif %}">{{ moeda(diferenca_estimada) }}</strong></p>
+                    <p><span>Receitas realizadas</span><strong class="valor-financeiro">{{ moeda(receitas_realizadas) }}</strong></p>
+                    <p><span>Receitas previstas</span><strong class="valor-financeiro">{{ moeda(receitas_previstas) }}</strong></p>
+                    <p><span>Pressão imediata</span><strong class="valor-financeiro">{{ moeda(pressao_imediata) }}</strong></p>
+                    <p><span>Diferença estimada</span><strong class="{% if diferenca_estimada < 0 %}text-danger{% else %}text-success{% endif %}" class="valor-financeiro">{{ moeda(diferenca_estimada) }}</strong></p>
                 </div>
 
                 <div class="radar-bottom-card">
@@ -829,9 +829,9 @@
 
                 <div class="radar-bottom-card dicas">
                     <h3>Dicas rápidas</h3>
-                    <p><span>Pague hoje:</span><strong>{{ moeda(total_hoje) }}</strong></p>
-                    <p><span>Próximos 7 dias:</span><strong>{{ moeda(total_proximos_7) }}</strong></p>
-                    <p><span>Dívidas herdadas:</span><strong>{{ moeda(total_divida_herdada) }}</strong></p>
+                    <p><span>Pague hoje:</span><strong class="valor-financeiro">{{ moeda(total_hoje) }}</strong></p>
+                    <p><span>Próximos 7 dias:</span><strong class="valor-financeiro">{{ moeda(total_proximos_7) }}</strong></p>
+                    <p><span>Dívidas herdadas:</span><strong class="valor-financeiro">{{ moeda(total_divida_herdada) }}</strong></p>
                     <div class="radar-total-pressao">
                         Total de pressão: {{ moeda(pressao_imediata) }}
                     </div>

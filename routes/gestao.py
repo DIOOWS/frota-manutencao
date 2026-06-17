@@ -5,14 +5,17 @@ from models.fechamento_mensal import FechamentoMensal
 from models.conta_pagar_importada import ContaPagarImportada
 from models.conta_receber_importada import ContaReceberImportada
 from models.conta_recorrente import ContaRecorrente
+from models.dashboard_operacional_importado import DashboardOperacionalImportado
 from database import db
 from datetime import datetime, date, timedelta
 from collections import Counter
 from decimal import Decimal, InvalidOperation
 from sqlalchemy import or_, and_
 import calendar
+import re
 from io import BytesIO
 import openpyxl
+from openpyxl import load_workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
 
@@ -5051,3 +5054,499 @@ def exportar_centro_receitas():
         download_name=f"centro_receitas_{ano}.xlsx",
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
+
+# =========================================================
+# DASHBOARD OPERACIONAL IMPORTADO
+# Cole este bloco em routes/gestao.py
+# Requer:
+# from models.dashboard_operacional_importado import DashboardOperacionalImportado
+# import re
+# from collections import Counter, defaultdict
+# from openpyxl import load_workbook
+# =========================================================
+
+def op_texto(valor, padrao="NÃO INFORMADO"):
+    if valor is None:
+        return padrao
+
+    texto = str(valor).strip()
+
+    if not texto or texto.upper() in ["NAN", "NONE", "-", "/", "43"]:
+        return padrao
+
+    texto = " ".join(texto.split()).upper()
+    return texto
+
+
+def op_data(valor):
+    if not valor:
+        return None
+
+    if isinstance(valor, datetime):
+        return valor
+
+    try:
+        return datetime.strptime(str(valor).strip(), "%d/%m/%Y %H:%M:%S")
+    except Exception:
+        pass
+
+    try:
+        return datetime.strptime(str(valor).strip(), "%d/%m/%Y")
+    except Exception:
+        return None
+
+
+def op_frota_3_numeros(valor):
+    if valor is None:
+        return "NÃO INFORMADO"
+
+    texto = str(valor).strip().upper()
+    numeros = re.findall(r"\d+", texto)
+
+    if not numeros:
+        return "NÃO INFORMADO"
+
+    digitos = "".join(numeros)
+    return digitos[:3].zfill(3)
+
+
+def op_tipo_servico(defeito):
+    texto = op_texto(defeito)
+
+    if texto == "NÃO INFORMADO":
+        return "NÃO INFORMADO"
+
+    if "CONTRATO" in texto:
+        return "CONTRATO"
+
+    if (
+        "REFRIG" in texto
+        or "COMPRESSOR" in texto
+        or "GÁS" in texto
+        or "GAS" in texto
+        or "PLACA EUT" in texto
+    ):
+        return "REFRIGERAÇÃO"
+
+    if (
+        "ESTRUT" in texto
+        or "BAÚ" in texto
+        or "BAU" in texto
+        or "LAMINA" in texto
+        or "PISO" in texto
+        or "PORTA" in texto
+        or "PARACHOQUE" in texto
+    ):
+        return "ESTRUTURAL"
+
+    if "ENCARRO" in texto or "DESENCARRO" in texto:
+        return "ENCARROÇAMENTO"
+
+    if "REVISÃO" in texto or "REVISAO" in texto or "KM" in texto:
+        return "REVISÃO / KM"
+
+    if "BATERIA" in texto or "ELÉTR" in texto or "ELETR" in texto or "CHICOTE" in texto:
+        return "ELÉTRICA"
+
+    if "PINTURA" in texto or "ADESIVO" in texto:
+        return "PINTURA / ADESIVO"
+
+    return "OUTROS SERVIÇOS"
+
+
+def op_encontrar_header(ws):
+    """
+    Procura a linha do cabeçalho.
+    O arquivo enviado normalmente tem cabeçalho na linha 2.
+    """
+    for row_idx in range(1, min(ws.max_row, 12) + 1):
+        valores = [
+            op_texto(ws.cell(row=row_idx, column=col_idx).value, "")
+            for col_idx in range(1, ws.max_column + 1)
+        ]
+
+        if "CLIENTE" in valores and any("ENTRADA" in v for v in valores):
+            return row_idx
+
+    return 1
+
+
+def op_mapa_colunas(ws, header_row):
+    mapa = {}
+
+    for col_idx in range(1, ws.max_column + 1):
+        nome = op_texto(ws.cell(row=header_row, column=col_idx).value, "")
+        if nome:
+            mapa[nome] = col_idx
+
+    return mapa
+
+
+def op_col(mapa, nomes):
+    for nome in nomes:
+        for chave, indice in mapa.items():
+            if nome in chave:
+                return indice
+
+    return None
+
+
+def op_valor(ws, row_idx, col_idx):
+    if not col_idx:
+        return None
+
+    return ws.cell(row=row_idx, column=col_idx).value
+
+
+def op_processar_excel_dashboard(arquivo):
+    wb = load_workbook(arquivo, data_only=True)
+    ws = wb.active
+
+    header_row = op_encontrar_header(ws)
+    mapa = op_mapa_colunas(ws, header_row)
+
+    c_cliente = op_col(mapa, ["CLIENTE"])
+    c_cidade = op_col(mapa, ["CIDADE"])
+    c_entrada = op_col(mapa, ["ENTRADA"])
+    c_pronto = op_col(mapa, ["PRONTO"])
+    c_saida = op_col(mapa, ["SAÍDA", "SAIDA"])
+    c_situacao = op_col(mapa, ["SITUAÇÃO", "SITUACAO"])
+    c_veiculo = op_col(mapa, ["VEÍCULO", "VEICULO"])
+    c_defeito = op_col(mapa, ["DEFEITO"])
+    c_marca = op_col(mapa, ["MARCA"])
+    c_frota = op_col(mapa, ["FROTA"])
+    c_km = op_col(mapa, ["KM"])
+
+    registros = []
+
+    for row_idx in range(header_row + 1, ws.max_row + 1):
+        cliente = op_texto(op_valor(ws, row_idx, c_cliente))
+        cidade = op_texto(op_valor(ws, row_idx, c_cidade))
+
+        entrada = op_data(op_valor(ws, row_idx, c_entrada))
+        pronto = op_data(op_valor(ws, row_idx, c_pronto))
+        saida = op_data(op_valor(ws, row_idx, c_saida))
+
+        data_base = entrada or saida or pronto
+
+        # ignora linhas completamente vazias ou sem data útil
+        if cliente == "NÃO INFORMADO" and not data_base:
+            continue
+
+        if not data_base:
+            continue
+
+        defeito = op_texto(op_valor(ws, row_idx, c_defeito))
+        frota_original = op_texto(op_valor(ws, row_idx, c_frota))
+
+        registros.append(DashboardOperacionalImportado(
+            cliente=cliente,
+            cidade_uf=cidade,
+            entrada=entrada,
+            pronto=pronto,
+            saida=saida,
+            situacao=op_texto(op_valor(ws, row_idx, c_situacao)),
+            veiculo=op_texto(op_valor(ws, row_idx, c_veiculo)),
+            defeito=defeito,
+            tipo_servico=op_tipo_servico(defeito),
+            marca=op_texto(op_valor(ws, row_idx, c_marca)),
+            frota_original=frota_original,
+            frota_tratada=op_frota_3_numeros(frota_original),
+            km=op_texto(op_valor(ws, row_idx, c_km)),
+            ano=data_base.year,
+            mes=data_base.month,
+        ))
+
+    return registros
+
+
+def op_counter_top(registros, atributo, limite=8, ignorar_nao_informado=True):
+    contador = Counter()
+
+    for r in registros:
+        valor = getattr(r, atributo, None) or "NÃO INFORMADO"
+
+        if ignorar_nao_informado and valor == "NÃO INFORMADO":
+            continue
+
+        contador[valor] += 1
+
+    return contador.most_common(limite)
+
+
+def op_series_anual(registros):
+    contador = Counter()
+
+    for r in registros:
+        if r.ano:
+            contador[r.ano] += 1
+
+    anos = list(range(min(contador.keys()), max(contador.keys()) + 1)) if contador else []
+
+    return {
+        "labels": [str(ano) for ano in anos],
+        "valores": [contador.get(ano, 0) for ano in anos],
+    }
+
+
+def op_series_mensal_comparativa(registros, anos_comparar):
+    nomes_meses = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"]
+    dados = {}
+
+    for ano in anos_comparar:
+        dados[str(ano)] = [0] * 12
+
+    for r in registros:
+        if r.ano in anos_comparar and r.mes:
+            dados[str(r.ano)][r.mes - 1] += 1
+
+    return {
+        "labels": nomes_meses,
+        "series": dados,
+    }
+
+
+@gestao_bp.route("/dashboard-operacional", methods=["GET"])
+@gestao_required
+def dashboard_operacional():
+    filtros = {
+        "ano": request.args.get("ano", type=int),
+        "mes": request.args.get("mes", type=int),
+        "cliente": request.args.get("cliente", "").strip(),
+        "cidade": request.args.get("cidade", "").strip(),
+        "frota": request.args.get("frota", "").strip(),
+        "veiculo": request.args.get("veiculo", "").strip(),
+        "servico": request.args.get("servico", "").strip(),
+        "situacao": request.args.get("situacao", "").strip(),
+    }
+
+    query = DashboardOperacionalImportado.query
+
+    if filtros["ano"]:
+        query = query.filter(DashboardOperacionalImportado.ano == filtros["ano"])
+
+    if filtros["mes"]:
+        query = query.filter(DashboardOperacionalImportado.mes == filtros["mes"])
+
+    if filtros["cliente"]:
+        query = query.filter(DashboardOperacionalImportado.cliente == filtros["cliente"])
+
+    if filtros["cidade"]:
+        query = query.filter(DashboardOperacionalImportado.cidade_uf == filtros["cidade"])
+
+    if filtros["frota"]:
+        query = query.filter(DashboardOperacionalImportado.frota_tratada == filtros["frota"])
+
+    if filtros["veiculo"]:
+        query = query.filter(DashboardOperacionalImportado.veiculo == filtros["veiculo"])
+
+    if filtros["servico"]:
+        query = query.filter(DashboardOperacionalImportado.tipo_servico == filtros["servico"])
+
+    if filtros["situacao"]:
+        query = query.filter(DashboardOperacionalImportado.situacao == filtros["situacao"])
+
+    registros = query.all()
+    todos_registros = DashboardOperacionalImportado.query.all()
+
+    def distinct_coluna(coluna):
+        return [
+            item[0] for item in db.session.query(coluna)
+            .filter(coluna.isnot(None))
+            .filter(coluna != "NÃO INFORMADO")
+            .distinct()
+            .order_by(coluna)
+            .all()
+        ]
+
+    anos_disponiveis = [
+        item[0] for item in db.session.query(DashboardOperacionalImportado.ano)
+        .filter(DashboardOperacionalImportado.ano.isnot(None))
+        .distinct()
+        .order_by(DashboardOperacionalImportado.ano)
+        .all()
+    ]
+
+    meses_disponiveis = [
+        {"numero": 1, "nome": "Janeiro"},
+        {"numero": 2, "nome": "Fevereiro"},
+        {"numero": 3, "nome": "Março"},
+        {"numero": 4, "nome": "Abril"},
+        {"numero": 5, "nome": "Maio"},
+        {"numero": 6, "nome": "Junho"},
+        {"numero": 7, "nome": "Julho"},
+        {"numero": 8, "nome": "Agosto"},
+        {"numero": 9, "nome": "Setembro"},
+        {"numero": 10, "nome": "Outubro"},
+        {"numero": 11, "nome": "Novembro"},
+        {"numero": 12, "nome": "Dezembro"},
+    ]
+
+    clientes_disponiveis = distinct_coluna(DashboardOperacionalImportado.cliente)
+    cidades_disponiveis = distinct_coluna(DashboardOperacionalImportado.cidade_uf)
+    frotas_disponiveis = distinct_coluna(DashboardOperacionalImportado.frota_tratada)
+    veiculos_disponiveis = distinct_coluna(DashboardOperacionalImportado.veiculo)
+    servicos_disponiveis = distinct_coluna(DashboardOperacionalImportado.tipo_servico)
+    situacoes_disponiveis = distinct_coluna(DashboardOperacionalImportado.situacao)
+
+    total_os = len(registros)
+    clientes = len(set(r.cliente for r in registros if r.cliente and r.cliente != "NÃO INFORMADO"))
+    frotas = len(set(r.frota_tratada for r in registros if r.frota_tratada and r.frota_tratada != "NÃO INFORMADO"))
+    cidades = len(set(r.cidade_uf for r in registros if r.cidade_uf and r.cidade_uf != "NÃO INFORMADO"))
+    veiculos = len(set(r.veiculo for r in registros if r.veiculo and r.veiculo != "NÃO INFORMADO"))
+
+    anos_para_mensal = []
+    if filtros["ano"]:
+        anos_para_mensal = [filtros["ano"]]
+    elif anos_disponiveis:
+        anos_para_mensal = anos_disponiveis[-2:]
+
+    total_base = DashboardOperacionalImportado.query.count()
+
+    return render_template(
+        "gestao/dashboard_operacional.html",
+        filtros=filtros,
+        ano=filtros["ano"],
+        mes=filtros["mes"],
+        cliente=filtros["cliente"],
+
+        anos_disponiveis=anos_disponiveis,
+        meses_disponiveis=meses_disponiveis,
+        clientes_disponiveis=clientes_disponiveis,
+        cidades_disponiveis=cidades_disponiveis,
+        frotas_disponiveis=frotas_disponiveis,
+        veiculos_disponiveis=veiculos_disponiveis,
+        servicos_disponiveis=servicos_disponiveis,
+        situacoes_disponiveis=situacoes_disponiveis,
+
+        total_os=total_os,
+        clientes=clientes,
+        frotas=frotas,
+        cidades=cidades,
+        veiculos=veiculos,
+        total_base=total_base,
+
+        top_clientes=op_counter_top(registros, "cliente", 8),
+        top_cidades=op_counter_top(registros, "cidade_uf", 8),
+        top_frotas=op_counter_top(registros, "frota_tratada", 8),
+        top_veiculos=op_counter_top(registros, "veiculo", 8),
+        top_servicos=op_counter_top(registros, "tipo_servico", 8, ignorar_nao_informado=False),
+        top_situacoes=op_counter_top(registros, "situacao", 8, ignorar_nao_informado=False),
+
+        # Agora os gráficos também respeitam os filtros atuais.
+        grafico_anual=op_series_anual(registros),
+        grafico_mensal=op_series_mensal_comparativa(registros, anos_para_mensal),
+    )
+
+
+@gestao_bp.route("/api/dashboard-operacional-detalhes", methods=["GET"])
+@gestao_required
+def api_dashboard_operacional_detalhes():
+    filtros = {
+        "ano": request.args.get("ano", type=int),
+        "mes": request.args.get("mes", type=int),
+        "cliente": request.args.get("cliente", "").strip(),
+        "cidade": request.args.get("cidade", "").strip(),
+        "frota": request.args.get("frota", "").strip(),
+        "veiculo": request.args.get("veiculo", "").strip(),
+        "servico": request.args.get("servico", "").strip(),
+        "situacao": request.args.get("situacao", "").strip(),
+    }
+
+    query = DashboardOperacionalImportado.query
+
+    if filtros["ano"]:
+        query = query.filter(DashboardOperacionalImportado.ano == filtros["ano"])
+    if filtros["mes"]:
+        query = query.filter(DashboardOperacionalImportado.mes == filtros["mes"])
+    if filtros["cliente"]:
+        query = query.filter(DashboardOperacionalImportado.cliente == filtros["cliente"])
+    if filtros["cidade"]:
+        query = query.filter(DashboardOperacionalImportado.cidade_uf == filtros["cidade"])
+    if filtros["frota"]:
+        query = query.filter(DashboardOperacionalImportado.frota_tratada == filtros["frota"])
+    if filtros["veiculo"]:
+        query = query.filter(DashboardOperacionalImportado.veiculo == filtros["veiculo"])
+    if filtros["servico"]:
+        query = query.filter(DashboardOperacionalImportado.tipo_servico == filtros["servico"])
+    if filtros["situacao"]:
+        query = query.filter(DashboardOperacionalImportado.situacao == filtros["situacao"])
+
+    registros = query.order_by(
+        DashboardOperacionalImportado.entrada.desc().nullslast(),
+        DashboardOperacionalImportado.id.desc()
+    ).limit(500).all()
+
+    def data_fmt(valor):
+        if not valor:
+            return "-"
+        return valor.strftime("%d/%m/%Y")
+
+    itens = []
+
+    for r in registros:
+        itens.append({
+            "cliente": r.cliente or "-",
+            "cidade": r.cidade_uf or "-",
+            "entrada": data_fmt(r.entrada),
+            "saida": data_fmt(r.saida),
+            "situacao": r.situacao or "-",
+            "veiculo": r.veiculo or "-",
+            "frota": r.frota_tratada or "-",
+            "servico": r.tipo_servico or "-",
+            "defeito": r.defeito or "-",
+        })
+
+    return jsonify({
+        "ok": True,
+        "total": query.count(),
+        "itens": itens,
+    })
+
+
+
+
+@gestao_bp.route("/dashboard-operacional/importar", methods=["POST"])
+@gestao_required
+def dashboard_operacional_importar():
+    arquivo = request.files.get("arquivo")
+
+    if not arquivo or not arquivo.filename:
+        flash("Selecione um arquivo Excel para importar.", "error")
+        return redirect("/gestao/dashboard-operacional")
+
+    substituir = request.form.get("substituir") == "1"
+
+    try:
+        registros = op_processar_excel_dashboard(arquivo)
+
+        if substituir:
+            DashboardOperacionalImportado.query.delete()
+            db.session.commit()
+
+        if registros:
+            db.session.bulk_save_objects(registros)
+            db.session.commit()
+
+        flash(f"Dashboard operacional importado com sucesso. {len(registros)} registro(s) processado(s).", "success")
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao importar arquivo: {str(e)}", "error")
+
+    return redirect("/gestao/dashboard-operacional")
+
+
+@gestao_bp.route("/dashboard-operacional/limpar", methods=["POST"])
+@gestao_required
+def dashboard_operacional_limpar():
+    try:
+        DashboardOperacionalImportado.query.delete()
+        db.session.commit()
+        flash("Base do Dashboard Operacional foi limpa com sucesso.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao limpar base: {str(e)}", "error")
+
+    return redirect("/gestao/dashboard-operacional")

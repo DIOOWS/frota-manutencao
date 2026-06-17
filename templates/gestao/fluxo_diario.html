@@ -66,17 +66,17 @@
 
       <div class="fluxo-resumo-card receita">
         <span>Receitas do mês</span>
-        <strong>{{ moeda(total_receitas_mes) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(total_receitas_mes) }}</strong>
       </div>
 
       <div class="fluxo-resumo-card despesa">
         <span>Despesas do mês</span>
-        <strong>{{ moeda(total_despesas_mes) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(total_despesas_mes) }}</strong>
       </div>
 
       <div class="fluxo-resumo-card saldo">
         <span>Saldo do mês</span>
-        <strong>{{ moeda(saldo_mes) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(saldo_mes) }}</strong>
       </div>
 
     </div>
@@ -89,17 +89,17 @@
 
       <div class="fluxo-resumo-card receita">
         <span>Receitas acumuladas no ano</span>
-        <strong>{{ moeda(total_receitas_ano) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(total_receitas_ano) }}</strong>
       </div>
 
       <div class="fluxo-resumo-card despesa">
         <span>Despesas acumuladas no ano</span>
-        <strong>{{ moeda(total_despesas_ano) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(total_despesas_ano) }}</strong>
       </div>
 
       <div class="fluxo-resumo-card saldo">
         <span>Saldo acumulado no ano</span>
-        <strong>{{ moeda(saldo_ano) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(saldo_ano) }}</strong>
       </div>
 
     </div>
@@ -139,19 +139,19 @@
               {{ linha.dia }}
             </td>
 
-            <td class="fluxo-valor fluxo-despesa">
+            <td class="fluxo-valor valor-financeiro fluxo-despesa">
               {{ moeda(linha.despesas) }}
             </td>
 
-            <td class="fluxo-valor fluxo-receita">
+            <td class="fluxo-valor valor-financeiro fluxo-receita">
               {{ moeda(linha.receitas) }}
             </td>
 
-            <td class="fluxo-valor {% if linha.saldo < 0 %}fluxo-negativo{% else %}fluxo-positivo{% endif %}">
+            <td class="fluxo-valor valor-financeiro {% if linha.saldo < 0 %}fluxo-negativo{% else %}fluxo-positivo{% endif %}">
               {{ moeda(linha.saldo) }}
             </td>
 
-            <td class="fluxo-valor {% if linha.acumulado < 0 %}fluxo-negativo{% else %}fluxo-positivo{% endif %}">
+            <td class="fluxo-valor valor-financeiro {% if linha.acumulado < 0 %}fluxo-negativo{% else %}fluxo-positivo{% endif %}">
               {{ moeda(linha.acumulado) }}
             </td>
 
@@ -171,34 +171,34 @@
 
       <div class="fluxo-footer-item receita">
         <span>Receitas Ano</span>
-        <strong>{{ moeda(total_receitas_ano) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(total_receitas_ano) }}</strong>
       </div>
 
       <div class="fluxo-footer-item despesa">
         <span>Despesas Ano</span>
-        <strong>{{ moeda(total_despesas_ano) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(total_despesas_ano) }}</strong>
       </div>
 
       <div class="fluxo-footer-item saldo">
         <span>Saldo Ano</span>
-        <strong>{{ moeda(saldo_ano) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(saldo_ano) }}</strong>
       </div>
 
     {% else %}
 
       <div class="fluxo-footer-item receita">
         <span>Receitas</span>
-        <strong>{{ moeda(total_receitas_mes) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(total_receitas_mes) }}</strong>
       </div>
 
       <div class="fluxo-footer-item despesa">
         <span>Despesas</span>
-        <strong>{{ moeda(total_despesas_mes) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(total_despesas_mes) }}</strong>
       </div>
 
       <div class="fluxo-footer-item saldo">
         <span>Saldo</span>
-        <strong>{{ moeda(saldo_mes) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(saldo_mes) }}</strong>
       </div>
 
     {% endif %}

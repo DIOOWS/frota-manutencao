@@ -47,35 +47,35 @@
       <button type="button" class="dash-card-limpo neutral">
         <i class="dash-kpi-icon dash-icon-saldo">↓</i>
         <span>Saldo inicial</span>
-        <strong>{{ moeda(saldo_inicial) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(saldo_inicial) }}</strong>
         <small>Base inicial da competência</small>
       </button>
 
       <button type="button" class="dash-card-limpo success dashboard-clickable-kpi" data-dashboard-kpi="entradas">
         <i class="dash-kpi-icon dash-icon-recebido">↑</i>
         <span>Recebido no mês</span>
-        <strong>{{ moeda(total_entradas) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(total_entradas) }}</strong>
         <small>Clique para ver detalhes</small>
       </button>
 
       <button type="button" class="dash-card-limpo danger dashboard-clickable-kpi" data-dashboard-kpi="saidas">
         <i class="dash-kpi-icon dash-icon-pago">↓</i>
         <span>Pago no mês</span>
-        <strong>{{ moeda(total_saidas) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(total_saidas) }}</strong>
         <small>Clique para ver detalhes</small>
       </button>
 
       <button type="button" class="dash-card-limpo purple">
         <i class="dash-kpi-icon dash-icon-resultado">▣</i>
         <span>Restituído no mês</span>
-        <strong>{{ moeda(lucro_mes) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(lucro_mes) }}</strong>
         <small>Transfer. + Pago</small>
       </button>
 
       <button type="button" class="dash-card-limpo cyan">
         <i class="dash-kpi-icon dash-icon-atual">✓</i>
         <span>Saldo final</span>
-        <strong>{{ moeda(saldo_final) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(saldo_final) }}</strong>
         <small>Saldo inicial + resultado</small>
       </button>
 
@@ -100,19 +100,19 @@
     <div class="dash-prioridade-grid">
       <button type="button" class="dash-card-principal danger dashboard-clickable-kpi" data-dashboard-kpi="obrigacoes_total">
         <span>Total a pagar (competência)</span>
-        <strong>{{ moeda(total_pagar_mes) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(total_pagar_mes) }}</strong>
         <small>{{ qtd_pagar_mes }} conta(s) com vencimento neste mês</small>
       </button>
 
       <button type="button" class="dash-card-principal {{ saldo_pagar_classe }}">
         <span>Saldo disponível do mês</span>
-        <strong>{{ moeda(saldo_pos_pagar_mes) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(saldo_pos_pagar_mes) }}</strong>
         <small>Saldo atual • o que posso pagar do mês.</small>
       </button>
 
       <button type="button" class="dash-card-principal {{ saldo_cenario_classe }}">
         <span>Caixa projetado</span>
-        <strong>{{ moeda(saldo_pos_cenario) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(saldo_pos_cenario) }}</strong>
         <small>Caixa livre projetado • pagar x receber</small>
       </button>
     </div>
@@ -120,31 +120,31 @@
     <div class="dash-obrigacoes-grid-limpo">
       <button type="button" class="dash-mini-obrigacao red dashboard-clickable-kpi" data-dashboard-kpi="obrigacoes_atrasadas">
         <span>Atrasadas do mês</span>
-        <strong>{{ moeda(obrigacoes_dashboard.atrasadas if obrigacoes_dashboard else 0) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(obrigacoes_dashboard.atrasadas if obrigacoes_dashboard else 0) }}</strong>
         <small>{{ obrigacoes_dashboard.atrasadas_qtd if obrigacoes_dashboard else 0 }} conta(s)</small>
       </button>
 
       <button type="button" class="dash-mini-obrigacao orange dashboard-clickable-kpi" data-dashboard-kpi="obrigacoes_hoje">
         <span>Vence hoje</span>
-        <strong>{{ moeda(obrigacoes_dashboard.vence_hoje if obrigacoes_dashboard else 0) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(obrigacoes_dashboard.vence_hoje if obrigacoes_dashboard else 0) }}</strong>
         <small>{{ obrigacoes_dashboard.vence_hoje_qtd if obrigacoes_dashboard else 0 }} conta(s)</small>
       </button>
 
       <button type="button" class="dash-mini-obrigacao purple dashboard-clickable-kpi" data-dashboard-kpi="obrigacoes_proximos_7">
         <span>Próximos 7 dias</span>
-        <strong>{{ moeda(obrigacoes_dashboard.proximos_7 if obrigacoes_dashboard else 0) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(obrigacoes_dashboard.proximos_7 if obrigacoes_dashboard else 0) }}</strong>
         <small>{{ obrigacoes_dashboard.proximos_7_qtd if obrigacoes_dashboard else 0 }} conta(s)</small>
       </button>
 
       <button type="button" class="dash-mini-obrigacao blue dashboard-clickable-kpi" data-dashboard-kpi="obrigacoes_ate_fim_mes">
         <span>Até fim do mês</span>
-        <strong>{{ moeda(obrigacoes_dashboard.ate_fim_mes if obrigacoes_dashboard else 0) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(obrigacoes_dashboard.ate_fim_mes if obrigacoes_dashboard else 0) }}</strong>
         <small>{{ obrigacoes_dashboard.ate_fim_mes_qtd if obrigacoes_dashboard else 0 }} conta(s)</small>
       </button>
 
       <button type="button" class="dash-mini-obrigacao success dashboard-clickable-kpi" data-dashboard-kpi="a_receber">
         <span>A receber</span>
-        <strong>{{ moeda(total_a_receber) }}</strong>
+        <strong class="valor-financeiro">{{ moeda(total_a_receber) }}</strong>
         <small>Recebíveis em aberto</small>
       </button>
     </div>

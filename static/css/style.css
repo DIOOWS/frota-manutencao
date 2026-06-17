@@ -27485,3 +27485,4843 @@ body:has(.dashboard-limpo-page) .sidinho-widget {
     width: 100%;
   }
 }
+
+
+/* =========================================================
+   EASY CONTROL - OCULTAR / MOSTRAR VALORES FINANCEIROS
+========================================================= */
+.easy-user-menu {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.easy-hide-values-toggle {
+  height: 38px;
+  border: 1px solid rgba(30, 64, 175, 0.18);
+  background: linear-gradient(135deg, #0f172a, #1d4ed8);
+  color: #ffffff;
+  padding: 0 13px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
+  transition: 0.2s ease;
+  white-space: nowrap;
+}
+
+.easy-hide-values-toggle:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.easy-hide-values-toggle[aria-pressed="true"] {
+  background: linear-gradient(135deg, #334155, #0f172a);
+}
+
+.valor-financeiro {
+  position: relative;
+}
+
+.valor-financeiro.valor-financeiro-oculto {
+  color: transparent !important;
+  text-shadow: none !important;
+  user-select: none;
+}
+
+.valor-financeiro.valor-financeiro-oculto * {
+  color: transparent !important;
+  text-shadow: none !important;
+}
+
+.valor-financeiro.valor-financeiro-oculto::after {
+  content: attr(data-valor-mascara);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: inherit;
+  color: currentColor;
+  -webkit-text-fill-color: #64748b;
+  text-shadow: none;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+td.valor-financeiro.valor-financeiro-oculto::after,
+th.valor-financeiro.valor-financeiro-oculto::after {
+  justify-content: flex-end;
+  padding-right: inherit;
+}
+
+strong.valor-financeiro.valor-financeiro-oculto::after {
+  font-weight: inherit;
+}
+
+@media (max-width: 768px) {
+  .easy-hide-values-toggle {
+    height: 34px;
+    padding: 0 10px;
+    font-size: 0;
+    border-radius: 50%;
+    width: 34px;
+  }
+
+
+
+
+  .easy-hide-values-toggle{
+  border: none;
+  background: #0f172a;
+  color: #fff;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.easy-hide-values-toggle:hover{
+  filter: brightness(1.08);
+}
+
+.easy-valores-ocultos .valor-financeiro{
+  filter: blur(6px);
+  user-select: none;
+}
+
+  .easy-hide-values-toggle i {
+    font-size: 15px;
+  }
+
+  .easy-hide-values-toggle span {
+    display: none;
+  }
+}
+
+.easy-hide-values-toggle{
+  border: none;
+  background: #0f172a;
+  color: #fff;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.easy-hide-values-toggle:hover{
+  filter: brightness(1.08);
+}
+
+body.easy-valores-ocultos .valor-financeiro{
+  color: transparent !important;
+  text-shadow: 0 0 8px rgba(15, 23, 42, 0.75) !important;
+  user-select: none !important;
+}
+
+
+
+/* =========================================================
+   DASHBOARD OPERACIONAL IMPORTADO - EASY CONTROL
+   Visual tipo Power BI, sem financeiro, azul forte.
+========================================================= */
+
+.opdash-page {
+  --op-blue-dark: #001f5b;
+  --op-blue: #0033a0;
+  --op-blue-light: #0b4fd9;
+  --op-bg: #f4f7fb;
+  --op-card: #ffffff;
+  --op-text: #111827;
+  --op-muted: #64748b;
+  --op-border: #d6dde8;
+
+  min-height: calc(100vh - 90px);
+  background: var(--op-bg);
+  color: var(--op-text);
+}
+
+.opdash-hero {
+  background: linear-gradient(135deg, var(--op-blue-dark), var(--op-blue));
+  color: #fff;
+  border-radius: 22px;
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  box-shadow: 0 16px 35px rgba(0, 31, 91, .22);
+}
+
+.opdash-eyebrow {
+  display: inline-flex;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.14);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: 10px;
+}
+
+.opdash-hero h1 {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: -.03em;
+}
+
+.opdash-hero p {
+  margin: 6px 0 0;
+  color: rgba(255,255,255,.82);
+  font-size: 14px;
+}
+
+.opdash-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.opdash-import-form {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: 620px;
+}
+
+.opdash-import-form input[type="file"] {
+  background: #fff;
+  color: var(--op-text);
+  border-radius: 12px;
+  padding: 9px;
+  border: 0;
+  font-size: 13px;
+}
+
+.opdash-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(255,255,255,.12);
+  padding: 9px 10px;
+  border-radius: 12px;
+}
+
+.opdash-btn {
+  border: 0;
+  text-decoration: none;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 12px;
+  font-weight: 900;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: .18s ease;
+  cursor: pointer;
+}
+
+.opdash-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+}
+
+.opdash-btn.primary {
+  background: var(--op-blue-light);
+  color: #fff;
+}
+
+.opdash-btn.danger {
+  background: #111827;
+  color: #fff;
+}
+
+.opdash-btn.ghost {
+  background: #e8eef8;
+  color: var(--op-blue-dark);
+}
+
+.opdash-filter-card {
+  margin-top: 16px;
+  background: #fff;
+  border: 1px solid var(--op-border);
+  border-radius: 18px;
+  padding: 14px;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, .05);
+}
+
+.opdash-filter {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.opdash-filter label {
+  display: block;
+  font-size: 11px;
+  color: var(--op-muted);
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.opdash-filter select {
+  height: 40px;
+  min-width: 180px;
+  border: 1px solid var(--op-border);
+  border-radius: 12px;
+  padding: 0 10px;
+  font-weight: 700;
+  color: var(--op-text);
+  background: #fff;
+}
+
+.opdash-base-info {
+  color: var(--op-muted);
+  font-size: 13px;
+}
+
+.opdash-base-info strong {
+  color: var(--op-blue-dark);
+}
+
+.opdash-kpis {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.opdash-kpi {
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--op-border);
+  border-radius: 18px;
+  padding: 16px 16px 14px;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, .05);
+}
+
+.opdash-kpi::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 6px;
+  background: var(--op-blue);
+}
+
+.opdash-kpi span {
+  display: block;
+  color: var(--op-muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.opdash-kpi strong {
+  display: block;
+  margin-top: 6px;
+  color: var(--op-blue-dark);
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: -.05em;
+}
+
+.opdash-kpi small {
+  display: block;
+  margin-top: 8px;
+  color: var(--op-muted);
+  font-size: 12px;
+}
+
+.opdash-grid-main {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.opdash-grid-lists {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.opdash-card {
+  background: #fff;
+  border: 1px solid var(--op-border);
+  border-radius: 18px;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, .05);
+  overflow: hidden;
+}
+
+.opdash-card.span-5 {
+  grid-column: span 5;
+}
+
+.opdash-card.span-7 {
+  grid-column: span 7;
+}
+
+.opdash-card-head {
+  background: var(--op-blue-dark);
+  color: #fff;
+  padding: 12px 14px;
+}
+
+.opdash-card-head h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+}
+
+.opdash-card-head small {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: rgba(255,255,255,.75);
+}
+
+.opdash-chart-box {
+  position: relative;
+  padding: 14px;
+  height: 300px;
+}
+
+.opdash-chart-box.big {
+  height: 330px;
+}
+
+.opdash-ranking {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.opdash-rank-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  background: #f7faff;
+  border: 1px solid #e1e8f5;
+  border-left: 5px solid var(--op-blue);
+  border-radius: 12px;
+  padding: 10px 11px;
+  min-height: 42px;
+}
+
+.opdash-rank-row span {
+  color: var(--op-text);
+  font-size: 12px;
+  font-weight: 800;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.opdash-rank-row strong {
+  background: var(--op-blue-dark);
+  color: #fff;
+  border-radius: 10px;
+  min-width: 42px;
+  text-align: center;
+  padding: 5px 8px;
+  font-size: 12px;
+}
+
+.opdash-empty {
+  color: var(--op-muted);
+  padding: 12px;
+  font-weight: 700;
+}
+
+@media (max-width: 1100px) {
+  .opdash-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .opdash-card.span-5,
+  .opdash-card.span-7 {
+    grid-column: span 12;
+  }
+
+  .opdash-grid-lists {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .opdash-hero,
+  .opdash-filter-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .opdash-actions {
+    align-items: stretch;
+  }
+
+  .opdash-import-form {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 700px) {
+  .opdash-kpis,
+  .opdash-grid-lists {
+    grid-template-columns: 1fr;
+  }
+
+  .opdash-filter select {
+    width: 100%;
+  }
+
+  .opdash-filter > div,
+  .opdash-filter .opdash-btn {
+    width: 100%;
+  }
+}
+
+@media print {
+  .easy-navbar,
+  .sidinho-widget,
+  .opdash-actions,
+  .opdash-filter-card {
+    display: none !important;
+  }
+
+  .content-top {
+    padding: 0 !important;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  .opdash-page {
+    background: #fff !important;
+  }
+
+  .opdash-hero,
+  .opdash-card-head {
+    background: #001f5b !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .opdash-kpi::before,
+  .opdash-rank-row strong {
+    background: #0033a0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+
+/* =========================================================
+   DASHBOARD OPERACIONAL V3 - LAYOUT IGUAL REFERÊNCIA
+   Painel visual tipo Power BI para Easy Control
+========================================================= */
+
+.content-top:has(.opbi-page) {
+  padding: 0 !important;
+}
+
+.opbi-page {
+  --navy: #001f5b;
+  --navy-2: #000f35;
+  --blue: #0033a0;
+  --blue-2: #0b4fd9;
+  --border: #0b2460;
+  --line: #cfd7e6;
+  --text: #07143a;
+  --muted: #4b5563;
+  --bg: #ffffff;
+
+  background: #fff;
+  color: var(--text);
+  width: 100%;
+  min-height: calc(100vh - 78px);
+  padding: 12px 14px 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+/* ================= HEADER ================= */
+
+.opbi-header {
+  height: 104px;
+  display: grid;
+  grid-template-columns: 245px 1fr 270px;
+  align-items: center;
+  gap: 12px;
+  border-top: 4px solid var(--navy);
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  padding: 4px 12px 8px;
+}
+
+.opbi-logo-box {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.opbi-logo {
+  width: 215px;
+  max-height: 92px;
+  object-fit: contain;
+}
+
+.opbi-title-box {
+  text-align: center;
+}
+
+.opbi-title-box h1 {
+  margin: 0;
+  color: var(--navy-2);
+  font-size: clamp(38px, 4vw, 62px);
+  line-height: .9;
+  font-weight: 950;
+  letter-spacing: -.045em;
+  text-transform: uppercase;
+}
+
+.opbi-title-line {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.opbi-title-line span {
+  display: block;
+  height: 2px;
+  width: 150px;
+  background: var(--navy);
+}
+
+.opbi-title-line h2 {
+  margin: 0;
+  color: var(--navy);
+  font-size: clamp(17px, 1.8vw, 28px);
+  font-weight: 650;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+
+.opbi-date-card {
+  justify-self: end;
+  width: 250px;
+  height: 76px;
+  background: linear-gradient(135deg, var(--navy-2), var(--navy));
+  color: #fff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+}
+
+.opbi-date-card i {
+  font-size: 33px;
+}
+
+.opbi-date-card small {
+  display: block;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.opbi-date-card strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 22px;
+  font-weight: 950;
+}
+
+/* ================= TOOLBAR ================= */
+
+.opbi-toolbar {
+  background: var(--navy);
+  color: #fff;
+  border-radius: 8px;
+  margin: 5px 0 8px;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.opbi-import,
+.opbi-filter {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.opbi-toolbar input[type="file"],
+.opbi-toolbar select {
+  height: 31px;
+  border: 1px solid #dbeafe;
+  border-radius: 6px;
+  background: #fff;
+  color: #111827;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0 8px;
+}
+
+.opbi-toolbar label {
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.opbi-toolbar button,
+.opbi-toolbar a {
+  height: 31px;
+  border: 0;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--navy);
+  font-size: 11px;
+  font-weight: 950;
+  padding: 0 12px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.opbi-toolbar .opbi-clean {
+  background: #020617;
+  color: #fff;
+}
+
+/* ================= KPI ================= */
+
+.opbi-kpi-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1.15fr 1.25fr 1.2fr 1.2fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.opbi-kpi-card,
+.opbi-period-card {
+  height: 116px;
+  border: 1.7px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  padding: 12px 18px;
+  gap: 16px;
+  box-shadow: 0 2px 7px rgba(0,0,0,.05);
+}
+
+.opbi-kpi-icon {
+  width: 70px;
+  height: 70px;
+  min-width: 70px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--navy-2), var(--blue));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.opbi-kpi-icon i {
+  font-size: 35px;
+}
+
+.opbi-kpi-card span,
+.opbi-period-card span {
+  display: block;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 950;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.opbi-kpi-card strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--navy);
+  font-size: 42px;
+  line-height: .95;
+  font-weight: 950;
+  letter-spacing: -.05em;
+}
+
+.opbi-kpi-card small,
+.opbi-period-card small {
+  display: block;
+  margin-top: 8px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.opbi-period-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, var(--navy-2), var(--navy));
+  color: #fff;
+  border-color: var(--navy);
+}
+
+.opbi-period-card span,
+.opbi-period-card small {
+  color: #fff;
+}
+
+.opbi-period-card strong {
+  color: #fff;
+  font-size: 30px;
+  font-weight: 950;
+}
+
+/* ================= PANELS ================= */
+
+.opbi-main-grid {
+  display: grid;
+  grid-template-columns: 40% 60%;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.opbi-panel,
+.opbi-rank-card,
+.opbi-donut-card,
+.opbi-map-card {
+  background: #fff;
+  border: 1.7px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 7px rgba(0,0,0,.04);
+}
+
+.opbi-panel-title,
+.opbi-small-title {
+  height: 34px;
+  background: var(--navy);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 950;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  text-transform: uppercase;
+  position: relative;
+}
+
+.opbi-panel-title::after,
+.opbi-small-title::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  bottom: 0;
+  border-left: 30px solid transparent;
+  border-bottom: 34px solid #fff;
+}
+
+.opbi-annual,
+.opbi-monthly {
+  height: 282px;
+}
+
+.opbi-annual-content,
+.opbi-monthly-content {
+  display: grid;
+  grid-template-columns: 1fr 125px;
+  height: calc(100% - 34px);
+}
+
+.opbi-chart-wrap {
+  position: relative;
+  height: 100%;
+  padding: 15px 18px 10px;
+}
+
+.opbi-growth-box,
+.opbi-performance-box {
+  border-left: 1.5px solid var(--line);
+  padding: 14px 10px;
+  text-align: center;
+}
+
+.opbi-growth-box h4,
+.opbi-performance-box h4 {
+  margin: 0 0 10px;
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.opbi-growth-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.opbi-growth-item {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 6px 5px;
+  background: #fff;
+}
+
+.opbi-growth-item span {
+  display: block;
+  color: var(--navy);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.opbi-growth-item strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.opbi-growth-item.positive strong {
+  color: #15803d;
+}
+
+.opbi-growth-item.negative strong {
+  color: #d97706;
+}
+
+.opbi-growth-item.neutral strong {
+  color: #64748b;
+}
+
+.opbi-performance-box strong {
+  display: block;
+  font-size: 30px;
+  color: var(--navy);
+  font-weight: 950;
+  line-height: 1;
+}
+
+.opbi-performance-box span {
+  display: block;
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.opbi-performance-box hr {
+  margin: 9px 0;
+  border-color: var(--line);
+  opacity: 1;
+}
+
+.opbi-performance-box em {
+  display: block;
+  color: #4b5563;
+  font-size: 23px;
+  font-weight: 950;
+  font-style: normal;
+}
+
+.opbi-performance-box small {
+  display: block;
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+/* ================= RANK GRID ================= */
+
+.opbi-rank-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.opbi-rank-card {
+  height: 225px;
+  padding: 0;
+}
+
+.opbi-rank-head {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  padding: 10px 12px 5px;
+}
+
+.opbi-rank-head i {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, var(--navy-2), var(--blue));
+  border-radius: 50%;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.opbi-rank-head h3 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.opbi-rank-head small {
+  display: block;
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.opbi-bar-list {
+  padding: 1px 13px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.opbi-bar-row {
+  display: grid;
+  grid-template-columns: 96px 1fr 30px;
+  align-items: center;
+  gap: 8px;
+  min-height: 19px;
+}
+
+.opbi-bar-row span {
+  color: var(--text);
+  font-size: 10.5px;
+  font-weight: 950;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.opbi-bar-track {
+  height: 8px;
+  background: #edf2fa;
+  position: relative;
+}
+
+.opbi-bar-track div {
+  height: 100%;
+  background: linear-gradient(90deg, var(--navy), var(--blue));
+  min-width: 3px;
+}
+
+.opbi-bar-row strong {
+  color: var(--navy);
+  font-size: 11px;
+  font-weight: 950;
+  text-align: right;
+}
+
+.opbi-empty {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 10px;
+}
+
+/* ================= BOTTOM ================= */
+
+.opbi-bottom-grid {
+  display: grid;
+  grid-template-columns: 28% 40% 32%;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.opbi-donut-card,
+.opbi-map-card {
+  height: 218px;
+}
+
+.opbi-donut-content {
+  height: calc(100% - 34px);
+  display: grid;
+  grid-template-columns: 45% 55%;
+  align-items: center;
+}
+
+.opbi-donut-chart {
+  position: relative;
+  height: 158px;
+  padding: 10px 0 8px 12px;
+}
+
+.opbi-legend-list {
+  padding: 8px 12px 8px 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.opbi-legend-list div {
+  display: grid;
+  grid-template-columns: 12px 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.opbi-legend-list span {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--navy);
+  display: block;
+}
+
+.opbi-legend-list div:nth-child(2) span { background: #3f7d20; }
+.opbi-legend-list div:nth-child(3) span { background: #f59e0b; }
+.opbi-legend-list div:nth-child(4) span { background: #6b7280; }
+.opbi-legend-list div:nth-child(5) span { background: #0b4fd9; }
+
+.opbi-legend-list strong {
+  color: var(--navy);
+  font-size: 11px;
+  font-weight: 950;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.opbi-legend-list em {
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 900;
+  font-style: normal;
+}
+
+.opbi-map-fake {
+  height: calc(100% - 34px);
+  margin: 0;
+  background:
+    radial-gradient(circle at 30% 70%, rgba(0, 51, 160, .12), transparent 10%),
+    radial-gradient(circle at 67% 42%, rgba(0, 51, 160, .10), transparent 12%),
+    linear-gradient(145deg, #f8fafc, #dbeafe);
+  position: relative;
+  overflow: hidden;
+}
+
+.opbi-map-fake::before {
+  content: "";
+  position: absolute;
+  inset: 18px 35px 20px 30px;
+  border: 2px solid rgba(0,31,91,.25);
+  clip-path: polygon(4% 72%, 15% 40%, 30% 55%, 43% 24%, 57% 42%, 72% 20%, 92% 46%, 82% 70%, 65% 60%, 50% 80%, 30% 72%, 15% 86%);
+}
+
+.opbi-map-fake strong {
+  position: absolute;
+  left: 45%;
+  bottom: 30px;
+  transform: translateX(-50%);
+  color: var(--navy);
+  font-size: 20px;
+  font-weight: 950;
+}
+
+.opbi-pin {
+  width: 16px;
+  height: 16px;
+  background: var(--blue);
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 3px 8px rgba(0,0,0,.22);
+  position: absolute;
+}
+
+.opbi-pin.p1 { left: 20%; top: 57%; }
+.opbi-pin.p2 { left: 38%; top: 42%; }
+.opbi-pin.p3 { left: 54%; top: 50%; }
+.opbi-pin.p4 { left: 67%; top: 36%; }
+.opbi-pin.p5 { left: 76%; top: 60%; }
+
+/* ================= FOOTER ================= */
+
+.opbi-footer {
+  height: 58px;
+  background: linear-gradient(135deg, var(--navy-2), var(--navy));
+  color: #fff;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 950;
+  text-transform: uppercase;
+  margin: 0 -14px;
+}
+
+.opbi-footer div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  border-right: 1px solid rgba(255,255,255,.35);
+  height: 100%;
+}
+
+.opbi-footer div:last-child {
+  border-right: 0;
+}
+
+.opbi-footer i {
+  font-size: 28px;
+}
+
+/* ================= RESPONSIVO ================= */
+
+@media (max-width: 1280px) {
+  .opbi-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .opbi-main-grid,
+  .opbi-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .opbi-rank-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .opbi-header {
+    grid-template-columns: 180px 1fr;
+    height: auto;
+  }
+
+  .opbi-date-card {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    width: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  .opbi-header,
+  .opbi-kpi-grid,
+  .opbi-rank-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .opbi-title-box h1 {
+    font-size: 36px;
+  }
+
+  .opbi-title-line span {
+    display: none;
+  }
+
+  .opbi-annual-content,
+  .opbi-monthly-content,
+  .opbi-donut-content {
+    grid-template-columns: 1fr;
+  }
+
+  .opbi-annual,
+  .opbi-monthly {
+    height: 430px;
+  }
+
+  .opbi-growth-box,
+  .opbi-performance-box {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .opbi-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* ================= IMPRESSÃO ================= */
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 5mm;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  .easy-navbar,
+  .sidinho-widget,
+  .no-print {
+    display: none !important;
+  }
+
+  .opbi-page {
+    min-height: auto;
+    padding: 0 !important;
+    transform-origin: top left;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .opbi-header {
+    height: 92px;
+  }
+
+  .opbi-kpi-card,
+  .opbi-period-card {
+    height: 88px;
+  }
+
+  .opbi-kpi-icon {
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+  }
+
+  .opbi-kpi-icon i {
+    font-size: 26px;
+  }
+
+  .opbi-kpi-card strong {
+    font-size: 32px;
+  }
+
+  .opbi-annual,
+  .opbi-monthly {
+    height: 235px;
+  }
+
+  .opbi-rank-card {
+    height: 190px;
+  }
+
+  .opbi-donut-card,
+  .opbi-map-card {
+    height: 180px;
+  }
+
+  .opbi-footer {
+    height: 42px;
+    font-size: 12px;
+  }
+}
+
+
+
+
+/* =========================================================
+   DASHBOARD OPERACIONAL V3 - LAYOUT IGUAL REFERÊNCIA
+   Painel visual tipo Power BI para Easy Control
+========================================================= */
+
+.content-top:has(.opbi-page) {
+  padding: 0 !important;
+}
+
+.opbi-page {
+  --navy: #001f5b;
+  --navy-2: #000f35;
+  --blue: #0033a0;
+  --blue-2: #0b4fd9;
+  --border: #0b2460;
+  --line: #cfd7e6;
+  --text: #07143a;
+  --muted: #4b5563;
+  --bg: #ffffff;
+
+  background: #fff;
+  color: var(--text);
+  width: 100%;
+  min-height: calc(100vh - 78px);
+  padding: 12px 14px 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+/* ================= HEADER ================= */
+
+.opbi-header {
+  height: 104px;
+  display: grid;
+  grid-template-columns: 245px 1fr 270px;
+  align-items: center;
+  gap: 12px;
+  border-top: 4px solid var(--navy);
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  padding: 4px 12px 8px;
+}
+
+.opbi-logo-box {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.opbi-logo {
+  width: 215px;
+  max-height: 92px;
+  object-fit: contain;
+}
+
+.opbi-title-box {
+  text-align: center;
+}
+
+.opbi-title-box h1 {
+  margin: 0;
+  color: var(--navy-2);
+  font-size: clamp(38px, 4vw, 62px);
+  line-height: .9;
+  font-weight: 950;
+  letter-spacing: -.045em;
+  text-transform: uppercase;
+}
+
+.opbi-title-line {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.opbi-title-line span {
+  display: block;
+  height: 2px;
+  width: 150px;
+  background: var(--navy);
+}
+
+.opbi-title-line h2 {
+  margin: 0;
+  color: var(--navy);
+  font-size: clamp(17px, 1.8vw, 28px);
+  font-weight: 650;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+
+.opbi-date-card {
+  justify-self: end;
+  width: 250px;
+  height: 76px;
+  background: linear-gradient(135deg, var(--navy-2), var(--navy));
+  color: #fff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+}
+
+.opbi-date-card i {
+  font-size: 33px;
+}
+
+.opbi-date-card small {
+  display: block;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.opbi-date-card strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 22px;
+  font-weight: 950;
+}
+
+/* ================= TOOLBAR ================= */
+
+.opbi-toolbar {
+  background: var(--navy);
+  color: #fff;
+  border-radius: 8px;
+  margin: 5px 0 8px;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.opbi-import,
+.opbi-filter {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.opbi-toolbar input[type="file"],
+.opbi-toolbar select {
+  height: 31px;
+  border: 1px solid #dbeafe;
+  border-radius: 6px;
+  background: #fff;
+  color: #111827;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0 8px;
+}
+
+.opbi-toolbar label {
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.opbi-toolbar button,
+.opbi-toolbar a {
+  height: 31px;
+  border: 0;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--navy);
+  font-size: 11px;
+  font-weight: 950;
+  padding: 0 12px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.opbi-toolbar .opbi-clean {
+  background: #020617;
+  color: #fff;
+}
+
+/* ================= KPI ================= */
+
+.opbi-kpi-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1.15fr 1.25fr 1.2fr 1.2fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.opbi-kpi-card,
+.opbi-period-card {
+  height: 116px;
+  border: 1.7px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  padding: 12px 18px;
+  gap: 16px;
+  box-shadow: 0 2px 7px rgba(0,0,0,.05);
+}
+
+.opbi-kpi-icon {
+  width: 70px;
+  height: 70px;
+  min-width: 70px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--navy-2), var(--blue));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.opbi-kpi-icon i {
+  font-size: 35px;
+}
+
+.opbi-kpi-card span,
+.opbi-period-card span {
+  display: block;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 950;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.opbi-kpi-card strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--navy);
+  font-size: 42px;
+  line-height: .95;
+  font-weight: 950;
+  letter-spacing: -.05em;
+}
+
+.opbi-kpi-card small,
+.opbi-period-card small {
+  display: block;
+  margin-top: 8px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.opbi-period-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, var(--navy-2), var(--navy));
+  color: #fff;
+  border-color: var(--navy);
+}
+
+.opbi-period-card span,
+.opbi-period-card small {
+  color: #fff;
+}
+
+.opbi-period-card strong {
+  color: #fff;
+  font-size: 30px;
+  font-weight: 950;
+}
+
+/* ================= PANELS ================= */
+
+.opbi-main-grid {
+  display: grid;
+  grid-template-columns: 40% 60%;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.opbi-panel,
+.opbi-rank-card,
+.opbi-donut-card,
+.opbi-map-card {
+  background: #fff;
+  border: 1.7px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 7px rgba(0,0,0,.04);
+}
+
+.opbi-panel-title,
+.opbi-small-title {
+  height: 34px;
+  background: var(--navy);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 950;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  text-transform: uppercase;
+  position: relative;
+}
+
+.opbi-panel-title::after,
+.opbi-small-title::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  bottom: 0;
+  border-left: 30px solid transparent;
+  border-bottom: 34px solid #fff;
+}
+
+.opbi-annual,
+.opbi-monthly {
+  height: 300px;
+}
+
+.opbi-annual-content,
+.opbi-monthly-content {
+  display: grid;
+  grid-template-columns: 1fr 125px;
+  height: calc(100% - 34px);
+}
+
+.opbi-chart-wrap {
+  position: relative;
+  height: 100%;
+  min-height: 230px;
+  padding: 15px 18px 10px;
+}
+
+.opbi-growth-box,
+.opbi-performance-box {
+  border-left: 1.5px solid var(--line);
+  padding: 14px 10px;
+  text-align: center;
+}
+
+.opbi-growth-box h4,
+.opbi-performance-box h4 {
+  margin: 0 0 10px;
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.opbi-growth-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.opbi-growth-item {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 6px 5px;
+  background: #fff;
+}
+
+.opbi-growth-item span {
+  display: block;
+  color: var(--navy);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.opbi-growth-item strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.opbi-growth-item.positive strong {
+  color: #15803d;
+}
+
+.opbi-growth-item.negative strong {
+  color: #d97706;
+}
+
+.opbi-growth-item.neutral strong {
+  color: #64748b;
+}
+
+.opbi-performance-box strong {
+  display: block;
+  font-size: 30px;
+  color: var(--navy);
+  font-weight: 950;
+  line-height: 1;
+}
+
+.opbi-performance-box span {
+  display: block;
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.opbi-performance-box hr {
+  margin: 9px 0;
+  border-color: var(--line);
+  opacity: 1;
+}
+
+.opbi-performance-box em {
+  display: block;
+  color: #4b5563;
+  font-size: 23px;
+  font-weight: 950;
+  font-style: normal;
+}
+
+.opbi-performance-box small {
+  display: block;
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+/* ================= RANK GRID ================= */
+
+.opbi-rank-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.opbi-rank-card {
+  height: 225px;
+  padding: 0;
+}
+
+.opbi-rank-head {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  padding: 10px 12px 5px;
+}
+
+.opbi-rank-head i {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, var(--navy-2), var(--blue));
+  border-radius: 50%;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.opbi-rank-head h3 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.opbi-rank-head small {
+  display: block;
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.opbi-bar-list {
+  padding: 1px 13px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.opbi-bar-row {
+  display: grid;
+  grid-template-columns: 96px 1fr 30px;
+  align-items: center;
+  gap: 8px;
+  min-height: 19px;
+}
+
+.opbi-bar-row span {
+  color: var(--text);
+  font-size: 10.5px;
+  font-weight: 950;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.opbi-bar-track {
+  height: 8px;
+  background: #edf2fa;
+  position: relative;
+}
+
+.opbi-bar-track div {
+  height: 100%;
+  background: linear-gradient(90deg, var(--navy), var(--blue));
+  min-width: 3px;
+}
+
+.opbi-bar-row strong {
+  color: var(--navy);
+  font-size: 11px;
+  font-weight: 950;
+  text-align: right;
+}
+
+.opbi-empty {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 10px;
+}
+
+/* ================= BOTTOM ================= */
+
+.opbi-bottom-grid {
+  display: grid;
+  grid-template-columns: 28% 40% 32%;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.opbi-donut-card,
+.opbi-map-card {
+  height: 218px;
+}
+
+.opbi-donut-content {
+  height: calc(100% - 34px);
+  display: grid;
+  grid-template-columns: 45% 55%;
+  align-items: center;
+}
+
+.opbi-donut-chart {
+  position: relative;
+  height: 158px;
+  padding: 10px 0 8px 12px;
+}
+
+.opbi-legend-list {
+  padding: 8px 12px 8px 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.opbi-legend-list div {
+  display: grid;
+  grid-template-columns: 12px 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.opbi-legend-list span {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--navy);
+  display: block;
+}
+
+.opbi-legend-list div:nth-child(2) span { background: #3f7d20; }
+.opbi-legend-list div:nth-child(3) span { background: #f59e0b; }
+.opbi-legend-list div:nth-child(4) span { background: #6b7280; }
+.opbi-legend-list div:nth-child(5) span { background: #0b4fd9; }
+
+.opbi-legend-list strong {
+  color: var(--navy);
+  font-size: 11px;
+  font-weight: 950;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.opbi-legend-list em {
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 900;
+  font-style: normal;
+}
+
+.opbi-map-fake {
+  height: calc(100% - 34px);
+  margin: 0;
+  background:
+    radial-gradient(circle at 30% 70%, rgba(0, 51, 160, .12), transparent 10%),
+    radial-gradient(circle at 67% 42%, rgba(0, 51, 160, .10), transparent 12%),
+    linear-gradient(145deg, #f8fafc, #dbeafe);
+  position: relative;
+  overflow: hidden;
+}
+
+.opbi-map-fake::before {
+  content: "";
+  position: absolute;
+  inset: 18px 35px 20px 30px;
+  border: 2px solid rgba(0,31,91,.25);
+  clip-path: polygon(4% 72%, 15% 40%, 30% 55%, 43% 24%, 57% 42%, 72% 20%, 92% 46%, 82% 70%, 65% 60%, 50% 80%, 30% 72%, 15% 86%);
+}
+
+.opbi-map-fake strong {
+  position: absolute;
+  left: 45%;
+  bottom: 30px;
+  transform: translateX(-50%);
+  color: var(--navy);
+  font-size: 20px;
+  font-weight: 950;
+}
+
+.opbi-pin {
+  width: 16px;
+  height: 16px;
+  background: var(--blue);
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 3px 8px rgba(0,0,0,.22);
+  position: absolute;
+}
+
+.opbi-pin.p1 { left: 20%; top: 57%; }
+.opbi-pin.p2 { left: 38%; top: 42%; }
+.opbi-pin.p3 { left: 54%; top: 50%; }
+.opbi-pin.p4 { left: 67%; top: 36%; }
+.opbi-pin.p5 { left: 76%; top: 60%; }
+
+/* ================= FOOTER ================= */
+
+.opbi-footer {
+  height: 58px;
+  background: linear-gradient(135deg, var(--navy-2), var(--navy));
+  color: #fff;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 950;
+  text-transform: uppercase;
+  margin: 0 -14px;
+}
+
+.opbi-footer div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  border-right: 1px solid rgba(255,255,255,.35);
+  height: 100%;
+}
+
+.opbi-footer div:last-child {
+  border-right: 0;
+}
+
+.opbi-footer i {
+  font-size: 28px;
+}
+
+/* ================= RESPONSIVO ================= */
+
+@media (max-width: 1280px) {
+  .opbi-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .opbi-main-grid,
+  .opbi-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .opbi-rank-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .opbi-header {
+    grid-template-columns: 180px 1fr;
+    height: auto;
+  }
+
+  .opbi-date-card {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    width: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  .opbi-header,
+  .opbi-kpi-grid,
+  .opbi-rank-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .opbi-title-box h1 {
+    font-size: 36px;
+  }
+
+  .opbi-title-line span {
+    display: none;
+  }
+
+  .opbi-annual-content,
+  .opbi-monthly-content,
+  .opbi-donut-content {
+    grid-template-columns: 1fr;
+  }
+
+  .opbi-annual,
+  .opbi-monthly {
+    height: 430px;
+  }
+
+  .opbi-growth-box,
+  .opbi-performance-box {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .opbi-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* ================= IMPRESSÃO ================= */
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 5mm;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  .easy-navbar,
+  .sidinho-widget,
+  .no-print {
+    display: none !important;
+  }
+
+  .opbi-page {
+    min-height: auto;
+    padding: 0 !important;
+    transform-origin: top left;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .opbi-header {
+    height: 92px;
+  }
+
+  .opbi-kpi-card,
+  .opbi-period-card {
+    height: 88px;
+  }
+
+  .opbi-kpi-icon {
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+  }
+
+  .opbi-kpi-icon i {
+    font-size: 26px;
+  }
+
+  .opbi-kpi-card strong {
+    font-size: 32px;
+  }
+
+  .opbi-annual,
+  .opbi-monthly {
+    height: 235px;
+  }
+
+  .opbi-rank-card {
+    height: 190px;
+  }
+
+  .opbi-donut-card,
+  .opbi-map-card {
+    height: 180px;
+  }
+
+  .opbi-footer {
+    height: 42px;
+    font-size: 12px;
+  }
+}
+
+
+
+
+/* =========================================================
+   DASHBOARD OPERACIONAL V3 - LAYOUT IGUAL REFERÊNCIA
+   Painel visual tipo Power BI para Easy Control
+========================================================= */
+
+.content-top:has(.opbi-page) {
+  padding: 0 !important;
+}
+
+.opbi-page {
+  --navy: #001f5b;
+  --navy-2: #000f35;
+  --blue: #0033a0;
+  --blue-2: #0b4fd9;
+  --border: #0b2460;
+  --line: #cfd7e6;
+  --text: #07143a;
+  --muted: #4b5563;
+  --bg: #ffffff;
+
+  background: #fff;
+  color: var(--text);
+  width: 100%;
+  min-height: calc(100vh - 78px);
+  padding: 12px 14px 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+/* ================= HEADER ================= */
+
+.opbi-header {
+  height: 104px;
+  display: grid;
+  grid-template-columns: 245px 1fr 270px;
+  align-items: center;
+  gap: 12px;
+  border-top: 4px solid var(--navy);
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  padding: 4px 12px 8px;
+}
+
+.opbi-logo-box {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.opbi-logo {
+  width: 215px;
+  max-height: 92px;
+  object-fit: contain;
+}
+
+.opbi-title-box {
+  text-align: center;
+}
+
+.opbi-title-box h1 {
+  margin: 0;
+  color: var(--navy-2);
+  font-size: clamp(38px, 4vw, 62px);
+  line-height: .9;
+  font-weight: 950;
+  letter-spacing: -.045em;
+  text-transform: uppercase;
+}
+
+.opbi-title-line {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.opbi-title-line span {
+  display: block;
+  height: 2px;
+  width: 150px;
+  background: var(--navy);
+}
+
+.opbi-title-line h2 {
+  margin: 0;
+  color: var(--navy);
+  font-size: clamp(17px, 1.8vw, 28px);
+  font-weight: 650;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+
+.opbi-date-card {
+  justify-self: end;
+  width: 250px;
+  height: 76px;
+  background: linear-gradient(135deg, var(--navy-2), var(--navy));
+  color: #fff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+}
+
+.opbi-date-card i {
+  font-size: 33px;
+}
+
+.opbi-date-card small {
+  display: block;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.opbi-date-card strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 22px;
+  font-weight: 950;
+}
+
+/* ================= TOOLBAR ================= */
+
+.opbi-toolbar {
+  background: var(--navy);
+  color: #fff;
+  border-radius: 8px;
+  margin: 5px 0 8px;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.opbi-import,
+
+
+.opbi-toolbar input[type="file"],
+.opbi-toolbar select {
+  height: 31px;
+  border: 1px solid #dbeafe;
+  border-radius: 6px;
+  background: #fff;
+  color: #111827;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0 8px;
+}
+
+.opbi-toolbar label {
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.opbi-toolbar button,
+.opbi-toolbar a {
+  height: 31px;
+  border: 0;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--navy);
+  font-size: 11px;
+  font-weight: 950;
+  padding: 0 12px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.opbi-toolbar .opbi-clean {
+  background: #020617;
+  color: #fff;
+}
+
+/* ================= KPI ================= */
+
+.opbi-kpi-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1.15fr 1.25fr 1.2fr 1.2fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.opbi-kpi-card,
+.opbi-period-card {
+  height: 116px;
+  border: 1.7px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  padding: 12px 18px;
+  gap: 16px;
+  box-shadow: 0 2px 7px rgba(0,0,0,.05);
+}
+
+.opbi-kpi-icon {
+  width: 70px;
+  height: 70px;
+  min-width: 70px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--navy-2), var(--blue));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.opbi-kpi-icon i {
+  font-size: 35px;
+}
+
+.opbi-kpi-card span,
+.opbi-period-card span {
+  display: block;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 950;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.opbi-kpi-card strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--navy);
+  font-size: 42px;
+  line-height: .95;
+  font-weight: 950;
+  letter-spacing: -.05em;
+}
+
+.opbi-kpi-card small,
+.opbi-period-card small {
+  display: block;
+  margin-top: 8px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.opbi-period-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, var(--navy-2), var(--navy));
+  color: #fff;
+  border-color: var(--navy);
+}
+
+.opbi-period-card span,
+.opbi-period-card small {
+  color: #fff;
+}
+
+.opbi-period-card strong {
+  color: #fff;
+  font-size: 30px;
+  font-weight: 950;
+}
+
+/* ================= PANELS ================= */
+
+.opbi-main-grid {
+  display: grid;
+  grid-template-columns: 40% 60%;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.opbi-panel,
+.opbi-rank-card,
+.opbi-donut-card,
+.opbi-map-card {
+  background: #fff;
+  border: 1.7px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 7px rgba(0,0,0,.04);
+}
+
+.opbi-panel-title,
+.opbi-small-title {
+  height: 34px;
+  background: var(--navy);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 950;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  text-transform: uppercase;
+  position: relative;
+}
+
+.opbi-panel-title::after,
+.opbi-small-title::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  bottom: 0;
+  border-left: 30px solid transparent;
+  border-bottom: 34px solid #fff;
+}
+
+.opbi-annual,
+.opbi-monthly {
+  height: 300px;
+}
+
+.opbi-annual-content,
+.opbi-monthly-content {
+  display: grid;
+  grid-template-columns: 1fr 125px;
+  height: calc(100% - 34px);
+}
+
+.opbi-chart-wrap {
+  position: relative;
+  height: 100%;
+  min-height: 230px;
+  padding: 15px 18px 10px;
+}
+
+.opbi-growth-box,
+.opbi-performance-box {
+  border-left: 1.5px solid var(--line);
+  padding: 14px 10px;
+  text-align: center;
+}
+
+.opbi-growth-box h4,
+.opbi-performance-box h4 {
+  margin: 0 0 10px;
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.opbi-growth-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.opbi-growth-item {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 6px 5px;
+  background: #fff;
+}
+
+.opbi-growth-item span {
+  display: block;
+  color: var(--navy);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.opbi-growth-item strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.opbi-growth-item.positive strong {
+  color: #15803d;
+}
+
+.opbi-growth-item.negative strong {
+  color: #d97706;
+}
+
+.opbi-growth-item.neutral strong {
+  color: #64748b;
+}
+
+.opbi-performance-box strong {
+  display: block;
+  font-size: 30px;
+  color: var(--navy);
+  font-weight: 950;
+  line-height: 1;
+}
+
+.opbi-performance-box span {
+  display: block;
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.opbi-performance-box hr {
+  margin: 9px 0;
+  border-color: var(--line);
+  opacity: 1;
+}
+
+.opbi-performance-box em {
+  display: block;
+  color: #4b5563;
+  font-size: 23px;
+  font-weight: 950;
+  font-style: normal;
+}
+
+.opbi-performance-box small {
+  display: block;
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+/* ================= RANK GRID ================= */
+
+.opbi-rank-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.opbi-rank-card {
+  height: 225px;
+  padding: 0;
+}
+
+.opbi-rank-head {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  padding: 10px 12px 5px;
+}
+
+.opbi-rank-head i {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, var(--navy-2), var(--blue));
+  border-radius: 50%;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.opbi-rank-head h3 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.opbi-rank-head small {
+  display: block;
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.opbi-bar-list {
+  padding: 1px 13px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.opbi-bar-row {
+  display: grid;
+  grid-template-columns: 96px 1fr 30px;
+  align-items: center;
+  gap: 8px;
+  min-height: 19px;
+}
+
+.opbi-bar-row span {
+  color: var(--text);
+  font-size: 10.5px;
+  font-weight: 950;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.opbi-bar-track {
+  height: 8px;
+  background: #edf2fa;
+  position: relative;
+}
+
+.opbi-bar-track div {
+  height: 100%;
+  background: linear-gradient(90deg, var(--navy), var(--blue));
+  min-width: 3px;
+}
+
+.opbi-bar-row strong {
+  color: var(--navy);
+  font-size: 11px;
+  font-weight: 950;
+  text-align: right;
+}
+
+.opbi-empty {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 10px;
+}
+
+/* ================= BOTTOM ================= */
+
+.opbi-bottom-grid {
+  display: grid;
+  grid-template-columns: 28% 40% 32%;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.opbi-donut-card,
+.opbi-map-card {
+  height: 218px;
+}
+
+.opbi-donut-content {
+  height: calc(100% - 34px);
+  display: grid;
+  grid-template-columns: 45% 55%;
+  align-items: center;
+}
+
+.opbi-donut-chart {
+  position: relative;
+  height: 158px;
+  padding: 10px 0 8px 12px;
+}
+
+.opbi-legend-list {
+  padding: 8px 12px 8px 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.opbi-legend-list div {
+  display: grid;
+  grid-template-columns: 12px 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.opbi-legend-list span {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--navy);
+  display: block;
+}
+
+.opbi-legend-list div:nth-child(2) span { background: #3f7d20; }
+.opbi-legend-list div:nth-child(3) span { background: #f59e0b; }
+.opbi-legend-list div:nth-child(4) span { background: #6b7280; }
+.opbi-legend-list div:nth-child(5) span { background: #0b4fd9; }
+
+.opbi-legend-list strong {
+  color: var(--navy);
+  font-size: 11px;
+  font-weight: 950;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.opbi-legend-list em {
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 900;
+  font-style: normal;
+}
+
+.opbi-map-fake {
+  height: calc(100% - 34px);
+  margin: 0;
+  background:
+    radial-gradient(circle at 30% 70%, rgba(0, 51, 160, .12), transparent 10%),
+    radial-gradient(circle at 67% 42%, rgba(0, 51, 160, .10), transparent 12%),
+    linear-gradient(145deg, #f8fafc, #dbeafe);
+  position: relative;
+  overflow: hidden;
+}
+
+.opbi-map-fake::before {
+  content: "";
+  position: absolute;
+  inset: 18px 35px 20px 30px;
+  border: 2px solid rgba(0,31,91,.25);
+  clip-path: polygon(4% 72%, 15% 40%, 30% 55%, 43% 24%, 57% 42%, 72% 20%, 92% 46%, 82% 70%, 65% 60%, 50% 80%, 30% 72%, 15% 86%);
+}
+
+.opbi-map-fake strong {
+  position: absolute;
+  left: 45%;
+  bottom: 30px;
+  transform: translateX(-50%);
+  color: var(--navy);
+  font-size: 20px;
+  font-weight: 950;
+}
+
+.opbi-pin {
+  width: 16px;
+  height: 16px;
+  background: var(--blue);
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 3px 8px rgba(0,0,0,.22);
+  position: absolute;
+}
+
+.opbi-pin.p1 { left: 20%; top: 57%; }
+.opbi-pin.p2 { left: 38%; top: 42%; }
+.opbi-pin.p3 { left: 54%; top: 50%; }
+.opbi-pin.p4 { left: 67%; top: 36%; }
+.opbi-pin.p5 { left: 76%; top: 60%; }
+
+/* ================= FOOTER ================= */
+
+.opbi-footer {
+  height: 58px;
+  background: linear-gradient(135deg, var(--navy-2), var(--navy));
+  color: #fff;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 950;
+  text-transform: uppercase;
+  margin: 0 -14px;
+}
+
+.opbi-footer div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  border-right: 1px solid rgba(255,255,255,.35);
+  height: 100%;
+}
+
+.opbi-footer div:last-child {
+  border-right: 0;
+}
+
+.opbi-footer i {
+  font-size: 28px;
+}
+
+/* ================= RESPONSIVO ================= */
+
+@media (max-width: 1280px) {
+  .opbi-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .opbi-main-grid,
+  .opbi-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .opbi-rank-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .opbi-header {
+    grid-template-columns: 180px 1fr;
+    height: auto;
+  }
+
+  .opbi-date-card {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    width: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  .opbi-header,
+  .opbi-kpi-grid,
+  .opbi-rank-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .opbi-title-box h1 {
+    font-size: 36px;
+  }
+
+  .opbi-title-line span {
+    display: none;
+  }
+
+  .opbi-annual-content,
+  .opbi-monthly-content,
+  .opbi-donut-content {
+    grid-template-columns: 1fr;
+  }
+
+  .opbi-annual,
+  .opbi-monthly {
+    height: 430px;
+  }
+
+  .opbi-growth-box,
+  .opbi-performance-box {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .opbi-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* ================= IMPRESSÃO ================= */
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 5mm;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  .easy-navbar,
+  .sidinho-widget,
+  .no-print {
+    display: none !important;
+  }
+
+  .opbi-page {
+    min-height: auto;
+    padding: 0 !important;
+    transform-origin: top left;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .opbi-header {
+    height: 92px;
+  }
+
+  .opbi-kpi-card,
+  .opbi-period-card {
+    height: 88px;
+  }
+
+  .opbi-kpi-icon {
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+  }
+
+  .opbi-kpi-icon i {
+    font-size: 26px;
+  }
+
+  .opbi-kpi-card strong {
+    font-size: 32px;
+  }
+
+  .opbi-annual,
+  .opbi-monthly {
+    height: 235px;
+  }
+
+  .opbi-rank-card {
+    height: 190px;
+  }
+
+  .opbi-donut-card,
+  .opbi-map-card {
+    height: 180px;
+  }
+
+  .opbi-footer {
+    height: 42px;
+    font-size: 12px;
+  }
+}
+
+
+/* =========================================================
+   V5 - SINCRONISMO, RESPONSIVIDADE E MODAL
+========================================================= */
+
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden !important;
+}
+
+.content-top:has(.opbi-page) {
+  max-width: 100%;
+  overflow-x: hidden !important;
+}
+
+.opbi-page {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.opbi-page *,
+.opbi-page *::before,
+.opbi-page *::after {
+  box-sizing: border-box;
+}
+
+.opbi-filter-panel {
+  background: #ffffff;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  margin: 0 0 8px;
+  box-shadow: 0 2px 7px rgba(0,0,0,.04);
+}
+
+.opbi-filter {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(110px, 1fr)) auto auto auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.opbi-filter select,
+.opbi-filter button,
+.opbi-filter a {
+  height: 31px;
+  min-width: 0;
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid #cfd7e6;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.opbi-filter button,
+.opbi-filter a {
+  border: none;
+  background: var(--navy);
+  color: #fff;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+}
+
+.opbi-filter a {
+  background: #e8eef8;
+  color: var(--navy);
+}
+
+.opbi-active-filters {
+  margin-top: 7px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.opbi-active-filters span {
+  background: #e8eef8;
+  color: var(--navy);
+  border: 1px solid #cfd7e6;
+  border-radius: 999px;
+  padding: 3px 8px;
+}
+
+.opbi-filter-click,
+.opbi-legend-click,
+.opbi-growth-item {
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-family: inherit;
+}
+
+.opbi-filter-click:hover .opbi-bar-track div,
+.opbi-growth-item:hover {
+  filter: brightness(1.15);
+}
+
+.opbi-click-card {
+  cursor: pointer;
+}
+
+.opbi-click-card:hover {
+  border-color: var(--blue);
+  box-shadow: 0 6px 14px rgba(0, 31, 91, .12);
+}
+
+.opbi-legend-click {
+  display: grid;
+  grid-template-columns: 12px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+}
+
+.opbi-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+}
+
+.opbi-modal.show {
+  display: block;
+}
+
+.opbi-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 6, 23, .55);
+}
+
+.opbi-modal-dialog {
+  position: relative;
+  z-index: 2;
+  width: min(1180px, calc(100vw - 28px));
+  max-height: calc(100vh - 40px);
+  margin: 20px auto;
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0,0,0,.35);
+  display: flex;
+  flex-direction: column;
+}
+
+.opbi-modal-head {
+  background: var(--navy);
+  color: #fff;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.opbi-modal-head h3 {
+  margin: 0;
+  font-weight: 950;
+}
+
+.opbi-modal-head p {
+  margin: 3px 0 0;
+  color: rgba(255,255,255,.8);
+  font-size: 12px;
+}
+
+.opbi-modal-head button {
+  background: #fff;
+  color: var(--navy);
+  border: 0;
+  border-radius: 10px;
+  width: 34px;
+  height: 34px;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.opbi-modal-table-wrap {
+  overflow: auto;
+  max-height: calc(100vh - 130px);
+}
+
+.opbi-modal-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.opbi-modal-table-wrap th {
+  position: sticky;
+  top: 0;
+  background: #e8eef8;
+  color: var(--navy);
+  text-align: left;
+  padding: 9px;
+  font-weight: 950;
+  border-bottom: 1px solid #cfd7e6;
+}
+
+.opbi-modal-table-wrap td {
+  padding: 8px 9px;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: top;
+}
+
+.opbi-modal-table-wrap tr:hover td {
+  background: #f8fafc;
+}
+
+/* mais compacto para caber sem scroll horizontal no 100% */
+@media (min-width: 1200px) {
+  .opbi-page {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .opbi-header {
+    grid-template-columns: 190px 1fr 210px;
+  }
+
+  .opbi-logo {
+    width: 160px;
+  }
+
+  .opbi-date-card {
+    width: 205px;
+  }
+
+  .opbi-kpi-card,
+  .opbi-period-card {
+    padding: 10px 13px;
+    gap: 11px;
+  }
+
+  .opbi-kpi-icon {
+    width: 58px;
+    height: 58px;
+    min-width: 58px;
+  }
+
+  .opbi-kpi-icon i {
+    font-size: 28px;
+  }
+
+  .opbi-kpi-card strong {
+    font-size: 34px;
+  }
+
+  .opbi-bar-row {
+    grid-template-columns: minmax(70px, 92px) 1fr 28px;
+  }
+}
+
+@media (max-width: 1450px) {
+  .opbi-filter {
+    grid-template-columns: repeat(4, minmax(120px, 1fr)) repeat(3, auto);
+  }
+}
+
+@media (max-width: 1000px) {
+  .opbi-filter {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .opbi-filter button,
+  .opbi-filter a {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .opbi-filter {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+
+
+/* =========================================================
+   DASHBOARD OPERACIONAL V3 - LAYOUT IGUAL REFERÊNCIA
+   Painel visual tipo Power BI para Easy Control
+========================================================= */
+
+.content-top:has(.opbi-page) {
+  padding: 0 !important;
+}
+
+.opbi-page {
+  --navy: #001f5b;
+  --navy-2: #000f35;
+  --blue: #0033a0;
+  --blue-2: #0b4fd9;
+  --border: #0b2460;
+  --line: #cfd7e6;
+  --text: #07143a;
+  --muted: #4b5563;
+  --bg: #ffffff;
+
+  background: #fff;
+  color: var(--text);
+  width: 100%;
+  min-height: calc(100vh - 78px);
+  padding: 12px 14px 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+/* ================= HEADER ================= */
+
+.opbi-header {
+  height: 104px;
+  display: grid;
+  grid-template-columns: 245px 1fr 270px;
+  align-items: center;
+  gap: 12px;
+  border-top: 4px solid var(--navy);
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  padding: 4px 12px 8px;
+}
+
+.opbi-logo-box {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.opbi-logo {
+  width: 215px;
+  max-height: 92px;
+  object-fit: contain;
+}
+
+.opbi-title-box {
+  text-align: center;
+}
+
+.opbi-title-box h1 {
+  margin: 0;
+  color: var(--navy-2);
+  font-size: clamp(38px, 4vw, 62px);
+  line-height: .9;
+  font-weight: 950;
+  letter-spacing: -.045em;
+  text-transform: uppercase;
+}
+
+.opbi-title-line {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.opbi-title-line span {
+  display: block;
+  height: 2px;
+  width: 150px;
+  background: var(--navy);
+}
+
+.opbi-title-line h2 {
+  margin: 0;
+  color: var(--navy);
+  font-size: clamp(17px, 1.8vw, 28px);
+  font-weight: 650;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+
+.opbi-date-card {
+  justify-self: end;
+  width: 250px;
+  height: 76px;
+  background: linear-gradient(135deg, var(--navy-2), var(--navy));
+  color: #fff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+}
+
+.opbi-date-card i {
+  font-size: 33px;
+}
+
+.opbi-date-card small {
+  display: block;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.opbi-date-card strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 22px;
+  font-weight: 950;
+}
+
+/* ================= TOOLBAR ================= */
+
+.opbi-toolbar {
+  background: var(--navy);
+  color: #fff;
+  border-radius: 8px;
+  margin: 5px 0 8px;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.opbi-import,
+
+
+.opbi-toolbar input[type="file"],
+.opbi-toolbar select {
+  height: 31px;
+  border: 1px solid #dbeafe;
+  border-radius: 6px;
+  background: #fff;
+  color: #111827;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0 8px;
+}
+
+.opbi-toolbar label {
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.opbi-toolbar button,
+.opbi-toolbar a {
+  height: 31px;
+  border: 0;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--navy);
+  font-size: 11px;
+  font-weight: 950;
+  padding: 0 12px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.opbi-toolbar .opbi-clean {
+  background: #020617;
+  color: #fff;
+}
+
+/* ================= KPI ================= */
+
+.opbi-kpi-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1.15fr 1.25fr 1.2fr 1.2fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.opbi-kpi-card,
+.opbi-period-card {
+  height: 116px;
+  border: 1.7px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  padding: 12px 18px;
+  gap: 16px;
+  box-shadow: 0 2px 7px rgba(0,0,0,.05);
+}
+
+.opbi-kpi-icon {
+  width: 70px;
+  height: 70px;
+  min-width: 70px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--navy-2), var(--blue));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.opbi-kpi-icon i {
+  font-size: 35px;
+}
+
+.opbi-kpi-card span,
+.opbi-period-card span {
+  display: block;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 950;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.opbi-kpi-card strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--navy);
+  font-size: 42px;
+  line-height: .95;
+  font-weight: 950;
+  letter-spacing: -.05em;
+}
+
+.opbi-kpi-card small,
+.opbi-period-card small {
+  display: block;
+  margin-top: 8px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.opbi-period-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, var(--navy-2), var(--navy));
+  color: #fff;
+  border-color: var(--navy);
+}
+
+.opbi-period-card span,
+.opbi-period-card small {
+  color: #fff;
+}
+
+.opbi-period-card strong {
+  color: #fff;
+  font-size: 30px;
+  font-weight: 950;
+}
+
+/* ================= PANELS ================= */
+
+.opbi-main-grid {
+  display: grid;
+  grid-template-columns: 40% 60%;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.opbi-panel,
+.opbi-rank-card,
+.opbi-donut-card,
+.opbi-map-card {
+  background: #fff;
+  border: 1.7px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 7px rgba(0,0,0,.04);
+}
+
+.opbi-panel-title,
+.opbi-small-title {
+  height: 34px;
+  background: var(--navy);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 950;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  text-transform: uppercase;
+  position: relative;
+}
+
+.opbi-panel-title::after,
+.opbi-small-title::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  bottom: 0;
+  border-left: 30px solid transparent;
+  border-bottom: 34px solid #fff;
+}
+
+.opbi-annual,
+.opbi-monthly {
+  height: 300px;
+}
+
+.opbi-annual-content,
+.opbi-monthly-content {
+  display: grid;
+  grid-template-columns: 1fr 125px;
+  height: calc(100% - 34px);
+}
+
+.opbi-chart-wrap {
+  position: relative;
+  height: 100%;
+  min-height: 230px;
+  padding: 15px 18px 10px;
+}
+
+.opbi-growth-box,
+.opbi-performance-box {
+  border-left: 1.5px solid var(--line);
+  padding: 14px 10px;
+  text-align: center;
+}
+
+.opbi-growth-box h4,
+.opbi-performance-box h4 {
+  margin: 0 0 10px;
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.opbi-growth-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.opbi-growth-item {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 6px 5px;
+  background: #fff;
+}
+
+.opbi-growth-item span {
+  display: block;
+  color: var(--navy);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.opbi-growth-item strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.opbi-growth-item.positive strong {
+  color: #15803d;
+}
+
+.opbi-growth-item.negative strong {
+  color: #d97706;
+}
+
+.opbi-growth-item.neutral strong {
+  color: #64748b;
+}
+
+.opbi-performance-box strong {
+  display: block;
+  font-size: 30px;
+  color: var(--navy);
+  font-weight: 950;
+  line-height: 1;
+}
+
+.opbi-performance-box span {
+  display: block;
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.opbi-performance-box hr {
+  margin: 9px 0;
+  border-color: var(--line);
+  opacity: 1;
+}
+
+.opbi-performance-box em {
+  display: block;
+  color: #4b5563;
+  font-size: 23px;
+  font-weight: 950;
+  font-style: normal;
+}
+
+.opbi-performance-box small {
+  display: block;
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+/* ================= RANK GRID ================= */
+
+.opbi-rank-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.opbi-rank-card {
+  height: 225px;
+  padding: 0;
+}
+
+.opbi-rank-head {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  padding: 10px 12px 5px;
+}
+
+.opbi-rank-head i {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, var(--navy-2), var(--blue));
+  border-radius: 50%;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.opbi-rank-head h3 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.opbi-rank-head small {
+  display: block;
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.opbi-bar-list {
+  padding: 1px 13px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.opbi-bar-row {
+  display: grid;
+  grid-template-columns: 96px 1fr 30px;
+  align-items: center;
+  gap: 8px;
+  min-height: 19px;
+}
+
+.opbi-bar-row span {
+  color: var(--text);
+  font-size: 10.5px;
+  font-weight: 950;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.opbi-bar-track {
+  height: 8px;
+  background: #edf2fa;
+  position: relative;
+}
+
+.opbi-bar-track div {
+  height: 100%;
+  background: linear-gradient(90deg, var(--navy), var(--blue));
+  min-width: 3px;
+}
+
+.opbi-bar-row strong {
+  color: var(--navy);
+  font-size: 11px;
+  font-weight: 950;
+  text-align: right;
+}
+
+.opbi-empty {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 10px;
+}
+
+/* ================= BOTTOM ================= */
+
+.opbi-bottom-grid {
+  display: grid;
+  grid-template-columns: 28% 40% 32%;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.opbi-donut-card,
+.opbi-map-card {
+  height: 218px;
+}
+
+.opbi-donut-content {
+  height: calc(100% - 34px);
+  display: grid;
+  grid-template-columns: 45% 55%;
+  align-items: center;
+}
+
+.opbi-donut-chart {
+  position: relative;
+  height: 158px;
+  padding: 10px 0 8px 12px;
+}
+
+.opbi-legend-list {
+  padding: 8px 12px 8px 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.opbi-legend-list div {
+  display: grid;
+  grid-template-columns: 12px 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.opbi-legend-list span {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--navy);
+  display: block;
+}
+
+.opbi-legend-list div:nth-child(2) span { background: #3f7d20; }
+.opbi-legend-list div:nth-child(3) span { background: #f59e0b; }
+.opbi-legend-list div:nth-child(4) span { background: #6b7280; }
+.opbi-legend-list div:nth-child(5) span { background: #0b4fd9; }
+
+.opbi-legend-list strong {
+  color: var(--navy);
+  font-size: 11px;
+  font-weight: 950;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.opbi-legend-list em {
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 900;
+  font-style: normal;
+}
+
+.opbi-map-fake {
+  height: calc(100% - 34px);
+  margin: 0;
+  background:
+    radial-gradient(circle at 30% 70%, rgba(0, 51, 160, .12), transparent 10%),
+    radial-gradient(circle at 67% 42%, rgba(0, 51, 160, .10), transparent 12%),
+    linear-gradient(145deg, #f8fafc, #dbeafe);
+  position: relative;
+  overflow: hidden;
+}
+
+.opbi-map-fake::before {
+  content: "";
+  position: absolute;
+  inset: 18px 35px 20px 30px;
+  border: 2px solid rgba(0,31,91,.25);
+  clip-path: polygon(4% 72%, 15% 40%, 30% 55%, 43% 24%, 57% 42%, 72% 20%, 92% 46%, 82% 70%, 65% 60%, 50% 80%, 30% 72%, 15% 86%);
+}
+
+.opbi-map-fake strong {
+  position: absolute;
+  left: 45%;
+  bottom: 30px;
+  transform: translateX(-50%);
+  color: var(--navy);
+  font-size: 20px;
+  font-weight: 950;
+}
+
+.opbi-pin {
+  width: 16px;
+  height: 16px;
+  background: var(--blue);
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 3px 8px rgba(0,0,0,.22);
+  position: absolute;
+}
+
+.opbi-pin.p1 { left: 20%; top: 57%; }
+.opbi-pin.p2 { left: 38%; top: 42%; }
+.opbi-pin.p3 { left: 54%; top: 50%; }
+.opbi-pin.p4 { left: 67%; top: 36%; }
+.opbi-pin.p5 { left: 76%; top: 60%; }
+
+/* ================= FOOTER ================= */
+
+.opbi-footer {
+  height: 58px;
+  background: linear-gradient(135deg, var(--navy-2), var(--navy));
+  color: #fff;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 950;
+  text-transform: uppercase;
+  margin: 0 -14px;
+}
+
+.opbi-footer div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  border-right: 1px solid rgba(255,255,255,.35);
+  height: 100%;
+}
+
+.opbi-footer div:last-child {
+  border-right: 0;
+}
+
+.opbi-footer i {
+  font-size: 28px;
+}
+
+/* ================= RESPONSIVO ================= */
+
+@media (max-width: 1280px) {
+  .opbi-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .opbi-main-grid,
+  .opbi-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .opbi-rank-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .opbi-header {
+    grid-template-columns: 180px 1fr;
+    height: auto;
+  }
+
+  .opbi-date-card {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    width: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  .opbi-header,
+  .opbi-kpi-grid,
+  .opbi-rank-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .opbi-title-box h1 {
+    font-size: 36px;
+  }
+
+  .opbi-title-line span {
+    display: none;
+  }
+
+  .opbi-annual-content,
+  .opbi-monthly-content,
+  .opbi-donut-content {
+    grid-template-columns: 1fr;
+  }
+
+  .opbi-annual,
+  .opbi-monthly {
+    height: 430px;
+  }
+
+  .opbi-growth-box,
+  .opbi-performance-box {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .opbi-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* ================= IMPRESSÃO ================= */
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 5mm;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  .easy-navbar,
+  .sidinho-widget,
+  .no-print {
+    display: none !important;
+  }
+
+  .opbi-page {
+    min-height: auto;
+    padding: 0 !important;
+    transform-origin: top left;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .opbi-header {
+    height: 92px;
+  }
+
+  .opbi-kpi-card,
+  .opbi-period-card {
+    height: 88px;
+  }
+
+  .opbi-kpi-icon {
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+  }
+
+  .opbi-kpi-icon i {
+    font-size: 26px;
+  }
+
+  .opbi-kpi-card strong {
+    font-size: 32px;
+  }
+
+  .opbi-annual,
+  .opbi-monthly {
+    height: 235px;
+  }
+
+  .opbi-rank-card {
+    height: 190px;
+  }
+
+  .opbi-donut-card,
+  .opbi-map-card {
+    height: 180px;
+  }
+
+  .opbi-footer {
+    height: 42px;
+    font-size: 12px;
+  }
+}
+
+
+/* =========================================================
+   V5 - SINCRONISMO, RESPONSIVIDADE E MODAL
+========================================================= */
+
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden !important;
+}
+
+.content-top:has(.opbi-page) {
+  max-width: 100%;
+  overflow-x: hidden !important;
+}
+
+.opbi-page {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.opbi-page *,
+.opbi-page *::before,
+.opbi-page *::after {
+  box-sizing: border-box;
+}
+
+.opbi-filter-panel {
+  background: #ffffff;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  margin: 0 0 8px;
+  box-shadow: 0 2px 7px rgba(0,0,0,.04);
+}
+
+.opbi-filter {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(110px, 1fr)) auto auto auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.opbi-filter select,
+.opbi-filter button,
+.opbi-filter a {
+  height: 31px;
+  min-width: 0;
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid #cfd7e6;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.opbi-filter button,
+.opbi-filter a {
+  border: none;
+  background: var(--navy);
+  color: #fff;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+}
+
+.opbi-filter a {
+  background: #e8eef8;
+  color: var(--navy);
+}
+
+.opbi-active-filters {
+  margin-top: 7px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.opbi-active-filters span {
+  background: #e8eef8;
+  color: var(--navy);
+  border: 1px solid #cfd7e6;
+  border-radius: 999px;
+  padding: 3px 8px;
+}
+
+.opbi-filter-click,
+.opbi-legend-click,
+.opbi-growth-item {
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-family: inherit;
+}
+
+.opbi-filter-click:hover .opbi-bar-track div,
+.opbi-growth-item:hover {
+  filter: brightness(1.15);
+}
+
+.opbi-click-card {
+  cursor: pointer;
+}
+
+.opbi-click-card:hover {
+  border-color: var(--blue);
+  box-shadow: 0 6px 14px rgba(0, 31, 91, .12);
+}
+
+.opbi-legend-click {
+  display: grid;
+  grid-template-columns: 12px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+}
+
+.opbi-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+}
+
+.opbi-modal.show {
+  display: block;
+}
+
+.opbi-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 6, 23, .55);
+}
+
+.opbi-modal-dialog {
+  position: relative;
+  z-index: 2;
+  width: min(1180px, calc(100vw - 28px));
+  max-height: calc(100vh - 40px);
+  margin: 20px auto;
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0,0,0,.35);
+  display: flex;
+  flex-direction: column;
+}
+
+.opbi-modal-head {
+  background: var(--navy);
+  color: #fff;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.opbi-modal-head h3 {
+  margin: 0;
+  font-weight: 950;
+}
+
+.opbi-modal-head p {
+  margin: 3px 0 0;
+  color: rgba(255,255,255,.8);
+  font-size: 12px;
+}
+
+.opbi-modal-head button {
+  background: #fff;
+  color: var(--navy);
+  border: 0;
+  border-radius: 10px;
+  width: 34px;
+  height: 34px;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.opbi-modal-table-wrap {
+  overflow: auto;
+  max-height: calc(100vh - 130px);
+}
+
+.opbi-modal-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.opbi-modal-table-wrap th {
+  position: sticky;
+  top: 0;
+  background: #e8eef8;
+  color: var(--navy);
+  text-align: left;
+  padding: 9px;
+  font-weight: 950;
+  border-bottom: 1px solid #cfd7e6;
+}
+
+.opbi-modal-table-wrap td {
+  padding: 8px 9px;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: top;
+}
+
+.opbi-modal-table-wrap tr:hover td {
+  background: #f8fafc;
+}
+
+/* mais compacto para caber sem scroll horizontal no 100% */
+@media (min-width: 1200px) {
+  .opbi-page {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .opbi-header {
+    grid-template-columns: 190px 1fr 210px;
+  }
+
+  .opbi-logo {
+    width: 160px;
+  }
+
+  .opbi-date-card {
+    width: 205px;
+  }
+
+  .opbi-kpi-card,
+  .opbi-period-card {
+    padding: 10px 13px;
+    gap: 11px;
+  }
+
+  .opbi-kpi-icon {
+    width: 58px;
+    height: 58px;
+    min-width: 58px;
+  }
+
+  .opbi-kpi-icon i {
+    font-size: 28px;
+  }
+
+  .opbi-kpi-card strong {
+    font-size: 34px;
+  }
+
+  .opbi-bar-row {
+    grid-template-columns: minmax(70px, 92px) 1fr 28px;
+  }
+}
+
+@media (max-width: 1450px) {
+  .opbi-filter {
+    grid-template-columns: repeat(4, minmax(120px, 1fr)) repeat(3, auto);
+  }
+}
+
+@media (max-width: 1000px) {
+  .opbi-filter {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .opbi-filter button,
+  .opbi-filter a {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .opbi-filter {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* =========================================================
+   V5.1 - ENQUADRAMENTO 100% TELA / SEM CORTE HORIZONTAL
+========================================================= */
+
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
+}
+
+body {
+  min-width: 0 !important;
+}
+
+.content-top {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+.content-top:has(.opbi-page) {
+  padding: 6px !important;
+}
+
+.opbi-page {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow-x: hidden !important;
+  padding: 6px 6px 0 !important;
+}
+
+.opbi-page *,
+.opbi-page *::before,
+.opbi-page *::after {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.opbi-header {
+  width: 100%;
+  grid-template-columns: 150px minmax(0, 1fr) 165px !important;
+  gap: 6px !important;
+  height: 74px !important;
+  padding: 3px 8px 5px !important;
+}
+
+.opbi-logo {
+  width: 112px !important;
+  max-height: 58px !important;
+}
+
+.opbi-title-box h1 {
+  font-size: clamp(28px, 3vw, 42px) !important;
+  line-height: .9 !important;
+}
+
+.opbi-title-line {
+  margin-top: 4px !important;
+  gap: 8px !important;
+}
+
+.opbi-title-line h2 {
+  font-size: clamp(13px, 1.25vw, 18px) !important;
+}
+
+.opbi-title-line span {
+  width: 80px !important;
+}
+
+.opbi-date-card {
+  width: 160px !important;
+  height: 48px !important;
+  padding: 7px 9px !important;
+  gap: 7px !important;
+}
+
+.opbi-date-card i {
+  font-size: 22px !important;
+}
+
+.opbi-date-card small {
+  font-size: 8px !important;
+}
+
+.opbi-date-card strong {
+  font-size: 16px !important;
+}
+
+.opbi-toolbar {
+  margin: 3px 0 5px !important;
+  padding: 5px !important;
+  gap: 5px !important;
+}
+
+.opbi-toolbar input[type="file"],
+.opbi-toolbar select,
+.opbi-toolbar button,
+.opbi-toolbar a {
+  height: 25px !important;
+  font-size: 9px !important;
+  padding: 0 7px !important;
+}
+
+.opbi-filter-panel {
+  padding: 5px !important;
+  margin-bottom: 5px !important;
+}
+
+.opbi-filter {
+  grid-template-columns: repeat(8, minmax(70px, 1fr)) 52px 48px 86px !important;
+  gap: 4px !important;
+}
+
+.opbi-filter select,
+.opbi-filter button,
+.opbi-filter a {
+  height: 26px !important;
+  font-size: 9px !important;
+  padding: 0 5px !important;
+}
+
+.opbi-active-filters {
+  margin-top: 4px !important;
+  font-size: 9px !important;
+  gap: 3px !important;
+}
+
+.opbi-active-filters span {
+  padding: 2px 6px !important;
+}
+
+.opbi-kpi-grid {
+  grid-template-columns: 1.03fr 1.03fr 1.18fr 1.03fr 1.08fr !important;
+  gap: 6px !important;
+  margin-bottom: 6px !important;
+}
+
+.opbi-kpi-card,
+.opbi-period-card {
+  height: 72px !important;
+  padding: 7px 9px !important;
+  gap: 8px !important;
+  border-radius: 6px !important;
+}
+
+.opbi-kpi-icon {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+}
+
+.opbi-kpi-icon i {
+  font-size: 21px !important;
+}
+
+.opbi-kpi-card span,
+.opbi-period-card span {
+  font-size: 9px !important;
+  line-height: 1.05 !important;
+}
+
+.opbi-kpi-card strong {
+  font-size: 27px !important;
+  margin-top: 1px !important;
+}
+
+.opbi-kpi-card small,
+.opbi-period-card small {
+  font-size: 8px !important;
+  margin-top: 2px !important;
+}
+
+.opbi-period-card strong {
+  font-size: 19px !important;
+}
+
+.opbi-main-grid {
+  grid-template-columns: minmax(0, 40%) minmax(0, 60%) !important;
+  gap: 6px !important;
+  margin-bottom: 6px !important;
+}
+
+.opbi-panel,
+.opbi-rank-card,
+.opbi-donut-card,
+.opbi-map-card {
+  border-radius: 6px !important;
+}
+
+.opbi-panel-title,
+.opbi-small-title {
+  height: 25px !important;
+  font-size: 10px !important;
+  padding: 0 9px !important;
+}
+
+.opbi-panel-title::after,
+.opbi-small-title::after {
+  border-left-width: 18px !important;
+  border-bottom-width: 25px !important;
+}
+
+.opbi-annual,
+.opbi-monthly {
+  height: 188px !important;
+}
+
+.opbi-annual-content,
+.opbi-monthly-content {
+  grid-template-columns: minmax(0, 1fr) 88px !important;
+  height: calc(100% - 25px) !important;
+}
+
+.opbi-chart-wrap {
+  min-height: 0 !important;
+  height: 100% !important;
+  padding: 8px 10px 5px !important;
+}
+
+.opbi-growth-box,
+.opbi-performance-box {
+  padding: 7px 5px !important;
+}
+
+.opbi-growth-box h4,
+.opbi-performance-box h4 {
+  font-size: 9px !important;
+  margin-bottom: 4px !important;
+}
+
+.opbi-growth-list {
+  gap: 3px !important;
+}
+
+.opbi-growth-item {
+  padding: 3px 2px !important;
+  border-radius: 4px !important;
+}
+
+.opbi-growth-item span {
+  font-size: 7px !important;
+}
+
+.opbi-growth-item strong {
+  font-size: 10px !important;
+}
+
+.opbi-performance-box strong {
+  font-size: 18px !important;
+}
+
+.opbi-performance-box span,
+.opbi-performance-box small {
+  font-size: 8px !important;
+}
+
+.opbi-performance-box em {
+  font-size: 17px !important;
+}
+
+.opbi-performance-box hr {
+  margin: 4px 0 !important;
+}
+
+.opbi-rank-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+  margin-bottom: 6px !important;
+}
+
+.opbi-rank-card {
+  height: 158px !important;
+}
+
+.opbi-rank-head {
+  padding: 6px 7px 2px !important;
+  gap: 5px !important;
+}
+
+.opbi-rank-head i {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  font-size: 15px !important;
+}
+
+.opbi-rank-head h3 {
+  font-size: 9px !important;
+}
+
+.opbi-rank-head small {
+  font-size: 7px !important;
+}
+
+.opbi-bar-list {
+  padding: 1px 7px 5px !important;
+  gap: 4px !important;
+}
+
+.opbi-bar-row {
+  grid-template-columns: minmax(48px, 82px) minmax(20px, 1fr) 22px !important;
+  gap: 5px !important;
+  min-height: 14px !important;
+  width: 100%;
+}
+
+.opbi-bar-row span {
+  font-size: 7.2px !important;
+}
+
+.opbi-bar-track {
+  height: 6px !important;
+}
+
+.opbi-bar-row strong {
+  font-size: 7.5px !important;
+}
+
+.opbi-bottom-grid {
+  grid-template-columns: minmax(0, 28%) minmax(0, 40%) minmax(0, 32%) !important;
+  gap: 6px !important;
+  margin-bottom: 5px !important;
+}
+
+.opbi-donut-card,
+.opbi-map-card {
+  height: 135px !important;
+}
+
+.opbi-donut-content {
+  height: calc(100% - 25px) !important;
+  grid-template-columns: 40% 60% !important;
+}
+
+.opbi-donut-chart {
+  height: 105px !important;
+  padding: 5px 0 4px 5px !important;
+}
+
+.opbi-legend-list {
+  padding: 5px 6px 5px 0 !important;
+  gap: 4px !important;
+}
+
+.opbi-legend-list div,
+.opbi-legend-click {
+  grid-template-columns: 8px minmax(0, 1fr) auto !important;
+  gap: 4px !important;
+}
+
+.opbi-legend-list span,
+.opbi-legend-click span {
+  width: 7px !important;
+  height: 7px !important;
+}
+
+.opbi-legend-list strong,
+.opbi-legend-click strong,
+.opbi-legend-list em,
+.opbi-legend-click em {
+  font-size: 7.5px !important;
+}
+
+.opbi-map-fake strong {
+  font-size: 12px !important;
+  bottom: 17px !important;
+}
+
+.opbi-pin {
+  width: 10px !important;
+  height: 10px !important;
+  border-width: 2px !important;
+}
+
+.opbi-footer {
+  height: 32px !important;
+  font-size: 9px !important;
+  margin: 0 -6px !important;
+}
+
+.opbi-footer i {
+  font-size: 15px !important;
+}
+
+.opbi-modal-dialog {
+  width: min(1120px, calc(100vw - 24px)) !important;
+}
+
+@media (max-width: 1180px) {
+  .opbi-header {
+    grid-template-columns: 120px minmax(0, 1fr) 140px !important;
+  }
+
+  .opbi-logo {
+    width: 95px !important;
+  }
+
+  .opbi-title-box h1 {
+    font-size: 28px !important;
+  }
+
+  .opbi-title-line h2 {
+    font-size: 12px !important;
+  }
+
+  .opbi-date-card {
+    width: 140px !important;
+  }
+
+  .opbi-filter {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .opbi-rank-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .opbi-bottom-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .opbi-header,
+  .opbi-kpi-grid,
+  .opbi-main-grid,
+  .opbi-rank-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .opbi-header {
+    height: auto !important;
+    text-align: center !important;
+  }
+
+  .opbi-logo-box {
+    justify-content: center !important;
+  }
+
+  .opbi-date-card {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .opbi-annual,
+  .opbi-monthly {
+    height: 260px !important;
+  }
+
+  .opbi-rank-card {
+    height: auto !important;
+    min-height: 165px !important;
+  }
+
+  .opbi-filter {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .opbi-filter {
+    grid-template-columns: 1fr !important;
+  }
+
+  .opbi-title-box h1 {
+    font-size: 24px !important;
+  }
+
+  .opbi-title-line span {
+    display: none !important;
+  }
+}
+
+

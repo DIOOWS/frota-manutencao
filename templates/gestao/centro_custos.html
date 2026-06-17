@@ -74,32 +74,32 @@
 
               {% for mes in meses %}
                 {% set valor_mes = linha.meses[mes] %}
-                <td class="centro-custos-numero centro-custos-celula-mes {% if valor_mes == 0 %}centro-custos-zero{% endif %}"
+                <td class="centro-custos-numero valor-financeiro centro-custos-celula-mes {% if valor_mes == 0 %}centro-custos-zero{% endif %}"
                     data-mes="{{ mes }}"
                     title="Clique para ver {{ linha.plano }} em {{ nomes_meses[mes] }}">
                   {{ valor_tabela(valor_mes) }}
                 </td>
               {% endfor %}
 
-              <td class="centro-custos-numero centro-custos-total-coluna centro-custos-clicavel" title="Clique para ver todas as despesas de {{ linha.plano }}">{{ valor_tabela(linha.total) }}</td>
-              <td class="centro-custos-numero centro-custos-total-coluna">{{ valor_tabela(linha.media) }}</td>
+              <td class="centro-custos-numero valor-financeiro centro-custos-total-coluna centro-custos-clicavel" title="Clique para ver todas as despesas de {{ linha.plano }}">{{ valor_tabela(linha.total) }}</td>
+              <td class="centro-custos-numero valor-financeiro centro-custos-total-coluna">{{ valor_tabela(linha.media) }}</td>
             </tr>
           {% else %}
             <tr>
               <td class="centro-custos-plano">Sem dados de Assistência</td>
-              {% for mes in meses %}<td class="centro-custos-numero centro-custos-zero">-</td>{% endfor %}
-              <td class="centro-custos-numero centro-custos-zero">-</td>
-              <td class="centro-custos-numero centro-custos-zero">-</td>
+              {% for mes in meses %}<td class="centro-custos-numero valor-financeiro centro-custos-zero">-</td>{% endfor %}
+              <td class="centro-custos-numero valor-financeiro centro-custos-zero">-</td>
+              <td class="centro-custos-numero valor-financeiro centro-custos-zero">-</td>
             </tr>
           {% endfor %}
 
           <tr class="centro-custos-total-assistencia">
             <td class="centro-custos-plano">Total Assistência Mês</td>
             {% for mes in meses %}
-              <td class="centro-custos-numero">{{ valor_tabela(total_assistencia.meses[mes]) }}</td>
+              <td class="centro-custos-numero valor-financeiro">{{ valor_tabela(total_assistencia.meses[mes]) }}</td>
             {% endfor %}
-            <td class="centro-custos-numero">{{ valor_tabela(total_assistencia.total) }}</td>
-            <td class="centro-custos-numero">{{ valor_tabela(total_assistencia.media) }}</td>
+            <td class="centro-custos-numero valor-financeiro">{{ valor_tabela(total_assistencia.total) }}</td>
+            <td class="centro-custos-numero valor-financeiro">{{ valor_tabela(total_assistencia.media) }}</td>
           </tr>
         </tbody>
       </table>
@@ -141,32 +141,32 @@
 
               {% for mes in meses %}
                 {% set valor_mes = linha.meses[mes] %}
-                <td class="centro-custos-numero centro-custos-celula-mes {% if valor_mes == 0 %}centro-custos-zero{% endif %}"
+                <td class="centro-custos-numero valor-financeiro centro-custos-celula-mes {% if valor_mes == 0 %}centro-custos-zero{% endif %}"
                     data-mes="{{ mes }}"
                     title="Clique para ver {{ linha.plano }} em {{ nomes_meses[mes] }}">
                   {{ valor_tabela(valor_mes) }}
                 </td>
               {% endfor %}
 
-              <td class="centro-custos-numero centro-custos-total-coluna centro-custos-clicavel" title="Clique para ver todas as despesas de {{ linha.plano }}">{{ valor_tabela(linha.total) }}</td>
-              <td class="centro-custos-numero centro-custos-total-coluna">{{ valor_tabela(linha.media) }}</td>
+              <td class="centro-custos-numero valor-financeiro centro-custos-total-coluna centro-custos-clicavel" title="Clique para ver todas as despesas de {{ linha.plano }}">{{ valor_tabela(linha.total) }}</td>
+              <td class="centro-custos-numero valor-financeiro centro-custos-total-coluna">{{ valor_tabela(linha.media) }}</td>
             </tr>
           {% else %}
             <tr>
               <td class="centro-custos-plano">Sem dados de Logística</td>
-              {% for mes in meses %}<td class="centro-custos-numero centro-custos-zero">-</td>{% endfor %}
-              <td class="centro-custos-numero centro-custos-zero">-</td>
-              <td class="centro-custos-numero centro-custos-zero">-</td>
+              {% for mes in meses %}<td class="centro-custos-numero valor-financeiro centro-custos-zero">-</td>{% endfor %}
+              <td class="centro-custos-numero valor-financeiro centro-custos-zero">-</td>
+              <td class="centro-custos-numero valor-financeiro centro-custos-zero">-</td>
             </tr>
           {% endfor %}
 
           <tr class="centro-custos-total-logistica">
             <td class="centro-custos-plano">Total Logística Mês</td>
             {% for mes in meses %}
-              <td class="centro-custos-numero">{{ valor_tabela(total_logistica.meses[mes]) }}</td>
+              <td class="centro-custos-numero valor-financeiro">{{ valor_tabela(total_logistica.meses[mes]) }}</td>
             {% endfor %}
-            <td class="centro-custos-numero">{{ valor_tabela(total_logistica.total) }}</td>
-            <td class="centro-custos-numero">{{ valor_tabela(total_logistica.media) }}</td>
+            <td class="centro-custos-numero valor-financeiro">{{ valor_tabela(total_logistica.total) }}</td>
+            <td class="centro-custos-numero valor-financeiro">{{ valor_tabela(total_logistica.media) }}</td>
           </tr>
         </tbody>
       </table>
@@ -185,10 +185,10 @@
         <tr class="centro-custos-total-geral">
           <td class="centro-custos-plano">Total despesas {{ ano }}</td>
           {% for mes in meses %}
-            <td class="centro-custos-numero">{{ valor_tabela(total_geral.meses[mes]) }}</td>
+            <td class="centro-custos-numero valor-financeiro">{{ valor_tabela(total_geral.meses[mes]) }}</td>
           {% endfor %}
-          <td class="centro-custos-numero">{{ valor_tabela(total_geral.total) }}</td>
-          <td class="centro-custos-numero">{{ valor_tabela(total_geral.media) }}</td>
+          <td class="centro-custos-numero valor-financeiro">{{ valor_tabela(total_geral.total) }}</td>
+          <td class="centro-custos-numero valor-financeiro">{{ valor_tabela(total_geral.media) }}</td>
         </tr>
       </tbody>
     </table>
