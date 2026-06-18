@@ -89,12 +89,25 @@ def salvar_foto_membro(arquivo):
     #   porque a pasta local some a cada deploy/restart.
     # - Com CLOUDINARY_URL configurado, o Cloudinary SDK já lê
     #   cloud_name, api_key e api_secret automaticamente.
-    if os.getenv("CLOUDINARY_URL"):
+    cloudinary_url = os.getenv("CLOUDINARY_URL")
+    cloud_name = os.getenv("CLOUD_NAME") or os.getenv("CLOUDINARY_CLOUD_NAME")
+    api_key = os.getenv("API_KEY") or os.getenv("CLOUDINARY_API_KEY")
+    api_secret = os.getenv("API_SECRET") or os.getenv("CLOUDINARY_API_SECRET")
+
+    if cloudinary_url or (cloud_name and api_key and api_secret):
         try:
             import cloudinary
             import cloudinary.uploader
 
-            cloudinary.config(secure=True)
+            if cloudinary_url:
+                cloudinary.config(secure=True)
+            else:
+                cloudinary.config(
+                    cloud_name=cloud_name,
+                    api_key=api_key,
+                    api_secret=api_secret,
+                    secure=True
+                )
 
             try:
                 arquivo.stream.seek(0)
