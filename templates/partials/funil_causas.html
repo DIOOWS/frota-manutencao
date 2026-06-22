@@ -1,42 +1,36 @@
-<div class="funil-executivo-card funil-top5-card">
+<div class="funil-executivo-card funil-pbi-card">
 
-  <div class="funil-executivo-header funil-top5-header">
+  <div class="funil-pbi-header">
     <div>
       <h4>Funil de Causas</h4>
-      <small>Top causas das manutenções registradas</small>
+      <small>Principais causas das manutenções registradas</small>
     </div>
 
-    <span>TOP 5 CAUSAS</span>
+    <span>TOP 10 CAUSAS</span>
   </div>
 
-  <div class="funil-top5-body">
+  <div class="funil-pbi-body">
 
     {% set total_causas = valores_frota|sum %}
-    {% set total_geral = total_causas if total_causas else 0 %}
-    {% set principal_label = labels_frota[0] if labels_frota else 'SEM DADOS' %}
-    {% set principal_valor = valores_frota[0] if valores_frota else 0 %}
-    {% set principal_percentual = (principal_valor / total_causas * 100)|round(1) if total_causas else 0 %}
+    {% set maximo = valores_frota[0] if valores_frota else 1 %}
+    {% set total_top = namespace(valor=0) %}
 
-    <div class="funil-top5-left">
-
-      <div class="funil-top5-cols">
-        <span>Causa</span>
-        <span>Qtd</span>
-        <span>%</span>
-      </div>
+    <div class="funil-pbi-left">
 
       {% for label in labels_frota[:5] %}
         {% set valor = valores_frota[loop.index0] %}
         {% set percentual = (valor / total_causas * 100)|round(1) if total_causas else 0 %}
+        {% set largura = (valor / maximo * 100)|round(0) if maximo else 0 %}
+        {% set total_top.valor = total_top.valor + valor %}
         {% set nivel = loop.index %}
 
-        <div class="funil-top5-row">
+        <div class="funil-pbi-row">
 
-          <div class="funil-top5-shape funil-top5-shape-{{ nivel }}">
-            <div class="funil-top5-icon">
+          <div class="funil-pbi-shape funil-pbi-shape-{{ nivel }}">
+            <div class="funil-pbi-icon">
               {% if 'PREVENTIVA' in label %}
                 🛡️
-              {% elif 'ELÉTRIC' in label or 'ELETRIC' in label or 'SISTEMA' in label %}
+              {% elif 'SISTEMA' in label or 'ELETRIC' in label or 'ELÉTRIC' in label %}
                 ⚡
               {% elif 'DESGASTE' in label %}
                 ⚙️
@@ -44,70 +38,72 @@
                 👥
               {% elif 'MANUTEN' in label %}
                 🔧
-              {% elif 'COMPONENT' in label or 'AVARIAD' in label %}
-                🧩
               {% else %}
                 🔩
               {% endif %}
             </div>
+
             <strong>{{ label }}</strong>
           </div>
 
-          <div class="funil-top5-qtd">{{ valor }}</div>
-          <div class="funil-top5-percent">{{ percentual }}%</div>
+          <div class="funil-pbi-qtd">{{ valor }}</div>
+
+          <div class="funil-pbi-percent">{{ percentual }}%</div>
+
+          <div class="funil-pbi-progress">
+            <span style="width: {{ largura }}%;"></span>
+          </div>
 
         </div>
       {% endfor %}
 
       {% if not labels_frota %}
-        <div class="funil-top5-empty">
+        <div class="funil-pbi-empty">
           Nenhuma causa registrada no período selecionado.
         </div>
       {% endif %}
 
     </div>
 
-    <aside class="funil-top5-summary">
-      <div class="funil-summary-kicker">Resumo</div>
+    <div class="funil-pbi-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Causa</th>
+            <th>Qtd</th>
+            <th>%</th>
+          </tr>
+        </thead>
 
-      <div class="funil-summary-total">
-        <small>Total de registros</small>
-        <strong>{{ total_geral }}</strong>
-      </div>
+        <tbody>
+          {% for label in labels_frota[:5] %}
+            {% set valor = valores_frota[loop.index0] %}
+            {% set percentual = (valor / total_causas * 100)|round(1) if total_causas else 0 %}
 
-      <div class="funil-summary-divider"></div>
+            <tr>
+              <td>{{ label }}</td>
+              <td>{{ valor }}</td>
+              <td>{{ percentual }}%</td>
+            </tr>
+          {% endfor %}
+        </tbody>
 
-      <div class="funil-summary-main">
-        <small>Principal causa</small>
-        <strong>{{ principal_label }}</strong>
-        <span>{{ principal_percentual }}%</span>
-      </div>
-
-      <div class="funil-summary-rank">
-        {% if labels_frota|length > 1 %}
-          <div>
-            <b>2º</b>
-            <span>{{ labels_frota[1] }}</span>
-            <strong>{{ valores_frota[1] }}</strong>
-          </div>
-        {% endif %}
-
-        {% if labels_frota|length > 2 %}
-          <div>
-            <b>3º</b>
-            <span>{{ labels_frota[2] }}</span>
-            <strong>{{ valores_frota[2] }}</strong>
-          </div>
-        {% endif %}
-      </div>
+        <tfoot>
+          <tr>
+            <td>Total</td>
+            <td>{{ total_top.valor }}</td>
+            <td>{{ (total_top.valor / total_causas * 100)|round(1) if total_causas else 0 }}%</td>
+          </tr>
+        </tfoot>
+      </table>
 
       <a
-        class="funil-summary-link"
         href="{{ url_for('manutencao.lista', cliente=request.args.get('cliente', ''), data_inicio=request.args.get('data_inicio', ''), data_fim=request.args.get('data_fim', '')) }}"
+        class="funil-pbi-link"
       >
-        Ver ranking completo →
+        Ver todas as causas <span>→</span>
       </a>
-    </aside>
+    </div>
 
   </div>
 
