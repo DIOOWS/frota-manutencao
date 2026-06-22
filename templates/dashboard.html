@@ -3,37 +3,76 @@
 
 {% block content %}
 
-<div class="dashboard-page">
+<div class="dashboard-page dashboard-premium-page">
 
   <!-- FILTRO -->
-  <form method="GET" class="dashboard-filter mb-4 d-flex gap-2">
+  <form method="GET" class="dashboard-filter dashboard-premium-filter mb-4">
 
-    <input type="date"
-           name="data_inicio"
-           class="form-control"
-           value="{{ request.args.get('data_inicio', '') }}">
+    {% if session.get("user_role") in ["admin", "gestao", "gestor"] %}
+      <div class="dash-filter-field dash-filter-cliente">
+        <label>Cliente</label>
+        <div class="dash-input-shell">
+          <span>▣</span>
+          <select name="cliente" class="form-select">
+            <option value="">Todos os Clientes</option>
+            {% for cliente in clientes %}
+              <option value="{{ cliente }}" {% if cliente == cliente_filtro %}selected{% endif %}>
+                {{ cliente }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    {% endif %}
 
-    <input type="date"
-           name="data_fim"
-           class="form-control"
-           value="{{ request.args.get('data_fim', '') }}">
+    <div class="dash-filter-field">
+      <label>Período</label>
+      <div class="dash-date-group">
+        <input type="date"
+               name="data_inicio"
+               class="form-control"
+               value="{{ request.args.get('data_inicio', '') }}">
+        <span class="dash-date-separator">até</span>
+        <input type="date"
+               name="data_fim"
+               class="form-control"
+               value="{{ request.args.get('data_fim', '') }}">
+      </div>
+    </div>
 
-    <button class="btn btn-dark">
-      Filtrar
-    </button>
+    <div class="dash-filter-field dash-filter-mes">
+      <label>Mês</label>
+      <select name="mes" class="form-select">
+        <option value="">Selecione o mês</option>
+        {% for m in range(1, 13) %}
+          {% set mes_valor = "2026-" ~ "%02d"|format(m) %}
+          <option value="{{ mes_valor }}" {% if request.args.get('mes') == mes_valor %}selected{% endif %}>
+            {{ "%02d"|format(m) }}/2026
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="dash-filter-actions">
+      <button class="btn btn-dashboard-filter" type="submit">⌕ Filtrar</button>
+      <a href="/" class="btn btn-dashboard-clear">↻ Limpar</a>
+    </div>
 
   </form>
 
-  {% if request.args.get("mes") %}
-    <div class="alert alert-info d-flex align-items-center justify-content-between">
+  {% if request.args.get("mes") or cliente_filtro %}
+    <div class="alert alert-info d-flex align-items-center justify-content-between flex-wrap gap-2 dashboard-active-filter">
       <div>
-        🔎 Filtrando mês:
-        <strong>{{ request.args.get("mes") }}</strong>
+        Filtro ativo:
+        {% if cliente_filtro %}
+          <strong>Cliente: {{ cliente_filtro }}</strong>
+        {% endif %}
+        {% if request.args.get("mes") %}
+          {% if cliente_filtro %} • {% endif %}
+          <strong>Mês: {{ request.args.get("mes") }}</strong>
+        {% endif %}
       </div>
-
-      <a href="/" class="btn btn-sm btn-dark">
-        Limpar filtro
-      </a>
+      <a href="/" class="btn btn-sm btn-dark">Limpar filtro</a>
     </div>
   {% endif %}
 
@@ -42,148 +81,93 @@
     {% include "partials/metricas.html" %}
   </div>
 
-  <!-- ========================= -->
-  <!-- LINHA 1 -->
-  <!-- ========================= -->
   <div class="row g-4 dashboard-row">
 
     <div class="col-md-6">
       <div class="dashboard-executive-card h-100">
-
         <div class="dashboard-executive-header">
           <div>
             <h5>Tipo de Atendimento</h5>
             <small>Distribuição entre atendimento interno e externo</small>
           </div>
         </div>
-
-        <div class="dashboard-executive-body">
-          <div class="grafico-box">
+        <div class="dashboard-executive-body atendimento-body-premium">
+          <div class="grafico-box atendimento-grafico-box">
             <canvas id="graficoAtendimento"></canvas>
           </div>
         </div>
-
       </div>
     </div>
 
     <div class="col-md-6">
       <div class="dashboard-executive-card h-100">
-
         <div class="dashboard-executive-header">
           <div>
             <h5>Atendimento Mensal</h5>
             <small>Evolução mensal das manutenções registradas</small>
           </div>
         </div>
-
         <div class="dashboard-executive-body">
-          <div class="grafico-box">
+          <div class="grafico-box mensal-grafico-box">
             <canvas id="graficoMes"></canvas>
           </div>
         </div>
-
       </div>
     </div>
 
   </div>
 
-  <!-- ========================= -->
-  <!-- LINHA 2 -->
-  <!-- FUNIL LARGURA TOTAL -->
-  <!-- ========================= -->
   <div class="row g-4 mt-1 dashboard-row">
-
     <div class="col-12">
       {% include "partials/funil_causas.html" %}
     </div>
-
   </div>
 
-  <!-- ========================= -->
-  <!-- LINHA 3 -->
-  <!-- ÚLTIMAS FINALIZAÇÕES EMBAIXO -->
-  <!-- ========================= -->
   <div class="row g-4 mt-1 dashboard-row">
-
     <div class="col-12">
-      <div class="dashboard-executive-card h-100">
-
+      <div class="dashboard-executive-card h-100 ultimas-premium-card">
         <div class="dashboard-executive-header">
           <div>
             <h5>Últimas Finalizações</h5>
             <small>Registros finalizados mais recentes</small>
           </div>
+          <a href="{{ url_for('manutencao.lista', filtro='finalizado', cliente=request.args.get('cliente', ''), data_inicio=request.args.get('data_inicio', ''), data_fim=request.args.get('data_fim', '')) }}" class="ultimas-ver-todas">Ver todas →</a>
         </div>
 
-        <div class="dashboard-executive-body">
+        <div class="dashboard-executive-body ultimas-premium-body">
           <div class="ultimas-finalizacoes-box">
-
             {% if ultimas_finalizacoes %}
-
               {% for m in ultimas_finalizacoes %}
-
                 {% if m.numero_frota %}
-                  <a href="/frotas/{{ m.numero_frota }}"
-                     class="ultima-finalizacao-item ultima-finalizacao-link"
-                     title="Abrir histórico da frota {{ m.numero_frota }}">
+                  <a href="/frotas/{{ m.numero_frota }}" class="ultima-finalizacao-item ultima-finalizacao-link" title="Abrir histórico da frota {{ m.numero_frota }}">
                 {% else %}
                   <div class="ultima-finalizacao-item">
                 {% endif %}
-
-                    <div class="ultima-finalizacao-icon">
-                      ✅
-                    </div>
-
+                    <div class="ultima-finalizacao-icon">✓</div>
                     <div class="ultima-finalizacao-info">
-                      <strong>
-                        OS {{ m.os or '-' }} • Frota {{ m.numero_frota or '-' }}
-                      </strong>
-
+                      <strong>OS {{ m.os or '-' }} • Frota {{ m.numero_frota or '-' }}</strong>
                       <small>
-                        Finalizado em
-                        {{ m.data_saida.strftime('%d/%m/%Y') if m.data_saida else '-' }}
-
-                        {% if m.dtm is not none %}
-                          • ATM: {{ m.dtm }} dia{% if m.dtm != 1 %}s{% endif %}
-                        {% endif %}
+                        Finalizado em {{ m.data_saida.strftime('%d/%m/%Y') if m.data_saida else '-' }}
+                        {% if m.dtm is not none %} • ATM: {{ m.dtm }} dia{% if m.dtm != 1 %}s{% endif %}{% endif %}
                       </small>
                     </div>
-
                     {% if m.numero_frota %}
-                      <div class="ultima-finalizacao-action">
-                        Ver frota →
-                      </div>
+                      <div class="ultima-finalizacao-action">Ver frota →</div>
                     {% endif %}
-
-                {% if m.numero_frota %}
-                  </a>
-                {% else %}
-                  </div>
-                {% endif %}
-
+                {% if m.numero_frota %}</a>{% else %}</div>{% endif %}
               {% endfor %}
-
             {% else %}
-
-              <div class="text-muted">
-                Nenhuma manutenção finalizada no período selecionado.
-              </div>
-
+              <div class="text-muted px-3 py-2">Nenhuma manutenção finalizada no período selecionado.</div>
             {% endif %}
-
           </div>
         </div>
-
       </div>
     </div>
-
   </div>
 
-  <!-- Canvas oculto para não quebrar JS antigo -->
   <canvas id="graficoPareto" style="display:none;"></canvas>
   <canvas id="graficoCorretivaGrande" style="display:none;"></canvas>
 
-  <!-- JSONS -->
   <script id="dados-atendimento" type="application/json">
   {{ {"labels": labels_atendimento, "valores": valores_atendimento} | tojson }}
   </script>

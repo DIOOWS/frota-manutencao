@@ -1,13 +1,18 @@
-<div class="row g-3 mb-4">
+<div class="row g-3 mb-4 dashboard-kpi-row">
 
   {% set data_inicio = request.args.get('data_inicio', '') %}
   {% set data_fim = request.args.get('data_fim', '') %}
+  {% set cliente = request.args.get('cliente', '') %}
+  {% set total_base = total or 0 %}
+  {% set pct_corretivas = ((corretivas or 0) / total_base * 100)|round(1) if total_base else 0 %}
+  {% set pct_preventivas = ((preventivas or 0) / total_base * 100)|round(1) if total_base else 0 %}
+  {% set pct_andamento = ((andamento or 0) / total_base * 100)|round(1) if total_base else 0 %}
 
-  <div class="col-md-3">
-    <a href="{{ url_for('manutencao.lista', data_inicio=data_inicio, data_fim=data_fim) if data_inicio and data_fim else url_for('manutencao.lista') }}" class="kpi-link">
-      <div class="kpi-box">
+  <div class="col-xl-3 col-lg-6 col-md-6">
+    <a href="{{ url_for('manutencao.lista', data_inicio=data_inicio, data_fim=data_fim, cliente=cliente) if data_inicio and data_fim else url_for('manutencao.lista', cliente=cliente) }}" class="kpi-link">
+      <div class="kpi-box kpi-total">
         <div class="kpi-icon">📊</div>
-        <div>
+        <div class="kpi-info">
           <h2>{{ total or 0 }}</h2>
           <span>Total</span>
         </div>
@@ -15,38 +20,41 @@
     </a>
   </div>
 
-  <div class="col-md-3">
-    <a href="{{ url_for('manutencao.lista', filtro='corretiva', data_inicio=data_inicio, data_fim=data_fim) if data_inicio and data_fim else url_for('manutencao.lista', filtro='corretiva') }}" class="kpi-link">
+  <div class="col-xl-3 col-lg-6 col-md-6">
+    <a href="{{ url_for('manutencao.lista', filtro='corretiva', data_inicio=data_inicio, data_fim=data_fim, cliente=cliente) if data_inicio and data_fim else url_for('manutencao.lista', filtro='corretiva', cliente=cliente) }}" class="kpi-link">
       <div class="kpi-box danger">
         <div class="kpi-icon">🛠️</div>
-        <div>
+        <div class="kpi-info">
           <h2>{{ corretivas or 0 }}</h2>
           <span>Corretivas</span>
         </div>
+        <div class="kpi-percent">{{ pct_corretivas }}%<small>do total</small></div>
       </div>
     </a>
   </div>
 
-  <div class="col-md-3">
-    <a href="{{ url_for('manutencao.lista', filtro='preventiva', data_inicio=data_inicio, data_fim=data_fim) if data_inicio and data_fim else url_for('manutencao.lista', filtro='preventiva') }}" class="kpi-link">
+  <div class="col-xl-3 col-lg-6 col-md-6">
+    <a href="{{ url_for('manutencao.lista', filtro='preventiva', data_inicio=data_inicio, data_fim=data_fim, cliente=cliente) if data_inicio and data_fim else url_for('manutencao.lista', filtro='preventiva', cliente=cliente) }}" class="kpi-link">
       <div class="kpi-box success">
         <div class="kpi-icon">🛡️</div>
-        <div>
+        <div class="kpi-info">
           <h2>{{ preventivas or 0 }}</h2>
           <span>Preventivas</span>
         </div>
+        <div class="kpi-percent">{{ pct_preventivas }}%<small>do total</small></div>
       </div>
     </a>
   </div>
 
-  <div class="col-md-3">
-    <a href="{{ url_for('manutencao.lista', filtro='andamento', data_inicio=data_inicio, data_fim=data_fim) if data_inicio and data_fim else url_for('manutencao.lista', filtro='andamento') }}" class="kpi-link">
+  <div class="col-xl-3 col-lg-6 col-md-6">
+    <a href="{{ url_for('manutencao.lista', filtro='andamento', data_inicio=data_inicio, data_fim=data_fim, cliente=cliente) if data_inicio and data_fim else url_for('manutencao.lista', filtro='andamento', cliente=cliente) }}" class="kpi-link">
       <div class="kpi-box warning">
         <div class="kpi-icon">⏳</div>
-        <div>
+        <div class="kpi-info">
           <h2>{{ andamento or 0 }}</h2>
           <span>Em andamento</span>
         </div>
+        <div class="kpi-percent">{{ pct_andamento }}%<small>do total</small></div>
       </div>
     </a>
   </div>

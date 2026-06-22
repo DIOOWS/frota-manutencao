@@ -68,8 +68,14 @@ def dashboard():
     data_inicio = request.args.get("data_inicio")
     data_fim = request.args.get("data_fim")
     mes_filtro = request.args.get("mes")
+    cliente_filtro = request.args.get("cliente")
 
     query = aplicar_filtro_cliente(Manutencao.query)
+
+    if usuario_eh_admin_ou_gestao() and cliente_filtro:
+        query = query.filter(
+            db.func.upper(Manutencao.cliente) == cliente_filtro.upper()
+        )
 
     inicio_mes_filtro = None
 
@@ -208,6 +214,22 @@ def dashboard():
         ]
     }
 
+    clientes = []
+
+    if usuario_eh_admin_ou_gestao():
+        clientes_query = (
+            db.session.query(Manutencao.cliente)
+            .distinct()
+            .order_by(Manutencao.cliente)
+            .all()
+        )
+
+        clientes = [
+            c[0]
+            for c in clientes_query
+            if c and c[0]
+        ]
+
     return render_template(
         "dashboard.html",
 
@@ -231,4 +253,7 @@ def dashboard():
         valores_preventiva_mes=valores_preventiva_mes,
 
         ultimas_finalizacoes=ultimas_finalizacoes,
+
+        clientes=clientes,
+        cliente_filtro=cliente_filtro,
     )
