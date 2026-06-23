@@ -15,76 +15,87 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
-<body class="neon-login-body login-truck-bg">
+<body class="easy-login-body">
 
-  <div class="neon-login-overlay"></div>
+  <video class="easy-login-video" autoplay muted loop playsinline>
+    <source src="{{ url_for('static', filename='hero.mp4') }}" type="video/mp4">
+  </video>
 
-  <div class="neon-login-wrapper">
+  <div class="easy-login-bg-fallback"></div>
+  <div class="easy-login-overlay"></div>
 
-    <div class="neon-login-box">
+  <main class="easy-login-wrapper">
 
-      <div class="neon-rotating-border"></div>
+    <section class="easy-login-card">
 
-      <div class="neon-login-glow neon-glow-top"></div>
-      <div class="neon-login-glow neon-glow-right"></div>
-      <div class="neon-login-glow neon-glow-bottom"></div>
-      <div class="neon-login-glow neon-glow-left"></div>
+      <div class="easy-login-brand-area">
+        <img
+          src="{{ url_for('static', filename='img/easy-logo.png') }}"
+          alt="Easy Assistência 24h"
+          class="easy-login-logo"
+        >
 
-      <div class="neon-login-inner">
+        <h1>Easy Control</h1>
+        <p>Plataforma Integrada de Gestão Operacional</p>
+      </div>
 
-        <div class="neon-login-title">
-          <h4>EASY CONTROL</h4>
+      {% if erro %}
+        <div class="alert alert-danger text-center easy-login-alert">
+          {{ erro }}
         </div>
+      {% endif %}
 
-        <div class="neon-login-brand">
-          LOGIN
-        </div>
+      <form method="POST" onsubmit="mostrarLoading()" class="easy-login-form">
 
-        {% if erro %}
-          <div class="alert alert-danger text-center neon-login-alert">
-            {{ erro }}
-          </div>
-        {% endif %}
-
-        <form method="POST" onsubmit="mostrarLoading()">
-
-          <div class="neon-input-group">
+        <div class="easy-form-group">
+          <label for="nome">Usuário</label>
+          <div class="easy-input-wrap">
             <i class="bi bi-person"></i>
-            <input type="text"
-                   name="nome"
-                   placeholder="Usuário"
-                   required
-                   autofocus>
+            <input
+              type="text"
+              id="nome"
+              name="nome"
+              placeholder="Digite seu usuário"
+              required
+              autofocus
+              autocomplete="username"
+            >
           </div>
+        </div>
 
-          <div class="neon-input-group">
+        <div class="easy-form-group">
+          <label for="senha">Senha</label>
+          <div class="easy-input-wrap">
             <i class="bi bi-lock"></i>
+            <input
+              type="password"
+              id="senha"
+              name="senha"
+              placeholder="Digite sua senha"
+              required
+              autocomplete="current-password"
+            >
 
-            <input type="password"
-                   id="senha"
-                   name="senha"
-                   placeholder="Senha"
-                   required>
-
-            <button type="button"
-                    class="neon-password-btn"
-                    onclick="toggleSenha()">
+            <button type="button" class="easy-password-btn" onclick="toggleSenha()" aria-label="Mostrar ou ocultar senha">
               <i class="bi bi-eye" id="iconeSenha"></i>
             </button>
           </div>
+        </div>
 
-          <button class="neon-login-btn" id="btnLogin">
-            <span id="textoBtn">Entrar</span>
-            <span class="spinner-border spinner-border-sm" id="spinner"></span>
-          </button>
+        <button class="easy-login-btn" id="btnLogin" type="submit">
+          <span id="textoBtn">Acessar Sistema</span>
+          <span class="spinner-border spinner-border-sm" id="spinner"></span>
+        </button>
 
-        </form>
+      </form>
 
-      </div>
+      <footer class="easy-login-footer">
+        Easy Assistência 24h © 2026 · Easy Control v2.0
+      </footer>
 
-    </div>
+    </section>
 
-  </div>
+  </main>
 
 <script>
 function toggleSenha() {

@@ -239,7 +239,7 @@ app.register_blueprint(agenda_equipe_bp)
 def favicon():
     return send_from_directory(
         os.path.join(app.root_path, "static", "css", "img"),
-        "logo.png",
+        "logo-easy.png",
         mimetype="image/png"
     )
 

@@ -34847,3 +34847,313 @@ body {
     font-size: 12px;
   }
 }
+
+
+
+
+
+
+
+
+
+/* =========================================================
+   🔐 LOGIN PREMIUM - EASY CONTROL
+   Substitui visual neon por layout corporativo glass
+========================================================= */
+
+.easy-login-body {
+  min-height: 100vh;
+  margin: 0;
+  overflow: hidden;
+  font-family: "Inter", "Segoe UI", Arial, sans-serif;
+  background: #061827;
+  color: #ffffff;
+}
+
+.easy-login-video,
+.easy-login-bg-fallback {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+
+.easy-login-bg-fallback {
+  background-image: url("/static/img/login-bg-caminhao.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+}
+
+.easy-login-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(255,255,255,0.14), transparent 28%),
+    linear-gradient(135deg, rgba(3, 20, 35, 0.94), rgba(13, 59, 102, 0.76), rgba(0, 0, 0, 0.82));
+}
+
+.easy-login-wrapper {
+  position: relative;
+  z-index: 3;
+  min-height: 100vh;
+  width: 100%;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.easy-login-card {
+  width: 100%;
+  max-width: 445px;
+  padding: 42px 38px 28px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 32px 90px rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  animation: easyLoginEntrance 0.72s ease forwards;
+}
+
+.easy-login-brand-area {
+  text-align: center;
+  margin-bottom: 30px;
+  animation: easyLogoFade 0.9s ease forwards;
+}
+
+.easy-login-logo {
+  width: 190px;
+  max-width: 76%;
+  max-height: 110px;
+  object-fit: contain;
+  margin-bottom: 18px;
+  filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.28));
+}
+
+.easy-login-brand-area h1 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 850;
+  letter-spacing: -0.9px;
+  text-shadow: 0 5px 18px rgba(0,0,0,0.28);
+}
+
+.easy-login-brand-area p {
+  margin: 10px auto 0;
+  max-width: 320px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.easy-login-alert {
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-size: 13px;
+  margin-bottom: 18px;
+  border: 1px solid rgba(255,255,255,0.25);
+}
+
+.easy-login-form {
+  width: 100%;
+}
+
+.easy-form-group {
+  margin-bottom: 17px;
+}
+
+.easy-form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.65px;
+}
+
+.easy-input-wrap {
+  width: 100%;
+  height: 53px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 15px;
+  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.65);
+  transition: 0.24s ease;
+}
+
+.easy-input-wrap:focus-within {
+  background: #ffffff;
+  border-color: rgba(255,255,255,0.92);
+  box-shadow:
+    0 0 0 4px rgba(255,255,255,0.16),
+    0 10px 25px rgba(13, 59, 102, 0.22);
+  transform: translateY(-1px);
+}
+
+.easy-input-wrap > i {
+  color: #0D3B66;
+  font-size: 17px;
+}
+
+.easy-input-wrap input {
+  flex: 1;
+  height: 100%;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #10243a;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.easy-input-wrap input::placeholder {
+  color: #7b8794;
+  font-weight: 500;
+}
+
+.easy-password-btn {
+  width: 34px;
+  height: 34px;
+  border: none;
+  background: rgba(13, 59, 102, 0.08);
+  color: #0D3B66;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.22s ease;
+}
+
+.easy-password-btn:hover {
+  background: #0D3B66;
+  color: #ffffff;
+}
+
+.easy-login-btn {
+  width: 100%;
+  height: 54px;
+  margin-top: 7px;
+  border: none;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #0D3B66, #144E86);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.72px;
+  cursor: pointer;
+  box-shadow: 0 18px 38px rgba(13, 59, 102, 0.44);
+  transition: 0.24s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.easy-login-btn:hover {
+  transform: translateY(-2px) scale(1.01);
+  background: linear-gradient(135deg, #0a3155, #1B6BB8);
+  box-shadow: 0 22px 44px rgba(13, 59, 102, 0.58);
+}
+
+.easy-login-btn:disabled {
+  opacity: 0.78;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.easy-login-btn .spinner-border {
+  width: 1rem;
+  height: 1rem;
+  display: none;
+}
+
+.easy-login-modules {
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.easy-login-modules span {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.13);
+  border: 1px solid rgba(255,255,255,0.17);
+  color: rgba(255,255,255,0.84);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.easy-login-footer {
+  margin-top: 22px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+}
+
+@keyframes easyLoginEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(26px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes easyLogoFade {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 520px) {
+  .easy-login-body {
+    overflow: auto;
+  }
+
+  .easy-login-wrapper {
+    padding: 18px;
+  }
+
+  .easy-login-card {
+    padding: 34px 24px 24px;
+    border-radius: 24px;
+  }
+
+  .easy-login-logo {
+    width: 165px;
+  }
+
+  .easy-login-brand-area h1 {
+    font-size: 30px;
+  }
+
+  .easy-input-wrap,
+  .easy-login-btn {
+    height: 51px;
+  }
+}
