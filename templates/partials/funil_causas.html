@@ -6,7 +6,7 @@
       <small>Principais causas das manutenções registradas</small>
     </div>
 
-    <span>TOP 10 CAUSAS</span>
+    <span>TOP 5 CAUSAS</span>
   </div>
 
   <div class="funil-pbi-body">
@@ -27,32 +27,12 @@
         <div class="funil-pbi-row">
 
           <div class="funil-pbi-shape funil-pbi-shape-{{ nivel }}">
-            <div class="funil-pbi-icon">
-              {% if 'PREVENTIVA' in label %}
-                🛡️
-              {% elif 'SISTEMA' in label or 'ELETRIC' in label or 'ELÉTRIC' in label %}
-                ⚡
-              {% elif 'DESGASTE' in label %}
-                ⚙️
-              {% elif 'HUMANA' in label %}
-                👥
-              {% elif 'MANUTEN' in label %}
-                🔧
-              {% else %}
-                🔩
-              {% endif %}
-            </div>
+
 
             <strong>{{ label }}</strong>
           </div>
 
-          <div class="funil-pbi-qtd">{{ valor }}</div>
 
-          <div class="funil-pbi-percent">{{ percentual }}%</div>
-
-          <div class="funil-pbi-progress">
-            <span style="width: {{ largura }}%;"></span>
-          </div>
 
         </div>
       {% endfor %}

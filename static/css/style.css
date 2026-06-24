@@ -34653,7 +34653,7 @@ body {
   font-weight: 900;
   text-transform: uppercase;
   position: relative;
-  clip-path: polygon(0 0, 94% 0, 100% 50%, 94% 100%, 0 100%, 6% 50%);
+  clip-path: polygon(0 0, 94% 0, 100% 50%, 94% 100%, 0 100%, 1% 50%);
   box-shadow: 0 7px 16px rgba(0, 62, 190, 0.18);
 }
 
