@@ -970,9 +970,28 @@
                                                     </td>
                                                     <td>
                                                         {% if grupo_selecionado.origem_importada %}
-                                                            <span class="text-muted">Importada</span>
+                                                            <div class="radar-historico-actions">
+                                                                <button type="button"
+                                                                        class="radar-historico-action-btn ver js-open-detalhe-herdada"
+                                                                        onclick="event.preventDefault(); event.stopPropagation();"
+                                                                        data-bs-toggle="modal"
+                                                                        data-bs-target="#modalDetalheHerdada{{ h.id }}"
+                                                                        title="Ver dados completos da conta">
+                                                                    <i class="bi bi-eye-fill"></i>
+                                                                </button>
+                                                                <span class="text-muted">Importada</span>
+                                                            </div>
                                                         {% else %}
                                                         <div class="radar-historico-actions">
+                                                            <button type="button"
+                                                                    class="radar-historico-action-btn ver js-open-detalhe-herdada"
+                                                                    onclick="event.preventDefault(); event.stopPropagation();"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#modalDetalheHerdada{{ h.id }}"
+                                                                    title="Ver dados completos da conta">
+                                                                <i class="bi bi-eye-fill"></i>
+                                                            </button>
+
                                                             <button type="button"
                                                                     class="radar-historico-action-btn editar js-toggle-edicao-herdada"
                                                                     title="Editar esta conta"
@@ -1312,6 +1331,109 @@
         </div>
     </div>
 </div>
+
+
+
+{% if grupo_selecionado %}
+    {% for h in grupo_selecionado.historico %}
+        <div class="modal fade radar-conta-modal radar-detalhe-herdada-modal"
+             id="modalDetalheHerdada{{ h.id }}"
+             tabindex="-1"
+             data-bs-backdrop="static"
+             data-bs-keyboard="false"
+             aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content radar-herdadas-modal radar-conta-detalhe-modal">
+                    <div class="modal-header">
+                        <div>
+                            <h5 class="modal-title">Conta herdada #{{ h.id }} — {{ h.descricao }}</h5>
+                            <small class="radar-modal-subtitle">Dados completos da parcela selecionada, incluindo observações.</small>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="radar-conta-detalhe-hero">
+                            <div class="radar-conta-detalhe-valor">
+                                <span>Valor da conta</span>
+                                <strong>{{ h.valor_formatado }}</strong>
+                                <small>Vencimento {{ h.data_vencimento_formatada }} • {{ h.dias_atraso }} dias em atraso</small>
+                            </div>
+
+                            <div class="radar-conta-detalhe-status">
+                                <span class="radar-status-pill vencido">{{ h.status or 'EM ABERTO' }}</span>
+                            </div>
+                        </div>
+
+                        <div class="radar-conta-detalhe-sections">
+                            <section class="radar-conta-detalhe-card">
+                                <h3>Identificação</h3>
+                                <p><span>Descrição</span><strong>{{ h.descricao or '-' }}</strong></p>
+                                <p><span>Fornecedor</span><strong>{{ h.fornecedor or '-' }}</strong></p>
+                                <p><span>Categoria</span><strong>{{ h.categoria or '-' }}</strong></p>
+                                <p><span>Setor</span><strong>{{ h.setor or '-' }}</strong></p>
+                            </section>
+
+                            <section class="radar-conta-detalhe-card">
+                                <h3>Financeiro</h3>
+                                <p><span>Valor</span><strong>{{ h.valor_formatado }}</strong></p>
+                                <p><span>Status</span><strong>{{ h.status or 'PENDENTE' }}</strong></p>
+                                <p><span>Tipo da conta</span><strong>{{ h.tipo_obrigacao or '-' }}</strong></p>
+                                <p><span>Recorrente</span><strong>{% if h.recorrente %}Sim{% else %}Não{% endif %}</strong></p>
+                            </section>
+
+                            <section class="radar-conta-detalhe-card">
+                                <h3>Datas</h3>
+                                <p><span>Competência</span><strong>{{ h.competencia or '-' }}</strong></p>
+                                <p><span>Vencimento</span><strong>{{ h.data_vencimento_formatada }}</strong></p>
+                                <p><span>Pagamento</span><strong>{% if h.data_pagamento_formatada and h.data_pagamento_formatada != '-' %}{{ h.data_pagamento_formatada }}{% else %}NÃO PAGO{% endif %}</strong></p>
+                                <p><span>Dias em atraso</span><strong>{{ h.dias_atraso }} dias</strong></p>
+                            </section>
+
+                            <section class="radar-conta-detalhe-card">
+                                <h3>Parcelamento</h3>
+
+                                {% if h.parcelada or h.tipo_obrigacao == 'PARCELADA' or h.parcela_atual or h.total_parcelas %}
+                                    <p><span>Parcela</span><strong>{{ h.parcela_label if h.parcela_label and h.parcela_label != '-' else 'PARCELADA' }}</strong></p>
+                                    <p><span>Parcela atual</span><strong>{{ h.parcela_atual or 'NÃO INFORMADA' }}</strong></p>
+                                    <p><span>Total parcelas</span><strong>{{ h.total_parcelas or 'NÃO INFORMADO' }}</strong></p>
+                                {% else %}
+                                    <p><span>Parcela</span><strong>CONTA ÚNICA</strong></p>
+                                    <p><span>Parcela atual</span><strong>NÃO APLICÁVEL</strong></p>
+                                    <p><span>Total parcelas</span><strong>NÃO APLICÁVEL</strong></p>
+                                {% endif %}
+
+                                <p><span>ID da conta</span><strong>#{{ h.id }}</strong></p>
+                            </section>
+
+                            <section class="radar-conta-detalhe-card radar-conta-detalhe-wide">
+                                <h3>Observações completas</h3>
+                                <div class="radar-conta-observacoes">
+                                    {{ h.observacoes or 'Sem observações cadastradas.' }}
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        {% if not grupo_selecionado.origem_importada %}
+                            <button type="button"
+                                    class="btn btn-primary js-toggle-edicao-herdada"
+                                    data-edit-row="{{ h.id }}"
+                                    data-bs-dismiss="modal">
+                                Editar esta conta
+                            </button>
+                        {% endif %}
+
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Fechar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
 
 
 {% if grupo_selecionado %}
@@ -3365,6 +3487,69 @@ document.addEventListener("DOMContentLoaded", function () {
         radarAbrirHistoricoSeSolicitado();
     }
 });
+</script>
+
+
+<script>
+/* =====================================================
+   CORREÇÃO: OLHINHO DA PARCELA HERDADA
+   Evita o abre/fecha quando abre detalhe por cima do histórico.
+===================================================== */
+(function () {
+    function modalAberto(selector) {
+        return document.querySelector(selector + '.show');
+    }
+
+    document.addEventListener('click', function (event) {
+        const btn = event.target.closest('.js-open-detalhe-herdada');
+        if (!btn) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+
+        const targetSelector = btn.getAttribute('data-bs-target');
+        const target = targetSelector ? document.querySelector(targetSelector) : null;
+        if (!target || typeof bootstrap === 'undefined') return;
+
+        const modal = bootstrap.Modal.getOrCreateInstance(target, {
+            backdrop: 'static',
+            keyboard: false,
+            focus: true
+        });
+
+        modal.show();
+    }, true);
+
+    document.addEventListener('show.bs.modal', function (event) {
+        const modal = event.target;
+        if (!modal || !modal.classList.contains('radar-detalhe-herdada-modal')) return;
+
+        const historicoAberto = modalAberto('#modalHistoricoHerdada');
+        if (historicoAberto) {
+            modal.dataset.abertoSobreHistorico = '1';
+            historicoAberto.classList.add('radar-modal-pai-ativo');
+        }
+    }, true);
+
+    document.addEventListener('shown.bs.modal', function (event) {
+        const modal = event.target;
+        if (!modal || !modal.classList.contains('radar-detalhe-herdada-modal')) return;
+
+        document.body.classList.add('modal-open');
+    });
+
+    document.addEventListener('hidden.bs.modal', function (event) {
+        const modal = event.target;
+        if (!modal || !modal.classList.contains('radar-detalhe-herdada-modal')) return;
+
+        const historicoAberto = modalAberto('#modalHistoricoHerdada');
+        if (historicoAberto) {
+            document.body.classList.add('modal-open');
+            historicoAberto.classList.remove('radar-modal-pai-ativo');
+        }
+    });
+})();
 </script>
 
 {% endblock %}

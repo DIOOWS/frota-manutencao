@@ -35118,3 +35118,152 @@ body {
     height: 51px;
   }
 }
+
+
+/* =========================================================
+   RADAR - DETALHE COMPLETO DA CONTA NO OLHINHO
+========================================================= */
+
+.radar-historico-action-btn.ver {
+  color: #0f46c7;
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.radar-historico-action-btn.ver:hover {
+  background: #dbeafe;
+  color: #072f92;
+}
+
+.radar-conta-detalhe-hero {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.radar-conta-detalhe-valor {
+  flex: 1;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.18);
+}
+
+.radar-conta-detalhe-valor span,
+.radar-conta-detalhe-valor small {
+  display: block;
+  color: rgba(255,255,255,0.78);
+  font-weight: 800;
+}
+
+.radar-conta-detalhe-valor span {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: 8px;
+}
+
+.radar-conta-detalhe-valor strong {
+  display: block;
+  font-size: 30px;
+  font-weight: 950;
+  line-height: 1.1;
+  margin-bottom: 10px;
+}
+
+.radar-conta-detalhe-status {
+  min-width: 170px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.07);
+}
+
+.radar-conta-detalhe-sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.radar-conta-detalhe-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+.radar-conta-detalhe-card h3 {
+  margin: 0 0 12px 0;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.radar-conta-detalhe-card p {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding: 9px 0;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.radar-conta-detalhe-card p:last-child {
+  border-bottom: none;
+}
+
+.radar-conta-detalhe-card p span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.radar-conta-detalhe-card p strong {
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 950;
+  text-align: right;
+  word-break: break-word;
+}
+
+.radar-conta-detalhe-wide {
+  grid-column: 1 / -1;
+}
+
+.radar-conta-observacoes {
+  min-height: 92px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 14px;
+  padding: 14px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 750;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (max-width: 900px) {
+  .radar-conta-detalhe-hero {
+    flex-direction: column;
+  }
+
+  .radar-conta-detalhe-status {
+    min-width: 100%;
+  }
+
+  .radar-conta-detalhe-sections {
+    grid-template-columns: 1fr;
+  }
+}
