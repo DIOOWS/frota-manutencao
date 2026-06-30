@@ -681,6 +681,50 @@ def excluir_imagem(id):
 
 
 # ==========================================
+# 🖼️ EXCLUIR IMAGEM KM
+# ==========================================
+@manutencao_bp.route("/<int:id>/excluir-imagem-km", methods=["POST"])
+def excluir_imagem_km(id):
+    if not session.get("user_id"):
+        return jsonify({"ok": False, "message": "Sessão expirada."}), 401
+
+    if not usuario_tem_permissao_operacional():
+        return jsonify({"ok": False, "message": "Sem permissão."}), 403
+
+    m = Manutencao.query.get_or_404(id)
+
+    if not manutencao_pertence_ao_usuario(m):
+        return jsonify({"ok": False, "message": "Sem permissão."}), 403
+
+    imagem_url = request.form.get("imagem_url")
+    if not imagem_url:
+        return jsonify({"ok": False, "message": "Imagem não informada."}), 400
+
+    imagens_atuais = carregar_lista_imagens(m.km_imagem)
+
+    if imagem_url not in imagens_atuais:
+        return jsonify({"ok": False, "message": "Imagem não encontrada nesse registro."}), 404
+
+    imagens_atuais.remove(imagem_url)
+    m.km_imagem = json.dumps(imagens_atuais)
+
+    public_id = extrair_public_id_cloudinary(imagem_url)
+    if public_id and cloudinary_esta_configurado():
+        try:
+            cloudinary.uploader.destroy(public_id)
+        except Exception as e:
+            print("Erro ao apagar imagem KM no Cloudinary:", e)
+
+    db.session.commit()
+
+    return jsonify({
+        "ok": True,
+        "message": "Imagem do KM excluída com sucesso!",
+        "restantes": len(imagens_atuais)
+    })
+
+
+# ==========================================
 # 🖼️ EXCLUIR IMAGEM AFERIÇÃO
 # ==========================================
 @manutencao_bp.route("/afericao/<int:afericao_id>/excluir-imagem", methods=["POST"])
@@ -771,6 +815,7 @@ def nova():
 
         placa_novas_imagens = salvar_imagens_arquivos(request.files.getlist("placa_imagens"))
         ambiente_novas_imagens = salvar_imagens_arquivos(request.files.getlist("ambiente_imagens"))
+        km_novas_imagens = salvar_imagens_arquivos(request.files.getlist("km_imagem"))
 
         nova_manutencao = Manutencao(
             data=data_convertida,
@@ -786,6 +831,8 @@ def nova():
             status=normalizar_texto(request.form.get("status")),
             observacao=normalizar_texto(request.form.get("observacao")),
             cliente=normalizar_texto(request.form.get("cliente")),
+            km_entrada=normalizar_simples(request.form.get("km_entrada")),
+            km_imagem=json.dumps(km_novas_imagens),
             os=os_numero,
             causa=normalizar_texto(request.form.get("causa")),
             problema=normalizar_texto(request.form.get("problema")),
@@ -839,6 +886,7 @@ def nova():
         causas_json=listar_causas_json(),
         m=None,
         imagens_lista=[],
+        km_imagens=[],
         afericao_placa={"id": None, "afericao": "", "data_afericao": "", "status": "", "imagens": []},
         afericao_ambiente={"id": None, "afericao": "", "data_afericao": "", "status": "", "imagens": []}
     )
@@ -909,6 +957,7 @@ def lista():
         r.ambiente_imagens = carregar_lista_imagens(afericao_ambiente.imagens) if afericao_ambiente else []
 
         r.imagens_lista = carregar_lista_imagens(r.imagens)
+        r.km_imagens = carregar_lista_imagens(getattr(r, "km_imagem", None))
 
     return render_template(
         "manutencoes/lista.html",
@@ -943,6 +992,7 @@ def editar(id):
             novas_imagens = salvar_imagens()
             placa_novas_imagens = salvar_imagens_arquivos(request.files.getlist("placa_imagens"))
             ambiente_novas_imagens = salvar_imagens_arquivos(request.files.getlist("ambiente_imagens"))
+            km_novas_imagens = salvar_imagens_arquivos(request.files.getlist("km_imagem"))
 
             data_convertida = parse_data(valor_formulario("data", m.data))
             data_saida_convertida = parse_data(valor_formulario("data_saida", m.data_saida))
@@ -968,6 +1018,12 @@ def editar(id):
             m.status = valor_formulario("status", m.status, normalizar_texto)
             m.observacao = valor_formulario("observacao", m.observacao, normalizar_texto)
             m.cliente = valor_formulario("cliente", m.cliente, normalizar_texto)
+            m.km_entrada = valor_formulario("km_entrada", getattr(m, "km_entrada", None), normalizar_simples)
+
+            if km_novas_imagens:
+                imagens_km_atuais = carregar_lista_imagens(getattr(m, "km_imagem", None))
+                m.km_imagem = json.dumps(imagens_km_atuais + km_novas_imagens)
+
             m.os = valor_formulario("os", m.os, normalizar_simples)
             m.causa = valor_formulario("causa", m.causa, normalizar_texto)
             m.problema = valor_formulario("problema", m.problema, normalizar_texto)
@@ -1015,6 +1071,7 @@ def editar(id):
 
     clientes = Cliente.query.order_by(Cliente.nome).all()
     imagens_lista = carregar_lista_imagens(m.imagens)
+    km_imagens = carregar_lista_imagens(getattr(m, "km_imagem", None))
     causas = CausaManutencao.query.filter_by(ativo=True).order_by(CausaManutencao.nome).all()
 
     identificador_afericao = identificador_veiculo(m.numero_frota, getattr(m, "placa", None))
@@ -1028,6 +1085,7 @@ def editar(id):
         causas=causas,
         causas_json=listar_causas_json(),
         imagens_lista=imagens_lista,
+        km_imagens=km_imagens,
         afericao_placa=afericao_placa,
         afericao_ambiente=afericao_ambiente
     )
@@ -1106,6 +1164,7 @@ def exportar_excel():
         "FROTA",
         "PLACA",
         "OS",
+        "KM ENTRADA",
         "BAÚ",
         "TIPO VEÍCULO",
         "TIPO SERVIÇO",
@@ -1156,6 +1215,7 @@ def exportar_excel():
             r.numero_frota or "",
             getattr(r, "placa", None) or "",
             r.os or "",
+            getattr(r, "km_entrada", None) or "",
             r.bau or "",
             r.tipo_veiculo or "",
             r.tipo_servico or "",

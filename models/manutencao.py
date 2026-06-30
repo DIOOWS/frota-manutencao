@@ -26,4 +26,7 @@ class Manutencao(db.Model):
     observacao = db.Column(db.String)
     cliente = db.Column(db.String)
 
+    km_entrada = db.Column(db.String(50))
+    km_imagem = db.Column(db.Text)
+
     imagens = db.Column(db.Text)

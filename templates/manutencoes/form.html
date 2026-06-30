@@ -36,7 +36,7 @@
     <section class="manutencao-section-card">
       <div class="manutencao-section-title">
         <span></span>
-        <h5>Informações da Manutenção</h5>
+        <h5>Manutenção</h5>
       </div>
 
       <div class="row g-3">
@@ -177,13 +177,8 @@
           <textarea name="observacao" class="form-control" rows="3" placeholder="Observação">{{ m.observacao if m else '' }}</textarea>
         </div>
       </div>
-    </section>
 
-    <section class="manutencao-section-card">
-      <div class="manutencao-section-title">
-        <span></span>
-        <h5>Evidências da Manutenção</h5>
-      </div>
+      <div class="manutencao-section-divider"></div>
 
       <div class="manutencao-upload-panel">
         <label class="form-label">Imagens da Manutenção</label>
@@ -212,7 +207,46 @@
     <section class="manutencao-section-card">
       <div class="manutencao-section-title">
         <span></span>
-        <h5>Aferição dos Termômetros</h5>
+        <h5>KM</h5>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">KM na chegada da empresa</label>
+          <input type="text" name="km_entrada" class="form-control"
+                 value="{{ m.km_entrada if m and m.km_entrada else '' }}"
+                 placeholder="Ex.: 125450">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Imagem do KM / Hodômetro</label>
+          <input type="file" name="km_imagem" class="form-control js-preview-input" data-preview-target="previewKm" multiple accept="image/*">
+          <small>Você pode adicionar novas imagens sem apagar as imagens já cadastradas.</small>
+          <div id="previewKm" class="manutencao-gallery manutencao-preview-gallery mt-3"></div>
+
+          {% if m and km_imagens %}
+            <div class="manutencao-gallery mt-3">
+              {% for img in km_imagens %}
+                <div class="manutencao-img-card imagem-card-km" data-url="{{ img }}">
+                  <img src="{{ img }}" alt="Imagem do KM">
+                  <button type="button"
+                          class="manutencao-img-remove btn-excluir-imagem-km"
+                          data-manutencao-id="{{ m.id }}"
+                          data-imagem-url="{{ img }}">
+                    ×
+                  </button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+
+    <section class="manutencao-section-card">
+      <div class="manutencao-section-title">
+        <span></span>
+        <h5>Refrigeração</h5>
       </div>
 
       <div class="row g-3">
@@ -736,6 +770,52 @@ document.addEventListener("DOMContentLoaded", function () {
         alert("Erro ao excluir imagem.");
         this.disabled = false;
         this.innerText = "Excluir imagem";
+      }
+    });
+  });
+
+  const botoesExcluirKm = document.querySelectorAll(".btn-excluir-imagem-km");
+
+  botoesExcluirKm.forEach((botao) => {
+    botao.addEventListener("click", async function () {
+      const manutencaoId = this.dataset.manutencaoId;
+      const imagemUrl = this.dataset.imagemUrl;
+
+      if (!confirm("Deseja excluir esta imagem do KM?")) {
+        return;
+      }
+
+      this.disabled = true;
+      this.innerText = "Excluindo...";
+
+      try {
+        const formData = new FormData();
+        formData.append("imagem_url", imagemUrl);
+
+        const response = await fetch(`/manutencoes/${manutencaoId}/excluir-imagem-km`, {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.ok) {
+          alert(data.message || "Erro ao excluir imagem do KM.");
+          this.disabled = false;
+          this.innerText = "×";
+          return;
+        }
+
+        const card = this.closest(".imagem-card-km");
+        if (card) {
+          card.remove();
+        }
+
+      } catch (error) {
+        console.error(error);
+        alert("Erro ao excluir imagem do KM.");
+        this.disabled = false;
+        this.innerText = "×";
       }
     });
   });
