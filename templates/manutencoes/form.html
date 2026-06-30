@@ -31,7 +31,7 @@
     {% endif %}
   </div>
 
-  <form method="POST" enctype="multipart/form-data" class="manutencao-premium-form">
+  <form method="POST" enctype="multipart/form-data" class="manutencao-premium-form" id="formManutencao" data-proteger-saida="true">
 
     <section class="manutencao-section-card">
       <div class="manutencao-section-title">
@@ -187,8 +187,9 @@
 
       <div class="manutencao-upload-panel">
         <label class="form-label">Imagens da Manutenção</label>
-        <input type="file" name="imagens" class="form-control" multiple accept="image/*">
+        <input type="file" name="imagens" class="form-control js-preview-input" data-preview-target="previewManutencao" multiple accept="image/*">
         <small>Você pode adicionar novas imagens sem apagar as imagens já cadastradas.</small>
+        <div id="previewManutencao" class="manutencao-gallery manutencao-preview-gallery mt-3"></div>
 
         {% if m and imagens_lista %}
           <div id="galeriaImagens" class="manutencao-gallery mt-3">
@@ -246,7 +247,8 @@
 
             <div class="mt-3">
               <label class="form-label">Imagens do Termômetro de Placa</label>
-              <input type="file" name="placa_imagens" class="form-control" multiple accept="image/*">
+              <input type="file" name="placa_imagens" class="form-control js-preview-input" data-preview-target="previewPlaca" multiple accept="image/*">
+              <div id="previewPlaca" class="manutencao-gallery manutencao-preview-gallery mt-3"></div>
 
               {% if afericao_placa and afericao_placa.imagens %}
                 <div class="manutencao-gallery mt-3">
@@ -298,7 +300,8 @@
 
             <div class="mt-3">
               <label class="form-label">Imagens do Termômetro de Ambiente</label>
-              <input type="file" name="ambiente_imagens" class="form-control" multiple accept="image/*">
+              <input type="file" name="ambiente_imagens" class="form-control js-preview-input" data-preview-target="previewAmbiente" multiple accept="image/*">
+              <div id="previewAmbiente" class="manutencao-gallery manutencao-preview-gallery mt-3"></div>
 
               {% if afericao_ambiente and afericao_ambiente.imagens %}
                 <div class="manutencao-gallery mt-3">
@@ -322,8 +325,8 @@
     </section>
 
     <div class="manutencao-form-actions">
-      <a href="/manutencoes/lista" class="btn btn-light">Cancelar</a>
-      <button class="btn manutencao-save-btn">Salvar Manutenção</button>
+      <a href="/manutencoes/lista" class="btn btn-light" id="btnCancelarManutencao">Cancelar</a>
+      <button type="submit" class="btn manutencao-save-btn" id="btnSalvarManutencao">Salvar Manutenção</button>
     </div>
 
   </form>
@@ -780,6 +783,115 @@ document.addEventListener("DOMContentLoaded", function () {
         this.disabled = false;
         this.innerText = "Excluir imagem";
       }
+    });
+  });
+});
+</script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.getElementById("formManutencao");
+  const btnCancelar = document.getElementById("btnCancelarManutencao");
+  const btnSalvar = document.getElementById("btnSalvarManutencao");
+
+  if (!form) {
+    return;
+  }
+
+  let formularioAlterado = false;
+  let enviandoFormulario = false;
+
+  function marcarAlterado(event) {
+    const alvo = event.target;
+
+    if (!alvo) {
+      return;
+    }
+
+    if (alvo.closest(".modal")) {
+      return;
+    }
+
+    formularioAlterado = true;
+  }
+
+  form.querySelectorAll("input, select, textarea").forEach(function (campo) {
+    campo.addEventListener("change", marcarAlterado);
+    campo.addEventListener("input", marcarAlterado);
+  });
+
+  form.addEventListener("submit", function () {
+    enviandoFormulario = true;
+    formularioAlterado = false;
+
+    if (btnSalvar) {
+      btnSalvar.disabled = true;
+      btnSalvar.innerText = "Salvando...";
+    }
+  });
+
+  window.addEventListener("beforeunload", function (event) {
+    if (!formularioAlterado || enviandoFormulario) {
+      return;
+    }
+
+    event.preventDefault();
+    event.returnValue = "";
+  });
+
+  if (btnCancelar) {
+    btnCancelar.addEventListener("click", function (event) {
+      if (!formularioAlterado || enviandoFormulario) {
+        return;
+      }
+
+      const confirmarSaida = confirm(
+        "Existem alterações não salvas.\n\nDeseja sair sem salvar?"
+      );
+
+      if (!confirmarSaida) {
+        event.preventDefault();
+      }
+    });
+  }
+
+  document.querySelectorAll(".js-preview-input").forEach(function (input) {
+    input.addEventListener("change", function () {
+      const targetId = input.dataset.previewTarget;
+      const box = document.getElementById(targetId);
+
+      if (!box) {
+        return;
+      }
+
+      box.innerHTML = "";
+
+      Array.from(input.files || []).forEach(function (file) {
+        if (!file.type.startsWith("image/")) {
+          return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function (event) {
+          const card = document.createElement("div");
+          card.className = "manutencao-img-card manutencao-preview-card";
+
+          const img = document.createElement("img");
+          img.src = event.target.result;
+          img.alt = file.name;
+
+          const label = document.createElement("small");
+          label.textContent = "Novo arquivo";
+
+          card.appendChild(img);
+          card.appendChild(label);
+          box.appendChild(card);
+        };
+
+        reader.readAsDataURL(file);
+      });
     });
   });
 });

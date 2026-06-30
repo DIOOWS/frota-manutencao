@@ -1,0 +1,84 @@
+{% set item = item if item is defined else none %}
+
+<div class="fc-form-grid">
+  <div class="fc-field span-2">
+    <label>Cliente</label>
+    <input type="text" name="cliente" class="form-control" value="{{ item.cliente if item else '' }}" required>
+  </div>
+
+  <div class="fc-field">
+    <label>O.S</label>
+    <input type="text" name="os" class="form-control" value="{{ item.os if item else '' }}">
+  </div>
+
+  <div class="fc-field">
+    <label>NFSE</label>
+    <input type="text" name="nfse" class="form-control" value="{{ item.nfse if item else '' }}">
+  </div>
+
+  <div class="fc-field span-2">
+    <label>Pedido de compras</label>
+    <input type="text" name="pedido_compras" class="form-control" value="{{ item.pedido_compras if item else '' }}">
+  </div>
+
+  <div class="fc-field">
+    <label>Valor</label>
+    <input type="text" name="valor" class="form-control money-mask" value="{{ '%.2f'|format(item.valor or 0) if item else '' }}" placeholder="0,00">
+  </div>
+
+  <div class="fc-field">
+    <label>Comissão</label>
+    <input type="text" name="comissao" class="form-control money-mask" value="{{ '%.2f'|format(item.comissao or 0) if item else '' }}" placeholder="0,00">
+  </div>
+
+  <div class="fc-field">
+    <label>Data de emissão</label>
+    <input type="date" name="data_emissao" class="form-control" value="{{ item.data_emissao.strftime('%Y-%m-%d') if item and item.data_emissao else '' }}">
+  </div>
+
+  <div class="fc-field">
+    <label>30 dias</label>
+    <input type="date" name="vencimento_30" class="form-control" value="{{ item.vencimento_30.strftime('%Y-%m-%d') if item and item.vencimento_30 else '' }}">
+  </div>
+
+  <div class="fc-field">
+    <label>60 dias</label>
+    <input type="date" name="vencimento_60" class="form-control" value="{{ item.vencimento_60.strftime('%Y-%m-%d') if item and item.vencimento_60 else '' }}">
+  </div>
+
+  <div class="fc-field">
+    <label>90 dias</label>
+    <input type="date" name="vencimento_90" class="form-control" value="{{ item.vencimento_90.strftime('%Y-%m-%d') if item and item.vencimento_90 else '' }}">
+  </div>
+
+  <div class="fc-field">
+    <label>Status</label>
+    <select name="status" class="form-control">
+      {% set st = item.status if item else 'PENDENTE' %}
+      <option value="PENDENTE" {% if st == 'PENDENTE' %}selected{% endif %}>Pendente</option>
+      <option value="RECEBIDO" {% if st == 'RECEBIDO' %}selected{% endif %}>Recebido</option>
+      <option value="ATRASADO" {% if st == 'ATRASADO' %}selected{% endif %}>Atrasado</option>
+      <option value="CANCELADO" {% if st == 'CANCELADO' %}selected{% endif %}>Cancelado</option>
+    </select>
+  </div>
+
+  <div class="fc-field">
+    <label>Tipo</label>
+    {% set tp = item.tipo if item else 'CONTRATO' %}
+    <select name="tipo" class="form-control">
+      <option value="CONTRATO" {% if tp == 'CONTRATO' %}selected{% endif %}>Contrato</option>
+      <option value="EXTRA" {% if tp == 'EXTRA' %}selected{% endif %}>Extra</option>
+      <option value="PARTICULAR" {% if tp == 'PARTICULAR' %}selected{% endif %}>Particular</option>
+    </select>
+  </div>
+
+  <div class="fc-field span-2">
+    <label>Comercial</label>
+    <input type="text" name="comercial" class="form-control" value="{{ item.comercial if item else '' }}">
+  </div>
+
+  <div class="fc-field span-4">
+    <label>Observações</label>
+    <textarea name="observacoes" class="form-control" rows="3">{{ item.observacoes if item else '' }}</textarea>
+  </div>
+</div>

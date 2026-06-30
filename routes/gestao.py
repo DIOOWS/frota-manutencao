@@ -5550,3 +5550,441 @@ def dashboard_operacional_limpar():
         flash(f"Erro ao limpar base: {str(e)}", "error")
 
     return redirect("/gestao/dashboard-operacional")
+
+# =========================================================
+# FATURAMENTO COMERCIAL
+# =========================================================
+
+class _PrazoRecebimento:
+    def __init__(self, data, cliente, valor):
+        self.data = data
+        self.cliente = cliente
+        self.valor = valor
+
+
+def _primeiro_vencimento(registro):
+    datas = [
+        getattr(registro, "vencimento_30", None),
+        getattr(registro, "vencimento_60", None),
+        getattr(registro, "vencimento_90", None),
+    ]
+    datas = [d for d in datas if d]
+    return min(datas) if datas else None
+
+
+def _proximo_vencimento(registro, hoje):
+    datas = [
+        getattr(registro, "vencimento_30", None),
+        getattr(registro, "vencimento_60", None),
+        getattr(registro, "vencimento_90", None),
+    ]
+    datas = sorted([d for d in datas if d and d >= hoje])
+    return datas[0] if datas else None
+
+
+
+@gestao_bp.route("/faturamento-comercial", methods=["GET", "POST"])
+@gestao_required
+def faturamento_comercial():
+    from models.faturamento_comercial import FaturamentoComercial
+
+    hoje = date.today()
+
+    if request.method == "POST":
+        registro_id = request.form.get("registro_id")
+
+        if registro_id:
+            registro = FaturamentoComercial.query.get_or_404(registro_id)
+        else:
+            registro = FaturamentoComercial()
+            db.session.add(registro)
+
+        registro.cliente = normalizar_texto(request.form.get("cliente"))
+        registro.os = normalizar_texto(request.form.get("os"))
+        registro.nfse = normalizar_texto(request.form.get("nfse"))
+        registro.pedido_compras = normalizar_texto(request.form.get("pedido_compras"))
+        registro.valor = dinheiro(request.form.get("valor"))
+        registro.comissao = dinheiro(request.form.get("comissao"))
+        registro.data_emissao = parse_data(request.form.get("data_emissao"))
+        registro.vencimento_30 = parse_data(request.form.get("vencimento_30"))
+        registro.vencimento_60 = parse_data(request.form.get("vencimento_60"))
+        registro.vencimento_90 = parse_data(request.form.get("vencimento_90"))
+        registro.status = normalizar_texto(request.form.get("status")) or "PENDENTE"
+        registro.tipo = normalizar_texto(request.form.get("tipo")) or "CONTRATO"
+        registro.comercial = normalizar_texto(request.form.get("comercial"))
+        registro.observacoes = request.form.get("observacoes")
+        registro.pago = registro.status in ["RECEBIDO", "NOTAS PAGAS", "PAGO"]
+
+        data_base = registro.data_emissao or registro.vencimento_30 or hoje
+        registro.mes = data_base.month
+        registro.ano = data_base.year
+
+        db.session.commit()
+
+        flash("Faturamento comercial salvo com sucesso.", "success")
+
+        mes_retorno = request.form.get("mes_retorno") or registro.mes
+        ano_retorno = request.form.get("ano_retorno") or registro.ano
+
+        return redirect(f"/gestao/faturamento-comercial?mes={mes_retorno}&ano={ano_retorno}")
+
+    mes = request.args.get("mes", hoje.month, type=int)
+    ano = request.args.get("ano", hoje.year, type=int)
+    cliente_filtro = normalizar_texto(request.args.get("cliente"))
+    status_filtro = normalizar_texto(request.args.get("status"))
+    tipo_filtro = normalizar_texto(request.args.get("tipo"))
+    vencimento_filtro = normalizar_texto(request.args.get("vencimento"))
+
+    periodo_inicio = primeiro_dia_mes(mes, ano)
+    periodo_fim = ultimo_dia_mes(mes, ano)
+
+    # A tela agora trabalha por competência direta: mês + ano.
+    # A sincronização continua trazendo todos os registros de Contas a Receber,
+    # mas a visualização fica limpa por mês selecionado.
+    query = FaturamentoComercial.query.filter(
+        FaturamentoComercial.mes == mes,
+        FaturamentoComercial.ano == ano,
+    )
+
+    if cliente_filtro:
+        query = query.filter(FaturamentoComercial.cliente.ilike(f"%{cliente_filtro}%"))
+
+    if status_filtro:
+        query = query.filter(FaturamentoComercial.status == status_filtro)
+
+    if tipo_filtro:
+        query = query.filter(FaturamentoComercial.tipo == tipo_filtro)
+
+    registros = query.order_by(
+        FaturamentoComercial.data_emissao.desc().nullslast(),
+        FaturamentoComercial.vencimento_30.asc().nullslast(),
+        FaturamentoComercial.id.desc()
+    ).all()
+
+    if vencimento_filtro:
+        hoje_ref = hoje
+        filtrados = []
+        for r in registros:
+            datas_venc = [r.vencimento_30, r.vencimento_60, r.vencimento_90]
+            datas_venc = [d for d in datas_venc if d]
+            if vencimento_filtro == "ATRASADO":
+                if (not r.pago) and any(d < hoje_ref for d in datas_venc):
+                    filtrados.append(r)
+            elif vencimento_filtro == "PROXIMOS_30":
+                limite = hoje_ref + timedelta(days=30)
+                if (not r.pago) and any(hoje_ref <= d <= limite for d in datas_venc):
+                    filtrados.append(r)
+            elif vencimento_filtro == "TODOS":
+                filtrados.append(r)
+        registros = filtrados
+
+    def _is_recebido(registro):
+        status = normalizar_texto(getattr(registro, "status", None)) or ""
+        return bool(getattr(registro, "pago", False)) or status in ["RECEBIDO", "NOTAS PAGAS", "PAGO", "QUITADO", "BAIXADO"]
+
+    registros_validos = [r for r in registros if (normalizar_texto(r.status) or "") != "CANCELADO"]
+
+    total_notas = sum(dinheiro(r.valor) for r in registros_validos)
+    total_recebido = sum(dinheiro(r.valor) for r in registros_validos if _is_recebido(r))
+    total_pendente = sum(dinheiro(r.valor) for r in registros_validos if not _is_recebido(r))
+    total_comissao = sum(dinheiro(r.comissao) for r in registros_validos)
+
+    percentual_recebido = (total_recebido / total_notas * 100) if total_notas else 0
+    percentual_aberto = (total_pendente / total_notas * 100) if total_notas else 0
+    percentual_comissao = (total_comissao / total_notas * 100) if total_notas else 0
+
+    tipo_counter = Counter()
+    clientes_counter = Counter()
+
+    proximos_recebimentos = []
+    atrasadas = []
+
+    for r in registros_validos:
+        valor = dinheiro(r.valor)
+        tipo_counter[r.tipo or "SEM TIPO"] += valor
+        clientes_counter[r.cliente or "SEM CLIENTE"] += valor
+
+        if not _is_recebido(r):
+            prox = _proximo_vencimento(r, hoje)
+            primeiro = _primeiro_vencimento(r)
+
+            if prox and prox <= hoje + timedelta(days=30):
+                proximos_recebimentos.append(_PrazoRecebimento(prox, r.cliente or "SEM CLIENTE", valor))
+            elif primeiro and primeiro < hoje:
+                atrasadas.append(_PrazoRecebimento(primeiro, r.cliente or "SEM CLIENTE", valor))
+
+    proximos_recebimentos = sorted(proximos_recebimentos, key=lambda x: x.data)[:6]
+    atrasadas = sorted(atrasadas, key=lambda x: x.data)[:6]
+
+    total_por_tipo = {
+        "CONTRATO": tipo_counter.get("CONTRATO", 0),
+        "EXTRA": tipo_counter.get("EXTRA", 0),
+        "PARTICULAR": tipo_counter.get("PARTICULAR", 0),
+    }
+
+    total_notas_pagas = total_recebido
+
+    return render_template(
+        "gestao/faturamento_comercial.html",
+        mes=mes,
+        ano=ano,
+        inicio=periodo_inicio,
+        fim=periodo_fim,
+        cliente_filtro=cliente_filtro,
+        status_filtro=status_filtro,
+        tipo_filtro=tipo_filtro,
+        vencimento_filtro=vencimento_filtro,
+        registros=registros,
+        total_notas=total_notas,
+        total_recebido=total_recebido,
+        total_pendente=total_pendente,
+        total_comissao=total_comissao,
+        percentual_recebido=percentual_recebido,
+        percentual_aberto=percentual_aberto,
+        percentual_comissao=percentual_comissao,
+        totais_tipo=tipo_counter.most_common(),
+        total_por_tipo=total_por_tipo,
+        total_notas_pagas=total_notas_pagas,
+        ranking_clientes=clientes_counter.most_common(8),
+        proximos_recebimentos=proximos_recebimentos,
+        atrasadas=atrasadas,
+    )
+
+
+
+
+@gestao_bp.route("/faturamento-comercial/exportar")
+@gestao_required
+def exportar_faturamento_comercial():
+    from models.faturamento_comercial import FaturamentoComercial
+
+    hoje = date.today()
+    mes = request.args.get("mes", hoje.month, type=int)
+    ano = request.args.get("ano", hoje.year, type=int)
+    cliente_filtro = normalizar_texto(request.args.get("cliente"))
+    status_filtro = normalizar_texto(request.args.get("status"))
+    tipo_filtro = normalizar_texto(request.args.get("tipo"))
+    vencimento_filtro = normalizar_texto(request.args.get("vencimento"))
+
+    query = FaturamentoComercial.query.filter(
+        FaturamentoComercial.mes == mes,
+        FaturamentoComercial.ano == ano,
+    )
+
+    if cliente_filtro:
+        query = query.filter(FaturamentoComercial.cliente.ilike(f"%{cliente_filtro}%"))
+
+    if status_filtro:
+        query = query.filter(FaturamentoComercial.status == status_filtro)
+
+    if tipo_filtro:
+        query = query.filter(FaturamentoComercial.tipo == tipo_filtro)
+
+    registros = query.order_by(
+        FaturamentoComercial.data_emissao.desc().nullslast(),
+        FaturamentoComercial.vencimento_30.asc().nullslast(),
+        FaturamentoComercial.id.desc()
+    ).all()
+
+    if vencimento_filtro:
+        filtrados = []
+        limite = hoje + timedelta(days=30)
+        for r in registros:
+            status = normalizar_texto(getattr(r, "status", None)) or ""
+            recebido = bool(getattr(r, "pago", False)) or status in ["RECEBIDO", "NOTAS PAGAS", "PAGO", "QUITADO", "BAIXADO"]
+            datas_venc = [r.vencimento_30, r.vencimento_60, r.vencimento_90]
+            datas_venc = [d for d in datas_venc if d]
+
+            if vencimento_filtro == "ATRASADO" and (not recebido) and any(d < hoje for d in datas_venc):
+                filtrados.append(r)
+            elif vencimento_filtro == "PROXIMOS_30" and (not recebido) and any(hoje <= d <= limite for d in datas_venc):
+                filtrados.append(r)
+
+        registros = filtrados
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Faturamento Comercial"
+
+    cabecalhos = [
+        "Cliente", "O.S", "NFSE", "Pedido de Compras", "Valor", "Comissão Comercial",
+        "Data de Emissão", "30 Dias", "60 Dias", "90 Dias", "Status", "Tipo", "Comercial", "Observações"
+    ]
+    ws.append(cabecalhos)
+
+    header_fill = PatternFill("solid", fgColor="002244")
+    header_font = Font(color="FFFFFF", bold=True)
+    thin = Side(style="thin", color="D9E2EF")
+
+    for cell in ws[1]:
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    for r in registros:
+        ws.append([
+            r.cliente or "",
+            r.os or "",
+            r.nfse or "",
+            r.pedido_compras or "",
+            float(dinheiro(r.valor)),
+            float(dinheiro(r.comissao)),
+            r.data_emissao.strftime("%d/%m/%Y") if r.data_emissao else "",
+            r.vencimento_30.strftime("%d/%m/%Y") if r.vencimento_30 else "",
+            r.vencimento_60.strftime("%d/%m/%Y") if r.vencimento_60 else "",
+            r.vencimento_90.strftime("%d/%m/%Y") if r.vencimento_90 else "",
+            r.status or "",
+            r.tipo or "",
+            r.comercial or "",
+            r.observacoes or "",
+        ])
+
+    widths = [32, 12, 14, 22, 14, 18, 16, 14, 14, 14, 16, 14, 20, 36]
+    for idx, width in enumerate(widths, start=1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(idx)].width = width
+
+    for row in ws.iter_rows(min_row=2):
+        for cell in row:
+            cell.border = Border(left=thin, right=thin, top=thin, bottom=thin)
+            cell.alignment = Alignment(vertical="center")
+
+    for row in ws.iter_rows(min_row=2, min_col=5, max_col=6):
+        for cell in row:
+            cell.number_format = '"R$" #,##0.00'
+
+    ws.freeze_panes = "A2"
+    ws.auto_filter.ref = ws.dimensions
+
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    nome_arquivo = f"faturamento_comercial_{mes:02d}_{ano}.xlsx"
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name=nome_arquivo,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+
+@gestao_bp.route("/faturamento-comercial/sincronizar", methods=["POST"])
+@gestao_required
+def sincronizar_faturamento_comercial():
+    from models.faturamento_comercial import FaturamentoComercial
+
+    contas = ContaReceberImportada.query.all()
+
+    criados = 0
+    atualizados = 0
+    ignorados = 0
+
+    for conta in contas:
+        cliente = normalizar_texto(getattr(conta, "cliente", None)) or "SEM CLIENTE"
+        nfse = normalizar_texto(getattr(conta, "numero_fatura", None)) or "-"
+        valor = dinheiro(getattr(conta, "total", None) or getattr(conta, "valor", 0))
+
+        data_documento = data_para_date(getattr(conta, "data_documento", None))
+        data_vencimento = data_para_date(getattr(conta, "data_vencimento", None))
+        data_pagamento = data_para_date(getattr(conta, "data_pagamento", None))
+
+        data_base = data_documento or data_vencimento or data_pagamento
+        mes_ref = getattr(conta, "mes", None) or (data_base.month if data_base else None)
+        ano_ref = getattr(conta, "ano", None) or (data_base.year if data_base else None)
+
+        if not mes_ref or not ano_ref:
+            ignorados += 1
+            continue
+
+        registro = FaturamentoComercial.query.filter(
+            FaturamentoComercial.cliente == cliente,
+            FaturamentoComercial.nfse == nfse,
+            FaturamentoComercial.valor == valor,
+        ).first()
+
+        pago = bool(getattr(conta, "pago", False))
+        status_importado = normalizar_texto(getattr(conta, "status", None))
+        status = "RECEBIDO" if pago or status_importado in ["RECEBIDO", "PAGO", "QUITADO", "BAIXADO"] else "PENDENTE"
+
+        if registro:
+            # Mantém campos comerciais preenchidos manualmente e atualiza apenas dados vindos da importação.
+            registro.data_emissao = registro.data_emissao or data_documento
+            registro.vencimento_30 = registro.vencimento_30 or data_vencimento
+            registro.observacoes = registro.observacoes or getattr(conta, "observacoes", None)
+            registro.pago = pago
+            registro.status = status
+            registro.mes = registro.mes or mes_ref
+            registro.ano = registro.ano or ano_ref
+            atualizados += 1
+            continue
+
+        novo = FaturamentoComercial(
+            cliente=cliente,
+            nfse=nfse,
+            valor=valor,
+            comissao=0,
+            data_emissao=data_documento,
+            vencimento_30=data_vencimento,
+            vencimento_60=None,
+            vencimento_90=None,
+            status=status,
+            tipo="CONTRATO",
+            observacoes=getattr(conta, "observacoes", None),
+            pago=pago,
+            mes=mes_ref,
+            ano=ano_ref,
+        )
+
+        db.session.add(novo)
+        criados += 1
+
+    db.session.commit()
+
+    mes_retorno = request.form.get("mes", type=int) or date.today().month
+    ano_retorno = request.form.get("ano", type=int) or date.today().year
+
+    flash(
+        f"Sincronização concluída: {criados} novos, {atualizados} atualizados e {ignorados} ignorados.",
+        "success"
+    )
+
+    return redirect(f"/gestao/faturamento-comercial?mes={mes_retorno}&ano={ano_retorno}")
+
+
+@gestao_bp.route("/faturamento-comercial/<int:registro_id>/status", methods=["POST"])
+@gestao_required
+def faturamento_comercial_status(registro_id):
+    from models.faturamento_comercial import FaturamentoComercial
+
+    registro = FaturamentoComercial.query.get_or_404(registro_id)
+    status = normalizar_texto(request.form.get("status")) or "PENDENTE"
+
+    registro.status = status
+    registro.pago = status == "RECEBIDO"
+
+    db.session.commit()
+
+    mes = request.form.get("mes") or registro.mes or date.today().month
+    ano = request.form.get("ano") or registro.ano or date.today().year
+
+    flash("Status atualizado com sucesso.", "success")
+    return redirect(f"/gestao/faturamento-comercial?mes={mes}&ano={ano}")
+
+
+@gestao_bp.route("/faturamento-comercial/<int:registro_id>/excluir", methods=["POST"])
+@gestao_required
+def faturamento_comercial_excluir(registro_id):
+    from models.faturamento_comercial import FaturamentoComercial
+
+    registro = FaturamentoComercial.query.get_or_404(registro_id)
+
+    mes = request.form.get("mes") or registro.mes or date.today().month
+    ano = request.form.get("ano") or registro.ano or date.today().year
+
+    db.session.delete(registro)
+    db.session.commit()
+
+    flash("Lançamento excluído com sucesso.", "success")
+    return redirect(f"/gestao/faturamento-comercial?mes={mes}&ano={ano}")
+

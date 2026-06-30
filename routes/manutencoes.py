@@ -110,19 +110,33 @@ def salvar_imagens():
 
 
 def salvar_imagens_arquivos(arquivos):
-    caminhos = []
+    """
+    Envia uma lista de arquivos para o Cloudinary e retorna as URLs.
 
-    if not cloudinary_esta_configurado():
-        print("⚠️ Cloudinary não configurado. Upload ignorado no ambiente atual.")
+    Importante:
+    - Se nenhum arquivo foi enviado, retorna lista vazia.
+    - Se o Cloudinary não estiver configurado, avisa claramente e não altera o banco.
+    - Se algum upload falhar, levanta erro para evitar salvar manutenção pela metade.
+    """
+    caminhos = []
+    arquivos_validos = [arquivo for arquivo in (arquivos or []) if arquivo and arquivo.filename]
+
+    if not arquivos_validos:
         return caminhos
 
-    for arquivo in arquivos:
-        if arquivo and arquivo.filename:
-            try:
-                upload = cloudinary.uploader.upload(arquivo)
-                caminhos.append(upload["secure_url"])
-            except Exception as e:
-                print("❌ Erro ao enviar imagem para o Cloudinary:", e)
+    if not cloudinary_esta_configurado():
+        raise RuntimeError(
+            "Cloudinary não configurado. Configure CLOUD_NAME, API_KEY e API_SECRET para salvar imagens."
+        )
+
+    for arquivo in arquivos_validos:
+        try:
+            upload = cloudinary.uploader.upload(arquivo)
+            caminhos.append(upload["secure_url"])
+        except Exception as e:
+            raise RuntimeError(
+                f"Erro ao enviar a imagem '{arquivo.filename}' para o Cloudinary: {str(e)}"
+            )
 
     return caminhos
 
@@ -315,10 +329,11 @@ def salvar_ou_atualizar_afericao(
             db.session.delete(reg)
         return
 
+    limite_imagens = 10
     total_imagens = len(imagens_atuais) + len(novas_imagens)
-    if total_imagens > 4:
+    if total_imagens > limite_imagens:
         raise ValueError(
-            f"O termômetro de {tipo_termometro.lower()} permite no máximo 4 imagens."
+            f"O termômetro de {tipo_termometro.lower()} permite no máximo {limite_imagens} imagens."
         )
 
     if not reg:
@@ -706,6 +721,32 @@ def excluir_imagem_afericao(afericao_id):
     })
 
 
+
+
+def valor_formulario(nome, valor_atual=None, normalizador=None):
+    """
+    Em edição, preserva o valor salvo quando o campo não vem no POST.
+    Se o campo veio vazio de propósito, permite limpar ao salvar.
+    """
+    if nome not in request.form:
+        return valor_atual
+
+    valor = request.form.get(nome)
+
+    if normalizador:
+        return normalizador(valor)
+
+    return valor
+
+
+def redirecionar_apos_salvar_manutencao(manutencao):
+    identificador = identificador_veiculo(manutencao.numero_frota, manutencao.placa)
+
+    if identificador:
+        return redirect("/frotas/" + str(identificador))
+
+    return redirect("/manutencoes/lista")
+
 # ==========================================
 # ➕ NOVA MANUTENÇÃO
 # ==========================================
@@ -779,9 +820,13 @@ def nova():
             flash("Manutenção salva com sucesso!", "success")
             return redirect("/manutencoes/lista")
 
-        except ValueError as e:
+        except (ValueError, RuntimeError) as e:
             db.session.rollback()
             flash(str(e), "danger")
+            return redirect(request.url)
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Erro inesperado ao salvar manutenção: {str(e)}", "danger")
             return redirect(request.url)
 
     clientes = Cliente.query.order_by(Cliente.nome).all()
@@ -892,35 +937,41 @@ def editar(id):
         numero_frota_antiga = identificador_veiculo(m.numero_frota, getattr(m, "placa", None))
         os_antiga = m.os
 
-        m.data = parse_data(request.form.get("data"))
-        m.data_saida = parse_data(request.form.get("data_saida"))
-        m.dtm = calcular_dtm(m.data, m.data_saida)
-
-        novas_imagens = salvar_imagens()
-
-        if novas_imagens:
-            imagens_atuais = carregar_lista_imagens(m.imagens)
-            m.imagens = json.dumps(imagens_atuais + novas_imagens)
-
-        m.numero_frota = normalizar_simples(request.form.get("numero_frota"))
-        m.placa = normalizar_texto(request.form.get("placa"))
-        identificador_afericao_novo = identificador_veiculo(m.numero_frota, m.placa)
-        m.bau = normalizar_texto(request.form.get("bau"))
-        m.tipo_veiculo = normalizar_texto(request.form.get("tipo_veiculo"))
-        m.tipo_servico = normalizar_texto(request.form.get("tipo_servico"))
-        m.tipo_atendimento = normalizar_texto(request.form.get("tipo_atendimento"))
-        m.tipo_manutencao = normalizar_texto(request.form.get("tipo_manutencao"))
-        m.status = normalizar_texto(request.form.get("status"))
-        m.observacao = normalizar_texto(request.form.get("observacao"))
-        m.cliente = normalizar_texto(request.form.get("cliente"))
-        m.os = normalizar_simples(request.form.get("os"))
-        m.causa = normalizar_texto(request.form.get("causa"))
-        m.problema = normalizar_texto(request.form.get("problema"))
-
-        placa_novas_imagens = salvar_imagens_arquivos(request.files.getlist("placa_imagens"))
-        ambiente_novas_imagens = salvar_imagens_arquivos(request.files.getlist("ambiente_imagens"))
-
         try:
+            # Faz upload de todas as imagens primeiro. Se alguma falhar,
+            # nada é gravado no banco.
+            novas_imagens = salvar_imagens()
+            placa_novas_imagens = salvar_imagens_arquivos(request.files.getlist("placa_imagens"))
+            ambiente_novas_imagens = salvar_imagens_arquivos(request.files.getlist("ambiente_imagens"))
+
+            data_convertida = parse_data(valor_formulario("data", m.data))
+            data_saida_convertida = parse_data(valor_formulario("data_saida", m.data_saida))
+            dtm_calculado = calcular_dtm(data_convertida, data_saida_convertida)
+
+            m.data = data_convertida
+            m.data_saida = data_saida_convertida
+            m.dtm = dtm_calculado
+
+            if novas_imagens:
+                imagens_atuais = carregar_lista_imagens(m.imagens)
+                m.imagens = json.dumps(imagens_atuais + novas_imagens)
+
+            m.numero_frota = valor_formulario("numero_frota", m.numero_frota, normalizar_simples)
+            m.placa = valor_formulario("placa", m.placa, normalizar_texto)
+            identificador_afericao_novo = identificador_veiculo(m.numero_frota, m.placa)
+
+            m.bau = valor_formulario("bau", m.bau, normalizar_texto)
+            m.tipo_veiculo = valor_formulario("tipo_veiculo", m.tipo_veiculo, normalizar_texto)
+            m.tipo_servico = valor_formulario("tipo_servico", m.tipo_servico, normalizar_texto)
+            m.tipo_atendimento = valor_formulario("tipo_atendimento", m.tipo_atendimento, normalizar_texto)
+            m.tipo_manutencao = valor_formulario("tipo_manutencao", m.tipo_manutencao, normalizar_texto)
+            m.status = valor_formulario("status", m.status, normalizar_texto)
+            m.observacao = valor_formulario("observacao", m.observacao, normalizar_texto)
+            m.cliente = valor_formulario("cliente", m.cliente, normalizar_texto)
+            m.os = valor_formulario("os", m.os, normalizar_simples)
+            m.causa = valor_formulario("causa", m.causa, normalizar_texto)
+            m.problema = valor_formulario("problema", m.problema, normalizar_texto)
+
             mover_afericoes_se_trocar_frota_ou_os(
                 numero_frota_antiga=numero_frota_antiga,
                 os_antiga=os_antiga,
@@ -932,9 +983,9 @@ def editar(id):
                 numero_frota=identificador_afericao_novo,
                 os=m.os,
                 tipo_termometro="PLACA",
-                afericao=request.form.get("placa_afericao"),
-                data_afericao=parse_data(request.form.get("placa_data_afericao")),
-                status=request.form.get("placa_status"),
+                afericao=valor_formulario("placa_afericao", None),
+                data_afericao=parse_data(valor_formulario("placa_data_afericao", None)),
+                status=valor_formulario("placa_status", None),
                 novas_imagens=placa_novas_imagens
             )
 
@@ -942,20 +993,24 @@ def editar(id):
                 numero_frota=identificador_afericao_novo,
                 os=m.os,
                 tipo_termometro="AMBIENTE",
-                afericao=request.form.get("ambiente_afericao"),
-                data_afericao=parse_data(request.form.get("ambiente_data_afericao")),
-                status=request.form.get("ambiente_status"),
+                afericao=valor_formulario("ambiente_afericao", None),
+                data_afericao=parse_data(valor_formulario("ambiente_data_afericao", None)),
+                status=valor_formulario("ambiente_status", None),
                 novas_imagens=ambiente_novas_imagens
             )
 
             db.session.commit()
 
             flash("Manutenção atualizada com sucesso!", "success")
-            return redirect("/frotas/" + str(identificador_veiculo(m.numero_frota, m.placa)))
+            return redirecionar_apos_salvar_manutencao(m)
 
-        except ValueError as e:
+        except (ValueError, RuntimeError) as e:
             db.session.rollback()
             flash(str(e), "danger")
+            return redirect(request.url)
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Erro inesperado ao salvar manutenção: {str(e)}", "danger")
             return redirect(request.url)
 
     clientes = Cliente.query.order_by(Cliente.nome).all()

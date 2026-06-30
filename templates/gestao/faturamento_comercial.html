@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+{% block title %}Faturamento Comercial{% endblock %}
+
+{% block content %}
+
+<div class="fc2-page">
+
+  <div class="fc2-header">
+    <div>
+      <h1>Faturamento Comercial / Notas Emitidas</h1>
+      <p>Acompanhe todas as notas fiscais emitidas, prazos de recebimento e comissões.</p>
+    </div>
+
+    <div class="fc2-header-actions">
+      <form method="POST" action="/gestao/faturamento-comercial/sincronizar">
+        <input type="hidden" name="mes" value="{{ mes }}">
+        <input type="hidden" name="ano" value="{{ ano }}">
+        <button class="fc2-btn-primary" type="submit">
+          <i class="bi bi-arrow-repeat"></i>
+          Sincronizar tudo
+        </button>
+      </form>
+
+      <button type="button" class="fc2-btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoFaturamento">
+        <i class="bi bi-plus-lg"></i>
+        Nova Nota
+      </button>
+    </div>
+  </div>
+
+  <div class="fc2-kpis">
+    <div class="fc2-kpi blue">
+      <div class="fc2-kpi-icon"><i class="bi bi-receipt"></i></div>
+      <div class="fc2-kpi-info">
+        <span>Total em notas emitidas</span>
+        <strong class="valor-financeiro" data-valor-mascara="R$ ••••••">R$ {{ "%.2f"|format(total_notas) }}</strong>
+        <small>Valor total faturado</small>
+      </div>
+      <div class="fc2-progress"><i style="width: 100%;"></i></div>
+    </div>
+
+    <div class="fc2-kpi green">
+      <div class="fc2-kpi-icon"><i class="bi bi-currency-dollar"></i></div>
+      <div class="fc2-kpi-info">
+        <span>Total recebido</span>
+        <strong class="valor-financeiro" data-valor-mascara="R$ ••••••">R$ {{ "%.2f"|format(total_recebido) }}</strong>
+        <small class="valor-financeiro" data-valor-mascara="••••% do total emitido">{{ "%.2f"|format(percentual_recebido) }}% do total emitido</small>
+      </div>
+      <div class="fc2-progress"><i style="width: {{ percentual_recebido if percentual_recebido <= 100 else 100 }}%;"></i></div>
+    </div>
+
+    <div class="fc2-kpi orange">
+      <div class="fc2-kpi-icon"><i class="bi bi-hourglass-split"></i></div>
+      <div class="fc2-kpi-info">
+        <span>Em aberto</span>
+        <strong class="valor-financeiro" data-valor-mascara="R$ ••••••">R$ {{ "%.2f"|format(total_pendente) }}</strong>
+        <small class="valor-financeiro" data-valor-mascara="••••% do total emitido">{{ "%.2f"|format(percentual_aberto) }}% do total emitido</small>
+      </div>
+      <div class="fc2-progress"><i style="width: {{ percentual_aberto if percentual_aberto <= 100 else 100 }}%;"></i></div>
+    </div>
+
+    <div class="fc2-kpi purple">
+      <div class="fc2-kpi-icon"><i class="bi bi-percent"></i></div>
+      <div class="fc2-kpi-info">
+        <span>Total comissão</span>
+        <strong class="valor-financeiro" data-valor-mascara="R$ ••••••">R$ {{ "%.2f"|format(total_comissao) }}</strong>
+        <small>Comissão total a receber</small>
+      </div>
+      <div class="fc2-progress"><i style="width: {{ percentual_comissao if percentual_comissao <= 100 else 100 }}%;"></i></div>
+    </div>
+  </div>
+
+  <form method="GET" action="/gestao/faturamento-comercial" class="fc2-filter-card fc2-filter-compact">
+
+    <div class="fc2-filter-group mes">
+      <label>Mês</label>
+      <select name="mes" class="form-control">
+        {% set meses_nome = [
+          (1, 'Janeiro'), (2, 'Fevereiro'), (3, 'Março'), (4, 'Abril'),
+          (5, 'Maio'), (6, 'Junho'), (7, 'Julho'), (8, 'Agosto'),
+          (9, 'Setembro'), (10, 'Outubro'), (11, 'Novembro'), (12, 'Dezembro')
+        ] %}
+        {% for numero, nome in meses_nome %}
+          <option value="{{ numero }}" {% if mes == numero %}selected{% endif %}>{{ nome }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="fc2-filter-group ano">
+      <label>Ano</label>
+      <select name="ano" class="form-control">
+        {% for a in range(2023, 2031) %}
+          <option value="{{ a }}" {% if ano == a %}selected{% endif %}>{{ a }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="fc2-filter-group">
+      <label>Cliente</label>
+      <input type="text" name="cliente" value="{{ cliente_filtro or '' }}" class="form-control" placeholder="Todos os clientes">
+    </div>
+
+    <div class="fc2-filter-group">
+      <label>Status</label>
+      <select name="status" class="form-control">
+        <option value="">Todos os status</option>
+        <option value="PENDENTE" {% if status_filtro == 'PENDENTE' %}selected{% endif %}>Pendente</option>
+        <option value="RECEBIDO" {% if status_filtro == 'RECEBIDO' %}selected{% endif %}>Recebido</option>
+        <option value="NOTAS PAGAS" {% if status_filtro == 'NOTAS PAGAS' %}selected{% endif %}>Notas pagas</option>
+        <option value="ATRASADO" {% if status_filtro == 'ATRASADO' %}selected{% endif %}>Atrasado</option>
+        <option value="CANCELADO" {% if status_filtro == 'CANCELADO' %}selected{% endif %}>Cancelado</option>
+      </select>
+    </div>
+
+    <div class="fc2-filter-group">
+      <label>Tipo</label>
+      <select name="tipo" class="form-control">
+        <option value="">Todos (Contrato/Extra/Part.)</option>
+        <option value="CONTRATO" {% if tipo_filtro == 'CONTRATO' %}selected{% endif %}>Contrato</option>
+        <option value="EXTRA" {% if tipo_filtro == 'EXTRA' %}selected{% endif %}>Extra</option>
+        <option value="PARTICULAR" {% if tipo_filtro == 'PARTICULAR' %}selected{% endif %}>Particular</option>
+      </select>
+    </div>
+
+    <div class="fc2-filter-group">
+      <label>Vencimento</label>
+      <select name="vencimento" class="form-control">
+        <option value="">Todos</option>
+        <option value="PROXIMOS_30" {% if vencimento_filtro == 'PROXIMOS_30' %}selected{% endif %}>Próximos 30 dias</option>
+        <option value="ATRASADO" {% if vencimento_filtro == 'ATRASADO' %}selected{% endif %}>Atrasados</option>
+      </select>
+    </div>
+
+    <div class="fc2-filter-actions">
+      <button class="fc2-btn-filter" type="submit">
+        <i class="bi bi-search"></i>
+        Filtrar
+      </button>
+      <a href="/gestao/faturamento-comercial?mes={{ mes }}&ano={{ ano }}" class="fc2-btn-light">
+        <i class="bi bi-arrow-counterclockwise"></i>
+        Limpar
+      </a>
+    </div>
+  </form>
+
+  <div class="fc2-grid">
+    <div class="fc2-left">
+      <section class="fc2-card fc2-table-card">
+        <div class="fc2-card-title-row">
+          <h2>Notas Emitidas</h2>
+          <div class="fc2-table-actions">
+            <a href="/gestao/faturamento-comercial/exportar?mes={{ mes }}&ano={{ ano }}&cliente={{ cliente_filtro or '' }}&status={{ status_filtro or '' }}&tipo={{ tipo_filtro or '' }}&vencimento={{ vencimento_filtro or '' }}" class="fc2-btn-light">
+              <i class="bi bi-download"></i> Exportar
+            </a>
+            <button type="button" class="fc2-btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoFaturamento">
+              <i class="bi bi-plus-lg"></i> Nova Nota
+            </button>
+          </div>
+        </div>
+
+        <div class="fc2-table-wrap">
+          <table class="fc2-table">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>O.S</th>
+                <th>NFSE</th>
+                <th>Valor</th>
+                <th>Emissão</th>
+                <th>Vencimento</th>
+                <th>Status</th>
+                <th>Tipo</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in registros %}
+                <tr>
+                  <td class="fc2-client-cell"><strong>{{ r.cliente or '-' }}</strong></td>
+                  <td>{{ r.os or '-' }}</td>
+                  <td>{{ r.nfse or '-' }}</td>
+                  <td class="fc2-money valor-financeiro" data-valor-mascara="R$ ••••••">R$ {{ "%.2f"|format(r.valor or 0) }}</td>
+                  <td>{{ r.data_emissao.strftime('%d/%m/%Y') if r.data_emissao else '-' }}</td>
+                  <td>{{ r.vencimento_30.strftime('%d/%m/%Y') if r.vencimento_30 else '-' }}</td>
+                  <td>
+                    <span class="fc2-status {{ (r.status or 'PENDENTE')|lower|replace(' ', '-') }}">
+                      {{ r.status or 'PENDENTE' }}
+                    </span>
+                  </td>
+                  <td>{{ r.tipo or '-' }}</td>
+                  <td>
+                    <div class="fc2-row-actions">
+                      <form method="POST" action="/gestao/faturamento-comercial/{{ r.id }}/status">
+                        <input type="hidden" name="mes" value="{{ mes }}">
+                        <input type="hidden" name="ano" value="{{ ano }}">
+                        <input type="hidden" name="status" value="RECEBIDO">
+                        <button title="Marcar recebido" class="fc2-icon success" type="submit"><i class="bi bi-check2"></i></button>
+                      </form>
+
+                      <button type="button" class="fc2-icon" data-bs-toggle="modal" data-bs-target="#modalEditar{{ r.id }}" title="Editar">
+                        <i class="bi bi-pencil"></i>
+                      </button>
+
+                      <form method="POST" action="/gestao/faturamento-comercial/{{ r.id }}/excluir" onsubmit="return confirm('Excluir este lançamento?');">
+                        <input type="hidden" name="mes" value="{{ mes }}">
+                        <input type="hidden" name="ano" value="{{ ano }}">
+                        <button title="Excluir" class="fc2-icon danger" type="submit"><i class="bi bi-trash"></i></button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% else %}
+                <tr>
+                  <td colspan="9" class="fc2-empty">Nenhuma nota encontrada para os filtros selecionados.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="fc2-table-footer">
+          <span>Mostrando 1 até {{ registros|length }} de {{ registros|length }} registros</span>
+          <div>
+            <button class="fc2-page-btn" disabled>Anterior</button>
+            <button class="fc2-page-btn active">1</button>
+            <button class="fc2-page-btn" disabled>Próxima</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="fc2-bottom-grid">
+        <section class="fc2-card">
+          <div class="fc2-card-title-row compact">
+            <h2>Próximos Vencimentos (30 dias)</h2>
+            <a href="/gestao/faturamento-comercial?mes={{ mes }}&ano={{ ano }}&vencimento=PROXIMOS_30">Ver todos</a>
+          </div>
+
+          <div class="fc2-list">
+            {% for item in proximos_recebimentos %}
+              <div class="fc2-list-line">
+                <span>{{ item.data.strftime('%d/%m/%Y') }}</span>
+                <strong>{{ item.cliente }}</strong>
+                <em class="valor-financeiro" data-valor-mascara="R$ ••••••">R$ {{ "%.2f"|format(item.valor) }}</em>
+              </div>
+            {% else %}
+              <div class="fc2-empty-small">Nenhum vencimento nos próximos 30 dias.</div>
+            {% endfor %}
+          </div>
+        </section>
+
+        <section class="fc2-card">
+          <div class="fc2-card-title-row compact">
+            <h2>Notas em Atraso</h2>
+            <a href="/gestao/faturamento-comercial?mes={{ mes }}&ano={{ ano }}&vencimento=ATRASADO">Ver todas</a>
+          </div>
+
+          {% if atrasadas %}
+            <div class="fc2-list">
+              {% for item in atrasadas %}
+                <div class="fc2-list-line danger">
+                  <span>{{ item.data.strftime('%d/%m/%Y') }}</span>
+                  <strong>{{ item.cliente }}</strong>
+                  <em class="valor-financeiro" data-valor-mascara="R$ ••••••">R$ {{ "%.2f"|format(item.valor) }}</em>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="fc2-ok-box">
+              <i class="bi bi-check-circle-fill"></i>
+              <span>Nenhuma nota em atraso</span>
+            </div>
+          {% endif %}
+        </section>
+      </div>
+    </div>
+
+    <aside class="fc2-right">
+      <section class="fc2-card fc2-side-card">
+        <h3>Total em Notas Emitidas</h3>
+        <div class="fc2-side-line green"><span>Contrato</span><strong class="valor-financeiro" data-valor-mascara="R$ ••••••">R$ {{ "%.2f"|format(total_por_tipo.CONTRATO or 0) }}</strong></div>
+        <div class="fc2-side-line orange"><span>Extra</span><strong class="valor-financeiro" data-valor-mascara="R$ ••••••">R$ {{ "%.2f"|format(total_por_tipo.EXTRA or 0) }}</strong></div>
+        <div class="fc2-side-line blue"><span>Particular</span><strong class="valor-financeiro" data-valor-mascara="R$ ••••••">R$ {{ "%.2f"|format(total_por_tipo.PARTICULAR or 0) }}</strong></div>
+        <div class="fc2-side-total"><span>Total</span><strong class="valor-financeiro" data-valor-mascara="R$ ••••••">R$ {{ "%.2f"|format(total_notas) }}</strong></div>
+      </section>
+
+      <section class="fc2-card fc2-side-card">
+        <h3>Notas Pagas / Recebidas</h3>
+        <div class="fc2-side-total clean"><span>Total recebido</span><strong class="green-text valor-financeiro" data-valor-mascara="R$ ••••••">R$ {{ "%.2f"|format(total_recebido) }}</strong></div>
+        <div class="fc2-side-total clean"><span>Total notas pagas</span><strong class="green-text valor-financeiro" data-valor-mascara="R$ ••••••">R$ {{ "%.2f"|format(total_notas_pagas) }}</strong></div>
+      </section>
+
+      <section class="fc2-card fc2-side-card">
+        <h3>Ranking por Cliente (Valor Emitido)</h3>
+        <div class="fc2-ranking">
+          {% for cliente, valor in ranking_clientes %}
+            <div class="fc2-rank-item">
+              <i></i>
+              <span>{{ cliente }}</span>
+              <strong class="valor-financeiro" data-valor-mascara="R$ ••••••">R$ {{ "%.2f"|format(valor) }}</strong>
+            </div>
+          {% else %}
+            <p class="fc2-empty-small">Sem ranking.</p>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="fc2-card fc2-side-card fc2-comissao-card">
+        <h3>Comissão a Receber</h3>
+        <div class="fc2-comissao-line">
+          <i class="bi bi-cash-coin"></i>
+          <span>Total comissão</span>
+          <strong class="valor-financeiro" data-valor-mascara="R$ ••••••">R$ {{ "%.2f"|format(total_comissao) }}</strong>
+        </div>
+        <div class="fc2-comissao-line clean">
+          <span>Percentual sobre faturamento</span>
+          <strong class="valor-financeiro" data-valor-mascara="••••%">{{ "%.2f"|format(percentual_comissao) }}%</strong>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+</div>
+
+<!-- MODAL NOVO -->
+<div class="modal fade" id="modalNovoFaturamento" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content fc-modal">
+      <form method="POST" action="/gestao/faturamento-comercial">
+        <input type="hidden" name="mes_retorno" value="{{ mes }}">
+        <input type="hidden" name="ano_retorno" value="{{ ano }}">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Nova nota comercial</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          {% include "gestao/_form_faturamento_comercial.html" %}
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+          <button class="fc2-btn-primary">Salvar nota</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% for r in registros %}
+<div class="modal fade" id="modalEditar{{ r.id }}" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content fc-modal">
+      <form method="POST" action="/gestao/faturamento-comercial">
+        <input type="hidden" name="registro_id" value="{{ r.id }}">
+        <input type="hidden" name="mes_retorno" value="{{ mes }}">
+        <input type="hidden" name="ano_retorno" value="{{ ano }}">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Editar nota comercial</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          {% set item = r %}
+          {% include "gestao/_form_faturamento_comercial.html" %}
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+          <button class="fc2-btn-primary">Salvar alterações</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+{% endblock %}
