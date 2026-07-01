@@ -27,6 +27,12 @@ class FaturamentoComercial(db.Model):
 
     pago = db.Column(db.Boolean, default=False, index=True)
 
+    # Controle da sincronização com Contas a Receber importadas.
+    # chave_conciliacao impede duplicidade nas próximas sincronizações.
+    # origem_registro separa notas manuais das notas criadas pela sincronização.
+    chave_conciliacao = db.Column(db.String(255), index=True)
+    origem_registro = db.Column(db.String(30), default="MANUAL", index=True)
+
     mes = db.Column(db.Integer, index=True)
     ano = db.Column(db.Integer, index=True)
 

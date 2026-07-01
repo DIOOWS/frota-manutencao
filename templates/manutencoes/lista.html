@@ -120,6 +120,7 @@
                   {{ m.causa|tojson }},
                   {{ m.observacao|tojson }},
                   {{ m.km_entrada|tojson }},
+                  {{ (m.data.strftime('%d/%m/%Y') if m.data else '')|tojson }},
                   {{ m.km_imagens|tojson }},
 
                   {{ m.placa_afericao|tojson }},
@@ -158,10 +159,10 @@
   </table>
 </div>
 
-<!-- MODAL DETALHE -->
-<div class="modal fade easy-maint-modal" id="modalDetalhe" tabindex="-1">
+<!-- MODAL DETALHE PREMIUM / TABELADO -->
+<div class="modal fade easy-maint-modal" id="modalDetalhe" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered easy-maint-dialog">
-    <div class="modal-content easy-maint-content">
+    <div class="modal-content easy-maint-content easy-maint-table-mode">
 
       <div class="easy-maint-header">
         <div class="easy-maint-title-wrap">
@@ -183,231 +184,153 @@
 
       <div class="modal-body easy-maint-body">
 
-        <!-- MANUTENÇÃO -->
+        <!-- 1. MANUTENÇÃO -->
         <section class="easy-section easy-section-manutencao open">
           <button type="button" class="easy-section-title" onclick="toggleEasyDetailAccordion(this)">
-            <span class="easy-section-title-left">
-              <span class="easy-section-icon">🔧</span>
-              <span>MANUTENÇÃO</span>
-            </span>
+            <span>1.&nbsp;&nbsp; MANUTENÇÃO</span>
             <span class="easy-section-chevron">⌃</span>
           </button>
 
           <div class="easy-section-body">
-            <div class="easy-maintenance-row">
-              <div class="easy-info-panel">
-                <div class="easy-info-grid">
-
-                  <div class="easy-info-item">
-                    <span class="easy-item-icon">👤</span>
-                    <div>
-                      <small>Cliente:</small>
-                      <strong id="mCliente"></strong>
-                    </div>
-                  </div>
-
-                  <div class="easy-info-item">
-                    <span class="easy-item-icon">🔧</span>
-                    <div>
-                      <small>Serviço:</small>
-                      <strong id="mServico"></strong>
-                    </div>
-                  </div>
-
-                  <div class="easy-info-item">
-                    <span class="easy-item-icon">◌</span>
-                    <div>
-                      <small>Status:</small>
-                      <strong id="mStatus" class="easy-status-text"></strong>
-                    </div>
-                  </div>
-
-                  <div class="easy-info-item">
-                    <span class="easy-item-icon">🚚</span>
-                    <div>
-                      <small>Frota:</small>
-                      <strong id="mFrota"></strong>
-                    </div>
-                  </div>
-
-                  <div class="easy-info-item">
-                    <span class="easy-item-icon">🎧</span>
-                    <div>
-                      <small>Atendimento:</small>
-                      <strong id="mAtendimento"></strong>
-                    </div>
-                  </div>
-
-                  <div class="easy-info-item">
-                    <span class="easy-item-icon easy-warning-icon">⚠</span>
-                    <div>
-                      <small>Problema:</small>
-                      <strong id="mProblema"></strong>
-                    </div>
-                  </div>
-
-                  <div class="easy-info-item">
-                    <span class="easy-item-icon">📄</span>
-                    <div>
-                      <small>OS:</small>
-                      <strong id="mOs"></strong>
-                    </div>
-                  </div>
-
-                  <div class="easy-info-item">
-                    <span class="easy-item-icon">🏢</span>
-                    <div>
-                      <small>Manutenção:</small>
-                      <strong id="mManutencao"></strong>
-                    </div>
-                  </div>
-
-                  <div class="easy-info-item">
-                    <span class="easy-item-icon">🎨</span>
-                    <div>
-                      <small>Causa:</small>
-                      <strong id="mCausa"></strong>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="easy-observation-row">
-                  <span class="easy-item-icon">💬</span>
-                  <div>
-                    <small>Observação:</small>
-                    <strong id="mObservacao"></strong>
-                  </div>
-                </div>
+            <div class="easy-detail-table">
+              <div class="easy-detail-cell">
+                <span>Cliente:</span>
+                <strong id="mCliente"></strong>
               </div>
 
-              <div class="easy-gallery-card easy-gallery-card-main">
-                <button type="button" class="easy-gallery-head" onclick="toggleGalleryBlock(this)">
-                  <span><b>📷</b> Imagens da Manutenção</span>
-                  <i>⌄</i>
-                </button>
-                <div id="mImagens" class="easy-modal-gallery"></div>
+              <div class="easy-detail-cell">
+                <span>Serviço:</span>
+                <strong id="mServico"></strong>
+              </div>
+
+              <div class="easy-detail-cell">
+                <span>Status:</span>
+                <strong id="mStatus" class="easy-main-status"></strong>
+              </div>
+
+              <div class="easy-detail-cell">
+                <span>Frota / Placa:</span>
+                <strong id="mFrota"></strong>
+              </div>
+
+              <div class="easy-detail-cell">
+                <span>Atendimento:</span>
+                <strong id="mAtendimento"></strong>
+              </div>
+
+              <div class="easy-detail-cell">
+                <span>Problema:</span>
+                <strong id="mProblema"></strong>
+              </div>
+
+              <div class="easy-detail-cell">
+                <span>OS:</span>
+                <strong id="mOs"></strong>
+              </div>
+
+              <div class="easy-detail-cell">
+                <span>Manutenção:</span>
+                <strong id="mManutencao"></strong>
+              </div>
+
+              <div class="easy-detail-cell">
+                <span>Causa:</span>
+                <strong id="mCausa"></strong>
+              </div>
+
+              <div class="easy-detail-cell easy-detail-cell-full">
+                <span>Observação:</span>
+                <strong id="mObservacao"></strong>
+              </div>
+
+              <div class="easy-detail-cell easy-detail-cell-full easy-images-row">
+                <span>Imagens da Manutenção:</span>
+                <div id="mImagens" class="easy-modal-gallery easy-modal-gallery-table"></div>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- KM -->
+        <!-- 2. KM -->
         <section class="easy-section easy-section-km open">
           <button type="button" class="easy-section-title" onclick="toggleEasyDetailAccordion(this)">
-            <span class="easy-section-title-left">
-              <span class="easy-section-icon">⌁</span>
-              <span>KM (QUILOMETRAGEM)</span>
-            </span>
+            <span>2.&nbsp;&nbsp; KM (QUILOMETRAGEM)</span>
             <span class="easy-section-chevron">⌃</span>
           </button>
 
           <div class="easy-section-body">
-            <div class="easy-km-layout">
+            <div class="easy-km-layout-table">
               <div class="easy-km-info-card">
                 <small>KM quando chegou na empresa</small>
                 <strong id="mKmEntrada"></strong>
-                <span id="mKmData">📅 -</span>
+                <span id="mKmData">-</span>
               </div>
 
-              <div class="easy-gallery-card easy-km-gallery-card">
-                <button type="button" class="easy-gallery-head" onclick="toggleGalleryBlock(this)">
-                  <span><b>📷</b> Imagem do Hodômetro / Painel</span>
-                  <i>⌄</i>
-                </button>
+              <div class="easy-km-image-wrap">
+                <strong>Imagem do Hodômetro / Painel</strong>
                 <div id="mImagensKm" class="easy-modal-gallery easy-modal-gallery-km"></div>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- REFRIGERAÇÃO -->
+        <!-- 3. REFRIGERAÇÃO -->
         <section class="easy-section easy-section-refri open">
           <button type="button" class="easy-section-title" onclick="toggleEasyDetailAccordion(this)">
-            <span class="easy-section-title-left">
-              <span class="easy-section-icon">❄</span>
-              <span>REFRIGERAÇÃO</span>
-            </span>
+            <span>3.&nbsp;&nbsp; REFRIGERAÇÃO</span>
             <span class="easy-section-chevron">⌃</span>
           </button>
 
           <div class="easy-section-body">
-            <div class="easy-refri-grid">
+            <div class="easy-refri-grid-table">
 
-              <div class="easy-refri-card">
-                <h6>▣ Aferição da Placa</h6>
-                <div class="easy-refri-fields">
+              <div class="easy-refri-card-table">
+                <h6>Aferição da Placa</h6>
+
+                <div class="easy-refri-mini-table">
                   <div>
-                    <small>Aferição:</small>
+                    <span>Aferição:</span>
                     <strong id="mPlacaAfericao"></strong>
                   </div>
                   <div>
-                    <small>Data:</small>
+                    <span>Data:</span>
                     <strong id="mPlacaData"></strong>
                   </div>
                   <div>
-                    <small>Status:</small>
+                    <span>Status:</span>
                     <span id="mPlacaStatus" class="badge"></span>
                   </div>
                 </div>
 
-                <div class="easy-gallery-card easy-refri-gallery-card">
-                  <button type="button" class="easy-gallery-head" onclick="toggleGalleryBlock(this)">
-                    <span><b>📷</b> Imagens da Aferição da Placa</span>
-                    <i>⌄</i>
-                  </button>
-                  <div id="mImagensPlaca" class="easy-modal-gallery"></div>
-                </div>
+                <div class="easy-refri-images-title">Imagens da Aferição da Placa:</div>
+                <div id="mImagensPlaca" class="easy-modal-gallery easy-refri-gallery-table"></div>
               </div>
 
-              <div class="easy-refri-card">
-                <h6>▣ Aferição do Ambiente</h6>
-                <div class="easy-refri-fields">
+              <div class="easy-refri-card-table">
+                <h6>Aferição do Ambiente</h6>
+
+                <div class="easy-refri-mini-table">
                   <div>
-                    <small>Aferição:</small>
+                    <span>Aferição:</span>
                     <strong id="mAmbienteAfericao"></strong>
                   </div>
                   <div>
-                    <small>Data:</small>
+                    <span>Data:</span>
                     <strong id="mAmbienteData"></strong>
                   </div>
                   <div>
-                    <small>Status:</small>
+                    <span>Status:</span>
                     <span id="mAmbienteStatus" class="badge"></span>
                   </div>
                 </div>
 
-                <div class="easy-gallery-card easy-refri-gallery-card">
-                  <button type="button" class="easy-gallery-head" onclick="toggleGalleryBlock(this)">
-                    <span><b>📷</b> Imagens da Aferição do Ambiente</span>
-                    <i>⌄</i>
-                  </button>
-                  <div id="mImagensAmbiente" class="easy-modal-gallery"></div>
-                </div>
+                <div class="easy-refri-images-title">Imagens da Aferição do Ambiente:</div>
+                <div id="mImagensAmbiente" class="easy-modal-gallery easy-refri-gallery-table"></div>
               </div>
 
             </div>
           </div>
         </section>
-
-        <div class="easy-extra-row">
-          <div class="easy-extra-item">
-            <span>📷</span>
-            <div>
-              <strong>Outras Imagens / Anexos da Manutenção</strong>
-              <small>Registros fotográficos adicionais e anexos relacionados.</small>
-            </div>
-            <i>⌄</i>
-          </div>
-
-          <div class="easy-extra-item">
-            <span>🔗</span>
-            <div>
-              <strong>Outros Anexos (Se houver)</strong>
-              <small>Documentos e anexos relacionados à manutenção.</small>
-            </div>
-            <i>⌄</i>
-          </div>
-        </div>
 
       </div>
 
@@ -419,7 +342,7 @@
 </div>
 
 <!-- MODAL IMAGEM AMPLIADA -->
-<div class="modal fade" id="modalImagem" tabindex="-1">
+<div class="modal fade" id="modalImagem" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content">
 
@@ -491,18 +414,34 @@ function aplicarStatusBadge(elementId, status) {
     return;
   }
 
-  if (status === "C") {
+  const statusNormalizado = status.toString().trim().toUpperCase();
+
+  if (statusNormalizado === "C") {
     el.innerText = "C - Conforme";
-    el.className = "badge bg-success";
-  } else if (status === "NC") {
+    el.className = "badge easy-badge-success";
+  } else if (statusNormalizado === "NC") {
     el.innerText = "NC - Não conforme";
-    el.className = "badge bg-danger";
-  } else if (status === "NA") {
+    el.className = "badge easy-badge-danger";
+  } else if (statusNormalizado === "NA") {
     el.innerText = "NA - Não se aplica";
-    el.className = "badge bg-secondary";
+    el.className = "badge easy-badge-neutral";
   } else {
     el.innerText = status;
-    el.className = "badge bg-secondary";
+    el.className = "badge easy-badge-neutral";
+  }
+}
+
+function aplicarStatusPrincipal(status) {
+  const el = document.getElementById("mStatus");
+  const statusNormalizado = (status || "-").toString().trim().toUpperCase();
+
+  el.innerText = statusNormalizado || "-";
+  el.className = "easy-main-status";
+
+  if (statusNormalizado.includes("ANDAMENTO")) {
+    el.classList.add("andamento");
+  } else if (statusNormalizado.includes("FINALIZADO")) {
+    el.classList.add("finalizado");
   }
 }
 
@@ -511,7 +450,7 @@ function renderizarGaleria(containerId, imagens, textoVazio) {
   box.innerHTML = "";
 
   if (!imagens || imagens.length === 0) {
-    box.innerHTML = `<p class="text-muted"><span>▧</span> ${textoVazio}</p>`;
+    box.innerHTML = `<div class="easy-empty-gallery"><span>▧</span> ${textoVazio}</div>`;
     return;
   }
 
@@ -539,19 +478,9 @@ function toggleEasyDetailAccordion(button) {
   section.classList.toggle("open");
 }
 
-function toggleGalleryBlock(button) {
-  const card = button.closest(".easy-gallery-card");
-
-  if (!card) {
-    return;
-  }
-
-  card.classList.toggle("collapsed");
-}
-
 function abrirModal(
   cliente, frota, os, servico, atendimento, manutencao, status, problema, causa, observacao,
-  kmEntrada, imagensKm,
+  kmEntrada, kmData, imagensKm,
   placaAfericao, placaData, placaStatus,
   ambienteAfericao, ambienteData, ambienteStatus,
   imagensManutencao, imagensPlaca, imagensAmbiente
@@ -562,11 +491,12 @@ function abrirModal(
   document.getElementById("mServico").innerText = servico || "-";
   document.getElementById("mAtendimento").innerText = atendimento || "-";
   document.getElementById("mManutencao").innerText = manutencao || "-";
-  document.getElementById("mStatus").innerText = status || "-";
+  aplicarStatusPrincipal(status);
   document.getElementById("mProblema").innerText = problema || "-";
   document.getElementById("mCausa").innerText = causa || "-";
   document.getElementById("mObservacao").innerText = observacao || "-";
-  document.getElementById("mKmEntrada").innerText = kmEntrada ? `${kmEntrada} KM` : "-";
+  document.getElementById("mKmEntrada").innerText = kmEntrada ? `${kmEntrada} km` : "-";
+  document.getElementById("mKmData").innerText = kmData || "-";
 
   document.getElementById("mPlacaAfericao").innerText = placaAfericao || "-";
   document.getElementById("mPlacaData").innerText = placaData || "-";
@@ -576,10 +506,14 @@ function abrirModal(
   document.getElementById("mAmbienteData").innerText = ambienteData || "-";
   aplicarStatusBadge("mAmbienteStatus", ambienteStatus);
 
-  renderizarGaleria("mImagens", imagensManutencao, "Nenhuma imagem de manutenção cadastrada.");
+  renderizarGaleria("mImagens", imagensManutencao, "Nenhuma imagem da manutenção cadastrada.");
   renderizarGaleria("mImagensKm", imagensKm, "Nenhuma imagem do KM cadastrada.");
   renderizarGaleria("mImagensPlaca", imagensPlaca, "Nenhuma imagem da aferição de placa cadastrada.");
   renderizarGaleria("mImagensAmbiente", imagensAmbiente, "Nenhuma imagem da aferição de ambiente cadastrada.");
+
+  document.querySelectorAll("#modalDetalhe .easy-section").forEach(section => {
+    section.classList.add("open");
+  });
 
   const modal = new bootstrap.Modal(document.getElementById("modalDetalhe"));
   modal.show();

@@ -21,6 +21,16 @@
         </button>
       </form>
 
+      <form method="POST" action="/gestao/faturamento-comercial/limpar-sincronizados"
+            onsubmit="return confirm('Isso vai apagar apenas as notas sincronizadas do mês selecionado. As notas manuais serão mantidas. Deseja continuar?');">
+        <input type="hidden" name="mes" value="{{ mes }}">
+        <input type="hidden" name="ano" value="{{ ano }}">
+        <button class="fc2-btn-danger" type="submit">
+          <i class="bi bi-trash3"></i>
+          Limpar sincronizados
+        </button>
+      </form>
+
       <button type="button" class="fc2-btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoFaturamento">
         <i class="bi bi-plus-lg"></i>
         Nova Nota

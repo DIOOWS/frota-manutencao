@@ -5897,25 +5897,49 @@ def sincronizar_faturamento_comercial():
             ignorados += 1
             continue
 
+        chave_conciliacao = normalizar_texto(getattr(conta, "chave_conciliacao", None))
+
+        if not chave_conciliacao:
+            chave_conciliacao = "|".join([
+                str(getattr(conta, "id", "")),
+                cliente or "SEM CLIENTE",
+                nfse or "-",
+                str(mes_ref),
+                str(ano_ref),
+            ])
+
         registro = FaturamentoComercial.query.filter(
-            FaturamentoComercial.cliente == cliente,
-            FaturamentoComercial.nfse == nfse,
-            FaturamentoComercial.valor == valor,
+            FaturamentoComercial.chave_conciliacao == chave_conciliacao
         ).first()
+
+        if not registro:
+            # Compatibilidade com registros antigos, criados antes do campo chave_conciliacao.
+            # Esse fallback evita criar duplicidade na primeira sincronização após a atualização.
+            registro = FaturamentoComercial.query.filter(
+                FaturamentoComercial.cliente == cliente,
+                FaturamentoComercial.nfse == nfse,
+                FaturamentoComercial.mes == mes_ref,
+                FaturamentoComercial.ano == ano_ref,
+            ).first()
 
         pago = bool(getattr(conta, "pago", False))
         status_importado = normalizar_texto(getattr(conta, "status", None))
         status = "RECEBIDO" if pago or status_importado in ["RECEBIDO", "PAGO", "QUITADO", "BAIXADO"] else "PENDENTE"
 
         if registro:
-            # Mantém campos comerciais preenchidos manualmente e atualiza apenas dados vindos da importação.
-            registro.data_emissao = registro.data_emissao or data_documento
-            registro.vencimento_30 = registro.vencimento_30 or data_vencimento
-            registro.observacoes = registro.observacoes or getattr(conta, "observacoes", None)
+            # Atualiza os campos que vêm da importação, mantendo os campos comerciais manuais.
+            registro.cliente = cliente
+            registro.nfse = nfse
+            registro.valor = valor
+            registro.data_emissao = data_documento or registro.data_emissao
+            registro.vencimento_30 = data_vencimento or registro.vencimento_30
+            registro.observacoes = getattr(conta, "observacoes", None) or registro.observacoes
             registro.pago = pago
             registro.status = status
-            registro.mes = registro.mes or mes_ref
-            registro.ano = registro.ano or ano_ref
+            registro.mes = mes_ref
+            registro.ano = ano_ref
+            registro.chave_conciliacao = chave_conciliacao
+            registro.origem_registro = "SINCRONIZADO"
             atualizados += 1
             continue
 
@@ -5934,6 +5958,8 @@ def sincronizar_faturamento_comercial():
             pago=pago,
             mes=mes_ref,
             ano=ano_ref,
+            chave_conciliacao=chave_conciliacao,
+            origem_registro="SINCRONIZADO",
         )
 
         db.session.add(novo)
@@ -5950,6 +5976,34 @@ def sincronizar_faturamento_comercial():
     )
 
     return redirect(f"/gestao/faturamento-comercial?mes={mes_retorno}&ano={ano_retorno}")
+
+
+@gestao_bp.route("/faturamento-comercial/limpar-sincronizados", methods=["POST"])
+@gestao_required
+def limpar_faturamento_comercial_sincronizados():
+    from models.faturamento_comercial import FaturamentoComercial
+
+    mes = request.form.get("mes", type=int) or date.today().month
+    ano = request.form.get("ano", type=int) or date.today().year
+
+    try:
+        removidos = FaturamentoComercial.query.filter(
+            FaturamentoComercial.mes == mes,
+            FaturamentoComercial.ano == ano,
+            FaturamentoComercial.origem_registro == "SINCRONIZADO",
+        ).delete(synchronize_session=False)
+
+        db.session.commit()
+
+        flash(
+            f"{removidos} registro(s) sincronizado(s) removido(s). As notas manuais foram mantidas.",
+            "success"
+        )
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao limpar registros sincronizados: {str(e)}", "danger")
+
+    return redirect(f"/gestao/faturamento-comercial?mes={mes}&ano={ano}")
 
 
 @gestao_bp.route("/faturamento-comercial/<int:registro_id>/status", methods=["POST"])
