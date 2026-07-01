@@ -2,39 +2,33 @@
 
 {% block content %}
 
-<div class="frotas-page">
+<div class="frotas-page frotas-table-page">
 
-  <!-- HEADER + BUSCA -->
-  <div class="frotas-page-header">
-
+  <div class="frotas-page-header frotas-table-header">
     <div class="frotas-title-wrap">
-      <div class="frotas-title-icon">
+      <div class="frotas-title-icon frotas-title-logo-box">
         <img src="{{ url_for('static', filename='img/caminhao.png') }}" alt="Caminhão">
       </div>
 
       <div>
-        <h2 class="titulo-pagina">Frotas</h2>
+        <h2 class="titulo-pagina">Frotas e Placas</h2>
         <p class="frotas-subtitle">
-          Visualize o histórico de manutenções por frota ou placa
+          Visualize o histórico de manutenções por cliente, frota ou placa.
         </p>
       </div>
     </div>
 
-    <div class="frotas-search-box">
+    <div class="frotas-search-box frotas-table-search">
       <span>🔎</span>
-      <input type="text" id="buscarFrota" placeholder="Buscar frota ou placa...">
+      <input type="text" id="buscarFrota" placeholder="Buscar cliente, frota, placa, status ou OS...">
     </div>
-
   </div>
 
-  <!-- RESUMO DAS FROTAS -->
-  <div class="frotas-resumo-grid">
-
+  <div class="frotas-resumo-grid frotas-resumo-compacto">
     <div class="frotas-resumo-card">
       <div class="frotas-resumo-icon azul">
         <img src="{{ url_for('static', filename='img/caminhao.png') }}" alt="Caminhão">
       </div>
-
       <div class="frotas-resumo-info">
         <span>Total de veículos</span>
         <strong>{{ total_frotas or 0 }}</strong>
@@ -44,10 +38,7 @@
     </div>
 
     <div class="frotas-resumo-card">
-      <div class="frotas-resumo-icon roxo">
-        🛠️
-      </div>
-
+      <div class="frotas-resumo-icon roxo">🛠️</div>
       <div class="frotas-resumo-info">
         <span>Total de manutenções</span>
         <strong>{{ total_manutencoes or 0 }}</strong>
@@ -57,10 +48,7 @@
     </div>
 
     <div class="frotas-resumo-card">
-      <div class="frotas-resumo-icon verde">
-        📊
-      </div>
-
+      <div class="frotas-resumo-icon verde">📊</div>
       <div class="frotas-resumo-info">
         <span>Média por frota</span>
         <strong>{{ media_por_frota or 0 }}</strong>
@@ -70,10 +58,7 @@
     </div>
 
     <div class="frotas-resumo-card">
-      <div class="frotas-resumo-icon azul2">
-        📈
-      </div>
-
+      <div class="frotas-resumo-icon azul2">📈</div>
       <div class="frotas-resumo-info">
         <span>Mês com mais manutenções</span>
         <strong>{{ mes_mais_manutencoes or "-" }}</strong>
@@ -81,77 +66,183 @@
         <div class="frotas-resumo-line azul2"></div>
       </div>
     </div>
-
   </div>
 
-  <!-- GRID DAS FROTAS -->
-  <div class="frotas-grid" id="frotasGrid">
+  <section class="frotas-tabela-card">
+    <div class="frotas-tabela-topo">
+      <div>
+        <h3>Lista de Frotas / Placas</h3>
+        <p>Registros agrupados pelo identificador do veículo.</p>
+      </div>
 
-    {% for f in frotas %}
-      <a href="/frotas/{{ f.codigo }}"
-         class="frota-card {{ f.classe }}"
-         data-frota="{{ f.codigo }} {{ f.label }} {{ f.tipo }}">
+      <div class="frotas-tabela-legenda">
+        <span><i class="leg-frota"></i> Frota</span>
+        <span><i class="leg-placa"></i> Placa</span>
+      </div>
+    </div>
 
-        <div class="frota-card-icon">
-          {% if f.tipo == "PLACA" %}
-            <span style="font-size: 30px;">🚗</span>
+    <div class="frotas-table-wrap">
+      <table class="frotas-premium-table" id="tabelaFrotas">
+        <thead>
+          <tr>
+            <th class="sortable-frotas" data-column="0">Cliente / Veículo <i class="bi bi-arrow-down-up"></i></th>
+            <th class="sortable-frotas" data-column="1">Tipo <i class="bi bi-arrow-down-up"></i></th>
+            <th class="sortable-frotas" data-column="2" data-type="number">Manut. <i class="bi bi-arrow-down-up"></i></th>
+            <th class="sortable-frotas" data-column="3">Última Entrada <i class="bi bi-arrow-down-up"></i></th>
+            <th class="sortable-frotas" data-column="4">Última OS <i class="bi bi-arrow-down-up"></i></th>
+            <th class="sortable-frotas" data-column="5">Último Serviço <i class="bi bi-arrow-down-up"></i></th>
+            <th class="sortable-frotas" data-column="6">Status <i class="bi bi-arrow-down-up"></i></th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for f in frotas %}
+            {% set status_normalizado = (f.ultimo_status or '-')|lower|replace(' ', '-') %}
+            <tr data-frota="{{ f.codigo }} {{ f.tipo }} {{ f.label }} {{ f.cliente }} {{ f.ultima_os or '' }} {{ f.ultimo_status or '' }} {{ f.ultimo_servico or '' }}">
+              <td>
+                <div class="frotas-veiculo-cell">
+                  <div class="frotas-cliente-logo">
+                    {% if f.cliente_logo %}
+                      <img src="{{ f.cliente_logo }}" alt="Logo {{ f.cliente }}">
+                    {% else %}
+                      <span>{{ (f.cliente[:1] if f.cliente else 'C')|upper }}</span>
+                    {% endif %}
+                  </div>
+
+                  <div class="frotas-veiculo-info">
+                    <strong>{{ f.codigo }}</strong>
+                    <small>{{ f.cliente or 'SEM CLIENTE' }}</small>
+                  </div>
+                </div>
+              </td>
+
+              <td>
+                <span class="frota-tipo-badge {% if f.tipo == 'PLACA' %}placa{% else %}frota{% endif %}">
+                  {{ f.tipo }}
+                </span>
+              </td>
+
+              <td>
+                <span class="frotas-qtd-pill">{{ f.qtd }}</span>
+              </td>
+
+              <td>
+                {% if f.ultima_data %}
+                  {{ f.ultima_data.strftime('%d/%m/%Y') }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+
+              <td>{{ f.ultima_os or '-' }}</td>
+              <td>{{ f.ultimo_servico or '-' }}</td>
+
+              <td>
+                <span class="frotas-status-badge {{ status_normalizado }}">
+                  {{ f.ultimo_status or '-' }}
+                </span>
+              </td>
+
+              <td>
+                <a href="/frotas/{{ f.codigo }}" class="frotas-action-btn">
+                  Ver histórico
+                  <i class="bi bi-arrow-right"></i>
+                </a>
+              </td>
+            </tr>
           {% else %}
-            <img src="{{ url_for('static', filename='img/caminhao.png') }}" alt="Caminhão">
-          {% endif %}
-        </div>
+            <tr>
+              <td colspan="8" class="frotas-empty">Nenhuma frota ou placa encontrada.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
 
-        <div class="frota-card-content">
-
-          <div class="frota-numero">
-            {{ f.codigo }}
-          </div>
-
-          <div class="frota-divider"></div>
-
-          <div class="frota-info">
-            <span class="frota-tipo-badge {% if f.tipo == 'PLACA' %}placa{% else %}frota{% endif %}">
-              {{ f.tipo }}
-            </span>
-            {{ f.qtd }} manutenção{% if f.qtd != 1 %}es{% endif %}
-          </div>
-
-          <div class="frota-link-text">
-            Ver histórico →
-          </div>
-
-        </div>
-
-      </a>
-    {% endfor %}
-
-  </div>
+    <div class="frotas-table-footer">
+      <span id="contadorFrotas">Mostrando {{ frotas|length }} de {{ frotas|length }} registros</span>
+    </div>
+  </section>
 
 </div>
-
-
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const input = document.getElementById("buscarFrota");
-  const cards = document.querySelectorAll(".frotas-page .frota-card");
+  const tabela = document.getElementById("tabelaFrotas");
+  const contador = document.getElementById("contadorFrotas");
 
-  if (!input) {
-    return;
+  if (!tabela) return;
+
+  const tbody = tabela.querySelector("tbody");
+  const linhas = Array.from(tbody.querySelectorAll("tr[data-frota]"));
+
+  function atualizarContador() {
+    const visiveis = linhas.filter(linha => linha.style.display !== "none").length;
+    if (contador) {
+      contador.textContent = `Mostrando ${visiveis} de ${linhas.length} registros`;
+    }
   }
 
-  input.addEventListener("input", function () {
-    const termo = this.value.trim().toLowerCase();
+  if (input) {
+    input.addEventListener("input", function () {
+      const termo = this.value.trim().toLowerCase();
 
-    cards.forEach(function (card) {
-      const frota = card.dataset.frota.toLowerCase();
+      linhas.forEach(function (linha) {
+        const texto = linha.dataset.frota.toLowerCase();
+        linha.style.display = texto.includes(termo) ? "" : "none";
+      });
 
-      if (frota.includes(termo)) {
-        card.style.display = "";
-      } else {
-        card.style.display = "none";
+      atualizarContador();
+    });
+  }
+
+  document.querySelectorAll(".sortable-frotas").forEach(function (header) {
+    header.dataset.order = "asc";
+
+    header.addEventListener("click", function () {
+      const column = Number(this.dataset.column);
+      const type = this.dataset.type || "text";
+      const order = this.dataset.order === "asc" ? "desc" : "asc";
+      this.dataset.order = order;
+
+      document.querySelectorAll(".sortable-frotas i").forEach(icon => {
+        icon.className = "bi bi-arrow-down-up";
+      });
+
+      const icon = this.querySelector("i");
+      if (icon) {
+        icon.className = order === "asc" ? "bi bi-arrow-up" : "bi bi-arrow-down";
       }
+
+      const ordenadas = Array.from(tbody.querySelectorAll("tr[data-frota]")).sort(function (a, b) {
+        let aText = (a.children[column]?.innerText || "").trim();
+        let bText = (b.children[column]?.innerText || "").trim();
+
+        if (type === "number") {
+          aText = Number(aText.replace(/[^0-9.-]/g, "")) || 0;
+          bText = Number(bText.replace(/[^0-9.-]/g, "")) || 0;
+        } else if (aText.match(/^\d{2}\/\d{2}\/\d{4}$/) && bText.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+          const [ad, am, ay] = aText.split("/");
+          const [bd, bm, by] = bText.split("/");
+          aText = new Date(`${ay}-${am}-${ad}`);
+          bText = new Date(`${by}-${bm}-${bd}`);
+        } else {
+          aText = aText.toLowerCase();
+          bText = bText.toLowerCase();
+        }
+
+        if (aText < bText) return order === "asc" ? -1 : 1;
+        if (aText > bText) return order === "asc" ? 1 : -1;
+        return 0;
+      });
+
+      ordenadas.forEach(linha => tbody.appendChild(linha));
     });
   });
+
+  atualizarContador();
 });
 </script>
 

@@ -8,3 +8,4 @@ class Cliente(db.Model):
     nome = db.Column(db.String(150), nullable=False)
     telefone = db.Column(db.String(20))
     email = db.Column(db.String(120))
+    logo = db.Column(db.Text)

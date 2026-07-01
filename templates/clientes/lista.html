@@ -2,53 +2,72 @@
 
 {% block content %}
 
-<h3>Clientes</h3>
+<div class="clientes-page">
 
-<a href="javascript:history.back()" class="btn btn-secondary mb-3">
-    ← Voltar
-</a>
+  <div class="clientes-header">
+    <div>
+      <h3>Clientes</h3>
+      <p>Gerencie os clientes cadastrados e suas logos operacionais.</p>
+    </div>
 
-<a href="/clientes/novo" class="btn btn-success mb-3 float-end">
-    + Novo Cliente
-</a>
+    <div class="clientes-header-actions">
+      <a href="javascript:history.back()" class="btn btn-light">← Voltar</a>
+      <a href="/clientes/novo" class="btn btn-success">+ Novo Cliente</a>
+    </div>
+  </div>
 
-<div class="card p-3">
-
-<table class="table">
-    <thead>
-        <tr>
-            <th>Nome</th>
+  <div class="clientes-card">
+    <div class="clientes-table-wrap">
+      <table class="table clientes-table">
+        <thead>
+          <tr>
+            <th>Cliente</th>
             <th>Telefone</th>
             <th>Email</th>
-            <th>Ações</th> <!-- 🔥 NOVO -->
-        </tr>
-    </thead>
+            <th>Ações</th>
+          </tr>
+        </thead>
 
-    <tbody>
-        {% for c in clientes %}
-        <tr>
-            <td>{{ c.nome }}</td>
-            <td>{{ c.telefone }}</td>
-            <td>{{ c.email }}</td>
-
+        <tbody>
+          {% for c in clientes %}
+          <tr>
             <td>
-                <!-- ✏️ EDITAR -->
-                <a href="/clientes/editar/{{ c.id }}" class="btn btn-sm btn-warning">
-                    Editar
-                </a>
-
-                <!-- 🗑️ EXCLUIR -->
+              <div class="cliente-cell">
+                <div class="cliente-logo-mini">
+                  {% if c.logo %}
+                    <img src="{{ c.logo }}" alt="Logo {{ c.nome }}">
+                  {% else %}
+                    <span>{{ (c.nome[:1] if c.nome else 'C')|upper }}</span>
+                  {% endif %}
+                </div>
+                <div>
+                  <strong>{{ c.nome }}</strong>
+                  <small>{{ 'COM LOGO' if c.logo else 'SEM LOGO' }}</small>
+                </div>
+              </div>
+            </td>
+            <td>{{ c.telefone or '-' }}</td>
+            <td>{{ c.email or '-' }}</td>
+            <td>
+              <div class="cliente-actions">
+                <a href="/clientes/editar/{{ c.id }}" class="btn btn-sm btn-warning">Editar</a>
                 <a href="/clientes/excluir/{{ c.id }}"
                    class="btn btn-sm btn-danger"
                    onclick="return confirm('Deseja excluir este cliente?')">
-                    Excluir
+                  Excluir
                 </a>
+              </div>
             </td>
-
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="4" class="text-center text-muted py-4">Nenhum cliente cadastrado.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
 
 </div>
 

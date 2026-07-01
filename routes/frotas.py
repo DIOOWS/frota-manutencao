@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, session, redirect
 from models.manutencao import Manutencao
 from models.afericao_termometro import AfericaoTermometro
 from models.usuario import Usuario
+from models.cliente import Cliente
 from database import db
 from collections import defaultdict
 from datetime import datetime
@@ -151,6 +152,13 @@ def lista_frotas():
 
     registros = aplicar_filtro_cliente(Manutencao.query).all()
 
+    clientes = Cliente.query.all()
+    clientes_map = {
+        normalizar_texto(cliente.nome): cliente
+        for cliente in clientes
+        if getattr(cliente, "nome", None)
+    }
+
     veiculos_map = {}
     meses_counter = defaultdict(int)
 
@@ -159,6 +167,10 @@ def lista_frotas():
 
         if ident:
             codigo = ident["codigo"]
+            cliente_nome = normalizar_texto(getattr(r, "cliente", None)) or "SEM CLIENTE"
+            cliente_obj = clientes_map.get(cliente_nome)
+            logo_cliente = getattr(cliente_obj, "logo", None) if cliente_obj else None
+            data_registro = getattr(r, "data", None)
 
             if codigo not in veiculos_map:
                 veiculos_map[codigo] = {
@@ -167,9 +179,26 @@ def lista_frotas():
                     "label": ident["label"],
                     "classe": ident["classe"],
                     "qtd": 0,
+                    "cliente": getattr(r, "cliente", None) or "SEM CLIENTE",
+                    "cliente_logo": logo_cliente,
+                    "ultima_data": data_registro,
+                    "ultima_os": getattr(r, "os", None),
+                    "ultimo_status": getattr(r, "status", None),
+                    "ultimo_servico": getattr(r, "tipo_servico", None),
+                    "ultimo_atendimento": getattr(r, "tipo_atendimento", None),
                 }
 
             veiculos_map[codigo]["qtd"] += 1
+
+            atual = veiculos_map[codigo].get("ultima_data")
+            if data_registro and (not atual or parse_data_segura(data_registro) >= parse_data_segura(atual)):
+                veiculos_map[codigo]["cliente"] = getattr(r, "cliente", None) or "SEM CLIENTE"
+                veiculos_map[codigo]["cliente_logo"] = logo_cliente
+                veiculos_map[codigo]["ultima_data"] = data_registro
+                veiculos_map[codigo]["ultima_os"] = getattr(r, "os", None)
+                veiculos_map[codigo]["ultimo_status"] = getattr(r, "status", None)
+                veiculos_map[codigo]["ultimo_servico"] = getattr(r, "tipo_servico", None)
+                veiculos_map[codigo]["ultimo_atendimento"] = getattr(r, "tipo_atendimento", None)
 
         if r.data:
             try:

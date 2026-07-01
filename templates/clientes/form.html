@@ -2,36 +2,72 @@
 
 {% block content %}
 
-<h3>{{ "Editar" if cliente else "Novo" }} Cliente</h3>
+<div class="cliente-form-page">
 
-<!--<a href="/clientes/partials/" class="btn btn-secondary mb-3">-->
-<!--    ← Voltar-->
-<!--</a>-->
-
-<div class="card p-4" style="max-width: 500px;">
-
-<form method="POST">
-
-    <div class="mb-2">
-        <input name="nome" placeholder="Nome" class="form-control"
-               value="{{ cliente.nome if cliente else '' }}">
+  <div class="cliente-form-header">
+    <div>
+      <h3>{{ "Editar Cliente" if cliente else "Novo Cliente" }}</h3>
+      <p>Cadastre os dados do cliente e a logo usada nas telas de frotas e manutenções.</p>
     </div>
 
-    <div class="mb-2">
-        <input name="telefone" placeholder="Telefone" class="form-control"
-               value="{{ cliente.telefone if cliente else '' }}">
-    </div>
+    <a href="/clientes/" class="btn btn-light cliente-voltar-btn">← Voltar</a>
+  </div>
 
-    <div class="mb-2">
-        <input name="email" placeholder="Email" class="form-control"
-               value="{{ cliente.email if cliente else '' }}">
-    </div>
+  <div class="cliente-form-card">
+    <form method="POST" enctype="multipart/form-data">
 
-    <button class="btn btn-success w-100">
-        {{ "Atualizar Cliente" if cliente else "Salvar Cliente" }}
-    </button>
+      <div class="cliente-logo-area">
+        <div class="cliente-logo-preview">
+          {% if cliente and cliente.logo %}
+            <img src="{{ cliente.logo }}" alt="Logo {{ cliente.nome }}">
+          {% else %}
+            <span>{{ (cliente.nome[:1] if cliente and cliente.nome else 'C')|upper }}</span>
+          {% endif %}
+        </div>
 
-</form>
+        <div class="cliente-logo-info">
+          <strong>Logo do cliente</strong>
+          <small>Use PNG, JPG ou WEBP. Essa imagem aparecerá nas telas operacionais.</small>
+          <input type="file" name="logo" class="form-control" accept="image/*">
+
+          {% if cliente and cliente.logo %}
+            <label class="cliente-remover-logo">
+              <input type="checkbox" name="remover_logo" value="1">
+              Remover logo atual
+            </label>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="row g-3 mt-2">
+        <div class="col-md-12">
+          <label class="form-label">Nome do cliente</label>
+          <input name="nome" class="form-control" placeholder="Nome do cliente"
+                 value="{{ cliente.nome if cliente else '' }}" required>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Telefone</label>
+          <input name="telefone" class="form-control" placeholder="Telefone"
+                 value="{{ cliente.telefone if cliente else '' }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">E-mail</label>
+          <input type="email" name="email" class="form-control" placeholder="Email"
+                 value="{{ cliente.email if cliente else '' }}">
+        </div>
+      </div>
+
+      <div class="cliente-form-actions">
+        <a href="/clientes/" class="btn btn-light">Cancelar</a>
+        <button class="btn btn-success">
+          {{ "Atualizar Cliente" if cliente else "Salvar Cliente" }}
+        </button>
+      </div>
+
+    </form>
+  </div>
 
 </div>
 
