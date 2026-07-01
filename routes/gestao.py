@@ -5635,6 +5635,15 @@ def faturamento_comercial():
     tipo_filtro = normalizar_texto(request.args.get("tipo"))
     vencimento_filtro = normalizar_texto(request.args.get("vencimento"))
 
+    sort_col = (request.args.get("sort") or "vencimento").strip().lower()
+    sort_order = (request.args.get("order") or "asc").strip().lower()
+
+    if sort_col not in ["cliente", "os", "nfse", "valor", "emissao", "vencimento", "status", "tipo"]:
+        sort_col = "vencimento"
+
+    if sort_order not in ["asc", "desc"]:
+        sort_order = "asc"
+
     periodo_inicio = primeiro_dia_mes(mes, ano)
     periodo_fim = ultimo_dia_mes(mes, ano)
 
@@ -5655,9 +5664,26 @@ def faturamento_comercial():
     if tipo_filtro:
         query = query.filter(FaturamentoComercial.tipo == tipo_filtro)
 
+    colunas_ordenacao = {
+        "cliente": FaturamentoComercial.cliente,
+        "os": FaturamentoComercial.os,
+        "nfse": FaturamentoComercial.nfse,
+        "valor": FaturamentoComercial.valor,
+        "emissao": FaturamentoComercial.data_emissao,
+        "vencimento": FaturamentoComercial.vencimento_30,
+        "status": FaturamentoComercial.status,
+        "tipo": FaturamentoComercial.tipo,
+    }
+
+    coluna_ordenacao = colunas_ordenacao.get(sort_col, FaturamentoComercial.vencimento_30)
+
+    if sort_order == "desc":
+        ordenacao_principal = coluna_ordenacao.desc().nullslast()
+    else:
+        ordenacao_principal = coluna_ordenacao.asc().nullslast()
+
     registros = query.order_by(
-        FaturamentoComercial.data_emissao.desc().nullslast(),
-        FaturamentoComercial.vencimento_30.asc().nullslast(),
+        ordenacao_principal,
         FaturamentoComercial.id.desc()
     ).all()
 
@@ -5734,6 +5760,8 @@ def faturamento_comercial():
         status_filtro=status_filtro,
         tipo_filtro=tipo_filtro,
         vencimento_filtro=vencimento_filtro,
+        sort_col=sort_col,
+        sort_order=sort_order,
         registros=registros,
         total_notas=total_notas,
         total_recebido=total_recebido,
@@ -5780,9 +5808,26 @@ def exportar_faturamento_comercial():
     if tipo_filtro:
         query = query.filter(FaturamentoComercial.tipo == tipo_filtro)
 
+    colunas_ordenacao = {
+        "cliente": FaturamentoComercial.cliente,
+        "os": FaturamentoComercial.os,
+        "nfse": FaturamentoComercial.nfse,
+        "valor": FaturamentoComercial.valor,
+        "emissao": FaturamentoComercial.data_emissao,
+        "vencimento": FaturamentoComercial.vencimento_30,
+        "status": FaturamentoComercial.status,
+        "tipo": FaturamentoComercial.tipo,
+    }
+
+    coluna_ordenacao = colunas_ordenacao.get(sort_col, FaturamentoComercial.vencimento_30)
+
+    if sort_order == "desc":
+        ordenacao_principal = coluna_ordenacao.desc().nullslast()
+    else:
+        ordenacao_principal = coluna_ordenacao.asc().nullslast()
+
     registros = query.order_by(
-        FaturamentoComercial.data_emissao.desc().nullslast(),
-        FaturamentoComercial.vencimento_30.asc().nullslast(),
+        ordenacao_principal,
         FaturamentoComercial.id.desc()
     ).all()
 

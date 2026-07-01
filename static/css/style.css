@@ -38587,3 +38587,69 @@ body {
     font-size: 13px;
     font-weight: 500;
 }
+/* =========================================================
+   FATURAMENTO COMERCIAL - CABEÇALHO ORDENÁVEL
+   Mantém o visual da tabela e adiciona setas de ordenação.
+========================================================= */
+.fc2-table thead th {
+  text-align: left !important;
+  vertical-align: middle !important;
+}
+
+.fc2-sort-link {
+  width: 100% !important;
+  min-height: 28px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 6px !important;
+  color: #ffffff !important;
+  text-decoration: none !important;
+  line-height: 1.1 !important;
+}
+
+.fc2-sort-link span {
+  display: inline-block !important;
+  color: #ffffff !important;
+}
+
+.fc2-sort-link i {
+  color: rgba(255, 255, 255, 0.72) !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+  transition: 0.18s ease !important;
+}
+
+.fc2-sort-link:hover i,
+.fc2-sort-link.active i {
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+}
+
+.fc2-sort-link.active {
+  font-weight: 950 !important;
+}
+
+.fc2-sort-link.active::after {
+  content: "" !important;
+  width: 4px !important;
+  height: 4px !important;
+  border-radius: 999px !important;
+  background: #38bdf8 !important;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.85) !important;
+  margin-left: 2px !important;
+}
+
+.fc2-table th:last-child,
+.fc2-table td:last-child {
+  text-align: center !important;
+}
+
+.fc2-table td:nth-child(4),
+.fc2-table td:nth-child(5),
+.fc2-table td:nth-child(6),
+.fc2-table td:nth-child(7),
+.fc2-table td:nth-child(8),
+.fc2-table td:nth-child(9) {
+  vertical-align: middle !important;
+}

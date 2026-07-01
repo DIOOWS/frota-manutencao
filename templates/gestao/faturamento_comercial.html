@@ -3,6 +3,9 @@
 
 {% block content %}
 
+
+
+
 <div class="fc2-page">
 
   <div class="fc2-header">
@@ -81,7 +84,6 @@
   </div>
 
   <form method="GET" action="/gestao/faturamento-comercial" class="fc2-filter-card fc2-filter-compact">
-
     <div class="fc2-filter-group mes">
       <label>Mês</label>
       <select name="mes" class="form-control">
@@ -172,14 +174,14 @@
           <table class="fc2-table">
             <thead>
               <tr>
-                <th>Cliente</th>
-                <th>O.S</th>
-                <th>NFSE</th>
-                <th>Valor</th>
-                <th>Emissão</th>
-                <th>Vencimento</th>
-                <th>Status</th>
-                <th>Tipo</th>
+                <th class="fc2-sort-js" data-column="0" data-type="text">Cliente <i class="bi bi-arrow-down-up"></i></th>
+                <th class="fc2-sort-js" data-column="1" data-type="text">O.S <i class="bi bi-arrow-down-up"></i></th>
+                <th class="fc2-sort-js" data-column="2" data-type="number">NFSE <i class="bi bi-arrow-down-up"></i></th>
+                <th class="fc2-sort-js" data-column="3" data-type="money">Valor <i class="bi bi-arrow-down-up"></i></th>
+                <th class="fc2-sort-js" data-column="4" data-type="date">Emissão <i class="bi bi-arrow-down-up"></i></th>
+                <th class="fc2-sort-js fc2-sort-active asc" data-column="5" data-type="date">Vencimento <i class="bi bi-arrow-up"></i></th>
+                <th class="fc2-sort-js" data-column="6" data-type="text">Status <i class="bi bi-arrow-down-up"></i></th>
+                <th class="fc2-sort-js" data-column="7" data-type="text">Tipo <i class="bi bi-arrow-down-up"></i></th>
                 <th>Ações</th>
               </tr>
             </thead>
@@ -385,5 +387,150 @@
   </div>
 </div>
 {% endfor %}
+
+
+
+<style>
+  .fc2-sort-js {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    transition: background .18s ease, color .18s ease;
+  }
+
+  .fc2-sort-js:hover {
+    background: #07295e !important;
+  }
+
+  .fc2-sort-js i {
+    margin-left: 6px;
+    font-size: 11px;
+    opacity: .95;
+  }
+
+  .fc2-sort-js.fc2-sort-active {
+    background: #061f4b !important;
+  }
+</style>
+
+<script>
+(function () {
+  function parseDateBR(value) {
+    const text = String(value || '').trim();
+    if (!text || text === '-') return 0;
+
+    const parts = text.split('/');
+    if (parts.length !== 3) return 0;
+
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const year = parseInt(parts[2], 10);
+
+    if (Number.isNaN(day) || Number.isNaN(month) || Number.isNaN(year)) return 0;
+
+    return new Date(year, month, day).getTime();
+  }
+
+  function parseMoney(value) {
+    let text = String(value || '').trim();
+    if (!text || text === '-') return 0;
+
+    text = text
+      .replace(/R\$/g, '')
+      .replace(/\s/g, '')
+      .replace(/\./g, '')
+      .replace(',', '.');
+
+    const number = parseFloat(text);
+    return Number.isNaN(number) ? 0 : number;
+  }
+
+  function parseNumber(value) {
+    const text = String(value || '').replace(/[^0-9.-]/g, '');
+    const number = parseFloat(text);
+    return Number.isNaN(number) ? 0 : number;
+  }
+
+  function normalizeText(value) {
+    return String(value || '')
+      .trim()
+      .toUpperCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function getComparableValue(cell, type) {
+    const text = cell ? cell.innerText.trim() : '';
+
+    if (type === 'date') return parseDateBR(text);
+    if (type === 'money') return parseMoney(text);
+    if (type === 'number') return parseNumber(text);
+
+    return normalizeText(text);
+  }
+
+  function resetHeaderIcons(headers, activeHeader, direction) {
+    headers.forEach(header => {
+      const icon = header.querySelector('i');
+      header.classList.remove('fc2-sort-active', 'asc', 'desc');
+
+      if (icon) {
+        icon.className = 'bi bi-arrow-down-up';
+      }
+    });
+
+    activeHeader.classList.add('fc2-sort-active', direction);
+
+    const activeIcon = activeHeader.querySelector('i');
+    if (activeIcon) {
+      activeIcon.className = direction === 'asc' ? 'bi bi-arrow-up' : 'bi bi-arrow-down';
+    }
+  }
+
+  function sortTable(header, headers) {
+    const table = header.closest('table');
+    const tbody = table ? table.querySelector('tbody') : null;
+
+    if (!tbody) return;
+
+    const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => {
+      return !row.querySelector('.fc2-empty') && row.children.length > 1;
+    });
+
+    if (!rows.length) return;
+
+    const column = parseInt(header.dataset.column, 10);
+    const type = header.dataset.type || 'text';
+    const currentDirection = header.classList.contains('asc') ? 'asc' : 'desc';
+    const nextDirection = currentDirection === 'asc' ? 'desc' : 'asc';
+    const multiplier = nextDirection === 'asc' ? 1 : -1;
+
+    rows.sort((rowA, rowB) => {
+      const valueA = getComparableValue(rowA.children[column], type);
+      const valueB = getComparableValue(rowB.children[column], type);
+
+      if (valueA < valueB) return -1 * multiplier;
+      if (valueA > valueB) return 1 * multiplier;
+      return 0;
+    });
+
+    const fragment = document.createDocumentFragment();
+    rows.forEach(row => fragment.appendChild(row));
+    tbody.appendChild(fragment);
+
+    resetHeaderIcons(headers, header, nextDirection);
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const headers = Array.from(document.querySelectorAll('.fc2-sort-js'));
+
+    headers.forEach(header => {
+      header.addEventListener('click', function () {
+        sortTable(this, headers);
+      });
+    });
+  });
+})();
+</script>
 
 {% endblock %}
