@@ -3682,4 +3682,68 @@ body.modal-open {
 })();
 </script>
 
+
+<script>
+/* =====================================================
+   CORREÇÃO ANTI-TRAVAMENTO DE MODAIS DO RADAR
+   Problema corrigido:
+   - Ao fechar modal aberto pelo olhinho, podia sobrar body.modal-open
+     ou .modal-backdrop invisível, bloqueando clique/scroll da tela.
+   - Agora, ao fechar qualquer modal, o Radar normaliza o estado do Bootstrap.
+===================================================== */
+(function () {
+    function radarModalEstaVisivel(modal) {
+        if (!modal) return false;
+        return modal.classList.contains('show') && modal.style.display !== 'none';
+    }
+
+    function radarExisteModalAberto() {
+        return Array.from(document.querySelectorAll('.modal'))
+            .some(radarModalEstaVisivel);
+    }
+
+    function radarLimparEstadoModalTravado() {
+        setTimeout(function () {
+            const existeAberto = radarExisteModalAberto();
+
+            if (!existeAberto) {
+                document.querySelectorAll('.modal-backdrop').forEach(function (backdrop) {
+                    backdrop.remove();
+                });
+
+                document.querySelectorAll('.radar-modal-pai-fixo, .radar-modal-pai-ativo').forEach(function (modal) {
+                    modal.classList.remove('radar-modal-pai-fixo');
+                    modal.classList.remove('radar-modal-pai-ativo');
+                    modal.style.removeProperty('display');
+                    modal.removeAttribute('aria-modal');
+                    modal.setAttribute('aria-hidden', 'true');
+                });
+
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('overflow');
+                document.body.style.removeProperty('padding-right');
+                document.body.style.removeProperty('position');
+                document.body.style.removeProperty('top');
+                document.body.style.removeProperty('width');
+
+                return;
+            }
+
+            document.body.classList.add('modal-open');
+        }, 120);
+    }
+
+    document.addEventListener('hidden.bs.modal', radarLimparEstadoModalTravado, true);
+    document.addEventListener('hide.bs.modal', radarLimparEstadoModalTravado, true);
+
+    document.addEventListener('click', function (event) {
+        const btnFechar = event.target.closest('[data-bs-dismiss="modal"], .btn-close');
+        if (!btnFechar) return;
+        setTimeout(radarLimparEstadoModalTravado, 180);
+    }, true);
+
+    window.radarLimparEstadoModalTravado = radarLimparEstadoModalTravado;
+})();
+</script>
+
 {% endblock %}
