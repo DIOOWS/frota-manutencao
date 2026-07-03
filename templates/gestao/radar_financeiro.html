@@ -702,9 +702,8 @@
                                                         <td>
                                                             <div class="radar-excel-actions">
                                                                 <button type="button"
-                                                                        class="radar-excel-action view"
-                                                                        data-bs-toggle="modal"
-                                                                        data-bs-target="#modalContaNormal{{ item.id }}"
+                                                                        class="radar-excel-action view js-radar-open-conta-sobre-tabela"
+                                                                        data-radar-conta-target="modalContaNormal{{ item.id }}"
                                                                         title="Ver detalhes">
                                                                     <i class="bi bi-eye-fill"></i>
                                                                 </button>
@@ -1594,7 +1593,7 @@
             {% if item.id not in radar_detalhe_ns.ids %}
                 {% set radar_detalhe_ns.ids = radar_detalhe_ns.ids + [item.id] %}
 
-                <div class="modal fade radar-conta-modal" id="modalContaNormal{{ item.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal fade radar-conta-modal radar-conta-modal-filho" id="modalContaNormal{{ item.id }}" tabindex="-1" data-bs-backdrop="false" aria-hidden="true">
                     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
                         <div class="modal-content radar-herdadas-modal radar-conta-detalhe-modal">
                             <div class="modal-header">
@@ -3547,6 +3546,137 @@ document.addEventListener("DOMContentLoaded", function () {
         if (historicoAberto) {
             document.body.classList.add('modal-open');
             historicoAberto.classList.remove('radar-modal-pai-ativo');
+        }
+    });
+})();
+</script>
+
+
+
+<style>
+/* Mantém a tabela do Radar aberta ao abrir o detalhe da conta por cima */
+.radar-excel-modal.radar-modal-pai-fixo {
+    display: block !important;
+}
+
+.radar-excel-modal.radar-modal-pai-fixo .radar-excel-content {
+    filter: none;
+}
+
+.radar-conta-modal-filho {
+    z-index: 1075 !important;
+}
+
+.radar-conta-modal-filho.show {
+    z-index: 1075 !important;
+}
+
+.radar-conta-modal-filho + .modal-backdrop {
+    z-index: 1070 !important;
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+</style>
+
+<script>
+(function () {
+    let radarModalPaiAtual = null;
+    let radarScrollTabela = null;
+
+    function guardarPosicaoTabela(modalPai) {
+        if (!modalPai) return null;
+
+        const shell = modalPai.querySelector('.radar-excel-table-shell');
+        if (!shell) return null;
+
+        return {
+            el: shell,
+            top: shell.scrollTop,
+            left: shell.scrollLeft
+        };
+    }
+
+    function restaurarPosicaoTabela() {
+        if (!radarScrollTabela || !radarScrollTabela.el) return;
+
+        radarScrollTabela.el.scrollTop = radarScrollTabela.top || 0;
+        radarScrollTabela.el.scrollLeft = radarScrollTabela.left || 0;
+    }
+
+    function manterModalPaiAberto(modalPai) {
+        if (!modalPai) return;
+
+        modalPai.classList.add('radar-modal-pai-fixo');
+        modalPai.style.display = 'block';
+        modalPai.removeAttribute('aria-hidden');
+        modalPai.setAttribute('aria-modal', 'true');
+        modalPai.classList.add('show');
+    }
+
+    function abrirDetalhePorCima(event) {
+        const botao = event.target.closest('.js-radar-open-conta-sobre-tabela');
+        if (!botao) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+
+        if (!window.bootstrap) return;
+
+        const modalPai = botao.closest('.radar-excel-modal');
+        const targetId = botao.getAttribute('data-radar-conta-target');
+        const modalFilho = document.getElementById(targetId);
+
+        if (!modalFilho) return;
+
+        radarModalPaiAtual = modalPai;
+        radarScrollTabela = guardarPosicaoTabela(modalPai);
+
+        manterModalPaiAberto(modalPai);
+
+        modalFilho.classList.add('radar-conta-modal-filho');
+        modalFilho.style.zIndex = '1075';
+
+        const instanciaFilho = bootstrap.Modal.getOrCreateInstance(modalFilho, {
+            backdrop: false,
+            keyboard: true,
+            focus: true
+        });
+
+        instanciaFilho.show();
+
+        setTimeout(function () {
+            manterModalPaiAberto(modalPai);
+            restaurarPosicaoTabela();
+            document.body.classList.add('modal-open');
+        }, 80);
+    }
+
+    document.addEventListener('click', abrirDetalhePorCima, true);
+
+    document.addEventListener('shown.bs.modal', function (event) {
+        if (event.target && event.target.classList.contains('radar-conta-modal-filho')) {
+            manterModalPaiAberto(radarModalPaiAtual);
+            restaurarPosicaoTabela();
+            document.body.classList.add('modal-open');
+        }
+    });
+
+    document.addEventListener('hidden.bs.modal', function (event) {
+        if (!event.target || !event.target.classList.contains('radar-conta-modal-filho')) return;
+
+        const modalPai = radarModalPaiAtual;
+
+        if (modalPai) {
+            manterModalPaiAberto(modalPai);
+
+            setTimeout(function () {
+                manterModalPaiAberto(modalPai);
+                restaurarPosicaoTabela();
+                document.body.classList.add('modal-open');
+            }, 80);
         }
     });
 })();
