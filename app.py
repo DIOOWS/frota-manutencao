@@ -218,6 +218,7 @@ from routes.gestao import gestao_bp
 from routes.radar_financeiro import radar_financeiro_bp
 from routes.importacoes import importacoes_bp
 from routes.agenda_equipe import agenda_equipe_bp
+from routes.planejamento_financeiro import planejamento_financeiro_bp
 
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(manutencao_bp)
@@ -230,6 +231,7 @@ app.register_blueprint(radar_financeiro_bp)
 app.register_blueprint(gestao_bp)
 app.register_blueprint(importacoes_bp)
 app.register_blueprint(agenda_equipe_bp)
+app.register_blueprint(planejamento_financeiro_bp)
 
 
 # ==========================================

@@ -5979,10 +5979,25 @@ def sincronizar_faturamento_comercial():
             registro.data_emissao = data_documento or registro.data_emissao
             registro.vencimento_30 = data_vencimento or registro.vencimento_30
             registro.observacoes = getattr(conta, "observacoes", None) or registro.observacoes
-            registro.pago = pago
-            registro.status = status
-            registro.mes = mes_ref
-            registro.ano = ano_ref
+            # Atualiza pagamento sem deixar a sincronização desfazer baixa manual.
+            ja_recebido_manual = bool(registro.pago) or normalizar_texto(registro.status) in [
+                "RECEBIDO", "NOTAS PAGAS", "PAGO", "QUITADO", "BAIXADO"
+            ]
+
+            if ja_recebido_manual:
+                registro.pago = True
+                registro.status = "RECEBIDO"
+            else:
+                registro.pago = pago
+                registro.status = status
+
+            # Preserva a competência original do faturamento já criado.
+            # Evita a nota sumir do mês atual e voltar para mês anterior como pendente.
+            if not registro.mes:
+                registro.mes = mes_ref
+            if not registro.ano:
+                registro.ano = ano_ref
+
             registro.chave_conciliacao = chave_conciliacao
             registro.origem_registro = "SINCRONIZADO"
             atualizados += 1
@@ -6057,15 +6072,43 @@ def faturamento_comercial_status(registro_id):
     from models.faturamento_comercial import FaturamentoComercial
 
     registro = FaturamentoComercial.query.get_or_404(registro_id)
+
+    mes = request.form.get("mes", type=int) or registro.mes or date.today().month
+    ano = request.form.get("ano", type=int) or registro.ano or date.today().year
     status = normalizar_texto(request.form.get("status")) or "PENDENTE"
 
+    status_recebido = [
+        "RECEBIDO",
+        "NOTAS PAGAS",
+        "PAGO",
+        "QUITADO",
+        "BAIXADO",
+    ]
+
     registro.status = status
-    registro.pago = status == "RECEBIDO"
+    registro.pago = status in status_recebido
+
+    # Não deixa a baixa alterar a competência do faturamento.
+    if not registro.mes:
+        registro.mes = mes
+    if not registro.ano:
+        registro.ano = ano
+
+    # Se a nota veio da sincronização, baixa também a conta importada de origem.
+    # Assim a próxima sincronização não recria/atualiza como PENDENTE.
+    if registro.chave_conciliacao:
+        conta = ContaReceberImportada.query.filter(
+            ContaReceberImportada.chave_conciliacao == registro.chave_conciliacao
+        ).first()
+
+        if conta:
+            conta.pago = bool(registro.pago)
+            conta.status = "RECEBIDO" if registro.pago else "PENDENTE"
+
+            if registro.pago and not getattr(conta, "data_pagamento", None):
+                conta.data_pagamento = datetime.combine(date.today(), datetime.min.time())
 
     db.session.commit()
-
-    mes = request.form.get("mes") or registro.mes or date.today().month
-    ano = request.form.get("ano") or registro.ano or date.today().year
 
     flash("Status atualizado com sucesso.", "success")
     return redirect(f"/gestao/faturamento-comercial?mes={mes}&ano={ano}")
@@ -6087,3 +6130,24 @@ def faturamento_comercial_excluir(registro_id):
     flash("Lançamento excluído com sucesso.", "success")
     return redirect(f"/gestao/faturamento-comercial?mes={mes}&ano={ano}")
 
+
+
+# =========================================================
+# PLANEJAMENTO FINANCEIRO
+# =========================================================
+# A tela nova de planejamento financeiro fica no blueprint próprio:
+# routes/planejamento_financeiro.py
+#
+# Aqui ficam apenas os redirects para links antigos do sistema.
+# Isso evita conflito com o blueprint novo e elimina o erro do campo "status".
+
+@gestao_bp.route("/planejamento_financeiro/")
+@gestao_required
+def planejamento_financeiro_redirect_underline():
+    return redirect("/gestao/planejamento-financeiro/")
+
+
+@gestao_bp.route("/planejamento_financeiro")
+@gestao_required
+def planejamento_financeiro_redirect_underline_sem_barra():
+    return redirect("/gestao/planejamento-financeiro/")
