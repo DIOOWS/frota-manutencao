@@ -12,6 +12,7 @@ from database import db
 from utils.auth import gestao_required
 
 from models.conta_pagar_importada import ContaPagarImportada
+from models.conta_receber_importada import ContaReceberImportada
 from models.planejamento_financeiro import PlanejamentoFinanceiro
 
 from .radar_financeiro import (
@@ -241,6 +242,51 @@ def inicio_dia_datetime_local(data_ref):
     return datetime.combine(data_ref, datetime.min.time())
 
 
+
+
+def valor_receber_decimal(conta):
+    """Retorna o valor de contas a receber importadas com segurança."""
+    return dinheiro_decimal(
+        getattr(conta, "total", None)
+        or getattr(conta, "valor", None)
+        or getattr(conta, "valor_recebido", None)
+        or 0
+    )
+
+
+def calcular_resumo_caixa_competencia(mes, ano):
+    """
+    Resumo do topo da tela.
+    - Recebido: entradas confirmadas no Radar/Importações dentro da competência.
+    - Pago: despesas confirmadas no Radar dentro da competência.
+    - Saldo da conta: recebido - pago.
+    """
+    primeiro_mes = primeiro_dia_mes(mes, ano)
+    ultimo_mes = ultimo_dia_mes(mes, ano)
+    inicio_dt = inicio_dia_datetime_local(primeiro_mes)
+    fim_dt = fim_dia_datetime(ultimo_mes)
+
+    contas_recebidas = ContaReceberImportada.query.filter(
+        ContaReceberImportada.pago == True,
+        ContaReceberImportada.origem_importacao == "RECEBIMENTO",
+        ContaReceberImportada.data_pagamento >= inicio_dt,
+        ContaReceberImportada.data_pagamento <= fim_dt,
+    ).all()
+
+    contas_pagas = ContaPagarImportada.query.filter(
+        ContaPagarImportada.pago == True,
+        ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA",
+        ContaPagarImportada.data_pagamento >= inicio_dt,
+        ContaPagarImportada.data_pagamento <= fim_dt,
+    ).all()
+
+    total_recebido = sum(valor_receber_decimal(c) for c in contas_recebidas)
+    total_pago = sum(dinheiro_decimal(getattr(c, "valor", 0)) for c in contas_pagas)
+    saldo_conta = total_recebido - total_pago
+
+    return total_recebido, total_pago, saldo_conta
+
+
 def conta_paga_na_competencia(conta, mes, ano):
     """
     Define se a conta paga no Radar pertence à competência do planejamento.
@@ -378,6 +424,7 @@ def index():
     total_aguardando = sum(dinheiro_decimal(i.get("valor")) for i in aguardando)
     total_planejado = sum(dinheiro_decimal(i.get("valor")) for i in planejadas)
     total_executado = sum(dinheiro_decimal(i.get("valor")) for i in executadas)
+    total_recebido, total_pago_competencia, saldo_competencia = calcular_resumo_caixa_competencia(mes, ano)
 
     return render_template(
         "gestao/planejamento_financeiro.html",
@@ -391,6 +438,9 @@ def index():
         total_aguardando=total_aguardando,
         total_planejado=total_planejado,
         total_executado=total_executado,
+        total_recebido=total_recebido,
+        total_pago_competencia=total_pago_competencia,
+        saldo_competencia=saldo_competencia,
     )
 
 
