@@ -108,6 +108,32 @@
   text-transform:uppercase;
 }
 
+.pf-v2-competencia-resumo{
+  margin-top:9px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+
+.pf-v2-competencia-resumo span{
+  display:inline-flex;
+  align-items:center;
+  min-height:24px;
+  padding:0 9px;
+  border-radius:999px;
+  background:rgba(255,255,255,.16);
+  border:1px solid rgba(255,255,255,.22);
+  color:#fff;
+  font-size:11px;
+  font-weight:900;
+  white-space:nowrap;
+}
+
+.pf-v2-competencia-resumo .pf-v2-resumo-pago{
+  background:rgba(34,197,94,.22);
+  border-color:rgba(134,239,172,.45);
+}
+
 .pf-v2-filters{
   flex:0 0 auto;
   display:flex;
@@ -203,7 +229,15 @@ select.pf-v2-control{
   box-shadow:0 0 0 3px rgba(11, 78, 219, .10);
 }
 
-.pf-v2-export-btn{
+.pf-v2-actions-top{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:nowrap;
+}
+
+.pf-v2-export-btn,
+.pf-v2-sync-btn{
   height:38px;
   padding:0 16px;
   display:inline-flex;
@@ -218,8 +252,12 @@ select.pf-v2-control{
   text-decoration:none;
   white-space:nowrap;
   box-shadow:0 8px 18px rgba(6, 27, 61, .18);
+  cursor:pointer;
 }
+.pf-v2-sync-btn{background:#166534;}
 .pf-v2-export-btn:hover{background:#0b4edb; color:#fff; text-decoration:none;}
+.pf-v2-sync-btn:hover{background:#15803d;}
+.pf-v2-sync-btn:disabled{opacity:.6; cursor:not-allowed;}
 .pf-v2-badge-green{background:#dcfce7; color:#166534; border:1px solid #86efac;}
 .pf-v2-row-paid{background:#f0fdf4!important;}
 .pf-v2-row-paid .pf-v2-value{color:#166534!important;}
@@ -613,6 +651,11 @@ select.pf-v2-control{
       <div class="pf-v2-competencia-box">
         <small>Competência de pagamento</small>
         <strong>{{ nome_mes(mes) }}/{{ ano }}</strong>
+        <div class="pf-v2-competencia-resumo">
+          <span>Planejado: {{ moeda(total_planejado + total_executado) }}</span>
+          <span class="pf-v2-resumo-pago">Pago: {{ moeda(total_executado) }}</span>
+          <span>Falta: {{ moeda(total_planejado) }}</span>
+        </div>
       </div>
     </div>
 
@@ -657,7 +700,14 @@ select.pf-v2-control{
       <button type="button" id="pfV2LimparBusca" title="Limpar busca">×</button>
     </div>
 
-    <a class="pf-v2-export-btn" href="/gestao/planejamento-financeiro/exportar?mes={{ mes }}&ano={{ ano }}">Exportar Excel</a>
+    <div class="pf-v2-actions-top">
+      <form method="POST" action="/gestao/planejamento-financeiro/sincronizar-radar" id="pfV2SyncRadarForm">
+        <input type="hidden" name="mes" value="{{ mes }}">
+        <input type="hidden" name="ano" value="{{ ano }}">
+        <button type="submit" class="pf-v2-sync-btn" id="pfV2SyncRadarBtn">Sincronizar Radar</button>
+      </form>
+      <a class="pf-v2-export-btn" href="/gestao/planejamento-financeiro/exportar?mes={{ mes }}&ano={{ ano }}">Exportar Excel</a>
+    </div>
   </section>
 
   <section class="pf-v2-board">
@@ -787,6 +837,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const filtroMes = document.getElementById("pfV2FiltroMes");
   const mesFiltro = document.getElementById("pfV2MesFiltro");
   const anoFiltro = document.getElementById("pfV2AnoFiltro");
+  const syncRadarForm = document.getElementById("pfV2SyncRadarForm");
+  const syncRadarBtn = document.getElementById("pfV2SyncRadarBtn");
 
   function normalizar(texto) {
     return (texto || "").toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
@@ -882,6 +934,30 @@ document.addEventListener("DOMContentLoaded", function () {
   if (anoFiltro && filtroMes) {
     anoFiltro.addEventListener("keydown", function (event) {
       if (event.key === "Enter") filtroMes.submit();
+    });
+  }
+
+  if (syncRadarForm && syncRadarBtn) {
+    syncRadarForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      const textoOriginal = syncRadarBtn.innerText;
+      syncRadarBtn.disabled = true;
+      syncRadarBtn.innerText = "Sincronizando...";
+
+      try {
+        const resposta = await fetch(syncRadarForm.action, {
+          method: "POST",
+          body: new FormData(syncRadarForm),
+          headers: { "X-Requested-With": "XMLHttpRequest" }
+        });
+        const dados = await resposta.json().catch(() => null);
+        if (!resposta.ok || !dados || !dados.ok) throw new Error(dados && dados.message ? dados.message : "Erro ao sincronizar.");
+        window.location.reload();
+      } catch (erro) {
+        alert(erro.message || "Não foi possível sincronizar com o Radar.");
+        syncRadarBtn.disabled = false;
+        syncRadarBtn.innerText = textoOriginal;
+      }
     });
   }
 

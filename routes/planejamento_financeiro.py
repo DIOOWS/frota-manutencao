@@ -236,6 +236,95 @@ def buscar_contas_exportacao_e_tela(mes, ano):
         ContaPagarImportada.id.asc(),
     ).all()
 
+
+def inicio_dia_datetime_local(data_ref):
+    return datetime.combine(data_ref, datetime.min.time())
+
+
+def conta_paga_na_competencia(conta, mes, ano):
+    """
+    Define se a conta paga no Radar pertence à competência do planejamento.
+    Regra principal: data_pagamento dentro do mês/ano selecionado.
+    Fallback: se não tiver data_pagamento, usa vencimento dentro do mês/ano.
+    """
+    primeiro_mes = primeiro_dia_mes(mes, ano)
+    ultimo_mes = ultimo_dia_mes(mes, ano)
+
+    data_pagamento = data_para_date_local(getattr(conta, "data_pagamento", None))
+    if data_pagamento:
+        return primeiro_mes <= data_pagamento <= ultimo_mes
+
+    vencimento = data_para_date_local(getattr(conta, "data_vencimento", None))
+    if vencimento:
+        return primeiro_mes <= vencimento <= ultimo_mes
+
+    return False
+
+
+def sincronizar_pagas_do_radar(mes, ano):
+    """
+    Cria registros de planejamento para contas que já foram pagas no Radar
+    dentro da competência selecionada. Assim elas aparecem como PAGA na tela
+    e entram na aba Pagas da exportação, mesmo que não tenham sido planejadas
+    manualmente antes.
+    """
+    primeiro_mes = primeiro_dia_mes(mes, ano)
+    ultimo_mes = ultimo_dia_mes(mes, ano)
+
+    inicio_dt = inicio_dia_datetime_local(primeiro_mes)
+    fim_dt = fim_dia_datetime(ultimo_mes)
+
+    contas = ContaPagarImportada.query.filter(
+        ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA",
+        or_(
+            ContaPagarImportada.data_pagamento >= inicio_dt,
+            ContaPagarImportada.data_vencimento >= inicio_dt,
+        ),
+        or_(
+            ContaPagarImportada.data_pagamento <= fim_dt,
+            ContaPagarImportada.data_vencimento <= fim_dt,
+        ),
+    ).all()
+
+    criadas = 0
+    ja_existiam = 0
+
+    for conta in contas:
+        if conta_esta_cancelada(conta):
+            continue
+
+        if not conta_esta_paga_local(conta):
+            continue
+
+        if not conta_paga_na_competencia(conta, mes, ano):
+            continue
+
+        existe = PlanejamentoFinanceiro.query.filter_by(
+            conta_id=int(getattr(conta, "id", 0)),
+            origem="IMPORTADA",
+            mes=mes,
+            ano=ano,
+        ).first()
+
+        if existe:
+            ja_existiam += 1
+            continue
+
+        novo = PlanejamentoFinanceiro(
+            conta_id=int(getattr(conta, "id", 0)),
+            origem="IMPORTADA",
+            mes=mes,
+            ano=ano,
+            status_planejamento="SINCRONIZADA_RADAR",
+        )
+        db.session.add(novo)
+        criadas += 1
+
+    if criadas:
+        db.session.commit()
+
+    return criadas, ja_existiam
+
 def buscar_planejamentos(mes, ano):
     registros = PlanejamentoFinanceiro.query.filter_by(
         origem="IMPORTADA",
@@ -419,6 +508,32 @@ def escrever_aba_planejamento(wb, titulo, competencia, itens, colunas):
     ws.auto_filter.ref = f"A4:{get_column_letter(len(colunas))}{max(4, linha - 1)}"
     return ws
 
+
+
+@planejamento_financeiro_bp.route("/sincronizar-radar", methods=["POST"])
+@gestao_required
+def sincronizar_radar():
+    agora = datetime.now()
+    mes = request.form.get("mes", type=int) or agora.month
+    ano = request.form.get("ano", type=int) or agora.year
+
+    if not 1 <= mes <= 12:
+        mes = agora.month
+
+    try:
+        criadas, ja_existiam = sincronizar_pagas_do_radar(mes, ano)
+        return jsonify({
+            "ok": True,
+            "message": f"Sincronização concluída. {criadas} conta(s) paga(s) adicionada(s), {ja_existiam} já existiam.",
+            "criadas": criadas,
+            "ja_existiam": ja_existiam,
+        })
+    except Exception as erro:
+        db.session.rollback()
+        return jsonify({
+            "ok": False,
+            "message": f"Erro ao sincronizar Radar: {str(erro)}",
+        }), 500
 
 @planejamento_financeiro_bp.route("/exportar")
 @gestao_required
