@@ -1,8 +1,11 @@
 from datetime import date, datetime
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 from flask import Blueprint, render_template, request, jsonify, send_file
 from sqlalchemy import or_
+import hashlib
+import re
+import unicodedata
 from io import BytesIO
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
@@ -97,6 +100,111 @@ def conta_esta_paga_local(conta):
 
     status = texto_limpo(getattr(conta, "status", None), "").upper()
     return status in ("PAGO", "RECEBIDO", "OK", "QUITADO", "BAIXADO")
+
+
+
+
+def normalizar_chave(valor):
+    """Normaliza texto para gerar uma chave estável entre reimportações."""
+    if valor is None:
+        return ""
+
+    texto = unicodedata.normalize("NFKD", str(valor))
+    texto = "".join(c for c in texto if not unicodedata.combining(c))
+    texto = re.sub(r"\s+", " ", texto).strip().upper()
+    return texto
+
+
+def valor_chave(valor):
+    return str(dinheiro_decimal(valor).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+
+
+def gerar_chave_conta(conta):
+    """
+    Chave estável da conta. Não depende do ID criado pela importação.
+
+    Usa os campos mais consistentes do relatório para reconhecer a mesma conta
+    depois que a importação é apagada e recriada.
+    """
+    vencimento = data_para_date_local(getattr(conta, "data_vencimento", None))
+    vencimento_txt = vencimento.isoformat() if vencimento else ""
+
+    fornecedor = buscar_primeiro(
+        conta,
+        ["fornecedor_funcionario", "fornecedor", "cliente"],
+        "",
+    )
+    conta_nome = buscar_primeiro(
+        conta,
+        ["plano_contas", "categoria", "descricao", "nome"],
+        "",
+    )
+    documento = buscar_primeiro(
+        conta,
+        ["numero_fatura", "documento", "numero_documento", "nf", "nota_fiscal"],
+        "",
+    )
+    parcela = buscar_primeiro(
+        conta,
+        ["parcela_label", "parcela", "numero_parcela"],
+        "",
+    )
+
+    base = "|".join([
+        normalizar_chave(fornecedor),
+        normalizar_chave(conta_nome),
+        normalizar_chave(documento),
+        normalizar_chave(parcela),
+        vencimento_txt,
+        valor_chave(getattr(conta, "valor", 0)),
+    ])
+
+    return hashlib.sha256(base.encode("utf-8")).hexdigest()
+
+
+def preencher_snapshot_planejamento(registro, conta, chave_conta=None):
+    """Atualiza o vínculo atual e preserva dados essenciais do planejamento."""
+    registro.conta_id = int(getattr(conta, "id", 0))
+    registro.chave_conta = chave_conta or gerar_chave_conta(conta)
+    registro.descricao_snapshot = buscar_primeiro(
+        conta, ["plano_contas", "categoria", "descricao", "nome"], "SEM CONTA"
+    )
+    registro.fornecedor_snapshot = buscar_primeiro(
+        conta, ["fornecedor_funcionario", "fornecedor", "cliente"], "-"
+    )
+    registro.valor_snapshot = dinheiro_decimal(getattr(conta, "valor", 0))
+    registro.vencimento_snapshot = data_para_date_local(getattr(conta, "data_vencimento", None))
+    registro.observacao_snapshot = buscar_primeiro(
+        conta, ["observacoes", "observacao", "historico", "descricao"], "-"
+    )
+
+
+def localizar_planejamento(conta, mes, ano, por_id=None, por_chave=None):
+    conta_id = int(getattr(conta, "id", 0))
+    chave = gerar_chave_conta(conta)
+
+    registro = None
+    if por_id is not None:
+        registro = por_id.get(conta_id)
+    if not registro and por_chave is not None:
+        registro = por_chave.get(chave)
+
+    if registro:
+        mudou = registro.conta_id != conta_id or registro.chave_conta != chave
+        preencher_snapshot_planejamento(registro, conta, chave)
+        if mudou:
+            db.session.flush()
+        return registro
+
+    return PlanejamentoFinanceiro.query.filter(
+        PlanejamentoFinanceiro.origem == "IMPORTADA",
+        PlanejamentoFinanceiro.mes == mes,
+        PlanejamentoFinanceiro.ano == ano,
+        or_(
+            PlanejamentoFinanceiro.conta_id == conta_id,
+            PlanejamentoFinanceiro.chave_conta == chave,
+        ),
+    ).first()
 
 
 def montar_item_planejamento(conta, mes, ano, hoje):
@@ -307,16 +415,37 @@ def conta_paga_na_competencia(conta, mes, ano):
     return False
 
 
+def buscar_planejamentos(mes, ano, contas=None):
+    registros = PlanejamentoFinanceiro.query.filter_by(
+        origem="IMPORTADA",
+        mes=mes,
+        ano=ano,
+    ).all()
+
+    por_id = {int(r.conta_id): r for r in registros if r.conta_id is not None}
+    por_chave = {r.chave_conta: r for r in registros if getattr(r, "chave_conta", None)}
+
+    # Migra automaticamente os registros antigos ainda ligados ao ID atual.
+    alterou = False
+    for conta in contas or []:
+        conta_id = int(getattr(conta, "id", 0))
+        registro = por_id.get(conta_id)
+        if registro and not getattr(registro, "chave_conta", None):
+            chave = gerar_chave_conta(conta)
+            preencher_snapshot_planejamento(registro, conta, chave)
+            por_chave[chave] = registro
+            alterou = True
+
+    if alterou:
+        db.session.commit()
+
+    return por_id, por_chave
+
+
 def sincronizar_pagas_do_radar(mes, ano):
-    """
-    Cria registros de planejamento para contas que já foram pagas no Radar
-    dentro da competência selecionada. Assim elas aparecem como PAGA na tela
-    e entram na aba Pagas da exportação, mesmo que não tenham sido planejadas
-    manualmente antes.
-    """
+    """Sincroniza pagas sem perder vínculos quando os IDs da importação mudarem."""
     primeiro_mes = primeiro_dia_mes(mes, ano)
     ultimo_mes = ultimo_dia_mes(mes, ano)
-
     inicio_dt = inicio_dia_datetime_local(primeiro_mes)
     fim_dt = fim_dia_datetime(ultimo_mes)
 
@@ -332,53 +461,41 @@ def sincronizar_pagas_do_radar(mes, ano):
         ),
     ).all()
 
+    por_id, por_chave = buscar_planejamentos(mes, ano, contas)
     criadas = 0
-    ja_existiam = 0
+    atualizadas = 0
 
     for conta in contas:
-        if conta_esta_cancelada(conta):
+        if conta_esta_cancelada(conta) or not conta_esta_paga_local(conta):
             continue
-
-        if not conta_esta_paga_local(conta):
-            continue
-
         if not conta_paga_na_competencia(conta, mes, ano):
             continue
 
-        existe = PlanejamentoFinanceiro.query.filter_by(
-            conta_id=int(getattr(conta, "id", 0)),
-            origem="IMPORTADA",
-            mes=mes,
-            ano=ano,
-        ).first()
+        chave = gerar_chave_conta(conta)
+        registro = por_id.get(int(conta.id)) or por_chave.get(chave)
 
-        if existe:
-            ja_existiam += 1
+        if registro:
+            if registro.conta_id != conta.id or registro.chave_conta != chave:
+                preencher_snapshot_planejamento(registro, conta, chave)
+                atualizadas += 1
             continue
 
         novo = PlanejamentoFinanceiro(
-            conta_id=int(getattr(conta, "id", 0)),
+            conta_id=int(conta.id),
+            chave_conta=chave,
             origem="IMPORTADA",
             mes=mes,
             ano=ano,
             status_planejamento="SINCRONIZADA_RADAR",
         )
+        preencher_snapshot_planejamento(novo, conta, chave)
         db.session.add(novo)
+        por_id[int(conta.id)] = novo
+        por_chave[chave] = novo
         criadas += 1
 
-    if criadas:
-        db.session.commit()
-
-    return criadas, ja_existiam
-
-def buscar_planejamentos(mes, ano):
-    registros = PlanejamentoFinanceiro.query.filter_by(
-        origem="IMPORTADA",
-        mes=mes,
-        ano=ano,
-    ).all()
-
-    return {int(r.conta_id): r for r in registros}
+    db.session.commit()
+    return criadas, atualizadas
 
 
 @planejamento_financeiro_bp.route("/")
@@ -394,7 +511,7 @@ def index():
         mes = agora.month
 
     contas = buscar_contas_exportacao_e_tela(mes, ano)
-    planejamentos = buscar_planejamentos(mes, ano)
+    planejamentos_id, planejamentos_chave = buscar_planejamentos(mes, ano, contas)
 
     aguardando = []
     planejadas = []
@@ -405,9 +522,9 @@ def index():
             continue
 
         item = montar_item_planejamento(conta, mes, ano, hoje)
-        conta_id = int(item.get("id") or 0)
+        registro = localizar_planejamento(conta, mes, ano, planejamentos_id, planejamentos_chave)
 
-        if conta_id in planejamentos:
+        if registro:
             if conta_esta_paga_local(conta):
                 item["status_execucao"] = "PAGA"
                 item["data_pagamento"] = formatar_data(getattr(conta, "data_pagamento", None))
@@ -449,7 +566,7 @@ def index():
 def montar_listas_planejamento(mes, ano):
     hoje = date.today()
     contas = buscar_contas_exportacao_e_tela(mes, ano)
-    planejamentos = buscar_planejamentos(mes, ano)
+    planejamentos_id, planejamentos_chave = buscar_planejamentos(mes, ano, contas)
 
     aguardando = []
     planejadas = []
@@ -460,10 +577,10 @@ def montar_listas_planejamento(mes, ano):
             continue
 
         item = montar_item_planejamento(conta, mes, ano, hoje)
-        conta_id = int(item.get("id") or 0)
         item["data_pagamento"] = formatar_data(getattr(conta, "data_pagamento", None))
+        registro = localizar_planejamento(conta, mes, ano, planejamentos_id, planejamentos_chave)
 
-        if conta_id in planejamentos:
+        if registro:
             if conta_esta_paga_local(conta):
                 item["status_execucao"] = "PAGA"
                 pagas.append(item)
@@ -571,12 +688,12 @@ def sincronizar_radar():
         mes = agora.month
 
     try:
-        criadas, ja_existiam = sincronizar_pagas_do_radar(mes, ano)
+        criadas, atualizadas = sincronizar_pagas_do_radar(mes, ano)
         return jsonify({
             "ok": True,
-            "message": f"Sincronização concluída. {criadas} conta(s) paga(s) adicionada(s), {ja_existiam} já existiam.",
+            "message": f"Sincronização concluída. {criadas} conta(s) adicionada(s) e {atualizadas} vínculo(s) recuperado(s).",
             "criadas": criadas,
-            "ja_existiam": ja_existiam,
+            "atualizadas": atualizadas,
         })
     except Exception as erro:
         db.session.rollback()
@@ -650,24 +767,37 @@ def planejar(conta_id):
     if not mes or not ano:
         return jsonify({"ok": False, "message": "Mês e ano inválidos."}), 400
 
-    existe = PlanejamentoFinanceiro.query.filter_by(
-        conta_id=conta_id,
-        origem="IMPORTADA",
-        mes=mes,
-        ano=ano,
+    conta = ContaPagarImportada.query.get(conta_id)
+    if not conta:
+        return jsonify({"ok": False, "message": "Conta não encontrada. Sincronize a importação e tente novamente."}), 404
+
+    chave = gerar_chave_conta(conta)
+    existe = PlanejamentoFinanceiro.query.filter(
+        PlanejamentoFinanceiro.origem == "IMPORTADA",
+        PlanejamentoFinanceiro.mes == mes,
+        PlanejamentoFinanceiro.ano == ano,
+        or_(
+            PlanejamentoFinanceiro.conta_id == conta_id,
+            PlanejamentoFinanceiro.chave_conta == chave,
+        ),
     ).first()
 
-    if not existe:
-        novo = PlanejamentoFinanceiro(
+    if existe:
+        preencher_snapshot_planejamento(existe, conta, chave)
+        existe.status_planejamento = "PLANEJADA"
+    else:
+        existe = PlanejamentoFinanceiro(
             conta_id=conta_id,
+            chave_conta=chave,
             origem="IMPORTADA",
             mes=mes,
             ano=ano,
             status_planejamento="PLANEJADA",
         )
-        db.session.add(novo)
-        db.session.commit()
+        preencher_snapshot_planejamento(existe, conta, chave)
+        db.session.add(existe)
 
+    db.session.commit()
     return jsonify({"ok": True, "message": "Conta planejada para pagamento."})
 
 
@@ -680,12 +810,24 @@ def remover(conta_id):
     if not mes or not ano:
         return jsonify({"ok": False, "message": "Mês e ano inválidos."}), 400
 
-    registro = PlanejamentoFinanceiro.query.filter_by(
-        conta_id=conta_id,
-        origem="IMPORTADA",
-        mes=mes,
-        ano=ano,
-    ).first()
+    conta = ContaPagarImportada.query.get(conta_id)
+    chave = gerar_chave_conta(conta) if conta else None
+
+    filtros = [
+        PlanejamentoFinanceiro.origem == "IMPORTADA",
+        PlanejamentoFinanceiro.mes == mes,
+        PlanejamentoFinanceiro.ano == ano,
+    ]
+
+    if chave:
+        filtros.append(or_(
+            PlanejamentoFinanceiro.conta_id == conta_id,
+            PlanejamentoFinanceiro.chave_conta == chave,
+        ))
+    else:
+        filtros.append(PlanejamentoFinanceiro.conta_id == conta_id)
+
+    registro = PlanejamentoFinanceiro.query.filter(*filtros).first()
 
     if registro:
         db.session.delete(registro)

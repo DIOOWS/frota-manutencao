@@ -76,10 +76,101 @@
     </div>
   {% endif %}
 
-  <!-- KPIs -->
-  <div class="dashboard-kpis">
-    {% include "partials/metricas.html" %}
-  </div>
+
+{% set url_total = url_for('manutencao.lista', cliente=request.args.get('cliente', ''), mes=request.args.get('mes', ''), data_inicio=request.args.get('data_inicio', ''), data_fim=request.args.get('data_fim', '')) %}
+{% set url_corretiva = url_for('manutencao.lista', filtro='corretiva', cliente=request.args.get('cliente', ''), mes=request.args.get('mes', ''), data_inicio=request.args.get('data_inicio', ''), data_fim=request.args.get('data_fim', '')) %}
+{% set url_preventiva = url_for('manutencao.lista', filtro='preventiva', cliente=request.args.get('cliente', ''), mes=request.args.get('mes', ''), data_inicio=request.args.get('data_inicio', ''), data_fim=request.args.get('data_fim', '')) %}
+{% set url_andamento = url_for('manutencao.lista', filtro='andamento', cliente=request.args.get('cliente', ''), mes=request.args.get('mes', ''), data_inicio=request.args.get('data_inicio', ''), data_fim=request.args.get('data_fim', '')) %}
+
+<style>
+  .dashboard-kpis-linkados{
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+    gap:16px;
+    margin-bottom:18px;
+  }
+  .dashboard-kpi-link{
+    min-height:86px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    padding:18px 20px;
+    border-radius:8px;
+    color:#fff;
+    text-decoration:none;
+    box-shadow:0 10px 22px rgba(15,23,42,.18);
+    position:relative;
+    overflow:hidden;
+  }
+  .dashboard-kpi-link:hover{color:#fff;text-decoration:none;transform:translateY(-1px);}
+  .dashboard-kpi-link::after{
+    content:"";
+    position:absolute;
+    right:-32px;
+    bottom:-42px;
+    width:125px;
+    height:125px;
+    border-radius:50%;
+    background:rgba(255,255,255,.13);
+  }
+  .dash-kpi-left{display:flex;align-items:center;gap:16px;min-width:0;position:relative;z-index:1;}
+  .dash-kpi-icon{
+    width:44px;
+    height:44px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(0,0,0,.25);
+    font-size:23px;
+    flex:0 0 auto;
+  }
+  .dash-kpi-main strong{display:block;font-size:28px;line-height:1;font-weight:950;}
+  .dash-kpi-main small{display:block;margin-top:7px;font-size:13px;line-height:1;font-weight:900;}
+  .dash-kpi-percent{position:relative;z-index:1;text-align:right;font-size:15px;font-weight:950;line-height:1.25;}
+  .dash-kpi-percent small{display:block;font-size:10px;font-weight:850;opacity:.95;}
+  .dash-kpi-total{background:linear-gradient(135deg,#05005f,#0b4edb);}
+  .dash-kpi-corretiva{background:linear-gradient(135deg,#7f1111,#dc2626);}
+  .dash-kpi-preventiva{background:linear-gradient(135deg,#047857,#10b981);}
+  .dash-kpi-andamento{background:linear-gradient(135deg,#92400e,#f59e0b);}
+  @media(max-width:1100px){.dashboard-kpis-linkados{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:640px){.dashboard-kpis-linkados{grid-template-columns:1fr;}}
+</style>
+
+<!-- KPIs -->
+<div class="dashboard-kpis dashboard-kpis-linkados">
+  <a class="dashboard-kpi-link dash-kpi-total" href="{{ url_total }}">
+    <div class="dash-kpi-left">
+      <span class="dash-kpi-icon">📊</span>
+      <div class="dash-kpi-main"><strong>{{ total }}</strong><small>Total</small></div>
+    </div>
+  </a>
+
+  <a class="dashboard-kpi-link dash-kpi-corretiva" href="{{ url_corretiva }}">
+    <div class="dash-kpi-left">
+      <span class="dash-kpi-icon">🛠️</span>
+      <div class="dash-kpi-main"><strong>{{ corretivas }}</strong><small>Corretivas</small></div>
+    </div>
+    <div class="dash-kpi-percent">{{ '%.1f'|format((corretivas / total * 100) if total else 0) }}%<small>do total</small></div>
+  </a>
+
+  <a class="dashboard-kpi-link dash-kpi-preventiva" href="{{ url_preventiva }}">
+    <div class="dash-kpi-left">
+      <span class="dash-kpi-icon">🛡️</span>
+      <div class="dash-kpi-main"><strong>{{ preventivas }}</strong><small>Preventivas</small></div>
+    </div>
+    <div class="dash-kpi-percent">{{ '%.1f'|format((preventivas / total * 100) if total else 0) }}%<small>do total</small></div>
+  </a>
+
+  <a class="dashboard-kpi-link dash-kpi-andamento" href="{{ url_andamento }}">
+    <div class="dash-kpi-left">
+      <span class="dash-kpi-icon">⌛</span>
+      <div class="dash-kpi-main"><strong>{{ andamento }}</strong><small>Em andamento</small></div>
+    </div>
+    <div class="dash-kpi-percent">{{ '%.1f'|format((andamento / total * 100) if total else 0) }}%<small>do total</small></div>
+  </a>
+</div>
 
   <div class="row g-4 dashboard-row">
 
@@ -131,7 +222,7 @@
             <h5>Últimas Finalizações</h5>
             <small>Registros finalizados mais recentes</small>
           </div>
-          <a href="{{ url_for('manutencao.lista', filtro='finalizado', cliente=request.args.get('cliente', ''), data_inicio=request.args.get('data_inicio', ''), data_fim=request.args.get('data_fim', '')) }}" class="ultimas-ver-todas">Ver todas →</a>
+          <a href="{{ url_for('manutencao.lista', filtro='finalizado', cliente=request.args.get('cliente', ''), mes=request.args.get('mes', ''), data_inicio=request.args.get('data_inicio', ''), data_fim=request.args.get('data_fim', '')) }}" class="ultimas-ver-todas">Ver todas →</a>
         </div>
 
         <div class="dashboard-executive-body ultimas-premium-body">

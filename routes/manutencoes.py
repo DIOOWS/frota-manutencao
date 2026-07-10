@@ -895,6 +895,7 @@ def nova():
 # ==========================================
 # 📋 LISTA
 # ==========================================
+
 @manutencao_bp.route("/lista")
 def lista():
     if not session.get("user_id"):
@@ -903,17 +904,46 @@ def lista():
     filtro = request.args.get("filtro")
     data_inicio = request.args.get("data_inicio")
     data_fim = request.args.get("data_fim")
+    mes_filtro = request.args.get("mes")
+    cliente_filtro = request.args.get("cliente")
 
     query = aplicar_filtro_cliente(Manutencao.query)
 
+    # Mantém o cliente filtrado no Dashboard quando o usuário é admin/gestão/gestor.
+    # Usuário cliente continua limitado automaticamente pelo aplicar_filtro_cliente().
+    if usuario_eh_admin_ou_gestao() and cliente_filtro:
+        query = query.filter(
+            db.func.upper(Manutencao.cliente) == normalizar_texto(cliente_filtro)
+        )
+
     if filtro == "andamento":
         query = query.filter(Manutencao.status.ilike("%ANDAMENTO%"))
+    elif filtro == "finalizado":
+        query = query.filter(Manutencao.status.ilike("%FINALIZADO%"))
     elif filtro == "corretiva":
         query = query.filter(Manutencao.tipo_servico.ilike("%CORRETIVA%"))
     elif filtro == "preventiva":
         query = query.filter(Manutencao.tipo_servico.ilike("%PREVENTIVA%"))
 
-    if data_inicio and data_fim:
+    # O filtro de mês do Dashboard vem no formato YYYY-MM.
+    # Quando ele existir, ele tem prioridade sobre data_inicio/data_fim.
+    if mes_filtro:
+        try:
+            inicio_mes = datetime.strptime(mes_filtro + "-01", "%Y-%m-%d")
+
+            if inicio_mes.month == 12:
+                fim_mes = inicio_mes.replace(year=inicio_mes.year + 1, month=1)
+            else:
+                fim_mes = inicio_mes.replace(month=inicio_mes.month + 1)
+
+            query = query.filter(
+                Manutencao.data >= inicio_mes,
+                Manutencao.data < fim_mes
+            )
+        except Exception:
+            pass
+
+    elif data_inicio and data_fim:
         try:
             inicio = datetime.strptime(data_inicio, "%Y-%m-%d")
             fim = datetime.strptime(data_fim, "%Y-%m-%d")
@@ -961,7 +991,12 @@ def lista():
 
     return render_template(
         "manutencoes/lista.html",
-        registros=registros
+        registros=registros,
+        filtro=filtro,
+        cliente_filtro=cliente_filtro,
+        mes_filtro=mes_filtro,
+        data_inicio=data_inicio,
+        data_fim=data_fim,
     )
 
 
