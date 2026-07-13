@@ -3,6 +3,67 @@
 {% block title %}Manutenções{% endblock %}
 
 {% block content %}
+<style>
+/* Vídeo compacto dentro do modal de detalhes */
+#modalDetalhe .easy-video-row {
+  display: grid !important;
+  grid-template-columns: 150px minmax(0, 1fr) !important;
+  align-items: start !important;
+  gap: 14px !important;
+}
+
+#modalDetalhe .easy-video-row > span {
+  padding-top: 8px !important;
+}
+
+#modalDetalhe .easy-modal-video-wrap {
+  width: fit-content !important;
+  max-width: 100% !important;
+  padding: 8px !important;
+  margin: 0 !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+}
+
+#modalDetalhe #mVideo {
+  display: block !important;
+  width: 180px !important;
+  max-width: 180px !important;
+  height: 250px !important;
+  max-height: 250px !important;
+  margin: 0 !important;
+  object-fit: contain !important;
+  background: #000 !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 768px) {
+  #modalDetalhe .easy-video-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  #modalDetalhe .easy-video-row > span {
+    padding-top: 0 !important;
+  }
+
+  #modalDetalhe #mVideo {
+    width: 160px !important;
+    max-width: 160px !important;
+    height: 225px !important;
+    max-height: 225px !important;
+  }
+}
+
+@media print {
+  #modalDetalhe #mVideo {
+    width: 150px !important;
+    height: 210px !important;
+  }
+}
+</style>
+
 
 <div class="manutencoes-operacional-page">
 
