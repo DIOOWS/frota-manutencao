@@ -40152,3 +40152,65 @@ body {
     }
 
 }
+
+
+
+/* =========================================================
+   VÍDEO COMPACTO NO MODAL DE DETALHES
+========================================================= */
+
+.easy-video-row,
+.easy-modal-video-wrap,
+.manutencao-video-modal {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 14px !important;
+  width: 100% !important;
+}
+
+.easy-video-row > span,
+.easy-modal-video-wrap > span,
+.manutencao-video-modal > span {
+  min-width: 115px !important;
+  padding-top: 8px !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+}
+
+.easy-video-row video,
+.easy-modal-video-wrap video,
+.manutencao-video-modal video,
+#modalDetalheManutencao video,
+#modalDetalheFrota video {
+  width: 220px !important;
+  max-width: 220px !important;
+  height: 300px !important;
+  max-height: 300px !important;
+  display: block !important;
+  margin: 0 !important;
+  object-fit: contain !important;
+  background: #000 !important;
+  border-radius: 10px !important;
+  border: 1px solid #dbe3ef !important;
+  box-shadow: 0 5px 14px rgba(15, 23, 42, 0.12) !important;
+}
+
+@media (max-width: 768px) {
+  .easy-video-row,
+  .easy-modal-video-wrap,
+  .manutencao-video-modal {
+    flex-direction: column !important;
+  }
+
+  .easy-video-row video,
+  .easy-modal-video-wrap video,
+  .manutencao-video-modal video,
+  #modalDetalheManutencao video,
+  #modalDetalheFrota video {
+    width: 190px !important;
+    max-width: 190px !important;
+    height: 260px !important;
+    max-height: 260px !important;
+  }
+}
