@@ -1000,19 +1000,40 @@ def importar_contas_pagas():
         total_linhas = 0
         competencias_importadas = set()
 
+        # =====================================================
+        # ETAPA 1 — NORMALIZA TODO O ARQUIVO EM MEMÓRIA
+        # =====================================================
+        # Antes, buscar_pagamento_existente() executava uma ou duas
+        # consultas ao banco para cada linha da planilha. Em arquivos
+        # grandes isso causava WORKER TIMEOUT no Gunicorn/Render.
+        #
+        # Agora o arquivo é preparado primeiro e os registros existentes
+        # são carregados em uma única consulta.
+        registros_processados = []
+
         for linha in linhas:
             plano_contas = texto(valor_por_coluna(linha, "Pl. Contas"))
 
             numero_fatura = texto(valor_por_coluna(linha, "Nº Fatura"))
-            fornecedor_funcionario = texto(valor_por_coluna(linha, "Fornecedor/Funcionário"))
+            fornecedor_funcionario = texto(
+                valor_por_coluna(linha, "Fornecedor/Funcionário")
+            )
             telefone = texto(valor_por_coluna(linha, "Telefone"))
             email = texto(valor_por_coluna(linha, "Email"))
 
-            data_pagamento = normalizar_data(valor_por_coluna(linha, "Dt. Pgto"))
-            data_vencimento = normalizar_data(valor_por_coluna(linha, "Dt. Vencto"))
-            data_documento = normalizar_data(valor_por_coluna(linha, "Dt. Docto"))
+            data_pagamento = normalizar_data(
+                valor_por_coluna(linha, "Dt. Pgto")
+            )
+            data_vencimento = normalizar_data(
+                valor_por_coluna(linha, "Dt. Vencto")
+            )
+            data_documento = normalizar_data(
+                valor_por_coluna(linha, "Dt. Docto")
+            )
 
-            valor = normalizar_decimal(valor_por_coluna(linha, "Valor"))
+            valor = normalizar_decimal(
+                valor_por_coluna(linha, "Valor")
+            )
 
             # Contas Pagas só entram quando existe Dt. Pgto.
             # É essa data que define automaticamente mês/ano no banco.
@@ -1046,58 +1067,119 @@ def importar_contas_pagas():
                 plano_contas=plano_contas
             )
 
-            conta = buscar_pagamento_existente(
-                chave_conciliacao=chave_conciliacao,
-                numero_fatura=numero_fatura,
-                fornecedor_funcionario=fornecedor_funcionario,
-                valor=valor,
-                data_vencimento=data_vencimento,
-                plano_contas=plano_contas
+            registros_processados.append({
+                "numero_fatura": numero_fatura,
+                "fornecedor_funcionario": fornecedor_funcionario,
+                "telefone": telefone,
+                "email": email,
+                "plano_contas": plano_contas,
+                "data_documento": data_documento,
+                "data_vencimento": data_vencimento,
+                "data_pagamento": data_pagamento,
+                "valor": valor,
+                "observacoes": observacoes,
+                "chave_conciliacao": chave_conciliacao,
+            })
+
+        # =====================================================
+        # ETAPA 2 — CARREGA PAGAMENTOS EXISTENTES UMA ÚNICA VEZ
+        # =====================================================
+        # Mantém também o mapa por campos antigos para conciliar registros
+        # anteriores que ainda possam estar sem chave_conciliacao.
+        contas_existentes = ContaPagarImportada.query.filter(
+            ContaPagarImportada.origem_importacao == "PAGAMENTO"
+        ).all()
+
+        mapa_por_chave = {}
+        mapa_por_campos = {}
+
+        for conta_existente in contas_existentes:
+            if conta_existente.chave_conciliacao:
+                mapa_por_chave.setdefault(
+                    conta_existente.chave_conciliacao,
+                    conta_existente
+                )
+
+            chave_campos = (
+                conta_existente.numero_fatura,
+                conta_existente.fornecedor_funcionario,
+                normalizar_decimal_chave(conta_existente.valor),
+                normalizar_data_chave(conta_existente.data_vencimento),
+                conta_existente.plano_contas,
+            )
+            mapa_por_campos.setdefault(chave_campos, conta_existente)
+
+        # =====================================================
+        # ETAPA 3 — CRIA OU ATUALIZA SEM CONSULTAS DENTRO DO LOOP
+        # =====================================================
+        for registro in registros_processados:
+            chave_conciliacao = registro["chave_conciliacao"]
+
+            chave_campos = (
+                registro["numero_fatura"],
+                registro["fornecedor_funcionario"],
+                normalizar_decimal_chave(registro["valor"]),
+                normalizar_data_chave(registro["data_vencimento"]),
+                registro["plano_contas"],
             )
 
-            if conta:
+            conta = mapa_por_chave.get(chave_conciliacao)
+
+            if conta is None:
+                conta = mapa_por_campos.get(chave_campos)
+
+            if conta is not None:
                 total_atualizado += 1
             else:
                 conta = ContaPagarImportada()
                 db.session.add(conta)
                 total_criado += 1
 
-            conta.numero_fatura = numero_fatura
-            conta.fornecedor_funcionario = fornecedor_funcionario
-            conta.telefone = telefone
-            conta.email = email
+            conta.numero_fatura = registro["numero_fatura"]
+            conta.fornecedor_funcionario = registro["fornecedor_funcionario"]
+            conta.telefone = registro["telefone"]
+            conta.email = registro["email"]
 
-            conta.plano_contas = plano_contas
-            conta.categoria = limpar_categoria(plano_contas)
-            conta.setor = identificar_setor(plano_contas, receita=False)
+            conta.plano_contas = registro["plano_contas"]
+            conta.categoria = limpar_categoria(registro["plano_contas"])
+            conta.setor = identificar_setor(
+                registro["plano_contas"],
+                receita=False
+            )
 
-            conta.data_documento = data_documento
-            conta.data_vencimento = data_vencimento
-            conta.data_pagamento = data_pagamento
+            conta.data_documento = registro["data_documento"]
+            conta.data_vencimento = registro["data_vencimento"]
+            conta.data_pagamento = registro["data_pagamento"]
 
-            conta.valor = valor
+            conta.valor = registro["valor"]
 
             conta.pago = True
             conta.status = "PAGO"
+            conta.observacoes = registro["observacoes"]
 
-            conta.observacoes = observacoes
-
-            # NOVO CENÁRIO:
-            # Não força mais tudo para o mês escolhido na tela.
             # A competência vem da data real de pagamento da linha.
-            conta.mes = data_pagamento.month
-            conta.ano = data_pagamento.year
-            competencias_importadas.add(f"{data_pagamento.month:02d}/{data_pagamento.year}")
+            conta.mes = registro["data_pagamento"].month
+            conta.ano = registro["data_pagamento"].year
+            competencias_importadas.add(
+                f"{conta.mes:02d}/{conta.ano}"
+            )
 
             conta.chave_conciliacao = chave_conciliacao
             conta.origem_importacao = "PAGAMENTO"
             conta.importado_em = datetime.utcnow()
 
+            # Atualiza os mapas durante o próprio processamento para evitar
+            # criar duplicidade caso a mesma conta apareça duas vezes no arquivo.
+            mapa_por_chave[chave_conciliacao] = conta
+            mapa_por_campos[chave_campos] = conta
+
             total_linhas += 1
 
         db.session.commit()
 
-        competencias_txt = ", ".join(sorted(competencias_importadas)) or "nenhuma competência"
+        competencias_txt = ", ".join(
+            sorted(competencias_importadas)
+        ) or "nenhuma competência"
 
         flash(
             (
