@@ -209,22 +209,48 @@
         <div class="manutencao-video-upload-head">
           <div>
             <label class="form-label">Vídeo da Manutenção</label>
-            <small>Envie 1 vídeo de até 30 segundos e no máximo 15 MB. Formatos: MP4, MOV ou WEBM.</small>
+            <small>Selecione o vídeo gravado e escolha o trecho que deseja enviar. O trecho pode ter no máximo 30 segundos.</small>
           </div>
-          <span class="manutencao-video-badge">1 VÍDEO</span>
+          <span class="manutencao-video-badge">ATÉ 30s</span>
         </div>
 
         <input type="file"
                name="video"
                id="videoManutencao"
                class="form-control"
-               accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm">
+               accept="video/mp4,video/quicktime,video/webm,video/x-m4v,.mp4,.mov,.webm,.m4v">
 
         <div id="previewVideoManutencao" class="manutencao-video-preview mt-3" hidden>
-          <video id="previewVideoPlayer" controls preload="metadata"></video>
+          <video id="previewVideoPlayer" controls preload="metadata" playsinline></video>
+
           <div class="manutencao-video-preview-info">
             <strong id="previewVideoNome">Novo vídeo</strong>
             <small id="previewVideoTamanho"></small>
+          </div>
+
+          <div id="videoCorteEditor" class="video-corte-editor" hidden>
+            <div class="video-corte-resumo">
+              <span>Início: <strong id="videoInicioTexto">00:00</strong></span>
+              <span>Fim: <strong id="videoFimTexto">00:30</strong></span>
+              <span>Trecho: <strong id="videoDuracaoTexto">30s</strong></span>
+            </div>
+
+            <div class="video-corte-campo">
+              <label for="videoInicioRange">Início do trecho</label>
+              <input type="range" id="videoInicioRange" min="0" value="0" step="0.1">
+            </div>
+
+            <div class="video-corte-campo">
+              <label for="videoFimRange">Fim do trecho</label>
+              <input type="range" id="videoFimRange" min="0" value="30" step="0.1">
+            </div>
+
+            <div class="video-corte-acoes">
+              <button type="button" class="btn btn-outline-primary" id="btnVisualizarTrecho">Visualizar trecho</button>
+              <button type="button" class="btn btn-primary" id="btnCortarVideo">Usar este trecho</button>
+            </div>
+
+            <div id="videoCorteStatus" class="video-corte-status" hidden></div>
           </div>
         </div>
 
@@ -980,35 +1006,168 @@ document.addEventListener("DOMContentLoaded", function () {
   const videoPlayer = document.getElementById("previewVideoPlayer");
   const videoNome = document.getElementById("previewVideoNome");
   const videoTamanho = document.getElementById("previewVideoTamanho");
-  const limiteVideoBytes = 15 * 1024 * 1024;
+  const editorCorte = document.getElementById("videoCorteEditor");
+  const inicioRange = document.getElementById("videoInicioRange");
+  const fimRange = document.getElementById("videoFimRange");
+  const inicioTexto = document.getElementById("videoInicioTexto");
+  const fimTexto = document.getElementById("videoFimTexto");
+  const duracaoTexto = document.getElementById("videoDuracaoTexto");
+  const btnVisualizarTrecho = document.getElementById("btnVisualizarTrecho");
+  const btnCortarVideo = document.getElementById("btnCortarVideo");
+  const corteStatus = document.getElementById("videoCorteStatus");
+
   let videoPreviewUrl = null;
+  let arquivoOriginalVideo = null;
+  let visualizandoTrecho = false;
+
+  function formatarTempo(segundos) {
+    const total = Math.max(0, Number(segundos) || 0);
+    const minutos = Math.floor(total / 60);
+    const segundosRestantes = Math.floor(total % 60);
+    return `${String(minutos).padStart(2, "0")}:${String(segundosRestantes).padStart(2, "0")}`;
+  }
+
+  function atualizarResumoCorte(origem = "inicio") {
+    let inicio = Number(inicioRange.value || 0);
+    let fim = Number(fimRange.value || 0);
+    const duracaoTotal = Number(videoPlayer.duration || 0);
+
+    if (fim <= inicio) {
+      if (origem === "inicio") {
+        fim = Math.min(duracaoTotal, inicio + 0.5);
+        fimRange.value = fim;
+      } else {
+        inicio = Math.max(0, fim - 0.5);
+        inicioRange.value = inicio;
+      }
+    }
+
+    if ((fim - inicio) > 30) {
+      if (origem === "inicio") {
+        fim = Math.min(duracaoTotal, inicio + 30);
+        fimRange.value = fim;
+      } else {
+        inicio = Math.max(0, fim - 30);
+        inicioRange.value = inicio;
+      }
+    }
+
+    inicioTexto.textContent = formatarTempo(inicio);
+    fimTexto.textContent = formatarTempo(fim);
+    duracaoTexto.textContent = `${Math.max(0, fim - inicio).toFixed(1)}s`;
+  }
+
+  function definirArquivoNoInput(blob, nomeArquivo) {
+    const arquivoFinal = new File([blob], nomeArquivo, {
+      type: blob.type || "video/webm",
+      lastModified: Date.now()
+    });
+
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(arquivoFinal);
+    videoInput.files = dataTransfer.files;
+    return arquivoFinal;
+  }
+
+  async function cortarVideoNoNavegador(inicio, fim) {
+    if (!videoPlayer.captureStream && !videoPlayer.mozCaptureStream) {
+      throw new Error("Este navegador não permite cortar vídeos. Use o Google Chrome atualizado.");
+    }
+
+    const capturar = videoPlayer.captureStream || videoPlayer.mozCaptureStream;
+    const stream = capturar.call(videoPlayer);
+
+    let mimeType = "";
+    const candidatos = [
+      "video/webm;codecs=vp9,opus",
+      "video/webm;codecs=vp8,opus",
+      "video/webm"
+    ];
+
+    for (const candidato of candidatos) {
+      if (window.MediaRecorder && MediaRecorder.isTypeSupported(candidato)) {
+        mimeType = candidato;
+        break;
+      }
+    }
+
+    const gravador = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+    const partes = [];
+
+    gravador.addEventListener("dataavailable", function (event) {
+      if (event.data && event.data.size > 0) {
+        partes.push(event.data);
+      }
+    });
+
+    const finalizado = new Promise(function (resolve, reject) {
+      gravador.addEventListener("stop", function () {
+        if (!partes.length) {
+          reject(new Error("Não foi possível gerar o trecho do vídeo."));
+          return;
+        }
+
+        resolve(new Blob(partes, { type: mimeType || "video/webm" }));
+      }, { once: true });
+
+      gravador.addEventListener("error", function () {
+        reject(new Error("Erro ao cortar o vídeo no navegador."));
+      }, { once: true });
+    });
+
+    videoPlayer.pause();
+    videoPlayer.currentTime = inicio;
+
+    await new Promise(function (resolve) {
+      videoPlayer.addEventListener("seeked", resolve, { once: true });
+    });
+
+    gravador.start(250);
+    await videoPlayer.play();
+
+    await new Promise(function (resolve) {
+      const verificar = function () {
+        if (videoPlayer.currentTime >= fim || videoPlayer.ended) {
+          videoPlayer.pause();
+          videoPlayer.removeEventListener("timeupdate", verificar);
+          resolve();
+        }
+      };
+
+      videoPlayer.addEventListener("timeupdate", verificar);
+    });
+
+    if (gravador.state !== "inactive") {
+      gravador.stop();
+    }
+
+    return finalizado;
+  }
 
   if (videoInput && videoPreview && videoPlayer) {
     videoInput.addEventListener("change", function () {
       const arquivo = videoInput.files && videoInput.files[0];
+      arquivoOriginalVideo = arquivo || null;
 
       if (videoPreviewUrl) {
         URL.revokeObjectURL(videoPreviewUrl);
         videoPreviewUrl = null;
       }
 
+      videoPlayer.pause();
       videoPlayer.removeAttribute("src");
       videoPlayer.load();
       videoPreview.hidden = true;
+      editorCorte.hidden = true;
+      corteStatus.hidden = true;
 
       if (!arquivo) return;
 
-      const extensoesPermitidas = ["mp4", "mov", "webm"];
+      const extensoesPermitidas = ["mp4", "mov", "webm", "m4v"];
       const extensao = (arquivo.name.split(".").pop() || "").toLowerCase();
 
       if (!extensoesPermitidas.includes(extensao)) {
-        alert("Formato de vídeo inválido. Envie MP4, MOV ou WEBM.");
-        videoInput.value = "";
-        return;
-      }
-
-      if (arquivo.size > limiteVideoBytes) {
-        alert("O vídeo deve ter no máximo 15 MB.");
+        alert("Formato de vídeo inválido. Envie MP4, MOV, WEBM ou M4V.");
         videoInput.value = "";
         return;
       }
@@ -1019,20 +1178,104 @@ document.addEventListener("DOMContentLoaded", function () {
       videoTamanho.textContent = `${(arquivo.size / 1024 / 1024).toFixed(2)} MB`;
       videoPreview.hidden = false;
 
-      videoPlayer.addEventListener("loadedmetadata", function validarDuracao() {
-        videoPlayer.removeEventListener("loadedmetadata", validarDuracao);
-        if (Number.isFinite(videoPlayer.duration) && videoPlayer.duration > 30.5) {
-          alert("O vídeo deve ter no máximo 30 segundos.");
-          videoInput.value = "";
-          videoPlayer.removeAttribute("src");
-          videoPlayer.load();
-          videoPreview.hidden = true;
-          if (videoPreviewUrl) {
-            URL.revokeObjectURL(videoPreviewUrl);
-            videoPreviewUrl = null;
-          }
+      videoPlayer.addEventListener("loadedmetadata", function configurarEditor() {
+        videoPlayer.removeEventListener("loadedmetadata", configurarEditor);
+
+        const duracao = Number(videoPlayer.duration || 0);
+        inicioRange.max = duracao;
+        fimRange.max = duracao;
+        inicioRange.value = 0;
+        fimRange.value = Math.min(30, duracao);
+        atualizarResumoCorte();
+
+        if (duracao > 30.05) {
+          editorCorte.hidden = false;
+          btnSalvar.disabled = true;
+          corteStatus.hidden = false;
+          corteStatus.className = "video-corte-status aviso";
+          corteStatus.textContent = "Escolha um trecho de até 30 segundos e clique em Usar este trecho.";
+        } else {
+          editorCorte.hidden = true;
+          btnSalvar.disabled = false;
+          corteStatus.hidden = false;
+          corteStatus.className = "video-corte-status sucesso";
+          corteStatus.textContent = "Vídeo pronto para envio.";
         }
       });
+    });
+
+    inicioRange.addEventListener("input", function () {
+      atualizarResumoCorte("inicio");
+      videoPlayer.currentTime = Number(inicioRange.value || 0);
+    });
+
+    fimRange.addEventListener("input", function () {
+      atualizarResumoCorte("fim");
+      videoPlayer.currentTime = Number(fimRange.value || 0);
+    });
+
+    btnVisualizarTrecho.addEventListener("click", async function () {
+      const inicio = Number(inicioRange.value || 0);
+      const fim = Number(fimRange.value || 0);
+      visualizandoTrecho = true;
+      videoPlayer.currentTime = inicio;
+      await videoPlayer.play();
+
+      const parar = function () {
+        if (visualizandoTrecho && videoPlayer.currentTime >= fim) {
+          visualizandoTrecho = false;
+          videoPlayer.pause();
+          videoPlayer.removeEventListener("timeupdate", parar);
+        }
+      };
+
+      videoPlayer.addEventListener("timeupdate", parar);
+    });
+
+    btnCortarVideo.addEventListener("click", async function () {
+      const inicio = Number(inicioRange.value || 0);
+      const fim = Number(fimRange.value || 0);
+      const duracao = fim - inicio;
+
+      if (duracao <= 0 || duracao > 30.05) {
+        alert("Escolha um trecho entre 1 e 30 segundos.");
+        return;
+      }
+
+      btnCortarVideo.disabled = true;
+      btnVisualizarTrecho.disabled = true;
+      btnSalvar.disabled = true;
+      corteStatus.hidden = false;
+      corteStatus.className = "video-corte-status processando";
+      corteStatus.textContent = "Gerando o trecho selecionado...";
+
+      try {
+        const blob = await cortarVideoNoNavegador(inicio, fim);
+        const nomeBase = (arquivoOriginalVideo?.name || "video").replace(/\.[^.]+$/, "");
+        const arquivoFinal = definirArquivoNoInput(blob, `${nomeBase}_trecho.webm`);
+
+        if (videoPreviewUrl) {
+          URL.revokeObjectURL(videoPreviewUrl);
+        }
+
+        videoPreviewUrl = URL.createObjectURL(arquivoFinal);
+        videoPlayer.src = videoPreviewUrl;
+        videoNome.textContent = arquivoFinal.name;
+        videoTamanho.textContent = `${(arquivoFinal.size / 1024 / 1024).toFixed(2)} MB • ${duracao.toFixed(1)}s`;
+        editorCorte.hidden = true;
+        btnSalvar.disabled = false;
+        corteStatus.className = "video-corte-status sucesso";
+        corteStatus.textContent = "Trecho pronto. Agora você pode salvar a manutenção.";
+        formularioAlterado = true;
+      } catch (error) {
+        console.error(error);
+        corteStatus.className = "video-corte-status erro";
+        corteStatus.textContent = error.message || "Não foi possível cortar o vídeo.";
+        btnSalvar.disabled = true;
+      } finally {
+        btnCortarVideo.disabled = false;
+        btnVisualizarTrecho.disabled = false;
+      }
     });
   }
 

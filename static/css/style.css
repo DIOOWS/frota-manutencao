@@ -40005,118 +40005,150 @@ body {
 
 
 
-
 /* =========================================================
-   VÍDEOS DAS MANUTENÇÕES - EASY CONTROL
+   VÍDEO DA MANUTENÇÃO - CORTE SIMPLES DE ATÉ 30 SEGUNDOS
 ========================================================= */
-.manutencao-video-upload-panel {
-  margin-top: 18px;
-  padding: 18px;
-  border: 1px solid #dbe4f0;
-  border-radius: 14px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-}
-
-.manutencao-video-upload-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 12px;
-}
-
-.manutencao-video-upload-head .form-label {
-  display: block;
-  margin-bottom: 3px;
-  font-weight: 800;
-  color: #172554;
-}
-
-.manutencao-video-upload-head small {
-  display: block;
-  color: #64748b;
-}
-
-.manutencao-video-badge {
-  flex: 0 0 auto;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: #e0ecff;
-  color: #1d4ed8;
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: .4px;
-}
-
-.manutencao-video-preview,
-.manutencao-video-atual {
-  padding: 14px;
-  border: 1px solid #dbe4f0;
-  border-radius: 12px;
-  background: #fff;
-}
-
-.manutencao-video-preview video,
-.manutencao-video-atual video,
-.easy-modal-video-wrap video,
-.manutencao-video-modal-wrap video {
-  display: block;
-  width: 100%;
-  max-height: 520px;
-  border-radius: 10px;
-  background: #0f172a;
-  object-fit: contain;
-}
-
-.manutencao-video-preview-info,
-.manutencao-video-atual-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-
-.manutencao-video-preview-info {
-  margin-top: 10px;
-  margin-bottom: 0;
-}
-
-.manutencao-video-preview-info small,
-.manutencao-video-atual-title small {
-  color: #64748b;
-}
-
-.easy-video-row {
-  align-items: flex-start !important;
-}
-
-.easy-modal-video-wrap,
-.manutencao-video-modal-wrap {
-  width: 100%;
-  padding: 10px;
+.video-corte-editor {
+  margin-top: 16px;
+  padding: 16px;
   border: 1px solid #dbe4f0;
   border-radius: 12px;
   background: #f8fafc;
 }
 
-.manutencao-video-modal-section h5 {
-  font-weight: 800;
-  color: #172554;
+.video-corte-resumo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin-bottom: 14px;
+  color: #475569;
+  font-size: 13px;
+}
+
+.video-corte-resumo strong {
+  color: #0f172a;
+}
+
+.video-corte-campo {
+  margin-bottom: 14px;
+}
+
+.video-corte-campo label {
+  display: block;
+  margin-bottom: 6px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.video-corte-campo input[type="range"] {
+  width: 100%;
+  cursor: pointer;
+}
+
+.video-corte-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.video-corte-status {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.video-corte-status.aviso {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+}
+
+.video-corte-status.processando {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+}
+
+.video-corte-status.sucesso {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #047857;
+}
+
+.video-corte-status.erro {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
 }
 
 @media (max-width: 768px) {
-  .manutencao-video-upload-head,
-  .manutencao-video-preview-info,
-  .manutencao-video-atual-title {
-    flex-direction: column;
-    align-items: flex-start;
+  .video-corte-acoes .btn {
+    width: 100%;
   }
+}
 
-  .manutencao-video-preview video,
-  .manutencao-video-atual video,
-  .easy-modal-video-wrap video,
-  .manutencao-video-modal-wrap video {
-    max-height: 340px;
-  }
+
+
+
+/* ===========================
+   PLAYER DE VÍDEO
+=========================== */
+
+.manutencao-video-preview,
+.manutencao-video-atual{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    margin-top:18px;
+}
+
+.manutencao-video-preview video,
+.manutencao-video-atual video{
+    width:420px;
+    max-width:100%;
+    aspect-ratio:16 / 9;
+    height:auto;
+
+    border-radius:12px;
+    background:#000;
+
+    border:1px solid #d8d8d8;
+
+    box-shadow:0 8px 20px rgba(0,0,0,.12);
+}
+
+.manutencao-video-preview-info{
+    width:420px;
+    max-width:100%;
+    margin-top:10px;
+    text-align:center;
+}
+
+.manutencao-video-preview-info strong{
+    display:block;
+    font-size:15px;
+}
+
+.manutencao-video-preview-info small{
+    color:#777;
+}
+
+@media (max-width:768px){
+
+    .manutencao-video-preview video,
+    .manutencao-video-atual video{
+
+        width:100%;
+    }
+
+    .manutencao-video-preview-info{
+
+        width:100%;
+    }
+
 }
