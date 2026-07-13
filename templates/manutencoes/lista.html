@@ -5,6 +5,10 @@
 {% block content %}
 <style>
 /* Vídeo compacto dentro do modal de detalhes */
+#modalDetalhe .easy-video-row[hidden] {
+  display: none !important;
+}
+
 #modalDetalhe .easy-video-row {
   display: grid !important;
   grid-template-columns: 150px minmax(0, 1fr) !important;
@@ -256,7 +260,7 @@
                       {{ m.imagens_lista|tojson }},
                       {{ m.placa_imagens|tojson }},
                       {{ m.ambiente_imagens|tojson }},
-                      {{ m.video_url|tojson }}
+                      {{ (m.video_url or '')|tojson }}
                     )' >👁</button>
 
                   {% if session.get("user_role") in ["admin", "gestao", "gestor"] %}
@@ -673,14 +677,25 @@ function abrirModal(
 
   const videoBloco = document.getElementById("mVideoBloco");
   const videoPlayer = document.getElementById("mVideo");
-  if (videoUrl) {
-    videoPlayer.src = videoUrl;
+  const videoUrlNormalizada = String(videoUrl || "").trim();
+  const videoUrlInvalida =
+    !videoUrlNormalizada ||
+    ["none", "null", "undefined"].includes(videoUrlNormalizada.toLowerCase());
+
+  videoPlayer.pause();
+  videoPlayer.removeAttribute("src");
+  videoPlayer.load();
+  videoBloco.hidden = true;
+
+  if (!videoUrlInvalida) {
+    videoPlayer.src = videoUrlNormalizada;
+    videoPlayer.onerror = function () {
+      videoPlayer.pause();
+      videoPlayer.removeAttribute("src");
+      videoPlayer.load();
+      videoBloco.hidden = true;
+    };
     videoBloco.hidden = false;
-  } else {
-    videoPlayer.pause();
-    videoPlayer.removeAttribute("src");
-    videoPlayer.load();
-    videoBloco.hidden = true;
   }
 
   document.querySelectorAll("#modalDetalhe .easy-section").forEach(section => {
