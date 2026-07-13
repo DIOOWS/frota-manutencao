@@ -30,3 +30,8 @@ class Manutencao(db.Model):
     km_imagem = db.Column(db.Text)
 
     imagens = db.Column(db.Text)
+
+    # Vídeo principal da manutenção armazenado no Cloudinary.
+    # O banco guarda somente a URL de entrega e o public_id usado para exclusão/substituição.
+    video_url = db.Column(db.Text)
+    video_public_id = db.Column(db.String(300))

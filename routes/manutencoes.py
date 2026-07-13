@@ -102,6 +102,113 @@ def cloudinary_esta_configurado():
 
 
 # ==========================================
+# 🎥 HELPERS VÍDEO
+# ==========================================
+VIDEO_EXTENSOES_PERMITIDAS = {"mp4", "mov", "webm", "m4v"}
+VIDEO_DURACAO_MAXIMA = 30  # segundos
+
+
+def extensao_arquivo(filename):
+    if not filename or "." not in filename:
+        return ""
+
+    return filename.rsplit(".", 1)[1].lower().strip()
+
+
+def validar_video_upload(arquivo):
+    if not arquivo or not arquivo.filename:
+        return
+
+    extensao = extensao_arquivo(arquivo.filename)
+
+    if extensao not in VIDEO_EXTENSOES_PERMITIDAS:
+        raise ValueError(
+            "Formato de vídeo não permitido. Envie MP4, MOV, WEBM ou M4V."
+        )
+
+
+
+def excluir_video_cloudinary(public_id):
+    if not public_id or not cloudinary_esta_configurado():
+        return
+
+    try:
+        cloudinary.uploader.destroy(
+            public_id,
+            resource_type="video",
+            invalidate=True
+        )
+    except Exception as e:
+        print("Erro ao apagar vídeo no Cloudinary:", e)
+
+
+def salvar_video_cloudinary(arquivo, manutencao_id=None):
+    """
+    Salva um único vídeo otimizado no Cloudinary.
+
+    Regras de economia:
+    - máximo de 30 segundos;
+    - resolução limitada a 1280x720;
+    - codec H.264/AAC;
+    - qualidade econômica;
+    - formato final MP4.
+    """
+    if not arquivo or not arquivo.filename:
+        return None
+
+    validar_video_upload(arquivo)
+
+    if not cloudinary_esta_configurado():
+        raise RuntimeError(
+            "Cloudinary não configurado. Configure CLOUD_NAME, API_KEY e API_SECRET para salvar vídeos."
+        )
+
+    pasta = "easy_control/manutencoes/videos"
+    public_id = f"manutencao_{manutencao_id}" if manutencao_id else None
+
+    try:
+        upload = cloudinary.uploader.upload(
+            arquivo,
+            resource_type="video",
+            folder=pasta,
+            public_id=public_id,
+            overwrite=True if public_id else False,
+            unique_filename=False if public_id else True,
+            use_filename=False,
+            format="mp4",
+            transformation=[
+                {
+                    "width": 1280,
+                    "height": 720,
+                    "crop": "limit",
+                    "quality": "auto:eco",
+                    "video_codec": "h264",
+                    "audio_codec": "aac"
+                }
+            ]
+        )
+    except Exception as e:
+        raise RuntimeError(
+            f"Erro ao enviar o vídeo '{arquivo.filename}' para o Cloudinary: {str(e)}"
+        )
+
+    duracao = float(upload.get("duration") or 0)
+
+    if duracao and duracao > VIDEO_DURACAO_MAXIMA:
+        excluir_video_cloudinary(upload.get("public_id"))
+        raise ValueError(
+            "O vídeo deve ter no máximo 30 segundos. Corte o arquivo e tente novamente."
+        )
+
+    return {
+        "url": upload.get("secure_url"),
+        "public_id": upload.get("public_id"),
+        "duracao": duracao,
+        "bytes": upload.get("bytes")
+    }
+
+
+# ==========================================
 # 🔥 HELPERS IMAGENS
 # ==========================================
 def salvar_imagens():
@@ -637,6 +744,36 @@ def api_editar_problema(problema_id):
 
 
 # ==========================================
+# 🎥 EXCLUIR VÍDEO MANUTENÇÃO
+# ==========================================
+@manutencao_bp.route("/<int:id>/excluir-video", methods=["POST"])
+def excluir_video(id):
+    if not session.get("user_id"):
+        return jsonify({"ok": False, "message": "Sessão expirada."}), 401
+
+    if not usuario_tem_permissao_operacional():
+        return jsonify({"ok": False, "message": "Sem permissão."}), 403
+
+    m = Manutencao.query.get_or_404(id)
+
+    if not manutencao_pertence_ao_usuario(m):
+        return jsonify({"ok": False, "message": "Sem permissão."}), 403
+
+    public_id = getattr(m, "video_public_id", None)
+
+    m.video_url = None
+    m.video_public_id = None
+    db.session.commit()
+
+    excluir_video_cloudinary(public_id)
+
+    return jsonify({
+        "ok": True,
+        "message": "Vídeo excluído com sucesso!"
+    })
+
+
+# ==========================================
 # 🖼️ EXCLUIR IMAGEM MANUTENÇÃO
 # ==========================================
 @manutencao_bp.route("/<int:id>/excluir-imagem", methods=["POST"])
@@ -807,6 +944,7 @@ def nova():
         data_saida_convertida = parse_data(request.form.get("data_saida"))
         dtm_calculado = calcular_dtm(data_convertida, data_saida_convertida)
         caminhos_imagens = salvar_imagens()
+        video_upload = salvar_video_cloudinary(request.files.get("video"))
 
         numero_frota = normalizar_simples(request.form.get("numero_frota"))
         placa = normalizar_texto(request.form.get("placa"))
@@ -836,7 +974,9 @@ def nova():
             os=os_numero,
             causa=normalizar_texto(request.form.get("causa")),
             problema=normalizar_texto(request.form.get("problema")),
-            imagens=json.dumps(caminhos_imagens)
+            imagens=json.dumps(caminhos_imagens),
+            video_url=video_upload.get("url") if video_upload else None,
+            video_public_id=video_upload.get("public_id") if video_upload else None
         )
 
         try:
@@ -869,10 +1009,14 @@ def nova():
 
         except (ValueError, RuntimeError) as e:
             db.session.rollback()
+            if 'video_upload' in locals() and video_upload:
+                excluir_video_cloudinary(video_upload.get("public_id"))
             flash(str(e), "danger")
             return redirect(request.url)
         except Exception as e:
             db.session.rollback()
+            if 'video_upload' in locals() and video_upload:
+                excluir_video_cloudinary(video_upload.get("public_id"))
             flash(f"Erro inesperado ao salvar manutenção: {str(e)}", "danger")
             return redirect(request.url)
 
@@ -1020,6 +1164,8 @@ def editar(id):
     if request.method == "POST":
         numero_frota_antiga = identificador_veiculo(m.numero_frota, getattr(m, "placa", None))
         os_antiga = m.os
+        video_public_id_antigo = getattr(m, "video_public_id", None)
+        novo_video_upload = None
 
         try:
             # Faz upload de todas as imagens primeiro. Se alguma falhar,
@@ -1028,6 +1174,12 @@ def editar(id):
             placa_novas_imagens = salvar_imagens_arquivos(request.files.getlist("placa_imagens"))
             ambiente_novas_imagens = salvar_imagens_arquivos(request.files.getlist("ambiente_imagens"))
             km_novas_imagens = salvar_imagens_arquivos(request.files.getlist("km_imagem"))
+
+            arquivo_video = request.files.get("video")
+            if arquivo_video and arquivo_video.filename:
+                novo_video_upload = salvar_video_cloudinary(arquivo_video, manutencao_id=m.id)
+                m.video_url = novo_video_upload.get("url")
+                m.video_public_id = novo_video_upload.get("public_id")
 
             data_convertida = parse_data(valor_formulario("data", m.data))
             data_saida_convertida = parse_data(valor_formulario("data_saida", m.data_saida))
@@ -1092,15 +1244,34 @@ def editar(id):
 
             db.session.commit()
 
+            if (
+                novo_video_upload
+                and video_public_id_antigo
+                and video_public_id_antigo != novo_video_upload.get("public_id")
+            ):
+                excluir_video_cloudinary(video_public_id_antigo)
+
             flash("Manutenção atualizada com sucesso!", "success")
             return redirecionar_apos_salvar_manutencao(m)
 
         except (ValueError, RuntimeError) as e:
             db.session.rollback()
+            if (
+                novo_video_upload
+                and novo_video_upload.get("public_id")
+                and novo_video_upload.get("public_id") != video_public_id_antigo
+            ):
+                excluir_video_cloudinary(novo_video_upload.get("public_id"))
             flash(str(e), "danger")
             return redirect(request.url)
         except Exception as e:
             db.session.rollback()
+            if (
+                novo_video_upload
+                and novo_video_upload.get("public_id")
+                and novo_video_upload.get("public_id") != video_public_id_antigo
+            ):
+                excluir_video_cloudinary(novo_video_upload.get("public_id"))
             flash(f"Erro inesperado ao salvar manutenção: {str(e)}", "danger")
             return redirect(request.url)
 
@@ -1151,8 +1322,12 @@ def excluir(id):
             os=str(m.os).strip()
         ).delete()
 
+    video_public_id = getattr(m, "video_public_id", None)
+
     db.session.delete(m)
     db.session.commit()
+
+    excluir_video_cloudinary(video_public_id)
 
     flash("Manutenção excluída com sucesso!", "success")
     return redirect("/manutencoes/lista")

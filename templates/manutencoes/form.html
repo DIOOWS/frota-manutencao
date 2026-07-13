@@ -202,6 +202,45 @@
           </div>
         {% endif %}
       </div>
+
+      <div class="manutencao-section-divider"></div>
+
+      <div class="manutencao-video-upload-panel">
+        <div class="manutencao-video-upload-head">
+          <div>
+            <label class="form-label">Vídeo da Manutenção</label>
+            <small>Envie 1 vídeo de até 30 segundos e no máximo 15 MB. Formatos: MP4, MOV ou WEBM.</small>
+          </div>
+          <span class="manutencao-video-badge">1 VÍDEO</span>
+        </div>
+
+        <input type="file"
+               name="video"
+               id="videoManutencao"
+               class="form-control"
+               accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm">
+
+        <div id="previewVideoManutencao" class="manutencao-video-preview mt-3" hidden>
+          <video id="previewVideoPlayer" controls preload="metadata"></video>
+          <div class="manutencao-video-preview-info">
+            <strong id="previewVideoNome">Novo vídeo</strong>
+            <small id="previewVideoTamanho"></small>
+          </div>
+        </div>
+
+        {% if m and m.video_url %}
+          <div class="manutencao-video-atual mt-3">
+            <div class="manutencao-video-atual-title">
+              <strong>Vídeo atual</strong>
+              <small>Enviar outro arquivo substituirá este vídeo.</small>
+            </div>
+            <video controls preload="metadata" playsinline>
+              <source src="{{ m.video_url }}" type="video/mp4">
+              Seu navegador não suporta reprodução de vídeo.
+            </video>
+          </div>
+        {% endif %}
+      </div>
     </section>
 
     <section class="manutencao-section-card">
@@ -933,6 +972,67 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!confirmarSaida) {
         event.preventDefault();
       }
+    });
+  }
+
+  const videoInput = document.getElementById("videoManutencao");
+  const videoPreview = document.getElementById("previewVideoManutencao");
+  const videoPlayer = document.getElementById("previewVideoPlayer");
+  const videoNome = document.getElementById("previewVideoNome");
+  const videoTamanho = document.getElementById("previewVideoTamanho");
+  const limiteVideoBytes = 15 * 1024 * 1024;
+  let videoPreviewUrl = null;
+
+  if (videoInput && videoPreview && videoPlayer) {
+    videoInput.addEventListener("change", function () {
+      const arquivo = videoInput.files && videoInput.files[0];
+
+      if (videoPreviewUrl) {
+        URL.revokeObjectURL(videoPreviewUrl);
+        videoPreviewUrl = null;
+      }
+
+      videoPlayer.removeAttribute("src");
+      videoPlayer.load();
+      videoPreview.hidden = true;
+
+      if (!arquivo) return;
+
+      const extensoesPermitidas = ["mp4", "mov", "webm"];
+      const extensao = (arquivo.name.split(".").pop() || "").toLowerCase();
+
+      if (!extensoesPermitidas.includes(extensao)) {
+        alert("Formato de vídeo inválido. Envie MP4, MOV ou WEBM.");
+        videoInput.value = "";
+        return;
+      }
+
+      if (arquivo.size > limiteVideoBytes) {
+        alert("O vídeo deve ter no máximo 15 MB.");
+        videoInput.value = "";
+        return;
+      }
+
+      videoPreviewUrl = URL.createObjectURL(arquivo);
+      videoPlayer.src = videoPreviewUrl;
+      videoNome.textContent = arquivo.name;
+      videoTamanho.textContent = `${(arquivo.size / 1024 / 1024).toFixed(2)} MB`;
+      videoPreview.hidden = false;
+
+      videoPlayer.addEventListener("loadedmetadata", function validarDuracao() {
+        videoPlayer.removeEventListener("loadedmetadata", validarDuracao);
+        if (Number.isFinite(videoPlayer.duration) && videoPlayer.duration > 30.5) {
+          alert("O vídeo deve ter no máximo 30 segundos.");
+          videoInput.value = "";
+          videoPlayer.removeAttribute("src");
+          videoPlayer.load();
+          videoPreview.hidden = true;
+          if (videoPreviewUrl) {
+            URL.revokeObjectURL(videoPreviewUrl);
+            videoPreviewUrl = null;
+          }
+        }
+      });
     });
   }
 

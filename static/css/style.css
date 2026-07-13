@@ -40004,3 +40004,119 @@ body {
 }
 
 
+
+
+/* =========================================================
+   VÍDEOS DAS MANUTENÇÕES - EASY CONTROL
+========================================================= */
+.manutencao-video-upload-panel {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid #dbe4f0;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.manutencao-video-upload-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.manutencao-video-upload-head .form-label {
+  display: block;
+  margin-bottom: 3px;
+  font-weight: 800;
+  color: #172554;
+}
+
+.manutencao-video-upload-head small {
+  display: block;
+  color: #64748b;
+}
+
+.manutencao-video-badge {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #e0ecff;
+  color: #1d4ed8;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .4px;
+}
+
+.manutencao-video-preview,
+.manutencao-video-atual {
+  padding: 14px;
+  border: 1px solid #dbe4f0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.manutencao-video-preview video,
+.manutencao-video-atual video,
+.easy-modal-video-wrap video,
+.manutencao-video-modal-wrap video {
+  display: block;
+  width: 100%;
+  max-height: 520px;
+  border-radius: 10px;
+  background: #0f172a;
+  object-fit: contain;
+}
+
+.manutencao-video-preview-info,
+.manutencao-video-atual-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.manutencao-video-preview-info {
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+
+.manutencao-video-preview-info small,
+.manutencao-video-atual-title small {
+  color: #64748b;
+}
+
+.easy-video-row {
+  align-items: flex-start !important;
+}
+
+.easy-modal-video-wrap,
+.manutencao-video-modal-wrap {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #dbe4f0;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.manutencao-video-modal-section h5 {
+  font-weight: 800;
+  color: #172554;
+}
+
+@media (max-width: 768px) {
+  .manutencao-video-upload-head,
+  .manutencao-video-preview-info,
+  .manutencao-video-atual-title {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .manutencao-video-preview video,
+  .manutencao-video-atual video,
+  .easy-modal-video-wrap video,
+  .manutencao-video-modal-wrap video {
+    max-height: 340px;
+  }
+}

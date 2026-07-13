@@ -136,7 +136,8 @@
 
                       {{ m.imagens_lista|tojson }},
                       {{ m.placa_imagens|tojson }},
-                      {{ m.ambiente_imagens|tojson }}
+                      {{ m.ambiente_imagens|tojson }},
+                      {{ m.video_url|tojson }}
                     )'>
                     👁
                   </button>
@@ -249,6 +250,13 @@
           <div id="mImagens" class="d-flex gap-2 flex-wrap"></div>
         </div>
 
+        <div class="mb-4 manutencao-video-modal-section" id="mVideoFrotaBloco" hidden>
+          <h5 class="mb-3">Vídeo da Manutenção</h5>
+          <div class="manutencao-video-modal-wrap">
+            <video id="mVideoFrota" controls preload="metadata" playsinline></video>
+          </div>
+        </div>
+
         <div class="mb-4">
           <h5 class="mb-3">Imagens Aferição Placa</h5>
           <div id="mImagensPlaca" class="d-flex gap-2 flex-wrap"></div>
@@ -336,7 +344,7 @@ function abrirModalFrota(
   cliente, frota, os, servico, atendimento, manutencao, status, problema, causa, observacao,
   placaAfericao, placaData, placaStatus,
   ambienteAfericao, ambienteData, ambienteStatus,
-  imagensManutencao, imagensPlaca, imagensAmbiente
+  imagensManutencao, imagensPlaca, imagensAmbiente, videoUrl
 ) {
   document.getElementById("mCliente").innerText = cliente || "-";
   document.getElementById("mFrota").innerText = frota || "-";
@@ -361,9 +369,31 @@ function abrirModalFrota(
   renderizarGaleriaFrota("mImagensPlaca", imagensPlaca, "Nenhuma imagem da aferição de placa cadastrada.");
   renderizarGaleriaFrota("mImagensAmbiente", imagensAmbiente, "Nenhuma imagem da aferição de ambiente cadastrada.");
 
+  const videoBloco = document.getElementById("mVideoFrotaBloco");
+  const videoPlayer = document.getElementById("mVideoFrota");
+  if (videoUrl) {
+    videoPlayer.src = videoUrl;
+    videoBloco.hidden = false;
+  } else {
+    videoPlayer.pause();
+    videoPlayer.removeAttribute("src");
+    videoPlayer.load();
+    videoBloco.hidden = true;
+  }
+
   const modal = new bootstrap.Modal(document.getElementById("modalDetalheFrota"));
   modal.show();
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+  const modalDetalhe = document.getElementById("modalDetalheFrota");
+  if (modalDetalhe) {
+    modalDetalhe.addEventListener("hidden.bs.modal", function () {
+      const video = document.getElementById("mVideoFrota");
+      if (video) video.pause();
+    });
+  }
+});
 
 function abrirImagemFrota(src) {
   document.getElementById("imagemAmpliadaFrota").src = src;

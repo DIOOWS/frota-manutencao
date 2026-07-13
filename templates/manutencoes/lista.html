@@ -194,7 +194,8 @@
 
                       {{ m.imagens_lista|tojson }},
                       {{ m.placa_imagens|tojson }},
-                      {{ m.ambiente_imagens|tojson }}
+                      {{ m.ambiente_imagens|tojson }},
+                      {{ m.video_url|tojson }}
                     )' >👁</button>
 
                   {% if session.get("user_role") in ["admin", "gestao", "gestor"] %}
@@ -328,6 +329,13 @@
               <div class="easy-detail-cell easy-detail-cell-full easy-images-row">
                 <span>Imagens da Manutenção:</span>
                 <div id="mImagens" class="easy-modal-gallery easy-modal-gallery-table"></div>
+              </div>
+
+              <div class="easy-detail-cell easy-detail-cell-full easy-video-row" id="mVideoBloco" hidden>
+                <span>Vídeo da Manutenção:</span>
+                <div class="easy-modal-video-wrap">
+                  <video id="mVideo" controls preload="metadata" playsinline></video>
+                </div>
               </div>
             </div>
           </div>
@@ -574,7 +582,7 @@ function abrirModal(
   kmEntrada, kmData, imagensKm,
   placaAfericao, placaData, placaStatus,
   ambienteAfericao, ambienteData, ambienteStatus,
-  imagensManutencao, imagensPlaca, imagensAmbiente
+  imagensManutencao, imagensPlaca, imagensAmbiente, videoUrl
 ) {
   document.getElementById("mCliente").innerText = cliente || "-";
   document.getElementById("mFrota").innerText = frota || "-";
@@ -602,6 +610,18 @@ function abrirModal(
   renderizarGaleria("mImagensPlaca", imagensPlaca, "Nenhuma imagem da aferição de placa cadastrada.");
   renderizarGaleria("mImagensAmbiente", imagensAmbiente, "Nenhuma imagem da aferição de ambiente cadastrada.");
 
+  const videoBloco = document.getElementById("mVideoBloco");
+  const videoPlayer = document.getElementById("mVideo");
+  if (videoUrl) {
+    videoPlayer.src = videoUrl;
+    videoBloco.hidden = false;
+  } else {
+    videoPlayer.pause();
+    videoPlayer.removeAttribute("src");
+    videoPlayer.load();
+    videoBloco.hidden = true;
+  }
+
   document.querySelectorAll("#modalDetalhe .easy-section").forEach(section => {
     section.classList.add("open");
   });
@@ -609,6 +629,16 @@ function abrirModal(
   const modal = new bootstrap.Modal(document.getElementById("modalDetalhe"));
   modal.show();
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+  const modalDetalhe = document.getElementById("modalDetalhe");
+  if (modalDetalhe) {
+    modalDetalhe.addEventListener("hidden.bs.modal", function () {
+      const video = document.getElementById("mVideo");
+      if (video) video.pause();
+    });
+  }
+});
 
 function abrirImagem(src) {
   document.getElementById("imagemAmpliada").src = src;
