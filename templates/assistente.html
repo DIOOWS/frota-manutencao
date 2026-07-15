@@ -1,169 +1,169 @@
-{% extends "base.html" %}
+<!--{% extends "base.html" %}-->
 
-{% block title %}Assistente Inteligente{% endblock %}
+<!--{% block title %}Assistente Inteligente{% endblock %}-->
 
-{% block content %}
+<!--{% block content %}-->
 
-<div class="assistente-page">
+<!--<div class="assistente-page">-->
 
-  <div class="assistente-header">
-    <div>
-      <h3>Assistente Inteligente</h3>
-      <small>
-        Faça perguntas sobre manutenções, frotas, TMA, causas e indicadores.
-      </small>
-    </div>
+<!--  <div class="assistente-header">-->
+<!--    <div>-->
+<!--      <h3>Assistente Inteligente</h3>-->
+<!--      <small>-->
+<!--        Faça perguntas sobre manutenções, frotas, TMA, causas e indicadores.-->
+<!--      </small>-->
+<!--    </div>-->
 
-    <span class="assistente-badge">
-      IA Consultiva
-    </span>
-  </div>
+<!--    <span class="assistente-badge">-->
+<!--      IA Consultiva-->
+<!--    </span>-->
+<!--  </div>-->
 
-  <div class="assistente-sugestoes">
+<!--  <div class="assistente-sugestoes">-->
 
-    <button type="button" onclick="usarPergunta('Faça um resumo geral do sistema')">
-      Resumo geral
-    </button>
+<!--    <button type="button" onclick="usarPergunta('Faça um resumo geral do sistema')">-->
+<!--      Resumo geral-->
+<!--    </button>-->
 
-    <button type="button" onclick="usarPergunta('Quais OS estão em andamento?')">
-      OS em andamento
-    </button>
+<!--    <button type="button" onclick="usarPergunta('Quais OS estão em andamento?')">-->
+<!--      OS em andamento-->
+<!--    </button>-->
 
-    <button type="button" onclick="usarPergunta('Quais frotas tiveram maior TMA?')">
-      Maiores TMA
-    </button>
+<!--    <button type="button" onclick="usarPergunta('Quais frotas tiveram maior TMA?')">-->
+<!--      Maiores TMA-->
+<!--    </button>-->
 
-    <button type="button" onclick="usarPergunta('Quais são as principais causas de manutenção?')">
-      Principais causas
-    </button>
+<!--    <button type="button" onclick="usarPergunta('Quais são as principais causas de manutenção?')">-->
+<!--      Principais causas-->
+<!--    </button>-->
 
-    <button type="button" onclick="usarPergunta('Quais foram as últimas finalizações?')">
-      Últimas finalizações
-    </button>
+<!--    <button type="button" onclick="usarPergunta('Quais foram as últimas finalizações?')">-->
+<!--      Últimas finalizações-->
+<!--    </button>-->
 
-    <button type="button" onclick="usarPergunta('Me mostre o histórico da frota 398')">
-      Histórico frota
-    </button>
+<!--    <button type="button" onclick="usarPergunta('Me mostre o histórico da frota 398')">-->
+<!--      Histórico frota-->
+<!--    </button>-->
 
-  </div>
+<!--  </div>-->
 
-  <div class="assistente-chat" id="chatBox">
+<!--  <div class="assistente-chat" id="chatBox">-->
 
-    <div class="assistente-msg assistente-msg-bot">
-      <div class="assistente-avatar">🤖</div>
-      <div class="assistente-balao">
-        Olá! Eu posso analisar os dados da frota para você.
-        <br><br>
-        Exemplos:
-        <br>
-        • Quais OS estão em andamento?
-        <br>
-        • Qual frota teve maior TMA?
-        <br>
-        • Quais são as principais causas de manutenção?
-      </div>
-    </div>
+<!--    <div class="assistente-msg assistente-msg-bot">-->
+<!--      <div class="assistente-avatar">🤖</div>-->
+<!--      <div class="assistente-balao">-->
+<!--        Olá! Eu posso analisar os dados da frota para você.-->
+<!--        <br><br>-->
+<!--        Exemplos:-->
+<!--        <br>-->
+<!--        • Quais OS estão em andamento?-->
+<!--        <br>-->
+<!--        • Qual frota teve maior TMA?-->
+<!--        <br>-->
+<!--        • Quais são as principais causas de manutenção?-->
+<!--      </div>-->
+<!--    </div>-->
 
-  </div>
+<!--  </div>-->
 
-  <div class="assistente-input-box">
-    <input type="text"
-           id="perguntaInput"
-           placeholder="Pergunte sobre as manutenções..."
-           onkeydown="verificarEnter(event)">
+<!--  <div class="assistente-input-box">-->
+<!--    <input type="text"-->
+<!--           id="perguntaInput"-->
+<!--           placeholder="Pergunte sobre as manutenções..."-->
+<!--           onkeydown="verificarEnter(event)">-->
 
-    <button type="button" onclick="enviarPergunta()" id="btnEnviarPergunta">
-      Enviar
-    </button>
-  </div>
+<!--    <button type="button" onclick="enviarPergunta()" id="btnEnviarPergunta">-->
+<!--      Enviar-->
+<!--    </button>-->
+<!--  </div>-->
 
-</div>
+<!--</div>-->
 
-<script>
-function usarPergunta(texto) {
-  document.getElementById("perguntaInput").value = texto;
-  enviarPergunta();
-}
+<!--<script>-->
+<!--function usarPergunta(texto) {-->
+<!--  document.getElementById("perguntaInput").value = texto;-->
+<!--  enviarPergunta();-->
+<!--}-->
 
-function verificarEnter(event) {
-  if (event.key === "Enter") {
-    enviarPergunta();
-  }
-}
+<!--function verificarEnter(event) {-->
+<!--  if (event.key === "Enter") {-->
+<!--    enviarPergunta();-->
+<!--  }-->
+<!--}-->
 
-function adicionarMensagem(tipo, texto) {
-  const chatBox = document.getElementById("chatBox");
+<!--function adicionarMensagem(tipo, texto) {-->
+<!--  const chatBox = document.getElementById("chatBox");-->
 
-  const msg = document.createElement("div");
-  msg.className = tipo === "user"
-    ? "assistente-msg assistente-msg-user"
-    : "assistente-msg assistente-msg-bot";
+<!--  const msg = document.createElement("div");-->
+<!--  msg.className = tipo === "user"-->
+<!--    ? "assistente-msg assistente-msg-user"-->
+<!--    : "assistente-msg assistente-msg-bot";-->
 
-  const avatar = document.createElement("div");
-  avatar.className = "assistente-avatar";
-  avatar.innerText = tipo === "user" ? "👤" : "🤖";
+<!--  const avatar = document.createElement("div");-->
+<!--  avatar.className = "assistente-avatar";-->
+<!--  avatar.innerText = tipo === "user" ? "👤" : "🤖";-->
 
-  const balao = document.createElement("div");
-  balao.className = "assistente-balao";
-  balao.innerText = texto;
+<!--  const balao = document.createElement("div");-->
+<!--  balao.className = "assistente-balao";-->
+<!--  balao.innerText = texto;-->
 
-  msg.appendChild(avatar);
-  msg.appendChild(balao);
+<!--  msg.appendChild(avatar);-->
+<!--  msg.appendChild(balao);-->
 
-  chatBox.appendChild(msg);
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
+<!--  chatBox.appendChild(msg);-->
+<!--  chatBox.scrollTop = chatBox.scrollHeight;-->
+<!--}-->
 
-function setLoading(ativo) {
-  const btn = document.getElementById("btnEnviarPergunta");
+<!--function setLoading(ativo) {-->
+<!--  const btn = document.getElementById("btnEnviarPergunta");-->
 
-  if (ativo) {
-    btn.disabled = true;
-    btn.innerText = "Analisando...";
-  } else {
-    btn.disabled = false;
-    btn.innerText = "Enviar";
-  }
-}
+<!--  if (ativo) {-->
+<!--    btn.disabled = true;-->
+<!--    btn.innerText = "Analisando...";-->
+<!--  } else {-->
+<!--    btn.disabled = false;-->
+<!--    btn.innerText = "Enviar";-->
+<!--  }-->
+<!--}-->
 
-async function enviarPergunta() {
-  const input = document.getElementById("perguntaInput");
-  const pergunta = input.value.trim();
+<!--async function enviarPergunta() {-->
+<!--  const input = document.getElementById("perguntaInput");-->
+<!--  const pergunta = input.value.trim();-->
 
-  if (!pergunta) {
-    return;
-  }
+<!--  if (!pergunta) {-->
+<!--    return;-->
+<!--  }-->
 
-  adicionarMensagem("user", pergunta);
-  input.value = "";
+<!--  adicionarMensagem("user", pergunta);-->
+<!--  input.value = "";-->
 
-  setLoading(true);
+<!--  setLoading(true);-->
 
-  try {
-    const resposta = await fetch("/assistente/perguntar", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ pergunta })
-    });
+<!--  try {-->
+<!--    const resposta = await fetch("/assistente/perguntar", {-->
+<!--      method: "POST",-->
+<!--      headers: {-->
+<!--        "Content-Type": "application/json"-->
+<!--      },-->
+<!--      body: JSON.stringify({ pergunta })-->
+<!--    });-->
 
-    const dados = await resposta.json();
+<!--    const dados = await resposta.json();-->
 
-    adicionarMensagem(
-      "bot",
-      dados.resposta || "Não consegui responder agora."
-    );
+<!--    adicionarMensagem(-->
+<!--      "bot",-->
+<!--      dados.resposta || "Não consegui responder agora."-->
+<!--    );-->
 
-  } catch (error) {
-    adicionarMensagem(
-      "bot",
-      "Erro ao consultar o assistente. Tente novamente."
-    );
-  }
+<!--  } catch (error) {-->
+<!--    adicionarMensagem(-->
+<!--      "bot",-->
+<!--      "Erro ao consultar o assistente. Tente novamente."-->
+<!--    );-->
+<!--  }-->
 
-  setLoading(false);
-}
-</script>
+<!--  setLoading(false);-->
+<!--}-->
+<!--</script>-->
 
-{% endblock %}
+<!--{% endblock %}-->

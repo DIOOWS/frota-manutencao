@@ -178,9 +178,9 @@
         </div>
       {% endif %}
 
-      <a href="/assistente" class="easy-nav-link">
-        Assistente
-      </a>
+<!--      <a href="/assistente" class="easy-nav-link">-->
+<!--        Assistente-->
+<!--      </a>-->
 
     </nav>
 
@@ -230,70 +230,70 @@
   {% block content %}{% endblock %}
 </div>
 
-<div class="sidinho-widget">
-  <div class="sidinho-chat-panel" id="sidinhoChatPanel">
-    <div class="sidinho-chat-header">
-      <div class="sidinho-header-left">
-        <img src="{{ url_for('static', filename='css/img/sidinho.png') }}" alt="Sidinho">
-        <div>
-          <strong>Sidinho</strong>
-          <small>Assistente Inteligente</small>
-        </div>
-      </div>
+<!--<div class="sidinho-widget">-->
+<!--  <div class="sidinho-chat-panel" id="sidinhoChatPanel">-->
+<!--    <div class="sidinho-chat-header">-->
+<!--      <div class="sidinho-header-left">-->
+<!--        <img src="{{ url_for('static', filename='css/img/sidinho.png') }}" alt="Sidinho">-->
+<!--        <div>-->
+<!--          <strong>Sidinho</strong>-->
+<!--          <small>Assistente Inteligente</small>-->
+<!--        </div>-->
+<!--      </div>-->
 
-      <button type="button" onclick="abrirFecharSidinho()">×</button>
-    </div>
+<!--      <button type="button" onclick="abrirFecharSidinho()">×</button>-->
+<!--    </div>-->
 
-    <div class="sidinho-quick-actions">
-      <button type="button" onclick="sidinhoPerguntaRapida('Quais OS estão em andamento?')">
-        OS em andamento
-      </button>
+<!--    <div class="sidinho-quick-actions">-->
+<!--      <button type="button" onclick="sidinhoPerguntaRapida('Quais OS estão em andamento?')">-->
+<!--        OS em andamento-->
+<!--      </button>-->
 
-      <button type="button" onclick="sidinhoPerguntaRapida('Qual frota tem mais corretiva?')">
-        Mais corretiva
-      </button>
+<!--      <button type="button" onclick="sidinhoPerguntaRapida('Qual frota tem mais corretiva?')">-->
+<!--        Mais corretiva-->
+<!--      </button>-->
 
-      <button type="button" onclick="sidinhoPerguntaRapida('Quais são as principais causas?')">
-        Causas
-      </button>
-    </div>
+<!--      <button type="button" onclick="sidinhoPerguntaRapida('Quais são as principais causas?')">-->
+<!--        Causas-->
+<!--      </button>-->
+<!--    </div>-->
 
-    <div class="sidinho-messages" id="sidinhoMessages">
-      <div class="sidinho-message sidinho-bot">
-        <div class="sidinho-balloon">
-          Olá! Eu sou o Sidinho. Pergunte sobre frotas, OS, TMA, causas, corretivas e manutenções.
-        </div>
-      </div>
-    </div>
+<!--    <div class="sidinho-messages" id="sidinhoMessages">-->
+<!--      <div class="sidinho-message sidinho-bot">-->
+<!--        <div class="sidinho-balloon">-->
+<!--          Olá! Eu sou o Sidinho. Pergunte sobre frotas, OS, TMA, causas, corretivas e manutenções.-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
 
-    <div class="sidinho-input-area">
-      <input type="text"
-             id="sidinhoInput"
-             placeholder="Digite sua pergunta..."
-             onkeydown="sidinhoEnter(event)">
+<!--    <div class="sidinho-input-area">-->
+<!--      <input type="text"-->
+<!--             id="sidinhoInput"-->
+<!--             placeholder="Digite sua pergunta..."-->
+<!--             onkeydown="sidinhoEnter(event)">-->
 
-      <button type="button"
-              id="sidinhoSendBtn"
-              onclick="sidinhoEnviarPergunta()">
-        ➤
-      </button>
-    </div>
-  </div>
+<!--      <button type="button"-->
+<!--              id="sidinhoSendBtn"-->
+<!--              onclick="sidinhoEnviarPergunta()">-->
+<!--        ➤-->
+<!--      </button>-->
+<!--    </div>-->
+<!--  </div>-->
 
-  <div class="sidinho-bubble" id="sidinhoBubble" onclick="abrirFecharSidinho()">
-    <div class="sidinho-bubble-alert">
-      Pergunte ao Sidinho
-    </div>
+<!--  <div class="sidinho-bubble" id="sidinhoBubble" onclick="abrirFecharSidinho()">-->
+<!--    <div class="sidinho-bubble-alert">-->
+<!--      Pergunte ao Sidinho-->
+<!--    </div>-->
 
-    <img src="{{ url_for('static', filename='css/img/sidinho.png') }}" alt="Sidinho">
-  </div>
+<!--    <img src="{{ url_for('static', filename='css/img/sidinho.png') }}" alt="Sidinho">-->
+<!--  </div>-->
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
-<script src="{{ url_for('static', filename='js/sidinho.js') }}"></script>
+<!--<script src="{{ url_for('static', filename='js/sidinho.js') }}"></script>-->
 
 <script>
   setTimeout(() => {
