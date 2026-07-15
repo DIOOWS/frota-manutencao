@@ -1,0 +1,2334 @@
+/* =========================
+   TOPO DA PÁGINA
+========================= */
+
+.importacoes-page .gestao-header {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 20px;
+  padding: 22px 24px;
+  margin-bottom: 18px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.importacoes-page .gestao-header h2 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 900;
+  color: #020024;
+  letter-spacing: -0.4px;
+}
+
+.importacoes-page .gestao-header p {
+  margin: 5px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.importacoes-page .gestao-header .btn {
+  height: 40px;
+  min-width: 128px;
+  border-radius: 12px;
+  font-weight: 900;
+  font-size: 13px;
+  border: none;
+}
+
+.importacoes-page .gestao-header .btn-dark {
+  background: linear-gradient(135deg, #020024, #090979);
+  color: #ffffff;
+}
+
+.importacoes-page .gestao-header .btn-primary {
+  background: linear-gradient(135deg, #090979, #0052e0, #00d4ff);
+  color: #ffffff;
+}
+
+/* =========================
+   COMPETÊNCIA / VISUALIZAR MÊS
+========================= */
+
+.importacoes-page .gestao-filtro {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 20px;
+  padding: 18px 20px;
+  margin-bottom: 26px !important;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+  display: flex;
+  align-items: end;
+  gap: 14px;
+  flex-wrap: wrap;
+  position: relative;
+}
+
+.importacoes-page .gestao-filtro::before {
+  content: "Competência financeira";
+  width: 100%;
+  display: block;
+  font-size: 18px;
+  font-weight: 900;
+  color: #020024;
+  margin-bottom: -2px;
+}
+
+.importacoes-page .gestao-filtro::after {
+  content: "Selecione o mês e o ano para visualizar as importações";
+  width: 100%;
+  display: block;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 700;
+  margin-top: -8px;
+  margin-bottom: 4px;
+}
+
+.importacoes-page .gestao-filtro input {
+  height: 42px;
+  width: 120px;
+  max-width: 120px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.importacoes-page .gestao-filtro input:focus {
+  border-color: #0052e0;
+  box-shadow: 0 0 0 4px rgba(0, 82, 224, 0.12);
+}
+
+.importacoes-page .gestao-filtro .btn-primary {
+  height: 42px;
+  min-width: 190px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 900;
+  box-shadow: 0 8px 18px rgba(9, 9, 121, 0.22);
+}
+
+.importacoes-page .gestao-filtro .btn-primary:hover {
+  filter: brightness(1.07);
+  transform: translateY(-1px);
+}
+
+/* =========================
+   ALERTA INFORMATIVO
+========================= */
+
+.importacoes-page .alert-info {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-left: 5px solid #0052e0;
+  border-radius: 16px;
+  color: #1e3a8a;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+/* =========================
+   CARD PRINCIPAL IGUAL DASHBOARD
+========================= */
+
+.importacoes-page .gestao-card {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+  padding: 0;
+  margin-bottom: 26px !important;
+}
+
+.importacoes-page .gestao-card > .d-flex:first-child {
+  margin: 0 !important;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  border-bottom: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.importacoes-page .gestao-card h5 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 21px;
+  font-weight: 900;
+  letter-spacing: -0.2px;
+}
+
+.importacoes-page .gestao-card h5::before {
+  content: "";
+}
+
+.importacoes-page .gestao-card .text-muted {
+  color: rgba(255, 255, 255, 0.86) !important;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* =========================
+   BOTÃO LIMPAR NO HEADER
+========================= */
+
+.importacoes-page form[action*="/limpar"] .btn-outline-danger {
+  height: 38px;
+  border-radius: 999px;
+  padding: 0 16px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 900;
+  box-shadow: none;
+}
+
+.importacoes-page form[action*="/limpar"] .btn-outline-danger::before {
+  content: "🧹 ";
+}
+
+.importacoes-page form[action*="/limpar"] .btn-outline-danger:hover {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #b91c1c;
+}
+
+/* =========================
+   CORPO DO CARD
+========================= */
+
+.importacao-box {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* =========================
+   FORM DE IMPORTAÇÃO
+========================= */
+
+.importacao-form {
+  background: #f8fafc;
+  border: 1px solid #dce5f2;
+  border-radius: 16px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: minmax(310px, 1.5fr) 100px 120px minmax(260px, 1fr) 210px;
+  gap: 14px;
+  align-items: end;
+}
+
+.importacao-form-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.importacao-form-info strong {
+  color: #020024;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.importacao-form-info small {
+  color: #64748b;
+  font-size: 12.5px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+.importacao-field label {
+  display: block;
+  margin-bottom: 6px;
+  color: #334155;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.importacao-field .form-control {
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.importacao-field .form-control:focus {
+  border-color: #0052e0;
+  box-shadow: 0 0 0 4px rgba(0, 82, 224, 0.12);
+}
+
+.importacao-file .form-control {
+  padding-top: 8px;
+}
+
+/* =========================
+   BOTÃO IMPORTAR
+========================= */
+
+.btn-importacao {
+  height: 40px;
+  min-width: 200px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  box-shadow: 0 8px 18px rgba(9, 9, 121, 0.2);
+}
+
+.btn-importacao:hover {
+  filter: brightness(1.07);
+  transform: translateY(-1px);
+}
+
+#contas-pagas .btn-importacao {
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+}
+
+#contas-receber .btn-importacao {
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+}
+
+/* =========================
+   RESUMOS
+========================= */
+
+.importacao-resumo-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.importacao-resumo-card {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 16px;
+  padding: 15px 16px;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.importacao-resumo-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+}
+
+.importacao-resumo-card span {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 8px;
+}
+
+.importacao-resumo-card strong {
+  color: #020024;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.importacao-resumo-card.success strong {
+  color: #047857;
+}
+
+.importacao-resumo-card.warning strong {
+  color: #b45309;
+}
+
+.importacao-resumo-card.danger strong {
+  color: #b91c1c;
+}
+
+/* =========================
+   FILTROS DA TABELA
+========================= */
+
+.importacoes-page .importacao-box > form.row {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 0 !important;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04);
+}
+
+.importacoes-page .importacao-box > form.row .form-control {
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.importacoes-page .importacao-box > form.row .btn {
+  height: 38px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.importacoes-page .importacao-box > form.row .btn-primary {
+  border: none;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+}
+
+.importacoes-page .importacao-box > form.row .btn-outline-secondary {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+}
+
+/* =========================
+   TABELA
+========================= */
+
+.importacao-table-wrap {
+  border: 1px solid #dce5f2;
+  border-radius: 16px;
+  background: #ffffff;
+  overflow-x: auto;
+  overflow-y: visible;
+  max-height: none;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+}
+
+.importacao-table-wrap table {
+  min-width: 1600px;
+  margin-bottom: 0;
+}
+
+.importacao-table-wrap thead th {
+  background: #020024;
+  color: #ffffff;
+  border-bottom: 3px solid #00d4ff;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 10px 9px;
+}
+
+.importacao-table-wrap tbody td {
+  font-size: 12px;
+  color: #334155;
+  vertical-align: middle;
+  white-space: nowrap;
+  padding: 9px;
+}
+
+.importacao-table-wrap tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.importacao-table-wrap tbody tr:hover {
+  background: #eef6ff;
+}
+
+.importacao-obs {
+  min-width: 230px;
+  max-width: 280px;
+  white-space: normal !important;
+  color: #64748b;
+}
+
+/* =========================
+   BADGES
+========================= */
+
+.importacoes-page .badge {
+  border-radius: 999px;
+  font-size: 10px;
+  padding: 5px 8px;
+  font-weight: 900;
+}
+
+/* =========================
+   AÇÕES DA TABELA
+========================= */
+
+.importacoes-page .table td:last-child,
+.importacoes-page .table th:last-child {
+  min-width: 105px;
+  width: 105px;
+  text-align: center;
+}
+
+.importacoes-page .table td:last-child .d-flex {
+  justify-content: center;
+  gap: 7px !important;
+}
+
+.importacoes-page .table td:last-child .btn {
+  width: 30px;
+  min-width: 30px;
+  height: 26px;
+  border-radius: 8px;
+  font-size: 11px;
+  padding: 0;
+}
+
+.importacoes-page .table td:last-child .btn-outline-primary {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #0052e0;
+}
+
+.importacoes-page .table td:last-child .btn-outline-primary:hover {
+  background: #0052e0;
+  color: #ffffff;
+}
+
+.importacoes-page .table td:last-child .btn-outline-danger {
+  background: #fff7f7;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.importacoes-page .table td:last-child .btn-outline-danger:hover {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+/* =========================
+   MODAIS
+========================= */
+
+.importacoes-page .modal-content {
+  border-radius: 18px;
+  border: 1px solid #dce5f2;
+  overflow: hidden;
+}
+
+.importacoes-page .modal-header {
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  border-bottom: none;
+}
+
+.importacoes-page .modal-title {
+  font-weight: 900;
+}
+
+.importacoes-page .modal-header .btn-close {
+  filter: invert(1);
+}
+
+.importacoes-page .modal-footer .btn {
+  border-radius: 10px;
+  font-weight: 900;
+}
+
+/* =========================
+   RESPONSIVO
+========================= */
+
+@media (max-width: 1300px) {
+  .importacao-form {
+    grid-template-columns: 1fr 100px 120px;
+  }
+
+  .btn-importacao {
+    width: 100%;
+  }
+
+  .importacao-resumo-grid {
+    grid-template-columns: repeat(3, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 992px) {
+  .importacoes-page .gestao-header {
+    align-items: stretch;
+  }
+
+  .importacoes-page .gestao-header .d-flex {
+    width: 100%;
+  }
+
+  .importacoes-page .gestao-header .btn {
+    flex: 1;
+  }
+
+  .importacao-form {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .importacao-resumo-grid {
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .importacoes-page .gestao-header {
+    padding: 18px;
+  }
+
+  .importacoes-page .gestao-header h2 {
+    font-size: 22px;
+  }
+
+  .importacoes-page .gestao-filtro {
+    align-items: stretch;
+  }
+
+  .importacoes-page .gestao-filtro input,
+  .importacoes-page .gestao-filtro .btn-primary {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .importacoes-page .gestao-card > .d-flex:first-child {
+    padding: 18px;
+  }
+
+  .importacoes-page form[action*="/limpar"] {
+    width: 100%;
+  }
+
+  .importacoes-page form[action*="/limpar"] .btn-outline-danger {
+    width: 100%;
+  }
+
+  .importacao-box {
+    padding: 18px;
+  }
+
+  .importacao-form {
+    grid-template-columns: 1fr;
+  }
+
+  .importacao-resumo-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+/* =========================================================
+   IMPORTAÇÕES FINANCEIRAS - AJUSTE FINAL PADRÃO SISTEMA
+========================================================= */
+
+/* Topo sem botões e mais limpo */
+.importacoes-page .gestao-header {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 20px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+.importacoes-page .gestao-header h2 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 900;
+  color: #020024;
+  letter-spacing: -0.6px;
+}
+
+.importacoes-page .gestao-header p {
+  margin: 6px 0 0;
+  color: #53627a;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* Remove o card antigo de competência, caso ainda exista */
+.importacoes-page > .gestao-filtro {
+  display: none !important;
+}
+
+/* Competência agora integrada antes de Contas Pagas */
+.importacoes-competencia-inline {
+  margin-bottom: 18px;
+}
+
+.competencia-inline-form {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 18px;
+  padding: 16px 18px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.competencia-inline-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.competencia-inline-text strong {
+  font-size: 18px;
+  font-weight: 900;
+  color: #020024;
+}
+
+.competencia-inline-text small {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.competencia-inline-fields {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.competencia-inline-fields .form-control {
+  width: 105px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #020024;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.btn-visualizar-mes {
+  height: 38px;
+  min-width: 150px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+  box-shadow: 0 8px 16px rgba(9, 9, 121, 0.18);
+}
+
+.btn-visualizar-mes:hover {
+  filter: brightness(1.07);
+  transform: translateY(-1px);
+}
+
+/* Card no padrão do dashboard */
+.importacoes-page .gestao-card {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+  padding: 0 !important;
+  margin-bottom: 26px !important;
+}
+
+/* Header azul do card */
+.importacoes-page .gestao-card > .d-flex:first-child {
+  margin: 0 !important;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  border-bottom: none;
+}
+
+/* Remove fundo quadrado antigo que estava atrás do título */
+.importacoes-page .gestao-card h5,
+.importacoes-page .gestao-card > h5,
+.importacoes-page .x-card h5 {
+  background: transparent !important;
+  color: #ffffff !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.importacoes-page .gestao-card h5 {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -0.4px;
+}
+
+.importacoes-page .gestao-card h5::before {
+  content: none !important;
+}
+
+.importacoes-page .gestao-card .text-muted {
+  color: rgba(255, 255, 255, 0.86) !important;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Botão limpar mais discreto */
+.importacoes-page form[action*="/limpar"] .btn-outline-danger {
+  height: 38px;
+  border-radius: 999px;
+  padding: 0 16px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 900;
+  box-shadow: none;
+}
+
+.importacoes-page form[action*="/limpar"] .btn-outline-danger:hover {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #b91c1c;
+}
+
+/* Corpo do card */
+.importacao-box {
+  padding: 20px 24px 24px;
+}
+
+/* Form de importação mais compacto */
+.importacao-form {
+  background: #f8fafc;
+  border: 1px solid #dce5f2;
+  border-radius: 16px;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: minmax(300px, 1.4fr) 90px 110px minmax(240px, 1fr) 190px;
+  gap: 12px;
+  align-items: end;
+}
+
+.importacao-form-info strong {
+  color: #020024;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.importacao-form-info small {
+  color: #000;
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+.importacao-field label {
+  font-size: 11px;
+  font-weight: 900;
+  color: #334155;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.importacao-field .form-control {
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Botão importar */
+.btn-importacao {
+  height: 38px;
+  min-width: 180px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+/* Resumos mais compactos */
+.importacao-resumo-grid {
+  grid-template-columns: repeat(5, minmax(135px, 1fr));
+  gap: 10px;
+}
+
+.importacao-resumo-card {
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.importacao-resumo-card span {
+  font-size: 10px;
+  margin-bottom: 6px;
+}
+
+.importacao-resumo-card strong {
+  font-size: 17px;
+}
+
+/* Filtros da tabela compactos */
+.importacoes-page .importacao-box > form.row {
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.importacoes-page .importacao-box > form.row .form-control,
+.importacoes-page .importacao-box > form.row .btn {
+  height: 34px;
+  font-size: 12px;
+  border-radius: 9px;
+}
+
+/* Tabela menor em altura */
+.importacao-table-wrap {
+  border: 1px solid #dce5f2;
+  border-radius: 16px;
+  background: #ffffff;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 360px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+}
+
+.importacao-table-wrap table {
+  min-width: 1350px;
+  margin-bottom: 0;
+}
+
+.importacao-table-wrap thead th {
+  background: #020024;
+  color: #ffffff;
+  border-bottom: 3px solid #00d4ff;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 7px 8px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.importacao-table-wrap tbody td {
+  font-size: 11px;
+  color: #334155;
+  vertical-align: middle;
+  white-space: nowrap;
+  padding: 6px 8px;
+  line-height: 1.2;
+}
+
+.importacao-table-wrap tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.importacao-table-wrap tbody tr:hover {
+  background: #eef6ff;
+}
+
+/* Oculta Telefone e Email em Contas Pagas */
+/* Colunas: 1 Fatura, 2 Fornecedor, 3 Telefone, 4 Email */
+#contas-pagas .importacao-table-wrap th:nth-child(3),
+#contas-pagas .importacao-table-wrap td:nth-child(3),
+#contas-pagas .importacao-table-wrap th:nth-child(4),
+#contas-pagas .importacao-table-wrap td:nth-child(4) {
+  display: none;
+}
+
+/* Oculta Telefone e Email em Contas a Receber */
+/* Colunas: 1 Fatura, 2 Cliente, 3 Telefone, 4 Email */
+#contas-receber .importacao-table-wrap th:nth-child(3),
+#contas-receber .importacao-table-wrap td:nth-child(3),
+#contas-receber .importacao-table-wrap th:nth-child(4),
+#contas-receber .importacao-table-wrap td:nth-child(4) {
+  display: none;
+}
+
+/* Ajusta observação para não estourar altura */
+.importacao-obs {
+  min-width: 180px;
+  max-width: 230px;
+  white-space: nowrap !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Botões de ação menores */
+.importacoes-page .table td:last-child,
+.importacoes-page .table th:last-child {
+  min-width: 90px;
+  width: 90px;
+  text-align: center;
+}
+
+.importacoes-page .table td:last-child .d-flex {
+  justify-content: center;
+  gap: 6px !important;
+}
+
+.importacoes-page .table td:last-child .btn {
+  width: 27px;
+  min-width: 27px;
+  height: 23px;
+  border-radius: 7px;
+  font-size: 10px;
+  padding: 0;
+}
+
+/* Responsivo */
+@media (max-width: 992px) {
+  .competencia-inline-form {
+    align-items: stretch;
+  }
+
+  .competencia-inline-fields {
+    width: 100%;
+  }
+
+  .competencia-inline-fields .form-control,
+  .btn-visualizar-mes {
+    flex: 1;
+  }
+
+  .importacao-form {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .importacao-resumo-grid {
+    grid-template-columns: repeat(2, minmax(135px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .competencia-inline-fields {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .competencia-inline-fields .form-control,
+  .btn-visualizar-mes {
+    width: 100%;
+  }
+
+  .importacao-form {
+    grid-template-columns: 1fr;
+  }
+
+  .importacao-resumo-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .importacao-table-wrap {
+    max-height: 420px;
+  }
+}
+
+
+
+
+/* =========================================================
+   FECHAMENTO MENSAL - PADRÃO EASY CONTROL
+========================================================= */
+
+.fechamento-page .gestao-header,
+.lancamentos-page .gestao-header {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 20px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+.fechamento-page .gestao-header h2,
+.lancamentos-page .gestao-header h2 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 900;
+  color: #020024;
+  letter-spacing: -0.6px;
+}
+
+.fechamento-page .gestao-header p,
+.lancamentos-page .gestao-header p {
+  margin: 6px 0 0;
+  color: #53627a;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.lancamentos-page .gestao-header .btn-success {
+  height: 40px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #064e3b, #10b981);
+  font-weight: 900;
+  padding: 0 18px;
+}
+
+/* Filtro fechamento */
+.fechamento-filtro {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 18px;
+  padding: 16px 18px;
+  margin-bottom: 22px !important;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.fechamento-filtro-info {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.fechamento-filtro-info strong {
+  font-size: 18px;
+  font-weight: 900;
+  color: #020024;
+}
+
+.fechamento-filtro-info small {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.fechamento-filtro .form-control {
+  width: 130px;
+  max-width: 130px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #020024;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.fechamento-filtro .btn-primary {
+  height: 40px;
+  min-width: 160px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+  box-shadow: 0 8px 16px rgba(9, 9, 121, 0.18);
+}
+
+/* Alertas */
+.fechamento-alerta {
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-weight: 700;
+}
+
+/* Excluir fechamento */
+.fechamento-excluir-form {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 18px;
+}
+
+.btn-excluir-fechamento {
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid #fecaca;
+  background: #fff7f7;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 0 18px;
+  box-shadow: 0 8px 18px rgba(185, 28, 28, 0.08);
+}
+
+.btn-excluir-fechamento:hover {
+  background: linear-gradient(135deg, #7f1d1d, #ef4444);
+  border-color: #ef4444;
+  color: #ffffff;
+}
+
+/* Card saldo inicial */
+.fechamento-card {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 20px;
+  overflow: hidden;
+  padding: 0 !important;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+}
+
+.fechamento-card-header {
+  padding: 18px 22px;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+}
+
+.fechamento-card-header h5 {
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.fechamento-card-header small {
+  display: block;
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.fechamento-card-body {
+  padding: 18px;
+}
+
+.fechamento-card-body .form-control {
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-weight: 700;
+}
+
+/* KPIs fechamento */
+.fechamento-kpis {
+  margin-top: 18px;
+}
+
+/* Ações */
+.fechamento-acoes {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.btn-salvar-fechamento {
+  height: 42px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #064e3b, #10b981);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 900;
+  padding: 0 22px;
+  box-shadow: 0 8px 18px rgba(16, 185, 129, 0.18);
+}
+
+.btn-salvar-fechamento:hover {
+  filter: brightness(1.07);
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   LANÇAMENTOS FINANCEIROS - PADRÃO EASY CONTROL
+========================================================= */
+
+.lancamentos-page .gestao-filtros-lancamentos {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  display: grid;
+  grid-template-columns: 90px 110px 150px 160px 1fr 110px 110px;
+  gap: 10px;
+  align-items: center;
+}
+
+.lancamentos-page .gestao-filtros-lancamentos .form-control {
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.lancamentos-page .gestao-filtros-lancamentos .btn {
+  height: 38px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.lancamentos-page .gestao-filtros-lancamentos .btn-primary {
+  border: none;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+}
+
+.lancamentos-page .gestao-filtros-lancamentos .btn-secondary {
+  border: none;
+  background: #64748b;
+}
+
+.lancamentos-card {
+  background: #ffffff;
+  border: 1px solid #dce5f2;
+  border-radius: 20px;
+  overflow: hidden;
+  padding: 0 !important;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+}
+
+.lancamentos-card-header {
+  padding: 18px 22px;
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+}
+
+.lancamentos-card-header h5 {
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.lancamentos-card-header small {
+  display: block;
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.lancamentos-table-wrap table {
+  margin-bottom: 0;
+}
+
+.lancamentos-table-wrap thead th {
+  background: #ffffff;
+  color: #020024;
+  font-size: 12px;
+  font-weight: 900;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.lancamentos-table-wrap tbody td {
+  font-size: 12px;
+  padding: 10px 8px;
+}
+
+@media (max-width: 1100px) {
+  .lancamentos-page .gestao-filtros-lancamentos {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .fechamento-filtro .form-control,
+  .fechamento-filtro .btn-primary {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .fechamento-excluir-form {
+    justify-content: stretch;
+  }
+
+  .btn-excluir-fechamento,
+  .btn-salvar-fechamento {
+    width: 100%;
+  }
+
+  .lancamentos-page .gestao-filtros-lancamentos {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+/* =========================================================
+   RADAR FINANCEIRO - CARDS COMPACTOS + LOTE PAGAS
+========================================================= */
+
+.radar-card-compacto {
+  padding: 10px !important;
+  border-radius: 14px;
+}
+
+.radar-card-compacto .radar-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.radar-card-resumo {
+  flex: 1;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+}
+
+.radar-card-resumo:hover .radar-card-title strong {
+  color: #0052e0;
+}
+
+.radar-card-title strong {
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.radar-card-title small {
+  font-size: 11px;
+}
+
+.radar-card-mini-info {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.radar-card-mini-info span {
+  font-size: 13px;
+  font-weight: 900;
+  color: #020024;
+}
+
+.radar-card-mini-info small {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.radar-card-status {
+  margin-top: 8px;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #1e3a8a;
+  display: inline-flex;
+}
+
+.radar-card-detalhes {
+  padding-top: 10px;
+  margin-top: 10px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.radar-card-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.radar-info-box {
+  padding: 8px;
+  border-radius: 10px;
+}
+
+.radar-info-box span {
+  font-size: 10px;
+}
+
+.radar-info-box strong {
+  font-size: 11px;
+}
+
+.radar-card-obs {
+  margin-top: 8px;
+  font-size: 11px;
+  line-height: 1.35;
+  max-height: 70px;
+  overflow-y: auto;
+}
+
+.radar-menu-btn {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 8px;
+}
+
+.radar-card-check {
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+}
+
+.radar-card-check input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* Lote coluna pagas */
+.radar-pagas-lote {
+  padding: 10px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.radar-pagas-lote form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.radar-pagas-lote-top {
+  display: grid;
+  grid-template-columns: 1fr 62px 78px;
+  gap: 6px;
+  align-items: center;
+}
+
+.radar-check-all {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 900;
+  color: #334155;
+  margin: 0;
+}
+
+.radar-check-all input {
+  width: 15px;
+  height: 15px;
+}
+
+.radar-pagas-lote .form-control {
+  height: 30px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 6px;
+}
+
+.radar-btn-lote {
+  height: 32px;
+  width: 100%;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 0 8px;
+}
+
+.radar-btn-warning {
+  border: none;
+  background: linear-gradient(135deg, #78350f, #f59e0b);
+  color: #ffffff;
+  border-radius: 9px;
+}
+
+.radar-btn-warning:hover {
+  filter: brightness(1.05);
+}
+
+/* Modal nova conta */
+#modalNovaConta .alert-info {
+  border-radius: 12px;
+  border-left: 5px solid #0052e0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Kanban mais limpo */
+.radar-coluna-body {
+  gap: 10px;
+}
+
+.radar-coluna {
+  min-width: 260px;
+}
+
+@media (max-width: 768px) {
+  .radar-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .radar-pagas-lote-top {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+
+/* =========================================================
+   RADAR FINANCEIRO - COLUNAS AJUSTADAS
+   Atrasadas | Vence Hoje | Próximos 7 Dias | Pendentes | Pagas
+========================================================= */
+
+.radar-card-compacto {
+  padding: 10px !important;
+  border-radius: 14px;
+}
+
+.radar-card-compacto .radar-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.radar-card-resumo {
+  flex: 1;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+}
+
+.radar-card-resumo:hover .radar-card-title strong {
+  color: #0052e0;
+}
+
+.radar-card-title strong {
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.radar-card-title small {
+  font-size: 11px;
+}
+
+.radar-card-mini-info {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.radar-card-mini-info span {
+  font-size: 13px;
+  font-weight: 900;
+  color: #020024;
+}
+
+.radar-card-mini-info small {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.radar-card-status {
+  margin-top: 8px;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #1e3a8a;
+  display: inline-flex;
+}
+
+.radar-card-detalhes {
+  padding-top: 10px;
+  margin-top: 10px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.radar-card-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.radar-info-box {
+  padding: 8px;
+  border-radius: 10px;
+}
+
+.radar-info-box span {
+  font-size: 10px;
+}
+
+.radar-info-box strong {
+  font-size: 11px;
+}
+
+.radar-card-obs {
+  margin-top: 8px;
+  font-size: 11px;
+  line-height: 1.35;
+  max-height: 70px;
+  overflow-y: auto;
+}
+
+.radar-menu-btn {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 8px;
+}
+
+.radar-card-check {
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+}
+
+.radar-card-check input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* Lote coluna pagas */
+.radar-pagas-lote {
+  padding: 10px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.radar-pagas-lote form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.radar-pagas-lote-top {
+  display: grid;
+  grid-template-columns: 1fr 62px 78px;
+  gap: 6px;
+  align-items: center;
+}
+
+.radar-check-all {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 900;
+  color: #334155;
+  margin: 0;
+}
+
+.radar-check-all input {
+  width: 15px;
+  height: 15px;
+}
+
+.radar-pagas-lote .form-control {
+  height: 30px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 6px;
+}
+
+.radar-btn-lote {
+  height: 32px;
+  width: 100%;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 0 8px;
+}
+
+.radar-btn-warning {
+  border: none;
+  background: linear-gradient(135deg, #78350f, #f59e0b);
+  color: #ffffff;
+  border-radius: 9px;
+}
+
+.radar-btn-warning:hover {
+  filter: brightness(1.05);
+}
+
+/* Modal nova conta */
+#modalNovaConta .alert-info {
+  border-radius: 12px;
+  border-left: 5px solid #0052e0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Kanban mais limpo */
+.radar-coluna-body {
+  gap: 10px;
+}
+
+.radar-coluna {
+  min-width: 260px;
+}
+
+/* Ajuste para 5 colunas */
+.radar-kanban-grid {
+  grid-template-columns: repeat(5, minmax(260px, 1fr));
+}
+
+@media (max-width: 1400px) {
+  .radar-kanban-grid {
+    grid-template-columns: repeat(3, minmax(260px, 1fr));
+  }
+}
+
+@media (max-width: 992px) {
+  .radar-kanban-grid {
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .radar-kanban-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .radar-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .radar-pagas-lote-top {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+/* =========================================================
+   RADAR FINANCEIRO - CARDS MAIS BAIXOS E COLORIDOS POR COLUNA
+========================================================= */
+
+/* Card base mais compacto */
+.radar-card-compacto {
+  padding: 8px 9px !important;
+  border-radius: 12px;
+  min-height: auto !important;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+  border: 1px solid transparent;
+}
+
+/* Reduz espaços internos */
+.radar-card-compacto .radar-card-header {
+  gap: 6px;
+}
+
+.radar-card-compacto .radar-card-title strong {
+  font-size: 12px;
+  line-height: 1.15;
+}
+
+.radar-card-compacto .radar-card-title small {
+  font-size: 10px;
+  line-height: 1.1;
+}
+
+.radar-card-compacto .radar-card-mini-info {
+  margin-top: 4px;
+}
+
+.radar-card-compacto .radar-card-mini-info span {
+  font-size: 12px;
+}
+
+.radar-card-compacto .radar-card-mini-info small {
+  font-size: 10px;
+}
+
+.radar-card-compacto .radar-card-status {
+  margin-top: 6px;
+  padding: 3px 7px;
+  font-size: 9px;
+}
+
+.radar-card-compacto .radar-menu-btn {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  font-size: 15px;
+}
+
+.radar-card-compacto .radar-card-detalhes {
+  margin-top: 7px;
+  padding-top: 7px;
+}
+
+.radar-card-compacto .radar-info-box {
+  padding: 6px;
+}
+
+.radar-card-compacto .radar-info-box span {
+  font-size: 9px;
+}
+
+.radar-card-compacto .radar-info-box strong {
+  font-size: 10px;
+}
+
+.radar-card-compacto .radar-card-obs {
+  margin-top: 6px;
+  font-size: 10px;
+  max-height: 52px;
+}
+
+/* =========================================================
+   CORES DOS CARDS CONFORME A COLUNA
+========================================================= */
+
+/* Atrasadas - Vermelho */
+.radar-coluna:has(.radar-coluna-header.danger) .radar-card {
+  background: linear-gradient(135deg, #fff5f5, #ffffff);
+  border-color: #fecaca;
+  border-left: 5px solid #dc2626;
+}
+
+.radar-coluna:has(.radar-coluna-header.danger) .radar-card-status {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Vence hoje - Amarelo/Laranja */
+.radar-coluna:has(.radar-coluna-header.warning) .radar-card {
+  background: linear-gradient(135deg, #fffbeb, #ffffff);
+  border-color: #fde68a;
+  border-left: 5px solid #f59e0b;
+}
+
+.radar-coluna:has(.radar-coluna-header.warning) .radar-card-status {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* Próximos 7 dias - Azul */
+.radar-coluna:has(.radar-coluna-header.primary) .radar-card {
+  background: linear-gradient(135deg, #eff6ff, #ffffff);
+  border-color: #bfdbfe;
+  border-left: 5px solid #2563eb;
+}
+
+.radar-coluna:has(.radar-coluna-header.primary) .radar-card-status {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+/* Pendentes - Azul escuro */
+.radar-coluna:has(.radar-coluna-header.dark) .radar-card {
+  background: linear-gradient(135deg, #f8fafc, #ffffff);
+  border-color: #cbd5e1;
+  border-left: 5px solid #020024;
+}
+
+.radar-coluna:has(.radar-coluna-header.dark) .radar-card-status {
+  background: #e2e8f0;
+  color: #020024;
+}
+
+/* Pagas - Verde */
+.radar-coluna:has(.radar-coluna-header.success) .radar-card {
+  background: linear-gradient(135deg, #f0fdf4, #ffffff);
+  border-color: #bbf7d0;
+  border-left: 5px solid #16a34a;
+}
+
+.radar-coluna:has(.radar-coluna-header.success) .radar-card-status {
+  background: #dcfce7;
+  color: #166534;
+}
+
+/* Hover mais bonito */
+.radar-card-compacto:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
+}
+
+/* Evita que o botão de abrir detalhe fique com fundo estranho */
+.radar-card-resumo {
+  background: transparent !important;
+}
+
+/* Ajusta checkbox da coluna pagas */
+.radar-card-check input {
+  width: 14px;
+  height: 14px;
+}
+
+
+
+/* =========================================================
+   RADAR FINANCEIRO - CARD TODO COLORIDO PELA COLUNA
+========================================================= */
+
+/* Base compacta */
+.radar-card-compacto {
+  padding: 8px 9px !important;
+  border-radius: 12px;
+  min-height: auto !important;
+  border: none !important;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.10);
+  overflow: hidden;
+}
+
+/* Textos dentro do card */
+.radar-card-compacto .radar-card-title strong,
+.radar-card-compacto .radar-card-mini-info span,
+.radar-card-compacto .radar-info-box strong {
+  color: #ffffff !important;
+}
+
+.radar-card-compacto .radar-card-title small,
+.radar-card-compacto .radar-card-mini-info small,
+.radar-card-compacto .radar-info-box span,
+.radar-card-compacto .radar-card-obs {
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
+/* Botão de abrir detalhes */
+.radar-card-resumo {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+/* Status dentro do card */
+.radar-card-compacto .radar-card-status {
+  margin-top: 6px;
+  padding: 3px 8px;
+  font-size: 9px;
+  font-weight: 900;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+}
+
+/* Botão menu */
+.radar-card-compacto .radar-menu-btn {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  font-size: 15px;
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+/* Detalhes */
+.radar-card-compacto .radar-card-detalhes {
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(255, 255, 255, 0.22) !important;
+}
+
+.radar-card-compacto .radar-info-box {
+  padding: 6px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+}
+
+/* Checkbox da coluna pagas */
+.radar-card-check input {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: #ffffff;
+}
+
+/* =========================================================
+   CORES DO BACKGROUND DO CARD INTEIRO
+========================================================= */
+
+/* ATRASADAS - vermelho */
+.radar-coluna:has(.radar-coluna-header.danger) .radar-card {
+  background: linear-gradient(135deg, #7f1d1d, #dc2626) !important;
+}
+
+/* VENCE HOJE - laranja */
+.radar-coluna:has(.radar-coluna-header.warning) .radar-card {
+  background: linear-gradient(135deg, #92400e, #f59e0b) !important;
+}
+
+/* PRÓXIMOS 7 DIAS - azul */
+.radar-coluna:has(.radar-coluna-header.primary) .radar-card {
+  background: linear-gradient(135deg, #1e3a8a, #2563eb) !important;
+}
+
+/* PENDENTES - azul escuro */
+.radar-coluna:has(.radar-coluna-header.dark) .radar-card {
+  background: linear-gradient(135deg, #020024, #090979) !important;
+}
+
+/* PAGAS - verde */
+.radar-coluna:has(.radar-coluna-header.success) .radar-card {
+  background: linear-gradient(135deg, #064e3b, #16a34a) !important;
+}
+
+/* Hover */
+.radar-card-compacto:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.04);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.18);
+}
+
+/* Observação */
+.radar-card-compacto .radar-card-obs {
+  margin-top: 6px;
+  font-size: 10px;
+  max-height: 52px;
+  overflow-y: auto;
+}
+
+/* Ajustes de altura menor */
+.radar-card-compacto .radar-card-header {
+  gap: 6px;
+}
+
+.radar-card-compacto .radar-card-title strong {
+  font-size: 12px;
+  line-height: 1.15;
+}
+
+.radar-card-compacto .radar-card-title small {
+  font-size: 10px;
+  line-height: 1.1;
+}
+
+.radar-card-compacto .radar-card-mini-info {
+  margin-top: 4px;
+}
+
+.radar-card-compacto .radar-card-mini-info span {
+  font-size: 12px;
+}
+
+.radar-card-compacto .radar-card-mini-info small {
+  font-size: 10px;
+}
+
+
+
+/* =========================================================
+   RADAR - AJUSTE FINO DOS CARDS COLORIDOS E MENU
+========================================================= */
+
+/* Card mais baixo e mais alinhado */
+.radar-card-compacto {
+  padding: 9px 10px !important;
+  border-radius: 13px !important;
+  min-height: 118px !important;
+  max-height: none !important;
+  overflow: visible !important;
+  position: relative;
+}
+
+/* Header do card */
+.radar-card-compacto .radar-card-header {
+  display: grid !important;
+  grid-template-columns: auto 1fr auto;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* Checkbox menor e alinhado */
+.radar-card-check {
+  margin-top: 2px !important;
+}
+
+.radar-card-check input {
+  width: 15px !important;
+  height: 15px !important;
+}
+
+/* Área clicável do resumo */
+.radar-card-resumo {
+  min-width: 0;
+  width: 100%;
+}
+
+/* Título e fornecedor */
+.radar-card-title strong {
+  display: block;
+  font-size: 13px !important;
+  line-height: 1.15 !important;
+  font-weight: 900;
+  color: #ffffff !important;
+  max-width: 170px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.radar-card-title small {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px !important;
+  line-height: 1.1 !important;
+  color: rgba(255,255,255,0.82) !important;
+  max-width: 170px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Valor e vencimento */
+.radar-card-mini-info {
+  margin-top: 7px !important;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start !important;
+  gap: 2px !important;
+}
+
+.radar-card-mini-info span {
+  font-size: 13px !important;
+  font-weight: 950 !important;
+  color: #ffffff !important;
+}
+
+.radar-card-mini-info small {
+  font-size: 10px !important;
+  color: rgba(255,255,255,0.78) !important;
+}
+
+/* Status menor */
+.radar-card-status {
+  margin-top: 8px !important;
+  padding: 4px 8px !important;
+  font-size: 9px !important;
+  line-height: 1 !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,0.20) !important;
+  color: #ffffff !important;
+  width: fit-content;
+}
+
+/* Botão de menu */
+.radar-menu-btn {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  border-radius: 9px !important;
+  background: rgba(255,255,255,0.18) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255,255,255,0.18) !important;
+  font-size: 17px !important;
+  line-height: 1 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radar-menu-btn:hover {
+  background: rgba(255,255,255,0.30) !important;
+}
+
+/* Dropdown mais bonito e menor */
+.radar-card .dropdown-menu {
+  min-width: 138px !important;
+  padding: 6px !important;
+  border-radius: 12px !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 14px 30px rgba(15,23,42,0.22) !important;
+  overflow: hidden;
+}
+
+/* Itens do menu */
+.radar-card .dropdown-item {
+  border-radius: 8px !important;
+  padding: 8px 10px !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  color: #1f2937 !important;
+}
+
+.radar-card .dropdown-item:hover {
+  background: #eff6ff !important;
+  color: #0052e0 !important;
+}
+
+.radar-card .dropdown-item.text-danger {
+  color: #dc2626 !important;
+}
+
+.radar-card .dropdown-item.text-danger:hover {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
+/* Forms dentro do dropdown sem margem esquisita */
+.radar-card .dropdown-menu form {
+  margin: 0 !important;
+}
+
+/* Detalhes quando abrir o card */
+.radar-card-detalhes {
+  margin-top: 9px !important;
+  padding-top: 9px !important;
+  border-top: 1px solid rgba(255,255,255,0.22) !important;
+}
+
+.radar-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 7px !important;
+}
+
+.radar-info-box {
+  padding: 7px !important;
+  border-radius: 9px !important;
+  background: rgba(255,255,255,0.13) !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+}
+
+.radar-info-box span {
+  font-size: 9px !important;
+  color: rgba(255,255,255,0.75) !important;
+}
+
+.radar-info-box strong {
+  font-size: 10px !important;
+  color: #ffffff !important;
+}
+
+/* Observação */
+.radar-card-obs {
+  margin-top: 7px !important;
+  padding: 7px !important;
+  border-radius: 9px !important;
+  background: rgba(255,255,255,0.13) !important;
+  color: rgba(255,255,255,0.84) !important;
+  font-size: 10px !important;
+  max-height: 54px !important;
+  overflow-y: auto;
+}
+
+/* Garante que a coluna não corte o dropdown */
+.radar-coluna,
+.radar-coluna-body {
+  overflow: visible !important;
+}
+
+/* Mas mantém rolagem geral se tiver muitos cards */
+.radar-kanban-grid {
+  overflow: visible !important;
+}
+
+
+

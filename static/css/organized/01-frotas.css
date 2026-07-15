@@ -1,0 +1,2396 @@
+/* =========================
+   KPIs SOMENTE NO DASHBOARD
+========================= */
+
+.dashboard-page .dashboard-kpis .row {
+  margin-bottom: 18px !important;
+}
+
+.dashboard-page .dashboard-kpis .kpi-link {
+  text-decoration: none;
+}
+
+.dashboard-page .dashboard-kpis .kpi-box {
+  min-height: 104px;
+  border-radius: 16px;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: linear-gradient(135deg, var(--dash-dark), var(--dash-mid), var(--dash-blue));
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.13);
+  overflow: hidden;
+  position: relative;
+}
+
+.dashboard-page .dashboard-kpis .kpi-box::before {
+  content: "";
+  position: absolute;
+  inset: auto -40px -45px auto;
+  width: 120px;
+  height: 120px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 50%;
+}
+
+.dashboard-page .dashboard-kpis .kpi-box:hover {
+  transform: translateY(-4px);
+  filter: brightness(1.05);
+}
+
+.dashboard-page .dashboard-kpis .kpi-box.danger {
+  background: linear-gradient(135deg, #450a0a, #991b1b, #ef4444);
+}
+
+.dashboard-page .dashboard-kpis .kpi-box.success {
+  background: linear-gradient(135deg, #022c22, #047857, #10b981);
+}
+
+.dashboard-page .dashboard-kpis .kpi-box.warning {
+  background: linear-gradient(135deg, #451a03, #b45309, #f59e0b);
+}
+
+.dashboard-page .dashboard-kpis .kpi-icon {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  backdrop-filter: blur(4px);
+}
+
+.dashboard-page .dashboard-kpis .kpi-box h2 {
+  font-size: 30px;
+  font-weight: 900;
+  margin: 0;
+  line-height: 1;
+}
+
+.dashboard-page .dashboard-kpis .kpi-box span {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  opacity: 0.9;
+}
+
+/* =========================
+   ÚLTIMAS FINALIZAÇÕES
+========================= */
+
+.dashboard-page .ultimas-finalizacoes-box {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dashboard-page .ultima-finalizacao-item {
+  background: #f8fafc;
+  border: 1px solid var(--dash-border);
+  border-left: 4px solid #10b981;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.04);
+}
+
+.dashboard-page .ultima-finalizacao-item:hover {
+  background: #eefcf6;
+  transform: translateX(3px);
+}
+
+.dashboard-page .ultima-finalizacao-icon {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #064e3b, #10b981);
+  color: #ffffff;
+  font-size: 16px;
+}
+
+.dashboard-page .ultima-finalizacao-info strong {
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--dash-text);
+}
+
+.dashboard-page .ultima-finalizacao-info small {
+  font-size: 11px;
+  color: var(--dash-muted);
+}
+
+.dashboard-page .ultima-finalizacao-action {
+  color: #10b981;
+}
+
+/* =========================
+   AJUSTE DO FUNIL PARA CONVERSAR COM OS OUTROS CARDS
+========================= */
+
+.dashboard-page .funil-executivo-card {
+  height: 100%;
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  border: 1px solid var(--dash-border);
+}
+
+.dashboard-page .funil-executivo-header {
+  min-height: 58px;
+  background: linear-gradient(135deg, var(--dash-dark), var(--dash-mid), var(--dash-blue));
+}
+
+.dashboard-page .funil-executivo-header h4 {
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.dashboard-page .funil-executivo-header small {
+  font-size: 11px;
+}
+
+.dashboard-page .funil-executivo-header span {
+  background: rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+/* =========================
+   RESPONSIVO
+========================= */
+
+@media (max-width: 768px) {
+  .dashboard-page .dashboard-filter {
+    flex-direction: column;
+  }
+
+  .dashboard-page .dashboard-filter .btn {
+    width: 100%;
+  }
+
+  .dashboard-page .dashboard-executive-body .grafico-box {
+    height: 240px;
+  }
+}
+
+
+
+
+
+/* =========================
+   🔧 AJUSTE FINO - HEADER FUNIL NO DASHBOARD
+========================= */
+
+.dashboard-page .funil-executivo-header {
+  min-height: 54px !important;
+  padding: 12px 18px !important;
+}
+
+.dashboard-page .funil-executivo-header h4 {
+  font-size: 14px !important;
+  line-height: 1.1 !important;
+  margin: 0 !important;
+}
+
+.dashboard-page .funil-executivo-header small {
+  font-size: 10px !important;
+  line-height: 1.1 !important;
+  margin-top: 2px !important;
+}
+
+.dashboard-page .funil-executivo-header span {
+  padding: 5px 10px !important;
+  font-size: 10px !important;
+}
+
+
+
+
+
+
+
+.frota-card {
+  background: linear-gradient(135deg, #020024, #090979, #00d4ff);
+  color: #ffffff;
+  border-radius: 16px;
+  padding: 18px 20px;
+  min-height: 120px;
+  text-decoration: none;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+  border: 1px solid rgba(255,255,255,0.14);
+  transition: 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.frota-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.25);
+  color: #ffffff;
+}
+
+.frota-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top right, rgba(255,255,255,0.22), transparent 35%),
+    linear-gradient(135deg, transparent, rgba(255,255,255,0.08));
+  pointer-events: none;
+}
+
+.frota-numero {
+  position: relative;
+  z-index: 2;
+  font-size: 26px;
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+
+.frota-info {
+  position: relative;
+  z-index: 2;
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0.92;
+}
+
+.frota-link-text {
+  position: relative;
+  z-index: 2;
+  margin-top: 18px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+
+
+
+
+
+/* =========================================================
+   🚚 FROTAS - CARDS PREMIUM AZUL GRADIENTE
+   Escopo seguro apenas para a tela .frotas-page
+========================================================= */
+
+.frotas-page {
+  padding: 4px 2px 30px;
+}
+
+/* HEADER DA PÁGINA */
+.frotas-page .frotas-page-header {
+  margin-bottom: 20px;
+}
+
+.frotas-page .frotas-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.frotas-page .frotas-title-icon {
+  width: 54px;
+  height: 54px;
+  min-width: 54px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #020024, #090979, #00d4ff);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.18);
+}
+
+.frotas-page .titulo-pagina {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1.1;
+}
+
+.frotas-page .frotas-subtitle {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* GRID */
+.frotas-page .frotas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 18px;
+}
+
+/* CARD */
+.frotas-page .frota-card {
+  min-height: 138px;
+  background:
+    radial-gradient(circle at top right, rgba(255,255,255,0.28), transparent 34%),
+    linear-gradient(135deg, #020024 0%, #090979 48%, #00d4ff 100%);
+  color: #ffffff;
+  border-radius: 18px;
+  padding: 18px;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.16);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  transition: 0.25s ease;
+}
+
+/* brilho suave */
+.frotas-page .frota-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      120deg,
+      transparent 0%,
+      rgba(255,255,255,0.18) 42%,
+      transparent 70%
+    );
+  transform: translateX(-100%);
+  transition: 0.55s ease;
+  pointer-events: none;
+}
+
+.frotas-page .frota-card::after {
+  content: "";
+  position: absolute;
+  right: -40px;
+  bottom: -55px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.10);
+  pointer-events: none;
+}
+
+.frotas-page .frota-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.26);
+  color: #ffffff;
+}
+
+.frotas-page .frota-card:hover::before {
+  transform: translateX(100%);
+}
+
+/* ÍCONE */
+.frotas-page .frota-card-icon {
+  width: 54px;
+  height: 54px;
+  min-width: 54px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.92);
+  color: #0f4edb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.55),
+    0 8px 18px rgba(0,0,0,0.16);
+  position: relative;
+  z-index: 2;
+}
+
+/* CONTEÚDO */
+.frotas-page .frota-card-content {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+}
+
+.frotas-page .frota-numero {
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+  margin-bottom: 8px;
+  color: #ffffff;
+}
+
+.frotas-page .frota-divider {
+  width: 28px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.88);
+  margin-bottom: 8px;
+}
+
+.frotas-page .frota-info {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.92);
+}
+
+.frotas-page .frota-link-text {
+  margin-top: 18px;
+  font-size: 13px;
+  font-weight: 900;
+  color: rgba(255,255,255,0.96);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: 0.2s ease;
+}
+
+.frotas-page .frota-card:hover .frota-link-text {
+  transform: translateX(4px);
+}
+
+/* RESPONSIVO */
+@media (max-width: 768px) {
+  .frotas-page .frotas-grid {
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 14px;
+  }
+
+  .frotas-page .frota-card {
+    min-height: 128px;
+    padding: 15px;
+  }
+
+  .frotas-page .frota-card-icon {
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    font-size: 22px;
+  }
+
+  .frotas-page .frota-numero {
+    font-size: 24px;
+  }
+}
+
+
+
+/* =========================================================
+   🚚 FROTAS - RESUMO + BUSCA
+========================================================= */
+
+.frotas-page .frotas-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.frotas-page .frotas-resumo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.frotas-page .frotas-resumo-card {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  min-height: 120px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+  position: relative;
+  overflow: hidden;
+}
+
+.frotas-page .frotas-resumo-card::after {
+  content: "";
+  position: absolute;
+  right: -30px;
+  bottom: -45px;
+  width: 140px;
+  height: 90px;
+  background: rgba(0, 212, 255, 0.08);
+  border-radius: 50%;
+}
+
+.frotas-page .frotas-resumo-icon {
+  width: 62px;
+  height: 62px;
+  min-width: 62px;
+  border-radius: 50%;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+}
+
+.frotas-page .frotas-resumo-icon.azul {
+  background: linear-gradient(135deg, #0f4edb, #00d4ff);
+}
+
+.frotas-page .frotas-resumo-icon.roxo {
+  background: linear-gradient(135deg, #4c1d95, #7c3aed);
+}
+
+.frotas-page .frotas-resumo-icon.verde {
+  background: linear-gradient(135deg, #047857, #14b8a6);
+}
+
+.frotas-page .frotas-resumo-icon.azul2 {
+  background: linear-gradient(135deg, #1d4ed8, #6366f1);
+}
+
+.frotas-page .frotas-resumo-info {
+  position: relative;
+  z-index: 2;
+}
+
+.frotas-page .frotas-resumo-info span {
+  display: block;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #334155;
+  margin-bottom: 5px;
+}
+
+.frotas-page .frotas-resumo-info strong {
+  display: block;
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 900;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.frotas-page .frotas-resumo-info small {
+  display: block;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.frotas-page .frotas-resumo-line {
+  width: 42px;
+  height: 4px;
+  border-radius: 999px;
+  margin-top: 12px;
+}
+
+.frotas-page .frotas-resumo-line.azul {
+  background: #0f4edb;
+}
+
+.frotas-page .frotas-resumo-line.roxo {
+  background: #7c3aed;
+}
+
+.frotas-page .frotas-resumo-line.verde {
+  background: #14b8a6;
+}
+
+.frotas-page .frotas-resumo-line.azul2 {
+  background: #1d4ed8;
+}
+
+/* BUSCA */
+.frotas-page .frotas-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 18px;
+}
+
+.frotas-page .frotas-search-box {
+  width: 320px;
+  max-width: 100%;
+  height: 44px;
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+.frotas-page .frotas-search-box span {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.frotas-page .frotas-search-box input {
+  border: none;
+  outline: none;
+  background: transparent;
+  flex: 1;
+  height: 100%;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.frotas-page .frotas-search-box input::placeholder {
+  color: #94a3b8;
+}
+
+/* RESPONSIVO */
+@media (max-width: 1100px) {
+  .frotas-page .frotas-resumo-grid {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .frotas-page .frotas-resumo-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .frotas-page .frotas-toolbar {
+    justify-content: stretch;
+  }
+
+  .frotas-page .frotas-search-box {
+    width: 100%;
+  }
+}
+
+
+
+/* =========================================================
+   🚚 FROTAS - AJUSTE FINAL PREMIUM
+   Busca em cima + cards brancos padronizados
+========================================================= */
+
+.frotas-page {
+  padding: 4px 2px 30px;
+}
+
+/* HEADER COM BUSCA */
+.frotas-page .frotas-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.frotas-page .frotas-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.frotas-page .frotas-title-icon {
+  width: 54px;
+  height: 54px;
+  min-width: 54px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #0f4edb, #00d4ff);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.16);
+}
+
+.frotas-page .titulo-pagina {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1.1;
+}
+
+.frotas-page .frotas-subtitle {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* BUSCA NO TOPO */
+.frotas-page .frotas-search-box {
+  width: 320px;
+  max-width: 100%;
+  height: 44px;
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+.frotas-page .frotas-search-box span {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.frotas-page .frotas-search-box input {
+  border: none;
+  outline: none;
+  background: transparent;
+  flex: 1;
+  height: 100%;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.frotas-page .frotas-search-box input::placeholder {
+  color: #94a3b8;
+}
+
+/* CARDS DE RESUMO */
+.frotas-page .frotas-resumo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.frotas-page .frotas-resumo-card {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  min-height: 120px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+  position: relative;
+  overflow: hidden;
+}
+
+.frotas-page .frotas-resumo-card::after {
+  content: "";
+  position: absolute;
+  right: -30px;
+  bottom: -45px;
+  width: 140px;
+  height: 90px;
+  background: rgba(0, 212, 255, 0.08);
+  border-radius: 50%;
+}
+
+.frotas-page .frotas-resumo-icon {
+  width: 62px;
+  height: 62px;
+  min-width: 62px;
+  border-radius: 50%;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+}
+
+.frotas-page .frotas-resumo-icon.azul {
+  background: linear-gradient(135deg, #0f4edb, #00d4ff);
+}
+
+.frotas-page .frotas-resumo-icon.roxo {
+  background: linear-gradient(135deg, #4c1d95, #7c3aed);
+}
+
+.frotas-page .frotas-resumo-icon.verde {
+  background: linear-gradient(135deg, #047857, #14b8a6);
+}
+
+.frotas-page .frotas-resumo-icon.azul2 {
+  background: linear-gradient(135deg, #1d4ed8, #6366f1);
+}
+
+.frotas-page .frotas-resumo-info {
+  position: relative;
+  z-index: 2;
+}
+
+.frotas-page .frotas-resumo-info span {
+  display: block;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #334155;
+  margin-bottom: 5px;
+}
+
+.frotas-page .frotas-resumo-info strong {
+  display: block;
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 900;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.frotas-page .frotas-resumo-info small {
+  display: block;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.frotas-page .frotas-resumo-line {
+  width: 42px;
+  height: 4px;
+  border-radius: 999px;
+  margin-top: 12px;
+}
+
+.frotas-page .frotas-resumo-line.azul {
+  background: #0f4edb;
+}
+
+.frotas-page .frotas-resumo-line.roxo {
+  background: #7c3aed;
+}
+
+.frotas-page .frotas-resumo-line.verde {
+  background: #14b8a6;
+}
+
+.frotas-page .frotas-resumo-line.azul2 {
+  background: #1d4ed8;
+}
+
+/* GRID DAS FROTAS */
+.frotas-page .frotas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 18px;
+}
+
+/* CARD FROTA BRANCO PADRÃO RESUMO */
+.frotas-page .frota-card {
+  min-height: 138px;
+ background-image: radial-gradient( circle farthest-corner at -24.7% -47.3%,  rgba(6,130,165,1) 0%, rgba(34,48,86,1) 66.8%, rgba(15,23,42,1) 100.2% );
+  color: #ffffff;
+  border-radius: 16px;
+  padding: 18px;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #dbe3ef;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  transition: 0.25s ease;
+}
+
+/* detalhe suave igual cards de cima */
+.frotas-page .frota-card::after {
+  content: "";
+  position: absolute;
+  right: -32px;
+  bottom: -44px;
+  width: 140px;
+  height: 90px;
+  background: rgba(0, 212, 255, 0.08);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.frotas-page .frota-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.12);
+  color: #0f172a;
+}
+
+/* ÍCONE */
+.frotas-page .frota-card-icon {
+  width: 54px;
+  height: 54px;
+  min-width: 54px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0f4edb, #00d4ff);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.13);
+  position: relative;
+  z-index: 2;
+}
+
+/* CONTEÚDO */
+.frotas-page .frota-card-content {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+}
+
+.frotas-page .frota-numero {
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+  margin-bottom: 8px;
+  color: #ffffff;
+}
+
+.frotas-page .frota-divider {
+  width: 28px;
+  height: 3px;
+  border-radius: 999px;
+  background: #1d4ed8;
+  margin-bottom: 8px;
+}
+
+.frotas-page .frota-info {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.frotas-page .frota-link-text {
+  margin-top: 18px;
+  font-size: 13px;
+  font-weight: 900;
+  color: #ffffff;;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: 0.2s ease;
+}
+
+.frotas-page .frota-card:hover .frota-link-text {
+  transform: translateX(4px);
+}
+
+/* RESPONSIVO */
+@media (max-width: 1100px) {
+  .frotas-page .frotas-resumo-grid {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .frotas-page .frotas-page-header {
+    align-items: flex-start;
+  }
+
+  .frotas-page .frotas-search-box {
+    width: 100%;
+  }
+
+  .frotas-page .frotas-grid {
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 14px;
+  }
+
+  .frotas-page .frota-card {
+    min-height: 128px;
+    padding: 15px;
+  }
+
+  .frotas-page .frota-card-icon {
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    font-size: 22px;
+  }
+
+  .frotas-page .frota-numero {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 650px) {
+  .frotas-page .frotas-resumo-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+/* =========================================================
+   🚚 FROTAS - IMAGEM DO CAMINHÃO NOS ÍCONES
+========================================================= */
+
+.frotas-page .frotas-title-icon img,
+.frotas-page .frotas-resumo-icon img,
+.frotas-page .frota-card-icon img {
+  width: 82%;
+  height: 82%;
+  object-fit: contain;
+  display: block;
+}
+
+.frotas-page .frotas-title-icon,
+.frotas-page .frotas-resumo-icon,
+.frotas-page .frota-card-icon {
+  overflow: hidden;
+}
+
+/* Ajuste especial do caminhão nos cards menores */
+.frotas-page .frota-card-icon img {
+  width: 90%;
+  height: 90%;
+}
+
+/* Deixa o fundo branco para destacar o caminhão */
+.frotas-page .frota-card-icon {
+  background: #ffffff !important;
+}
+
+/* No card de resumo, mantém o círculo azul mas mostra a imagem limpa */
+.frotas-page .frotas-resumo-icon.azul img {
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+}
+
+/* Ícone grande do título */
+.frotas-page .frotas-title-icon img {
+  width: 95%;
+  height: 95%;
+}
+
+
+
+/* =========================
+   FOOTER FIXO DO SISTEMA
+========================= */
+
+.app-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 76px;
+  background: #f8fafc;
+  border-top: 1px solid #dbe3ef;
+  box-shadow: 0 -6px 18px rgba(15, 23, 42, 0.08);
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-footer-content {
+  width: 100%;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-footer-text {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+/* Dá espaço para o conteúdo não ficar escondido atrás do footer */
+body {
+  padding-bottom: 86px;
+}
+
+/* =========================
+   SIDINHO DENTRO DO ESPAÇO DO FOOTER
+========================= */
+
+.sidinho-widget {
+  right: 22px !important;
+  bottom: 10px !important;
+  z-index: 1200 !important;
+}
+
+.sidinho-bubble-alert {
+  bottom: 18px !important;
+  right: 82px !important;
+}
+
+.sidinho-chat-panel {
+  bottom: 88px !important;
+  right: 0 !important;
+}
+
+
+
+/* =========================================================
+   🔧 AJUSTE FUNIL DE CAUSAS - BARRAS MAIS BONITAS
+========================================================= */
+
+.dashboard-page .funil-executivo-body {
+  grid-template-columns: 1fr 260px !important;
+  gap: 28px !important;
+  padding: 26px 28px !important;
+  align-items: flex-start;
+}
+
+.dashboard-page .funil-executivo-chart {
+  width: 100% !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+}
+
+.dashboard-page .funil-executivo-row {
+  display: grid !important;
+  grid-template-columns: 150px minmax(220px, 1fr) 62px !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.dashboard-page .funil-executivo-label {
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  color: #020024 !important;
+  text-align: right !important;
+  line-height: 1.15 !important;
+}
+
+.dashboard-page .funil-executivo-track {
+  width: 100% !important;
+  height: 34px !important;
+  background: #eaf2ff !important;
+  border-radius: 999px !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+.dashboard-page .funil-executivo-bar {
+  height: 100% !important;
+  min-width: 42px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #020024, #090979, #00d4ff) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  padding-right: 12px !important;
+  color: #ffffff !important;
+  font-weight: 900 !important;
+  box-shadow: 0 8px 16px rgba(9, 9, 121, 0.22) !important;
+}
+
+.dashboard-page .funil-executivo-bar strong {
+  font-size: 15px !important;
+  line-height: 1 !important;
+}
+
+.dashboard-page .funil-executivo-percent {
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  color: #020024 !important;
+}
+
+/* TABELA */
+.dashboard-page .funil-executivo-table {
+  width: 260px !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  border: 1px solid #dbe3ef !important;
+}
+
+.dashboard-page .funil-executivo-table table {
+  width: 100% !important;
+  font-size: 13px !important;
+}
+
+.dashboard-page .funil-executivo-table th,
+.dashboard-page .funil-executivo-table td {
+  padding: 12px !important;
+}
+
+/* RESPONSIVO */
+@media (max-width: 1200px) {
+  .dashboard-page .funil-executivo-body {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-page .funil-executivo-table {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-page .funil-executivo-row {
+    grid-template-columns: 110px minmax(140px, 1fr) 52px !important;
+  }
+
+  .dashboard-page .funil-executivo-label {
+    font-size: 11px !important;
+  }
+
+  .dashboard-page .funil-executivo-track {
+    height: 30px !important;
+  }
+}
+
+
+
+/* =========================================================
+   🔧 CORREÇÃO FINAL - FUNIL NÃO SOBREPOR A TABELA
+========================================================= */
+
+.dashboard-page .funil-executivo-card {
+  overflow: hidden !important;
+}
+
+.dashboard-page .funil-executivo-body {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 260px !important;
+  gap: 24px !important;
+  padding: 26px !important;
+  align-items: flex-start !important;
+}
+
+/* Área das barras */
+.dashboard-page .funil-executivo-chart {
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+}
+
+/* Cada linha do funil */
+.dashboard-page .funil-executivo-row {
+  display: grid !important;
+  grid-template-columns: 140px minmax(120px, 1fr) 58px !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+/* Texto da causa */
+.dashboard-page .funil-executivo-label {
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  color: #020024 !important;
+  text-align: right !important;
+  line-height: 1.15 !important;
+  word-break: normal !important;
+}
+
+/* Fundo da barra */
+.dashboard-page .funil-executivo-track {
+  width: 100% !important;
+  height: 34px !important;
+  background: #eaf2ff !important;
+  border-radius: 999px !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+/* Barra preenchida */
+.dashboard-page .funil-executivo-bar {
+  height: 100% !important;
+  min-width: 42px !important;
+  max-width: 100% !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #020024, #090979, #00d4ff) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  padding-right: 12px !important;
+  color: #ffffff !important;
+  font-weight: 900 !important;
+  box-shadow: 0 8px 16px rgba(9, 9, 121, 0.22) !important;
+}
+
+.dashboard-page .funil-executivo-bar strong {
+  font-size: 15px !important;
+  line-height: 1 !important;
+}
+
+.dashboard-page .funil-executivo-percent {
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  color: #020024 !important;
+  white-space: nowrap !important;
+}
+
+/* Tabela */
+.dashboard-page .funil-executivo-table {
+  width: 260px !important;
+  min-width: 260px !important;
+  max-width: 260px !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  border: 1px solid #dbe3ef !important;
+  align-self: flex-start !important;
+}
+
+.dashboard-page .funil-executivo-table table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-size: 13px !important;
+}
+
+.dashboard-page .funil-executivo-table th,
+.dashboard-page .funil-executivo-table td {
+  padding: 11px 12px !important;
+  white-space: normal !important;
+}
+
+/* Quando o card ficar apertado, a tabela vai para baixo */
+@media (max-width: 1500px) {
+  .dashboard-page .funil-executivo-body {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-page .funil-executivo-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
+
+/* Ajuste mobile */
+@media (max-width: 768px) {
+  .dashboard-page .funil-executivo-body {
+    padding: 18px !important;
+  }
+
+  .dashboard-page .funil-executivo-row {
+    grid-template-columns: 105px minmax(90px, 1fr) 48px !important;
+    gap: 8px !important;
+  }
+
+  .dashboard-page .funil-executivo-label {
+    font-size: 11px !important;
+  }
+
+  .dashboard-page .funil-executivo-track {
+    height: 30px !important;
+  }
+
+  .dashboard-page .funil-executivo-percent {
+    font-size: 11px !important;
+  }
+}
+
+
+/* =========================================================
+   🔧 ÚLTIMAS FINALIZAÇÕES ABAIXO - MAIS BONITO
+========================================================= */
+
+.dashboard-page .ultimas-finalizacoes-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dashboard-page .ultima-finalizacao-item {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.dashboard-page .ultima-finalizacao-info {
+  flex: 1;
+}
+
+.dashboard-page .ultima-finalizacao-action {
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   💰 GESTÃO FINANCEIRA
+========================================================= */
+
+.gestao-page {
+  padding-bottom: 30px;
+}
+
+.gestao-header {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin-bottom: 18px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.gestao-header h2 {
+  margin: 0;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.gestao-header p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.gestao-filtro {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+  max-width: 420px;
+}
+
+.gestao-filtro .form-control {
+  height: 42px;
+  border-radius: 10px;
+}
+
+.gestao-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.gestao-kpi {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+  position: relative;
+  overflow: hidden;
+}
+
+.gestao-kpi::after {
+  content: "";
+  position: absolute;
+  right: -30px;
+  bottom: -40px;
+  width: 120px;
+  height: 90px;
+  border-radius: 50%;
+  background: rgba(0, 212, 255, 0.08);
+}
+
+.gestao-kpi span {
+  display: block;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #64748b;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+
+.gestao-kpi strong {
+  display: block;
+  color: #0f172a;
+  font-size: 24px;
+  font-weight: 900;
+  position: relative;
+  z-index: 2;
+}
+
+.gestao-kpi.success strong {
+  color: #059669;
+}
+
+.gestao-kpi.danger strong {
+  color: #dc2626;
+}
+
+.gestao-card {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+}
+
+.gestao-card h5 {
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  color: #ffffff;
+  padding: 14px 18px;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.gestao-ranking-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.gestao-ranking-item span {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.gestao-ranking-item strong {
+  white-space: nowrap;
+  color: #0f172a;
+}
+
+.gestao-form {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+}
+
+@media (max-width: 1100px) {
+  .gestao-kpis {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .gestao-kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .gestao-filtro {
+    flex-direction: column;
+    max-width: 100%;
+  }
+
+  .skew-item2{
+  background color: blue;
+  }
+}
+
+
+
+/* =========================================================
+   💰 GESTÃO - FILTROS E TABELA DE LANÇAMENTOS
+========================================================= */
+
+.gestao-filtros-lancamentos {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+  display: grid;
+  grid-template-columns: 90px 110px 150px 160px 1fr 100px 100px;
+  gap: 10px;
+  align-items: center;
+}
+
+.gestao-filtros-lancamentos .form-control,
+.gestao-filtros-lancamentos .btn {
+  height: 40px;
+  border-radius: 10px;
+}
+
+.gestao-page .table th {
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.gestao-page .table td {
+  font-size: 13px;
+}
+
+.gestao-page .table td:last-child,
+.gestao-page .table th:last-child {
+  width: 90px;
+  min-width: 90px;
+  max-width: 90px;
+}
+
+@media (max-width: 1100px) {
+  .gestao-filtros-lancamentos {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 650px) {
+  .gestao-filtros-lancamentos {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+
+/* =========================================================
+   📥 GESTÃO - IMPORTAÇÕES FINANCEIRAS
+========================================================= */
+
+.importacoes-page .gestao-card {
+  overflow: hidden;
+}
+
+.importacao-box {
+  padding: 16px;
+}
+
+.importacao-form {
+  background: #f8fafc;
+  border: 1px solid #dbe3ef;
+  border-radius: 14px;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 1fr 320px 220px;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.importacao-form strong {
+  display: block;
+  font-size: 14px;
+  color: #0f172a;
+  font-weight: 900;
+}
+
+.importacao-form small {
+  display: block;
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 3px;
+}
+
+.importacao-form .form-control,
+.importacao-form .btn {
+  height: 42px;
+  border-radius: 10px;
+}
+
+.importacao-resumo-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(130px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.importacao-resumo-card {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+}
+
+.importacao-resumo-card span {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #64748b;
+  font-weight: 900;
+  margin-bottom: 4px;
+}
+
+.importacao-resumo-card strong {
+  font-size: 18px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.importacao-resumo-card.success strong {
+  color: #059669;
+}
+
+.importacao-resumo-card.danger strong {
+  color: #dc2626;
+}
+
+.importacao-resumo-card.warning strong {
+  color: #b45309;
+}
+
+.importacao-table-wrap {
+  border: 1px solid #dbe3ef;
+  border-radius: 14px;
+  overflow: auto;
+  max-height: 520px;
+}
+
+.importacao-table-wrap table {
+  min-width: 1500px;
+}
+
+.importacao-table-wrap thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #0f172a !important;
+  color: #ffffff !important;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.importacao-table-wrap td {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.importacao-obs {
+  max-width: 360px;
+  white-space: nowrap !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 1100px) {
+  .importacao-form {
+    grid-template-columns: 1fr;
+  }
+
+  .importacao-resumo-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 650px) {
+  .importacao-resumo-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+
+/* =========================================================
+   📥 IMPORTAÇÃO - FORM PREMIUM
+========================================================= */
+
+.importacao-form {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid #dbe7f5;
+  border-radius: 18px;
+  padding: 18px;
+  display: grid;
+  grid-template-columns: 1.5fr 150px 150px 320px 210px;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 18px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+.importacao-form-info strong {
+  display: block;
+  font-size: 15px;
+  color: #071a3d;
+  font-weight: 900;
+  margin-bottom: 4px;
+}
+
+.importacao-form-info small {
+  display: block;
+  font-size: 12px;
+  color: #010812;
+  line-height: 1.35;
+}
+
+.importacao-field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #475569;
+  margin-bottom: 5px;
+}
+
+.importacao-field .form-control {
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+}
+
+.importacao-file input[type="file"] {
+  padding: 8px;
+  background: #ffffff;
+}
+
+.btn-importacao {
+  height: 42px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #05055f 0%, #0057d9 55%, #12c7e8 100%);
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 14px;
+  box-shadow: 0 10px 22px rgba(0, 87, 217, 0.24);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-importacao:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(0, 87, 217, 0.32);
+  color: #ffffff;
+}
+
+@media (max-width: 1200px) {
+  .importacao-form {
+    grid-template-columns: 1fr 120px 120px;
+  }
+
+  .importacao-file,
+  .btn-importacao {
+    grid-column: span 3;
+  }
+}
+
+@media (max-width: 700px) {
+  .importacao-form {
+    grid-template-columns: 1fr;
+  }
+
+  .importacao-file,
+  .btn-importacao {
+    grid-column: auto;
+  }
+}
+
+
+
+/* =========================================================
+   📱 MENU HAMBÚRGUER RESPONSIVO - EASY CONTROL
+========================================================= */
+
+.mobile-menu-toggle {
+  display: none;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #ffffff;
+  font-size: 24px;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.18);
+  z-index: 1100;
+}
+
+.mobile-menu-toggle i {
+  line-height: 1;
+}
+
+@media (max-width: 1100px) {
+  .top-menu-skew {
+    height: 64px;
+    overflow: visible;
+    padding: 0 14px;
+  }
+
+  .top-logo {
+    width: auto;
+    min-width: 110px;
+  }
+
+  .top-logo img {
+    height: 62px;
+    max-width: 108px;
+  }
+
+  .mobile-menu-toggle {
+    display: inline-flex;
+    margin-left: auto;
+  }
+
+  .top-user {
+    width: auto;
+    margin-left: 10px;
+  }
+
+  .user-img {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+
+  .top-links {
+    position: absolute;
+    top: 64px;
+    left: 12px;
+    right: 12px;
+    background: #ffffff;
+    border: 1px solid #dbe3ef;
+    border-radius: 16px;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+    padding: 10px;
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 8px;
+    z-index: 1090;
+  }
+
+  .top-links.mobile-open {
+    display: flex;
+    animation: mobileMenuDown 0.22s ease;
+  }
+
+  .top-links .skew-item {
+    width: 100%;
+    min-width: 100%;
+    height: 46px;
+    margin-left: 0;
+    padding: 0 14px;
+    transform: none;
+    border-radius: 12px;
+    justify-content: flex-start;
+    box-shadow: none;
+    font-size: 14px;
+    background: linear-gradient(135deg, #f8fbff, #eaf2ff);
+    color: var(--primary);
+    border: 1px solid #dbeafe;
+  }
+
+  .top-links .skew-item span {
+    transform: none;
+  }
+
+  .top-links .skew-item:hover {
+    filter: none;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: #ffffff;
+    transform: translateX(3px);
+  }
+
+  .top-links .skew-item.sair {
+    min-width: 100%;
+    background: linear-gradient(135deg, #ff5f69, #c82333);
+    color: #ffffff;
+    border: none;
+    margin-left: 0;
+    justify-content: center;
+  }
+
+  .content-top {
+    padding: 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .top-menu-skew {
+    padding: 0 10px;
+  }
+
+  .top-logo img {
+    height: 56px;
+    max-width: 96px;
+  }
+
+  .mobile-menu-toggle {
+    width: 40px;
+    height: 40px;
+    font-size: 22px;
+    border-radius: 10px;
+  }
+
+  .top-user {
+    margin-left: 8px;
+  }
+
+  .user-img {
+    width: 34px;
+    height: 34px;
+  }
+
+  .top-links {
+    left: 8px;
+    right: 8px;
+    border-radius: 14px;
+  }
+
+  .top-links .skew-item {
+    height: 44px;
+    font-size: 13px;
+  }
+}
+
+@keyframes mobileMenuDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+
+
+
+
+
+
+
+/* =========================================================
+   💰 GESTÃO - EVOLUÇÃO FINANCEIRA MENSAL
+========================================================= */
+
+.gestao-section-title {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-left: 5px solid var(--primary);
+  border-radius: 16px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gestao-section-title h4 {
+  margin: 0;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.gestao-section-title p {
+  margin: 3px 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.gestao-comparativo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.gestao-comparativo-card {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+  position: relative;
+  overflow: hidden;
+}
+
+.gestao-comparativo-card::after {
+  content: "";
+  position: absolute;
+  right: -28px;
+  bottom: -38px;
+  width: 110px;
+  height: 90px;
+  border-radius: 50%;
+  background: rgba(0, 212, 255, 0.08);
+}
+
+.gestao-comparativo-card span {
+  display: block;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #64748b;
+  font-weight: 900;
+  margin-bottom: 8px;
+  position: relative;
+  z-index: 2;
+}
+
+.gestao-comparativo-card strong {
+  display: block;
+  color: #0f172a;
+  font-size: 25px;
+  font-weight: 900;
+  position: relative;
+  z-index: 2;
+}
+
+.gestao-comparativo-card small {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  margin-top: 5px;
+  position: relative;
+  z-index: 2;
+}
+
+.gestao-comparativo-card.success {
+  border-left: 4px solid #10b981;
+}
+
+.gestao-comparativo-card.success strong {
+  color: #059669;
+}
+
+.gestao-comparativo-card.danger {
+  border-left: 4px solid #ef4444;
+}
+
+.gestao-comparativo-card.danger strong {
+  color: #dc2626;
+}
+
+.gestao-chart-card {
+  min-height: 360px;
+}
+
+.gestao-chart-box {
+  position: relative;
+  width: 100%;
+  height: 290px;
+  padding: 8px;
+}
+
+.gestao-chart-box canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.gestao-evolucao-table {
+  margin-bottom: 0;
+}
+
+.gestao-evolucao-table th {
+  font-size: 12px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.gestao-evolucao-table td {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+  .gestao-comparativo-grid {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .gestao-section-title {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .gestao-comparativo-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gestao-chart-card {
+    min-height: auto;
+  }
+
+  .gestao-chart-box {
+    height: 250px;
+  }
+}
+
+
+
+
+
+/* =========================================================
+   💰 GESTÃO - EVOLUÇÃO FINANCEIRA MENSAL REVISADA
+========================================================= */
+
+.gestao-resumo-anual-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.gestao-resumo-anual-card {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+  border-left: 4px solid #1e3a8a;
+  min-height: 118px;
+}
+
+.gestao-resumo-anual-card span {
+  display: block;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.gestao-resumo-anual-card strong {
+  display: block;
+  color: #0f172a;
+  font-size: 24px;
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+
+.gestao-resumo-anual-card small {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.gestao-resumo-anual-card.success {
+  border-left-color: #10b981;
+}
+
+.gestao-resumo-anual-card.success strong {
+  color: #059669;
+}
+
+.gestao-resumo-anual-card.danger {
+  border-left-color: #ef4444;
+}
+
+.gestao-resumo-anual-card.danger strong {
+  color: #dc2626;
+}
+
+.gestao-meses-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.gestao-mes-card {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 14px;
+  padding: 14px;
+  min-height: 165px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+  border-top: 4px solid #cbd5e1;
+}
+
+.gestao-mes-card.ativo {
+  outline: 2px solid #2563eb;
+  box-shadow: 0 12px 30px rgba(37, 99, 235, 0.18);
+}
+
+.gestao-mes-card.positivo {
+  border-top-color: #10b981;
+}
+
+.gestao-mes-card.negativo {
+  border-top-color: #ef4444;
+}
+
+.gestao-mes-card.sem-movimento {
+  opacity: 0.78;
+  background: #f8fafc;
+}
+
+.gestao-mes-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.gestao-mes-card-top strong {
+  font-size: 18px;
+  color: #0f172a;
+  font-weight: 900;
+}
+
+.gestao-mes-card-top span {
+  background: #2563eb;
+  color: #ffffff;
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.gestao-mes-info,
+.gestao-mes-resultado {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+
+.gestao-mes-info small,
+.gestao-mes-resultado small {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.gestao-mes-info strong,
+.gestao-mes-resultado strong {
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.gestao-mes-resultado {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #dbe3ef;
+}
+
+.gestao-mes-sem-movimento {
+  height: 92px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-weight: 800;
+  font-size: 13px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.gestao-detalhamento-meses {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  padding: 14px 16px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+}
+
+.gestao-detalhamento-meses summary {
+  cursor: pointer;
+  font-weight: 900;
+  color: #1e3a8a;
+}
+
+@media (max-width: 1200px) {
+  .gestao-resumo-anual-grid {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+
+  .gestao-meses-grid {
+    grid-template-columns: repeat(3, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .gestao-resumo-anual-grid,
+  .gestao-meses-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+

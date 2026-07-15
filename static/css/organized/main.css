@@ -1,0 +1,17 @@
+/* Easy Control - CSS organizado em ordem de cascata. Não altere a ordem dos imports. */
+@import url("00-login.css");
+@import url("01-frotas.css");
+@import url("02-fluxo.css");
+@import url("03-radar-financeiro.css");
+@import url("04-radar-financeiro.css");
+@import url("05-radar-financeiro.css");
+@import url("06-radar-financeiro.css");
+@import url("07-radar-financeiro.css");
+@import url("08-importacoes.css");
+@import url("09-importacoes.css");
+@import url("10-dashboard.css");
+@import url("11-tabelas-componentes.css");
+@import url("12-tabelas-componentes.css");
+@import url("13-importacoes.css");
+@import url("14-tabelas-componentes.css");
+@import url("15-tabelas-componentes.css");

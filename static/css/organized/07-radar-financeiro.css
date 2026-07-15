@@ -1,0 +1,2717 @@
+/* =========================================================
+   RADAR - CONTA PARCELADA
+========================================================= */
+
+.radar-parcela-badge {
+  width: fit-content;
+  margin-top: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fcd34d;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: .3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.radar-parcela-badge i {
+  font-size: 11px;
+}
+
+.radar-herdada-card .radar-parcela-badge {
+  margin-top: 7px;
+  background: #fff7ed;
+  color: #c2410c;
+  border-color: #fed7aa;
+}
+
+
+
+
+/* =========================================================
+   RADAR FINANCEIRO INTELIGENTE - BRANCO + DÍVIDA HERDADA
+   RECORRÊNCIA + PARCELAMENTO
+   Cole no final do static/css/style.css
+========================================================= */
+
+.radar-herdadas-page {
+  color: #0f172a;
+  padding-bottom: 40px;
+}
+
+.radar-herdadas-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.radar-herdadas-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.radar-herdadas-title-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.22);
+}
+
+.radar-herdadas-title h1 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 950;
+  letter-spacing: -0.8px;
+  color: #0f172a;
+}
+
+.radar-herdadas-title p {
+  margin: 3px 0 0;
+  font-size: 14px;
+  color: #475569;
+  font-weight: 600;
+}
+
+.radar-herdadas-user-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.radar-herdadas-user-actions form {
+  margin: 0;
+}
+
+.radar-herdadas-alert-btn,
+.radar-herdadas-new-btn {
+  height: 42px;
+  border-radius: 11px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 900;
+  border: 1px solid transparent;
+  background: #ffffff;
+  transition: .18s ease;
+}
+
+.radar-herdadas-alert-btn {
+  color: #f97316;
+  border-color: #fed7aa;
+}
+
+.radar-herdadas-new-btn {
+  color: #16a34a;
+  border-color: #bbf7d0;
+}
+
+.radar-herdadas-alert-btn:hover,
+.radar-herdadas-new-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.10);
+}
+
+.radar-herdadas-kpis {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.radar-herdadas-kpi {
+  min-height: 94px;
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  border-radius: 14px;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+}
+
+.radar-herdadas-kpi-icon {
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+  border-radius: 999px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.radar-herdadas-kpi span {
+  display: block;
+  font-size: 11px;
+  font-weight: 950;
+  color: #0f172a;
+}
+
+.radar-herdadas-kpi strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 20px;
+  font-weight: 950;
+  color: #0f172a;
+}
+
+.radar-herdadas-kpi small {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.radar-herdadas-kpi.danger {
+  border-color: #fecaca;
+}
+
+.radar-herdadas-kpi.danger .radar-herdadas-kpi-icon {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.radar-herdadas-kpi.warning {
+  border-color: #fed7aa;
+}
+
+.radar-herdadas-kpi.warning .radar-herdadas-kpi-icon {
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+}
+
+.radar-herdadas-kpi.purple {
+  border-color: #ddd6fe;
+}
+
+.radar-herdadas-kpi.purple .radar-herdadas-kpi-icon {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+}
+
+.radar-herdadas-kpi.blue {
+  border-color: #bfdbfe;
+}
+
+.radar-herdadas-kpi.blue .radar-herdadas-kpi-icon {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+.radar-herdadas-kpi.success {
+  border-color: #bbf7d0;
+}
+
+.radar-herdadas-kpi.success .radar-herdadas-kpi-icon {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+
+.radar-herdadas-kpi.teal {
+  border-color: #99f6e4;
+}
+
+.radar-herdadas-kpi.teal .radar-herdadas-kpi-icon {
+  background: linear-gradient(135deg, #14b8a6, #0d9488);
+}
+
+.radar-herdadas-kpi.risk {
+  display: block;
+  text-align: center;
+  padding: 13px;
+}
+
+.radar-herdadas-kpi.risk strong {
+  color: #f97316;
+  font-size: 22px;
+}
+
+.radar-risk-bar {
+  height: 7px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ef4444, #f59e0b, #22c55e);
+  margin-top: 9px;
+  overflow: hidden;
+}
+
+.radar-risk-bar span {
+  display: block;
+  width: 70%;
+  height: 100%;
+}
+
+.radar-herdadas-filters {
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  border-radius: 15px;
+  padding: 12px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.05);
+  margin-bottom: 14px;
+}
+
+.radar-herdadas-filters form {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+}
+
+.radar-herdadas-filters .form-control {
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid #dbe4f0;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.radar-herdadas-filters select[name="mes"] {
+  width: 130px;
+}
+
+.radar-herdadas-filters input[name="ano"] {
+  width: 94px;
+}
+
+.radar-herdadas-filters select[name="visao"] {
+  width: 170px;
+}
+
+.radar-herdadas-filters select[name="setor"] {
+  width: 170px;
+}
+
+.radar-herdadas-filters .radar-search {
+  flex: 1;
+}
+
+.radar-filter-arrow,
+.radar-filter-submit {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid #dbe4f0;
+  background: #ffffff;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radar-filter-divider {
+  width: 1px;
+  height: 28px;
+  background: #e2e8f0;
+}
+
+.radar-herdadas-filters label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 900;
+  color: #334155;
+}
+
+.radar-herdadas-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  gap: 14px;
+  align-items: start;
+}
+
+.radar-herdadas-main {
+  min-width: 0;
+}
+
+.radar-herdadas-board {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(190px, 1fr));
+  gap: 10px;
+  align-items: stretch;
+}
+
+.radar-herdadas-coluna {
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  border-radius: 14px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.radar-herdadas-coluna-header {
+  padding: 14px;
+  text-align: center;
+  border-bottom: 1px solid #eef2f7;
+  position: relative;
+}
+
+.radar-herdadas-coluna-header strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.radar-herdadas-coluna-header small {
+  display: block;
+  margin-top: 4px;
+  font-size: 10px;
+  color: #475569;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.radar-herdadas-coluna-header span {
+  position: absolute;
+  right: 10px;
+  top: 11px;
+  min-width: 24px;
+  height: 22px;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 11px;
+  font-weight: 950;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid currentColor;
+}
+
+.radar-herdadas-coluna-total {
+  text-align: center;
+  padding: 0 12px 12px;
+  font-size: 20px;
+  font-weight: 950;
+}
+
+.radar-herdadas-coluna.danger {
+  border-color: #fecaca;
+}
+
+.radar-herdadas-coluna.danger .radar-herdadas-coluna-header,
+.radar-herdadas-coluna.danger .radar-herdadas-coluna-total {
+  color: #dc2626;
+}
+
+.radar-herdadas-coluna.warning {
+  border-color: #fed7aa;
+}
+
+.radar-herdadas-coluna.warning .radar-herdadas-coluna-header,
+.radar-herdadas-coluna.warning .radar-herdadas-coluna-total {
+  color: #f97316;
+}
+
+.radar-herdadas-coluna.purple {
+  border-color: #ddd6fe;
+}
+
+.radar-herdadas-coluna.purple .radar-herdadas-coluna-header,
+.radar-herdadas-coluna.purple .radar-herdadas-coluna-total {
+  color: #6d28d9;
+}
+
+.radar-herdadas-coluna.blue {
+  border-color: #bfdbfe;
+}
+
+.radar-herdadas-coluna.blue .radar-herdadas-coluna-header,
+.radar-herdadas-coluna.blue .radar-herdadas-coluna-total {
+  color: #2563eb;
+}
+
+.radar-herdadas-coluna.success {
+  border-color: #bbf7d0;
+}
+
+.radar-herdadas-coluna.success .radar-herdadas-coluna-header,
+.radar-herdadas-coluna.success .radar-herdadas-coluna-total {
+  color: #16a34a;
+}
+
+.radar-herdadas-coluna.teal {
+  border-color: #99f6e4;
+}
+
+.radar-herdadas-coluna.teal .radar-herdadas-coluna-header,
+.radar-herdadas-coluna.teal .radar-herdadas-coluna-total {
+  color: #0d9488;
+}
+
+.radar-herdadas-coluna-body {
+  padding: 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+.radar-herdadas-coluna-body::-webkit-scrollbar,
+.radar-historico-panel::-webkit-scrollbar {
+  width: 7px;
+}
+
+.radar-herdadas-coluna-body::-webkit-scrollbar-thumb,
+.radar-historico-panel::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.radar-herdada-card,
+.radar-normal-card {
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  border-radius: 10px;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+  transition: .16s ease;
+}
+
+.radar-herdada-card:hover,
+.radar-normal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08);
+}
+
+.radar-herdada-card.ativo {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.10);
+}
+
+.radar-herdada-card a {
+  display: block;
+  padding: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.radar-herdada-card-top {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  gap: 9px;
+  align-items: center;
+}
+
+.radar-herdada-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radar-herdada-card-top strong,
+.radar-normal-card-top strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 950;
+  color: #0f172a;
+}
+
+.radar-herdada-card-top small,
+.radar-normal-card-top small {
+  display: block;
+  font-size: 10px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.radar-herdada-card-top > span {
+  border: 1px solid #fecaca;
+  color: #ef4444;
+  background: #fff5f5;
+  border-radius: 7px;
+  padding: 3px 6px;
+  font-size: 10px;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.radar-herdada-valor,
+.radar-normal-valor {
+  margin-top: 9px;
+  font-size: 15px;
+  font-weight: 950;
+  color: #0f172a;
+}
+
+.radar-herdada-desde,
+.radar-normal-info {
+  margin-top: 3px;
+  font-size: 10px;
+  color: #334155;
+  font-weight: 700;
+}
+
+.radar-parcela-badge,
+.radar-recorrente-badge,
+.radar-parcelada-badge {
+  width: fit-content;
+  margin-top: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: .3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.radar-parcela-badge {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.radar-recorrente-badge {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.radar-parcelada-badge {
+  background: #f3e8ff;
+  color: #7c3aed;
+  border: 1px solid #ddd6fe;
+}
+
+.radar-herdada-meses {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 9px;
+}
+
+.radar-herdada-meses div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #475569;
+}
+
+.radar-herdada-meses small {
+  color: #dc2626;
+  font-weight: 950;
+}
+
+.radar-herdada-link {
+  margin-top: 10px;
+  color: #dc2626;
+  font-size: 11px;
+  font-weight: 950;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.radar-normal-card {
+  padding: 12px;
+}
+
+.radar-normal-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.radar-card-menu {
+  border: none;
+  background: #f8fafc;
+  color: #475569;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+}
+
+.radar-card-dropdown {
+  border: none;
+  border-radius: 14px;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.18);
+  padding: 8px;
+}
+
+.radar-card-dropdown .dropdown-item {
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.radar-card-dropdown form {
+  margin: 0;
+}
+
+.radar-normal-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.radar-status-pill {
+  min-height: 22px;
+  padding: 0 7px;
+  border-radius: 7px;
+  font-size: 9px;
+  font-weight: 950;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+}
+
+.radar-status-pill.pago {
+  background: #dcfce7;
+  color: #16a34a;
+  border: 1px solid #86efac;
+}
+
+.radar-status-pill.aberto {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.radar-status-pill.vencido {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.radar-status-pill.hoje {
+  background: #ffedd5;
+  color: #f97316;
+  border: 1px solid #fed7aa;
+}
+
+.radar-status-pill.proximo {
+  background: #f3e8ff;
+  color: #7c3aed;
+  border: 1px solid #ddd6fe;
+}
+
+.radar-status-pill.futuro {
+  background: #dbeafe;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.radar-status-pill.cancelado {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+.radar-herdadas-empty {
+  min-height: 80px;
+  border: 1px dashed #cbd5e1;
+  background: #f8fafc;
+  color: #94a3b8;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px;
+}
+
+.radar-historico-panel {
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  border-radius: 14px;
+  padding: 16px;
+  max-height: 790px;
+  overflow-y: auto;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+  position: sticky;
+  top: 82px;
+}
+
+.radar-historico-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.radar-historico-header h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 950;
+  color: #0f172a;
+}
+
+.radar-historico-header a {
+  color: #0f172a;
+}
+
+.radar-historico-total {
+  border: 1px solid #dbe4f0;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 14px;
+}
+
+.radar-historico-total span,
+.radar-historico-total small {
+  display: block;
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 800;
+}
+
+.radar-historico-total strong {
+  display: block;
+  font-size: 21px;
+  color: #0f172a;
+  font-weight: 950;
+  margin: 4px 0;
+}
+
+.radar-historico-resumo,
+.radar-historico-table-wrap,
+.radar-pagar-herdada,
+.radar-historico-info {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 14px;
+  margin-top: 14px;
+}
+
+.radar-historico-resumo h3,
+.radar-historico-table-wrap h3,
+.radar-pagar-herdada h3,
+.radar-historico-info h3 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 950;
+  color: #0f172a;
+}
+
+.radar-historico-resumo p,
+.radar-historico-info p {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  color: #475569;
+  margin: 0 0 7px;
+}
+
+.radar-historico-resumo strong {
+  color: #0f172a;
+}
+
+.radar-historico-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+
+.radar-historico-table th {
+  color: #64748b;
+  font-weight: 950;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 5px 3px;
+}
+
+.radar-historico-table td {
+  border-bottom: 1px solid #f1f5f9;
+  padding: 6px 3px;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.radar-pagar-herdada label {
+  font-size: 11px;
+  font-weight: 900;
+  color: #334155;
+  margin-bottom: 5px;
+}
+
+.radar-pagar-herdada .form-control {
+  height: 38px;
+  border-radius: 9px;
+  font-size: 12px;
+  margin-bottom: 9px;
+}
+
+.radar-pagar-herdada button {
+  width: 100%;
+  height: 38px;
+  border: none;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.radar-historico-empty {
+  text-align: center;
+  color: #64748b;
+  padding: 30px 10px;
+}
+
+.radar-historico-empty i {
+  font-size: 36px;
+  color: #2563eb;
+}
+
+.radar-historico-empty h2 {
+  font-size: 18px;
+  font-weight: 950;
+  color: #0f172a;
+  margin-top: 12px;
+}
+
+.radar-herdadas-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.radar-info-card,
+.radar-bottom-card {
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+}
+
+.radar-info-card h3,
+.radar-bottom-card h3 {
+  margin: 0 0 9px;
+  font-size: 14px;
+  font-weight: 950;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.radar-info-card p,
+.radar-bottom-card p {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: #334155;
+  font-weight: 600;
+}
+
+.radar-info-card.blue h3 {
+  color: #2563eb;
+}
+
+.radar-info-card.insight h3 {
+  color: #f59e0b;
+}
+
+.radar-info-card.fluxo h3 {
+  color: #2563eb;
+}
+
+.radar-fluxo-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+}
+
+.radar-fluxo-mini-grid div {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.radar-fluxo-mini-grid span {
+  display: block;
+  font-size: 10px;
+  color: #64748b;
+  font-weight: 900;
+}
+
+.radar-fluxo-mini-grid strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.radar-fluxo-mini-grid .positivo strong {
+  color: #16a34a;
+}
+
+.radar-fluxo-mini-grid .negativo strong {
+  color: #dc2626;
+}
+
+.radar-herdadas-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.35fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.radar-bottom-card p {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.radar-bottom-card i {
+  color: #2563eb;
+}
+
+.radar-total-pressao {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
+  color: #dc2626;
+  font-size: 17px;
+  font-weight: 950;
+  text-align: right;
+}
+
+.radar-herdadas-modal {
+  border: none;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 24px 55px rgba(15, 23, 42, 0.24);
+}
+
+.radar-herdadas-modal .modal-header {
+  background: linear-gradient(135deg, #0f172a, #1d4ed8);
+  color: #ffffff;
+  border: none;
+}
+
+.radar-herdadas-modal .modal-title {
+  color: #ffffff;
+  font-weight: 950;
+}
+
+.radar-herdadas-modal .btn-close {
+  filter: invert(1);
+}
+
+.radar-herdadas-modal .modal-body {
+  background: #f8fafc;
+}
+
+.radar-herdadas-modal .form-label {
+  font-size: 12px;
+  font-weight: 900;
+  color: #334155;
+}
+
+.radar-herdadas-modal .form-control {
+  border-radius: 10px;
+  min-height: 40px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.radar-recorrencia-check {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.radar-recorrencia-check small {
+  display: block;
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.radar-recorrencia-info {
+  border-radius: 14px;
+  padding: 13px 14px;
+  background: linear-gradient(135deg, #eff6ff, #ffffff);
+  border: 1px solid #bfdbfe;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.radar-recorrencia-info strong {
+  color: #1d4ed8;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.radar-recorrencia-info span {
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.radar-parcelamento-box {
+  display: none;
+  border: 1px solid #ddd6fe;
+  background: #faf5ff;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.radar-parcelamento-box.ativo {
+  display: block;
+}
+
+.radar-tipo-obrigacao-box {
+  border: 1px solid #dbe4f0;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.radar-tipo-obrigacao-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+}
+
+.radar-tipo-option {
+  border: 1px solid #dbe4f0;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 10px;
+  cursor: pointer;
+  transition: .16s ease;
+}
+
+.radar-tipo-option:hover {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.radar-tipo-option input {
+  margin-right: 6px;
+}
+
+.radar-tipo-option strong {
+  font-size: 12px;
+  font-weight: 950;
+  color: #0f172a;
+}
+
+.radar-tipo-option small {
+  display: block;
+  margin-top: 3px;
+  font-size: 10px;
+  color: #64748b;
+  line-height: 1.25;
+}
+
+@media (max-width: 1500px) {
+  .radar-herdadas-kpis {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .radar-herdadas-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .radar-historico-panel {
+    position: static;
+    max-height: none;
+  }
+}
+
+@media (max-width: 1200px) {
+  .radar-herdadas-board {
+    overflow-x: auto;
+    grid-template-columns: repeat(6, 235px);
+    padding-bottom: 8px;
+  }
+
+  .radar-herdadas-info-grid,
+  .radar-herdadas-bottom-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .radar-herdadas-header,
+  .radar-herdadas-user-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .radar-herdadas-alert-btn,
+  .radar-herdadas-new-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .radar-herdadas-kpis,
+  .radar-herdadas-info-grid,
+  .radar-herdadas-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .radar-herdadas-filters form {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .radar-herdadas-filters .form-control,
+  .radar-herdadas-filters select[name="mes"],
+  .radar-herdadas-filters input[name="ano"],
+  .radar-herdadas-filters select[name="visao"],
+  .radar-herdadas-filters select[name="setor"] {
+    width: 100%;
+  }
+
+  .radar-filter-arrow,
+  .radar-filter-submit {
+    width: 100%;
+  }
+
+  .radar-tipo-obrigacao-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+
+
+/* =========================================================
+   RADAR AJAX LOADING
+========================================================= */
+
+#radarAjaxLoading {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: none;
+  pointer-events: none;
+  background: rgba(248, 250, 252, 0.20);
+  backdrop-filter: blur(1px);
+}
+
+#radarAjaxLoading.ativo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 86px;
+}
+
+.radar-ajax-loading-card {
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  color: #0f172a;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.16);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.radar-ajax-loading-card .spinner-border {
+  color: #2563eb;
+}
+
+
+
+
+
+/* =========================================================
+   AJUSTE RADAR - LAYOUT NORMAL 100% + HISTÓRICO
+========================================================= */
+
+/* Evita a tela ficar larga demais e depender de zoom 75% */
+.radar-herdadas-page {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  padding: 18px 18px 48px;
+}
+
+/* KPIs mais compactos */
+.radar-herdadas-kpis {
+  grid-template-columns: repeat(6, minmax(150px, 1fr)) 230px;
+  gap: 10px;
+}
+
+.radar-herdadas-kpi {
+  min-height: 86px;
+  padding: 13px 14px;
+}
+
+.radar-herdadas-kpi-icon {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  font-size: 18px;
+}
+
+.radar-herdadas-kpi strong {
+  font-size: 18px;
+}
+
+.radar-herdadas-kpi small {
+  font-size: 10px;
+}
+
+/* Filtros mais compactos */
+.radar-herdadas-filters {
+  padding: 10px;
+}
+
+.radar-herdadas-filters form {
+  gap: 7px;
+}
+
+.radar-herdadas-filters .form-control {
+  height: 38px;
+  font-size: 12px;
+}
+
+.radar-filter-arrow,
+.radar-filter-submit {
+  width: 38px;
+  height: 38px;
+}
+
+/* Layout principal com painel lateral menor */
+.radar-herdadas-layout {
+  grid-template-columns: minmax(0, 1fr) 295px;
+  gap: 10px;
+}
+
+/* Board agora cabe melhor em tela normal */
+.radar-herdadas-board {
+  grid-template-columns:
+    minmax(210px, 1fr)
+    minmax(210px, 1fr)
+    minmax(210px, 1fr)
+    minmax(210px, 1fr)
+    minmax(210px, 1fr)
+    minmax(210px, 1fr);
+  gap: 8px;
+}
+
+/* Colunas mais compactas */
+.radar-herdadas-coluna-header {
+  padding: 12px 10px;
+}
+
+.radar-herdadas-coluna-header strong {
+  font-size: 12px;
+}
+
+.radar-herdadas-coluna-header small {
+  font-size: 9px;
+}
+
+.radar-herdadas-coluna-total {
+  font-size: 18px;
+  padding-bottom: 10px;
+}
+
+.radar-herdadas-coluna-body {
+  padding: 8px;
+  gap: 8px;
+  max-height: 540px;
+}
+
+/* Cards mais compactos */
+.radar-normal-card,
+.radar-herdada-card a {
+  padding: 10px;
+}
+
+.radar-normal-card-top strong,
+.radar-herdada-card-top strong {
+  font-size: 11px;
+}
+
+.radar-normal-card-top small,
+.radar-herdada-card-top small {
+  font-size: 9px;
+}
+
+.radar-normal-valor,
+.radar-herdada-valor {
+  font-size: 14px;
+}
+
+.radar-normal-info,
+.radar-herdada-desde {
+  font-size: 9px;
+}
+
+.radar-card-menu {
+  width: 25px;
+  height: 25px;
+}
+
+/* Painel lateral do histórico */
+.radar-historico-panel {
+  width: 295px;
+  max-width: 295px;
+  padding: 14px;
+  top: 75px;
+}
+
+/* Tabela do histórico mais compacta */
+.radar-historico-table {
+  font-size: 9px;
+}
+
+.radar-historico-table th,
+.radar-historico-table td {
+  padding: 5px 2px;
+}
+
+.radar-historico-header h2 {
+  font-size: 15px;
+}
+
+/* Botão X do histórico */
+.radar-historico-close {
+  border: none;
+  background: transparent;
+  color: #0f172a;
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: 0.18s ease;
+}
+
+.radar-historico-close:hover {
+  background: #f1f5f9;
+  color: #dc2626;
+}
+
+/* Cards de baixo mais compactos */
+.radar-herdadas-info-grid,
+.radar-herdadas-bottom-grid {
+  gap: 8px;
+}
+
+.radar-info-card,
+.radar-bottom-card {
+  padding: 12px;
+}
+
+.radar-info-card h3,
+.radar-bottom-card h3 {
+  font-size: 13px;
+}
+
+.radar-info-card p,
+.radar-bottom-card p {
+  font-size: 11px;
+}
+
+/* Em telas menores, mantém scroll horizontal só no kanban */
+@media (max-width: 1500px) {
+  .radar-herdadas-kpis {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .radar-herdadas-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .radar-historico-panel {
+    width: 100%;
+    max-width: 100%;
+    position: static;
+  }
+
+  .radar-herdadas-board {
+    overflow-x: auto;
+    grid-template-columns: repeat(6, 230px);
+    padding-bottom: 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .radar-herdadas-page {
+    padding: 12px;
+  }
+
+  .radar-herdadas-kpis,
+  .radar-herdadas-info-grid,
+  .radar-herdadas-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .radar-herdadas-board {
+    grid-template-columns: repeat(6, 225px);
+  }
+}
+
+
+
+
+.radar-historico-close {
+  border: none;
+  background: transparent;
+  color: #0f172a;
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: 0.18s ease;
+  cursor: pointer;
+}
+
+.radar-historico-close:hover {
+  background: #f1f5f9;
+  color: #dc2626;
+}
+
+/* =========================================================
+   RADAR - CSS RETIRADO DO HTML + AJUSTES DE PRODUÇÃO
+========================================================= */
+/* Ajuste para o Radar ficar organizado em zoom 100% */
+.radar-herdadas-page {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+@media (min-width: 1200px) {
+  .radar-herdadas-layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .radar-herdadas-board {
+    grid-template-columns: repeat(6, minmax(185px, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .radar-herdadas-coluna-header {
+    padding: 10px 8px !important;
+  }
+
+  .radar-herdadas-coluna-header strong {
+    font-size: 12px !important;
+  }
+
+  .radar-herdadas-coluna-header small {
+    font-size: 9px !important;
+  }
+
+  .radar-herdadas-coluna-total {
+    font-size: 17px !important;
+    padding-bottom: 9px !important;
+  }
+
+  .radar-herdadas-coluna-body {
+    padding: 7px !important;
+    gap: 7px !important;
+    max-height: 610px !important;
+  }
+
+  .radar-normal-card,
+  .radar-herdada-card a {
+    padding: 9px !important;
+  }
+
+  .radar-normal-card-top strong,
+  .radar-herdada-card-top strong {
+    font-size: 11px !important;
+  }
+
+  .radar-normal-valor,
+  .radar-herdada-valor {
+    font-size: 14px !important;
+  }
+
+  .radar-historico-table {
+    font-size: 9px !important;
+  }
+
+  .radar-historico-table th,
+  .radar-historico-table td {
+    padding: 5px 2px !important;
+  }
+}
+
+@media (max-width: 1199px) {
+  .radar-herdadas-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .radar-historico-panel {
+    position: static !important;
+    width: 100% !important;
+  }
+}
+
+.radar-historico-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.radar-historico-action-btn {
+  border: 1px solid #dbe4f0;
+  background: #ffffff;
+  color: #1d4ed8;
+  min-width: 28px;
+  height: 26px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+}
+.radar-historico-action-btn.pagar {
+  color: #16a34a;
+  border-color: #bbf7d0;
+}
+.radar-historico-action-btn.editar {
+  color: #2563eb;
+  border-color: #bfdbfe;
+}
+.radar-historico-action-btn:hover {
+  filter: brightness(0.98);
+  transform: translateY(-1px);
+}
+
+
+
+/* Histórico agora abre em modal para liberar espaço das colunas */
+.radar-herdadas-layout {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.radar-historico-modal .modal-dialog {
+  max-width: min(1180px, calc(100vw - 32px));
+}
+
+.radar-historico-modal .modal-body {
+  background: #f8fafc;
+}
+
+.radar-historico-modal-grid {
+  display: grid;
+  grid-template-columns: 310px minmax(0, 1fr);
+  gap: 16px;
+}
+
+.radar-historico-modal-left,
+.radar-historico-modal-right {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.radar-historico-table-wrap {
+  overflow-x: auto;
+}
+
+.radar-historico-table {
+  min-width: 760px;
+}
+
+@media (max-width: 900px) {
+  .radar-historico-modal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Radar em modal: mantém colunas respirando no zoom 100% */
+.radar-herdadas-layout {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.radar-herdada-card a.js-abrir-historico {
+  cursor: pointer;
+}
+
+.radar-historico-modal .modal-dialog {
+  max-width: min(1180px, calc(100vw - 32px));
+}
+
+.radar-historico-modal-grid {
+  display: grid;
+  grid-template-columns: 310px minmax(0, 1fr);
+  gap: 16px;
+}
+
+.radar-historico-table-wrap {
+  overflow-x: auto;
+}
+
+.radar-historico-table {
+  min-width: 760px;
+}
+
+@media (max-width: 900px) {
+  .radar-historico-modal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================
+   RADAR - BUSCA LOCAL SEM RELOAD
+========================================================= */
+.radar-card-filtrado {
+  display: none !important;
+}
+
+.radar-empty-busca-local {
+  min-height: 74px;
+  border: 1px dashed #cbd5e1;
+  background: #f8fafc;
+  color: #64748b;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 800;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px;
+  display: none;
+}
+
+.radar-herdada-valor::after {
+  content: "";
+}
+
+/* =========================================================
+   RADAR FINANCEIRO - TRANSPORTAR COLUNA / SELECIONADAS
+========================================================= */
+.radar-lote-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  padding: 8px 10px 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(248, 250, 252, 0.92);
+}
+
+.radar-lote-check-all {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: #334155;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.radar-lote-check-all input,
+.radar-card-check-label input {
+  width: 14px;
+  height: 14px;
+  accent-color: #2563eb;
+  cursor: pointer;
+}
+
+.radar-lote-btn {
+  width: 100%;
+  height: 30px;
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  border-radius: 10px;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  color: #1d4ed8;
+  font-size: 10px;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: 0.18s ease;
+}
+
+.radar-lote-btn:hover {
+  filter: brightness(1.03);
+  transform: translateY(-1px);
+}
+
+.radar-lote-btn.warning {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: linear-gradient(135deg, #fffbeb, #fde68a);
+  color: #92400e;
+}
+
+.radar-card-select-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.radar-card-check-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 10px;
+  font-weight: 900;
+  color: inherit;
+  opacity: 0.92;
+  cursor: pointer;
+  user-select: none;
+}
+
+.radar-lote-resumo {
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f8fafc, #e0f2fe);
+  border: 1px solid #bae6fd;
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.radar-lote-resumo strong {
+  color: #1d4ed8;
+  font-size: 16px;
+}
+
+.radar-lote-resumo small {
+  color: #475569;
+}
+
+@media (max-width: 768px) {
+  .radar-lote-actions {
+    gap: 5px;
+  }
+
+  .radar-lote-btn {
+    height: 32px;
+  }
+}
+
+
+/* =========================================================
+   RADAR - EXCLUSÃO EM LOTE / COLUNA
+========================================================= */
+.radar-lote-btn.danger {
+  border-color: rgba(220, 38, 38, 0.35);
+  background: linear-gradient(135deg, #fff1f2, #fecdd3);
+  color: #991b1b;
+}
+
+.radar-lote-btn.danger:hover {
+  filter: brightness(1.03);
+  transform: translateY(-1px);
+}
+
+#modalExcluirLote .alert-danger {
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+
+/* =========================
+   RADAR - EDIÇÃO HERDADA INLINE ESTÁVEL
+   Evita modal sobre modal e travamento de backdrop.
+========================= */
+.radar-herdada-edit-row td {
+  background: #f8fafc;
+  border-top: 1px solid #dbeafe;
+  border-bottom: 1px solid #dbeafe;
+  padding: 14px !important;
+}
+
+.radar-herdada-inline-form {
+  background: #ffffff;
+  border: 1px solid #dbeafe;
+  border-left: 5px solid #2563eb;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.radar-inline-edit-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.radar-inline-edit-head strong {
+  color: #0f172a;
+  font-size: 15px;
+}
+
+.radar-inline-edit-close {
+  border: none;
+  background: #e5e7eb;
+  color: #111827;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.radar-inline-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.radar-inline-edit-grid label {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.radar-inline-edit-wide {
+  grid-column: 1 / -1;
+}
+
+.radar-inline-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+@media (max-width: 900px) {
+  .radar-inline-edit-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .radar-inline-edit-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
+   RADAR - MODAL DE CONTA PADRÃO DAS COLUNAS
+   Ajuste seguro: usa o mesmo conceito visual do modal de contas herdadas.
+========================= */
+.radar-card-open-modal,
+.radar-card-detail-btn {
+  border: none;
+  cursor: pointer;
+}
+
+.radar-card-open-modal {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+  transition: 0.2s ease;
+}
+
+.radar-card-open-modal:hover {
+  background: linear-gradient(135deg, #1d4ed8, #06b6d4);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.radar-normal-footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.radar-card-detail-btn {
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 800;
+  transition: 0.2s ease;
+}
+
+.radar-card-detail-btn:hover {
+  background: #1d4ed8;
+  color: #ffffff;
+}
+
+.radar-conta-detalhe-modal .modal-header {
+  background: linear-gradient(135deg, #020024, #090979, #00d4ff);
+  color: #ffffff;
+  border-bottom: none;
+}
+
+.radar-conta-detalhe-modal .btn-close {
+  filter: invert(1);
+  opacity: 0.9;
+}
+
+.radar-modal-subtitle {
+  display: block;
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.radar-conta-detalhe-grid {
+  align-items: stretch;
+}
+
+.radar-conta-form-wrap {
+  height: 100%;
+}
+
+.radar-conta-edit-form label,
+.radar-conta-transporte-inline label {
+  font-size: 12px;
+  font-weight: 800;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+.radar-conta-edit-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.radar-conta-edit-actions {
+  margin-top: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.radar-conta-pagamento-box form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.radar-conta-transporte-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.radar-conta-transporte-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 95px;
+  gap: 8px;
+}
+
+@media (max-width: 992px) {
+  .radar-conta-edit-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .radar-conta-edit-grid,
+  .radar-conta-transporte-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .radar-normal-footer-actions,
+  .radar-conta-edit-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .radar-card-detail-btn,
+  .radar-conta-edit-actions .btn {
+    width: 100%;
+  }
+}
+
+
+/* =========================
+   RADAR - CARD ABRE MODAL EM TODAS AS COLUNAS
+========================= */
+.radar-normal-card.radar-card-modal-ready {
+  cursor: pointer;
+}
+
+.radar-normal-card.radar-card-modal-ready:hover {
+  transform: translateY(-2px);
+}
+
+.radar-card-detail-btn,
+.radar-card-open-modal {
+  cursor: pointer;
+}
+
+/* =========================
+   RADAR - JUROS / ACRÉSCIMO
+========================= */
+.radar-juros-help {
+  display: block;
+  margin-top: 4px;
+  color: #6b7280;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.radar-recorrencia-info b {
+  color: #0f172a;
+}
+
+
+/* =========================
+   RADAR - JUROS NO MODAL
+========================= */
+.radar-juros-help {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.25;
+}
+
+.radar-conta-edit-grid .radar-juros-help,
+.radar-inline-edit-grid .radar-juros-help {
+  grid-column: auto;
+}
+
+/* =========================================================
+   ✅ NOVA MANUTENÇÃO PREMIUM - CAMPOS, IMAGENS E PLACA
+========================================================= */
+.manutencao-form-page {
+  padding: 18px 22px 30px;
+}
+
+.manutencao-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.manutencao-form-header h3 {
+  margin: 0;
+  color: #17233c;
+  font-weight: 800;
+  font-size: 26px;
+}
+
+.manutencao-form-header p {
+  margin: 4px 0 0;
+  color: #667085;
+  font-size: 14px;
+}
+
+.manutencao-identificacao-card {
+  min-width: 230px;
+  min-height: 92px;
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #dbe4f0;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+}
+
+.manutencao-identificacao-card::after {
+  content: "";
+  position: absolute;
+  right: -28px;
+  bottom: -38px;
+  width: 110px;
+  height: 90px;
+  border-radius: 999px 999px 0 0;
+  background: rgba(14, 165, 233, 0.10);
+}
+
+.manutencao-identificacao-card.placa {
+  background: linear-gradient(135deg, #ffc107 0%, #ffb300 50%, #ff9800 100%);
+  border: none;
+  color: #fff;
+  box-shadow: 0 12px 26px rgba(255, 152, 0, 0.34);
+}
+
+.manutencao-identificacao-card.placa::after {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.manutencao-identificacao-card.frota {
+  border-left: 5px solid #0d6efd;
+}
+
+.manutencao-identificacao-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.88);
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+  z-index: 1;
+}
+
+.manutencao-identificacao-card strong {
+  display: block;
+  font-size: 25px;
+  font-weight: 900;
+  line-height: 1;
+  z-index: 1;
+  position: relative;
+}
+
+.manutencao-identificacao-card small {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  color: inherit;
+  font-size: 11px;
+  font-weight: 900;
+  z-index: 1;
+  position: relative;
+}
+
+.manutencao-identificacao-card.placa small {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.manutencao-premium-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.manutencao-section-card {
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+
+.manutencao-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.manutencao-section-title span {
+  width: 4px;
+  height: 24px;
+  border-radius: 999px;
+  background: #ffc107;
+  box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.12);
+}
+
+.manutencao-section-title h5 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 900;
+  color: #17233c;
+}
+
+.manutencao-premium-form .form-label {
+  color: #344054;
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.manutencao-premium-form .form-control,
+.manutencao-premium-form .form-select {
+  min-height: 42px;
+  border-radius: 9px;
+  border: 1px solid #d6dee8;
+  color: #111827;
+  font-size: 14px;
+  box-shadow: none;
+}
+
+.manutencao-premium-form .form-control:focus,
+.manutencao-premium-form .form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
+}
+
+.manutencao-info-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 13px;
+  border: 1px solid #b9d7ff;
+  border-radius: 9px;
+  background: #f0f7ff;
+  color: #0b5ed7;
+  font-size: 13px;
+}
+
+.manutencao-info-alert strong {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 50%;
+  background: #0d6efd;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.manutencao-upload-panel {
+  border: 1px solid #dbe4f0;
+  border-radius: 14px;
+  padding: 14px;
+  background: linear-gradient(135deg, #ffffff, #fbfdff);
+}
+
+.manutencao-upload-panel small {
+  display: block;
+  margin-top: 6px;
+  color: #667085;
+  font-size: 12px;
+}
+
+.manutencao-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.manutencao-img-card {
+  width: 118px;
+  height: 84px;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid #d7e0ea;
+  background: #f8fafc;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+}
+
+.manutencao-img-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.manutencao-img-remove {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.95);
+  color: #111827;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.18);
+}
+
+.manutencao-img-remove:hover {
+  background: #dc3545;
+  color: #fff;
+}
+
+.termometro-card {
+  height: 100%;
+  border: 1px solid #ffc107;
+  border-radius: 14px;
+  padding: 15px;
+  background: #fffdf7;
+}
+
+.termometro-card h6 {
+  margin: 0 0 14px;
+  font-weight: 900;
+  color: #17233c;
+}
+
+.manutencao-form-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 50;
+  background: rgba(238, 242, 247, 0.92);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid #dbe4f0;
+  padding: 14px 0 4px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.manutencao-save-btn {
+  border: none;
+  background: linear-gradient(135deg, #ffc107, #ff9800);
+  color: #17233c;
+  font-weight: 900;
+  padding: 10px 22px;
+  border-radius: 9px;
+  box-shadow: 0 8px 18px rgba(255, 152, 0, 0.28);
+}
+
+.manutencao-save-btn:hover {
+  filter: brightness(1.03);
+  transform: translateY(-1px);
+}
+
+/* Card de PLACA na tela de Frotas */
+.frota-card.frota-placa {
+  background: linear-gradient(135deg, #ffc107 0%, #ffb300 48%, #ff9800 100%) !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: 0 12px 26px rgba(255, 152, 0, 0.36) !important;
+}
+
+.frota-card.frota-placa::before {
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.28), transparent);
+}
+
+.frota-card.frota-placa .frota-numero,
+.frota-card.frota-placa .frota-info,
+.frota-card.frota-placa .frota-link-text {
+  color: #fff !important;
+}
+
+.frota-card.frota-placa .frota-divider {
+  background: rgba(255, 255, 255, 0.75) !important;
+}
+
+.frota-card.frota-placa .frota-card-icon {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+.frota-tipo-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  margin-right: 4px;
+}
+
+.frota-tipo-badge.frota {
+  background: rgba(13, 110, 253, 0.15);
+  color: #0d6efd;
+}
+
+.frota-tipo-badge.placa {
+  background: rgba(255, 255, 255, 0.30);
+  color: #fff;
+}
+
+@media (max-width: 768px) {
+  .manutencao-form-page {
+    padding: 14px 12px 24px;
+  }
+
+  .manutencao-form-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .manutencao-identificacao-card {
+    width: 100%;
+  }
+
+  .manutencao-section-card {
+    padding: 14px;
+  }
+
+  .manutencao-form-actions {
+    justify-content: stretch;
+  }
+
+  .manutencao-form-actions .btn {
+    width: 100%;
+  }
+}
+
+
+
+
+
+/* AJUSTE CARD FROTAS / PLACAS */
+.frotas-grid {
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+}
+
+.frota-card {
+  min-height: 135px;
+  padding: 18px 16px;
+  overflow: hidden;
+}
+
+.frota-card-content {
+  width: 100%;
+  min-width: 0;
+}
+
+.frota-numero {
+  font-size: 5px;
+  line-height: 1.1;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.frota-card-placa .frota-numero {
+  font-size: 5px;
+  max-width: 120px;
+}
+
+.frota-info {
+  font-size: 5px;
+  white-space: nowrap;
+}
+
+.frota-link-text {
+  font-size: 5px;
+  white-space: nowrap;
+}
+
+.placa-badge {
+  display: inline-block;
+  font-size: 5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   ✅ CORREÇÃO DEFINITIVA - CARDS DE FROTAS / PLACAS
+   Colocar no FINAL do style.css para sobrescrever regras antigas
+========================================================= */
+.frotas-page .frotas-grid,
+.frotas-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+  gap: 18px !important;
+  align-items: stretch !important;
+}
+
+.frotas-page .frota-card,
+.frota-card {
+  min-height: 138px !important;
+  height: 138px !important;
+  padding: 16px 18px !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  display: grid !important;
+  grid-template-columns: 44px minmax(0, 1fr) !important;
+  align-items: center !important;
+  column-gap: 12px !important;
+  text-align: left !important;
+  position: relative !important;
+}
+
+.frotas-page .frota-card-icon,
+.frota-card-icon {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(255,255,255,.92) !important;
+  overflow: hidden !important;
+  z-index: 2 !important;
+}
+
+.frotas-page .frota-card-icon img,
+.frota-card-icon img {
+  width: 34px !important;
+  height: 34px !important;
+  object-fit: contain !important;
+}
+
+.frotas-page .frota-card-content,
+.frota-card-content {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.frotas-page .frota-numero,
+.frota-numero,
+.frotas-page .frota-card .frota-numero,
+.frota-card .frota-numero {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 23px !important;
+  line-height: 1.05 !important;
+  font-weight: 900 !important;
+  letter-spacing: .4px !important;
+  color: #ffffff !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.frotas-page .frota-divider,
+.frota-divider {
+  width: 28px !important;
+  height: 3px !important;
+  border-radius: 999px !important;
+  margin: 7px 0 7px 0 !important;
+  background: #2563eb !important;
+}
+
+.frotas-page .frota-info,
+.frota-info,
+.frotas-page .frota-link-text,
+.frota-link-text {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 12px !important;
+  line-height: 1.25 !important;
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+.frotas-page .frota-link-text,
+.frota-link-text {
+  margin-top: 12px !important;
+  font-weight: 900 !important;
+}
+
+.frotas-page .frota-card.frota-placa,
+.frota-card.frota-placa {
+  background: linear-gradient(135deg, #ffc107 0%, #ffb300 48%, #ff9800 100%) !important;
+  box-shadow: 0 12px 26px rgba(255, 152, 0, .34) !important;
+}
+
+.frotas-page .frota-card.frota-placa .frota-numero,
+.frota-card.frota-placa .frota-numero {
+  font-size: 22px !important;
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(120, 70, 0, .18) !important;
+}
+
+.frotas-page .frota-card.frota-placa .frota-divider,
+.frota-card.frota-placa .frota-divider {
+  background: rgba(255,255,255,.88) !important;
+}
+
+.frotas-page .frota-tipo-badge,
+.frota-tipo-badge,
+.frotas-page .placa-badge,
+.placa-badge {
+  display: inline-flex !important;
+  width: fit-content !important;
+  max-width: 100% !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 3px 8px !important;
+  border-radius: 999px !important;
+  font-size: 9px !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+  margin-right: 5px !important;
+  vertical-align: middle !important;
+}
+
+.frotas-page .frota-tipo-badge.placa,
+.frota-tipo-badge.placa,
+.frotas-page .placa-badge,
+.placa-badge {
+  background: rgba(255,255,255,.32) !important;
+  color: #ffffff !important;
+}
+
+.frotas-page .frota-tipo-badge.frota,
+.frota-tipo-badge.frota {
+  background: rgba(37,99,235,.22) !important;
+  color: #ffffff !important;
+}
+
+@media (max-width: 900px) {
+  .frotas-page .frotas-grid,
+  .frotas-grid {
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .frotas-page .frotas-grid,
+  .frotas-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+
