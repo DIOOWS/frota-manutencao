@@ -2966,3 +2966,482 @@
 
 
 
+
+/* =========================================================
+   FLUXO DIÁRIO — MODAL COMPACTO EM TABELAS RECOLHÍVEIS
+========================================================= */
+
+.fluxo-dia-modal-dialog {
+  width: min(1480px, calc(100vw - 28px));
+  max-width: 1480px;
+}
+
+.fluxo-dia-modal-compacto {
+  border-radius: 14px;
+}
+
+.fluxo-dia-modal-header-compacto {
+  min-height: 62px;
+  padding: 10px 18px;
+}
+
+.fluxo-dia-modal-titulo-wrap {
+  min-width: 0;
+}
+
+.fluxo-dia-modal-header-compacto h5 {
+  font-size: 17px;
+  line-height: 1.15;
+}
+
+.fluxo-dia-modal-header-compacto small {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+}
+
+.fluxo-dia-modal-body-compacto {
+  padding: 12px;
+}
+
+.fluxo-dia-resumo-grid-compacto {
+  gap: 9px;
+  margin-bottom: 11px;
+}
+
+.fluxo-dia-resumo-grid-compacto .fluxo-dia-resumo-card {
+  min-height: 66px;
+  padding: 10px 13px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.fluxo-dia-resumo-grid-compacto .fluxo-dia-resumo-card span {
+  margin-bottom: 3px;
+  font-size: 9px;
+  letter-spacing: .03em;
+}
+
+.fluxo-dia-resumo-grid-compacto .fluxo-dia-resumo-card strong {
+  font-size: 17px;
+  line-height: 1.1;
+}
+
+.fluxo-dia-tabela-section {
+  margin-bottom: 10px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #dbe3ef;
+  border-radius: 11px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, .045);
+}
+
+.fluxo-dia-tabela-section:last-child {
+  margin-bottom: 0;
+}
+
+.fluxo-dia-tabela-toggle {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 0;
+  background: #fff;
+  color: #0f172a;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fluxo-dia-tabela-section.receita .fluxo-dia-tabela-toggle {
+  border-left: 4px solid #16a34a;
+}
+
+.fluxo-dia-tabela-section.despesa .fluxo-dia-tabela-toggle {
+  border-left: 4px solid #dc2626;
+}
+
+.fluxo-dia-tabela-section.manual .fluxo-dia-tabela-toggle {
+  border-left: 4px solid #7c3aed;
+}
+
+.fluxo-dia-tabela-toggle:hover {
+  background: #f8fafc;
+}
+
+.fluxo-dia-tabela-titulo,
+.fluxo-dia-tabela-meta {
+  display: inline-flex;
+  align-items: center;
+}
+
+.fluxo-dia-tabela-titulo {
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: .025em;
+}
+
+.fluxo-dia-tabela-section.receita .fluxo-dia-tabela-titulo i {
+  color: #15803d;
+}
+
+.fluxo-dia-tabela-section.despesa .fluxo-dia-tabela-titulo i {
+  color: #dc2626;
+}
+
+.fluxo-dia-tabela-section.manual .fluxo-dia-tabela-titulo i {
+  color: #7c3aed;
+}
+
+.fluxo-dia-tabela-meta {
+  gap: 10px;
+}
+
+.fluxo-dia-tabela-meta strong {
+  min-width: 28px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #eef2f7;
+  color: #0f172a;
+  font-size: 10px;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.fluxo-dia-tabela-section.receita .fluxo-dia-tabela-meta strong {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.fluxo-dia-tabela-section.despesa .fluxo-dia-tabela-meta strong {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.fluxo-dia-tabela-section.manual .fluxo-dia-tabela-meta strong {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.fluxo-dia-chevron {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.fluxo-dia-tabela-conteudo {
+  border-top: 1px solid #e2e8f0;
+}
+
+.fluxo-dia-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.fluxo-dia-table {
+  width: 100%;
+  min-width: 1040px;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  color: #0f172a;
+  font-size: 10.5px;
+}
+
+.fluxo-dia-table th,
+.fluxo-dia-table td {
+  border-right: 1px solid #e7edf5;
+  border-bottom: 1px solid #e7edf5;
+  vertical-align: middle;
+}
+
+.fluxo-dia-table th:last-child,
+.fluxo-dia-table td:last-child {
+  border-right: 0;
+}
+
+.fluxo-dia-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.fluxo-dia-table thead th {
+  height: 31px;
+  padding: 6px 8px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 9px;
+  line-height: 1.05;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: .035em;
+  white-space: nowrap;
+}
+
+.fluxo-dia-table.receita thead th {
+  background: #f0fdf4;
+}
+
+.fluxo-dia-table.despesa thead th {
+  background: #fff7f7;
+}
+
+.fluxo-dia-table.manual thead th {
+  background: #faf8ff;
+}
+
+.fluxo-dia-table tbody td {
+  height: 39px;
+  padding: 5px 8px;
+  background: #fff;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.fluxo-dia-table tbody tr:hover td {
+  background: #f8fbff;
+}
+
+.fluxo-dia-table th:nth-child(1),
+.fluxo-dia-table td:nth-child(1) {
+  width: 17%;
+}
+
+.fluxo-dia-table th:nth-child(2),
+.fluxo-dia-table td:nth-child(2) {
+  width: 9%;
+}
+
+.fluxo-dia-table th:nth-child(3),
+.fluxo-dia-table td:nth-child(3) {
+  width: 12%;
+}
+
+.fluxo-dia-table th:nth-child(4),
+.fluxo-dia-table td:nth-child(4),
+.fluxo-dia-table th:nth-child(5),
+.fluxo-dia-table td:nth-child(5) {
+  width: 9.5%;
+}
+
+.fluxo-dia-table th:nth-child(6),
+.fluxo-dia-table td:nth-child(6) {
+  width: 10%;
+}
+
+.fluxo-dia-table th:nth-child(7),
+.fluxo-dia-table td:nth-child(7) {
+  width: 8.5%;
+}
+
+.fluxo-dia-table th:nth-child(8),
+.fluxo-dia-table td:nth-child(8) {
+  width: 8%;
+}
+
+.fluxo-dia-table th:nth-child(9),
+.fluxo-dia-table td:nth-child(9) {
+  width: 16.5%;
+}
+
+.fluxo-dia-table.manual th:nth-child(1),
+.fluxo-dia-table.manual td:nth-child(1) {
+  width: 22%;
+}
+
+.fluxo-dia-table.manual th:nth-child(2),
+.fluxo-dia-table.manual td:nth-child(2),
+.fluxo-dia-table.manual th:nth-child(6),
+.fluxo-dia-table.manual td:nth-child(6),
+.fluxo-dia-table.manual th:nth-child(8),
+.fluxo-dia-table.manual td:nth-child(8) {
+  width: 10%;
+}
+
+.fluxo-dia-table.manual th:nth-child(3),
+.fluxo-dia-table.manual td:nth-child(3),
+.fluxo-dia-table.manual th:nth-child(4),
+.fluxo-dia-table.manual td:nth-child(4),
+.fluxo-dia-table.manual th:nth-child(7),
+.fluxo-dia-table.manual td:nth-child(7) {
+  width: 12%;
+}
+
+.fluxo-dia-table.manual th:nth-child(5),
+.fluxo-dia-table.manual td:nth-child(5) {
+  width: 12%;
+}
+
+.fluxo-dia-col-nome {
+  overflow: hidden;
+  font-weight: 900 !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fluxo-dia-valor {
+  white-space: nowrap;
+  font-weight: 950 !important;
+}
+
+.fluxo-dia-valor.receita {
+  color: #15803d;
+}
+
+.fluxo-dia-valor.despesa {
+  color: #dc2626;
+}
+
+.fluxo-dia-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  padding: 3px 7px;
+  border-radius: 999px;
+  font-size: 8.5px;
+  line-height: 1.1;
+  font-weight: 950;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.fluxo-dia-status.recebido,
+.fluxo-dia-status.pago {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.fluxo-dia-table.despesa .fluxo-dia-status.pago {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.fluxo-dia-status.pendente {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.fluxo-dia-status.cancelado {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.fluxo-dia-status.neutro {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.fluxo-dia-observacao-tabela {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  color: #475569;
+  font-size: 9.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fluxo-dia-sem-observacao {
+  color: #94a3b8;
+}
+
+.fluxo-dia-vazio-tabela {
+  height: 62px !important;
+  color: #64748b;
+  text-align: center;
+  font-weight: 800 !important;
+}
+
+.fluxo-dia-modal-footer-compacto {
+  min-height: 48px;
+  padding: 7px 12px;
+  justify-content: space-between;
+  background: #fff;
+  border-top: 1px solid #e2e8f0;
+}
+
+.fluxo-dia-modal-footer-compacto small {
+  color: #64748b;
+  font-size: 10px;
+}
+
+.fluxo-dia-modal-footer-compacto small i {
+  margin-right: 4px;
+  color: #2563eb;
+}
+
+.fluxo-dia-btn-fechar {
+  min-width: 84px;
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid #dbe3ef;
+  border-radius: 7px;
+  color: #0f172a;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+@media (max-width: 991.98px) {
+  .fluxo-dia-modal-dialog {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+  }
+
+  .fluxo-dia-modal-compacto {
+    min-height: 100%;
+    border-radius: 0;
+  }
+
+  .fluxo-dia-resumo-grid-compacto {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 575.98px) {
+  .fluxo-dia-modal-header-compacto {
+    min-height: 56px;
+    padding: 8px 12px;
+  }
+
+  .fluxo-dia-modal-header-compacto h5 {
+    font-size: 15px;
+  }
+
+  .fluxo-dia-modal-body-compacto {
+    padding: 8px;
+  }
+
+  .fluxo-dia-resumo-grid-compacto {
+    gap: 6px;
+  }
+
+  .fluxo-dia-resumo-grid-compacto .fluxo-dia-resumo-card {
+    min-height: 58px;
+    padding: 8px 10px;
+  }
+
+  .fluxo-dia-resumo-grid-compacto .fluxo-dia-resumo-card strong {
+    font-size: 14px;
+  }
+
+  .fluxo-dia-tabela-toggle {
+    min-height: 40px;
+    padding: 7px 9px;
+  }
+
+  .fluxo-dia-tabela-titulo {
+    font-size: 10px;
+  }
+
+  .fluxo-dia-modal-footer-compacto small {
+    display: none;
+  }
+
+  .fluxo-dia-modal-footer-compacto {
+    justify-content: flex-end;
+  }
+}

@@ -209,11 +209,11 @@
 
 <!-- MODAL DETALHES DO DIA -->
 <div class="modal fade" id="modalFluxoDia" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content fluxo-dia-modal-content">
+  <div class="modal-dialog modal-fullscreen-xl-down modal-xl modal-dialog-centered modal-dialog-scrollable fluxo-dia-modal-dialog">
+    <div class="modal-content fluxo-dia-modal-content fluxo-dia-modal-compacto">
 
-      <div class="modal-header fluxo-dia-modal-header">
-        <div>
+      <div class="modal-header fluxo-dia-modal-header fluxo-dia-modal-header-compacto">
+        <div class="fluxo-dia-modal-titulo-wrap">
           <h5 class="modal-title" id="fluxoDiaModalTitulo">Fluxo do dia</h5>
           <small id="fluxoDiaModalSubtitulo">Detalhamento das movimentações realizadas</small>
         </div>
@@ -221,7 +221,7 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>
 
-      <div class="modal-body fluxo-dia-modal-body">
+      <div class="modal-body fluxo-dia-modal-body fluxo-dia-modal-body-compacto">
 
         <div id="fluxoDiaLoading" class="fluxo-dia-loading">
           <div class="fluxo-dia-spinner"></div>
@@ -230,7 +230,7 @@
 
         <div id="fluxoDiaConteudo" class="d-none">
 
-          <div class="fluxo-dia-resumo-grid">
+          <div class="fluxo-dia-resumo-grid fluxo-dia-resumo-grid-compacto">
             <div class="fluxo-dia-resumo-card receita">
               <span>Receitas do dia</span>
               <strong id="fluxoDiaTotalReceitas">R$ 0,00</strong>
@@ -252,32 +252,114 @@
             </div>
           </div>
 
-          <div class="fluxo-dia-section">
-            <div class="fluxo-dia-section-title receita">
-              <span>Contas recebidas</span>
-              <strong id="fluxoDiaQtdReceitas">0</strong>
-            </div>
-            <div id="fluxoDiaReceitas" class="fluxo-dia-lista"></div>
-          </div>
+          <section class="fluxo-dia-tabela-section receita aberto" data-fluxo-section>
+            <button type="button" class="fluxo-dia-tabela-toggle" data-fluxo-toggle aria-expanded="true">
+              <span class="fluxo-dia-tabela-titulo">
+                <i class="bi bi-arrow-down-left-circle-fill"></i>
+                Contas recebidas
+              </span>
+              <span class="fluxo-dia-tabela-meta">
+                <strong id="fluxoDiaQtdReceitas">0</strong>
+                <i class="bi bi-chevron-up fluxo-dia-chevron"></i>
+              </span>
+            </button>
 
-          <div class="fluxo-dia-section">
-            <div class="fluxo-dia-section-title despesa">
-              <span>Contas pagas</span>
-              <strong id="fluxoDiaQtdDespesas">0</strong>
+            <div class="fluxo-dia-tabela-conteudo" data-fluxo-content>
+              <div class="fluxo-dia-table-wrap">
+                <table class="fluxo-dia-table receita">
+                  <thead>
+                    <tr>
+                      <th>Cliente</th>
+                      <th>Nº fatura</th>
+                      <th>Plano de contas</th>
+                      <th>Vencimento</th>
+                      <th>Recebimento</th>
+                      <th class="text-end">Valor</th>
+                      <th>Cobrança</th>
+                      <th>Status</th>
+                      <th>Observações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="fluxoDiaReceitas"></tbody>
+                </table>
+              </div>
             </div>
-            <div id="fluxoDiaDespesas" class="fluxo-dia-lista"></div>
-          </div>
+          </section>
 
-          <div class="fluxo-dia-section">
-            <div class="fluxo-dia-section-title manual">
-              <span>Lançamentos manuais</span>
-              <strong id="fluxoDiaQtdManuais">0</strong>
+          <section class="fluxo-dia-tabela-section despesa" data-fluxo-section>
+            <button type="button" class="fluxo-dia-tabela-toggle" data-fluxo-toggle aria-expanded="false">
+              <span class="fluxo-dia-tabela-titulo">
+                <i class="bi bi-arrow-up-right-circle-fill"></i>
+                Contas pagas
+              </span>
+              <span class="fluxo-dia-tabela-meta">
+                <strong id="fluxoDiaQtdDespesas">0</strong>
+                <i class="bi bi-chevron-down fluxo-dia-chevron"></i>
+              </span>
+            </button>
+
+            <div class="fluxo-dia-tabela-conteudo" data-fluxo-content hidden>
+              <div class="fluxo-dia-table-wrap">
+                <table class="fluxo-dia-table despesa">
+                  <thead>
+                    <tr>
+                      <th>Fornecedor</th>
+                      <th>Documento</th>
+                      <th>Plano de contas</th>
+                      <th>Vencimento</th>
+                      <th>Pagamento</th>
+                      <th class="text-end">Valor</th>
+                      <th>Setor</th>
+                      <th>Status</th>
+                      <th>Observações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="fluxoDiaDespesas"></tbody>
+                </table>
+              </div>
             </div>
-            <div id="fluxoDiaManuais" class="fluxo-dia-lista"></div>
-          </div>
+          </section>
+
+          <section class="fluxo-dia-tabela-section manual" data-fluxo-section>
+            <button type="button" class="fluxo-dia-tabela-toggle" data-fluxo-toggle aria-expanded="false">
+              <span class="fluxo-dia-tabela-titulo">
+                <i class="bi bi-pencil-square"></i>
+                Lançamentos manuais
+              </span>
+              <span class="fluxo-dia-tabela-meta">
+                <strong id="fluxoDiaQtdManuais">0</strong>
+                <i class="bi bi-chevron-down fluxo-dia-chevron"></i>
+              </span>
+            </button>
+
+            <div class="fluxo-dia-tabela-conteudo" data-fluxo-content hidden>
+              <div class="fluxo-dia-table-wrap">
+                <table class="fluxo-dia-table manual">
+                  <thead>
+                    <tr>
+                      <th>Descrição</th>
+                      <th>Tipo</th>
+                      <th>Categoria</th>
+                      <th>Setor</th>
+                      <th>Cliente/Fornecedor</th>
+                      <th>Data</th>
+                      <th class="text-end">Valor</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="fluxoDiaManuais"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
 
         </div>
 
+      </div>
+
+      <div class="modal-footer fluxo-dia-modal-footer-compacto">
+        <small><i class="bi bi-info-circle"></i> Clique no título de cada grupo para abrir ou recolher.</small>
+        <button type="button" class="btn btn-light fluxo-dia-btn-fechar" data-bs-dismiss="modal">Fechar</button>
       </div>
 
     </div>
@@ -302,112 +384,128 @@
     return String(valor);
   }
 
-  function fluxoDiaCampo(label, valor) {
+  function fluxoDiaEscapar(valor) {
+    return fluxoDiaTexto(valor)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function fluxoDiaStatus(status, tipo) {
+    const texto = fluxoDiaTexto(status);
+    const normalizado = texto.toUpperCase();
+
+    let classe = tipo === "receita" ? "recebido" : tipo === "despesa" ? "pago" : "neutro";
+
+    if (normalizado.includes("PENDENTE") || normalizado.includes("ABERTO")) {
+      classe = "pendente";
+    } else if (normalizado.includes("CANCEL")) {
+      classe = "cancelado";
+    }
+
+    return `<span class="fluxo-dia-status ${classe}">${fluxoDiaEscapar(texto)}</span>`;
+  }
+
+  function fluxoDiaObservacao(valor) {
+    const texto = fluxoDiaTexto(valor);
+
+    if (texto === "-") {
+      return '<span class="fluxo-dia-sem-observacao">-</span>';
+    }
+
+    return `<span class="fluxo-dia-observacao-tabela" title="${fluxoDiaEscapar(texto)}">${fluxoDiaEscapar(texto)}</span>`;
+  }
+
+  function fluxoDiaLinhaVazia(mensagem, colunas) {
+    return `<tr><td colspan="${colunas}" class="fluxo-dia-vazio-tabela">${fluxoDiaEscapar(mensagem)}</td></tr>`;
+  }
+
+  function montarLinhaReceita(item) {
     return `
-      <div class="fluxo-dia-campo">
-        <span>${label}</span>
-        <strong>${fluxoDiaTexto(valor)}</strong>
-      </div>
+      <tr>
+        <td class="fluxo-dia-col-nome" title="${fluxoDiaEscapar(item.cliente || item.titulo)}">${fluxoDiaEscapar(item.cliente || item.titulo)}</td>
+        <td>${fluxoDiaEscapar(item.numero_fatura)}</td>
+        <td>${fluxoDiaEscapar(item.plano_contas || item.categoria)}</td>
+        <td>${fluxoDiaEscapar(item.data_vencimento)}</td>
+        <td>${fluxoDiaEscapar(item.data_pagamento)}</td>
+        <td class="fluxo-dia-valor receita text-end">${fluxoDiaMoeda(item.total ?? item.valor)}</td>
+        <td>${fluxoDiaEscapar(item.cobranca)}</td>
+        <td>${fluxoDiaStatus(item.status, "receita")}</td>
+        <td>${fluxoDiaObservacao(item.observacoes)}</td>
+      </tr>
     `;
   }
 
-  function fluxoDiaVazio(mensagem) {
-    return `<div class="fluxo-dia-vazio">${mensagem}</div>`;
-  }
-
-  function montarCardReceita(item) {
+  function montarLinhaDespesa(item) {
     return `
-      <div class="fluxo-dia-item receita">
-        <div class="fluxo-dia-item-top">
-          <div>
-            <strong>${fluxoDiaTexto(item.titulo)}</strong>
-            <small>${fluxoDiaTexto(item.categoria)} • ${fluxoDiaTexto(item.setor)}</small>
-          </div>
-          <div class="fluxo-dia-item-valor receita">${fluxoDiaMoeda(item.total)}</div>
-        </div>
-
-        <div class="fluxo-dia-item-grid">
-          ${fluxoDiaCampo("Cliente", item.cliente)}
-          ${fluxoDiaCampo("Nº Fatura", item.numero_fatura)}
-          ${fluxoDiaCampo("Plano de contas", item.plano_contas)}
-          ${fluxoDiaCampo("Cobrança", item.cobranca)}
-          ${fluxoDiaCampo("Documento", item.data_documento)}
-          ${fluxoDiaCampo("Vencimento", item.data_vencimento)}
-          ${fluxoDiaCampo("Recebimento", item.data_pagamento)}
-          ${fluxoDiaCampo("Valor base", fluxoDiaMoeda(item.valor))}
-          ${fluxoDiaCampo("Juros", fluxoDiaMoeda(item.juros))}
-          ${fluxoDiaCampo("Status", item.status)}
-        </div>
-
-        <div class="fluxo-dia-observacao">
-          <span>Observações</span>
-          <p>${fluxoDiaTexto(item.observacoes)}</p>
-        </div>
-      </div>
+      <tr>
+        <td class="fluxo-dia-col-nome" title="${fluxoDiaEscapar(item.fornecedor_funcionario || item.titulo)}">${fluxoDiaEscapar(item.fornecedor_funcionario || item.titulo)}</td>
+        <td>${fluxoDiaEscapar(item.numero_fatura)}</td>
+        <td>${fluxoDiaEscapar(item.plano_contas || item.categoria)}</td>
+        <td>${fluxoDiaEscapar(item.data_vencimento)}</td>
+        <td>${fluxoDiaEscapar(item.data_pagamento)}</td>
+        <td class="fluxo-dia-valor despesa text-end">${fluxoDiaMoeda(item.valor)}</td>
+        <td>${fluxoDiaEscapar(item.setor)}</td>
+        <td>${fluxoDiaStatus(item.status, "despesa")}</td>
+        <td>${fluxoDiaObservacao(item.observacoes)}</td>
+      </tr>
     `;
   }
 
-  function montarCardDespesa(item) {
+  function montarLinhaManual(item) {
+    const tipoNormalizado = fluxoDiaTexto(item.tipo).toUpperCase();
+    const classeValor = tipoNormalizado === "RECEITA" ? "receita" : "despesa";
+
     return `
-      <div class="fluxo-dia-item despesa">
-        <div class="fluxo-dia-item-top">
-          <div>
-            <strong>${fluxoDiaTexto(item.titulo)}</strong>
-            <small>${fluxoDiaTexto(item.categoria)} • ${fluxoDiaTexto(item.setor)}</small>
-          </div>
-          <div class="fluxo-dia-item-valor despesa">${fluxoDiaMoeda(item.valor)}</div>
-        </div>
-
-        <div class="fluxo-dia-item-grid">
-          ${fluxoDiaCampo("Fornecedor", item.fornecedor_funcionario)}
-          ${fluxoDiaCampo("Nº Fatura", item.numero_fatura)}
-          ${fluxoDiaCampo("Plano de contas", item.plano_contas)}
-          ${fluxoDiaCampo("Categoria", item.categoria)}
-          ${fluxoDiaCampo("Setor", item.setor)}
-          ${fluxoDiaCampo("Documento", item.data_documento)}
-          ${fluxoDiaCampo("Vencimento", item.data_vencimento)}
-          ${fluxoDiaCampo("Pagamento", item.data_pagamento)}
-          ${fluxoDiaCampo("Status", item.status)}
-        </div>
-
-        <div class="fluxo-dia-observacao">
-          <span>Observações</span>
-          <p>${fluxoDiaTexto(item.observacoes)}</p>
-        </div>
-      </div>
+      <tr>
+        <td class="fluxo-dia-col-nome" title="${fluxoDiaEscapar(item.descricao || item.titulo)}">${fluxoDiaEscapar(item.descricao || item.titulo)}</td>
+        <td>${fluxoDiaEscapar(item.tipo)}</td>
+        <td>${fluxoDiaEscapar(item.categoria)}</td>
+        <td>${fluxoDiaEscapar(item.setor)}</td>
+        <td>${fluxoDiaEscapar(item.cliente)}</td>
+        <td>${fluxoDiaEscapar(item.data)}</td>
+        <td class="fluxo-dia-valor ${classeValor} text-end">${fluxoDiaMoeda(item.valor)}</td>
+        <td>${fluxoDiaStatus(item.status, classeValor)}</td>
+      </tr>
     `;
   }
 
-  function montarCardManual(item) {
-    const classeValor = item.tipo === "RECEITA" ? "receita" : "despesa";
+  function fluxoDiaDefinirSecao(secao, aberta) {
+    const botao = secao.querySelector("[data-fluxo-toggle]");
+    const conteudo = secao.querySelector("[data-fluxo-content]");
+    const chevron = secao.querySelector(".fluxo-dia-chevron");
 
-    return `
-      <div class="fluxo-dia-item manual">
-        <div class="fluxo-dia-item-top">
-          <div>
-            <strong>${fluxoDiaTexto(item.titulo)}</strong>
-            <small>${fluxoDiaTexto(item.tipo)} • ${fluxoDiaTexto(item.categoria)}</small>
-          </div>
-          <div class="fluxo-dia-item-valor ${classeValor}">${fluxoDiaMoeda(item.valor)}</div>
-        </div>
+    secao.classList.toggle("aberto", aberta);
+    botao.setAttribute("aria-expanded", String(aberta));
+    conteudo.hidden = !aberta;
 
-        <div class="fluxo-dia-item-grid">
-          ${fluxoDiaCampo("Tipo", item.tipo)}
-          ${fluxoDiaCampo("Categoria", item.categoria)}
-          ${fluxoDiaCampo("Subcategoria", item.subcategoria)}
-          ${fluxoDiaCampo("Setor", item.setor)}
-          ${fluxoDiaCampo("Cliente/Fornecedor", item.cliente)}
-          ${fluxoDiaCampo("Origem", item.origem_lancamento)}
-          ${fluxoDiaCampo("Data", item.data)}
-          ${fluxoDiaCampo("Status", item.status)}
-        </div>
+    chevron.classList.toggle("bi-chevron-up", aberta);
+    chevron.classList.toggle("bi-chevron-down", !aberta);
+  }
 
-        <div class="fluxo-dia-observacao">
-          <span>Descrição</span>
-          <p>${fluxoDiaTexto(item.descricao)}</p>
-        </div>
-      </div>
-    `;
+  function fluxoDiaPrepararAccordion() {
+    document.querySelectorAll("#modalFluxoDia [data-fluxo-section]").forEach(function (secao) {
+      const botao = secao.querySelector("[data-fluxo-toggle]");
+
+      if (botao.dataset.listenerAdicionado === "1") {
+        return;
+      }
+
+      botao.dataset.listenerAdicionado = "1";
+      botao.addEventListener("click", function () {
+        fluxoDiaDefinirSecao(secao, !secao.classList.contains("aberto"));
+      });
+    });
+  }
+
+  function fluxoDiaResetarAccordion() {
+    const secoes = document.querySelectorAll("#modalFluxoDia [data-fluxo-section]");
+
+    secoes.forEach(function (secao, indice) {
+      fluxoDiaDefinirSecao(secao, indice === 0);
+    });
   }
 
   async function abrirDetalhesFluxoDia(dataIso) {
@@ -417,12 +515,17 @@
     const loading = document.getElementById("fluxoDiaLoading");
     const conteudo = document.getElementById("fluxoDiaConteudo");
 
+    loading.innerHTML = `
+      <div class="fluxo-dia-spinner"></div>
+      <strong>Carregando contas do dia...</strong>
+    `;
     loading.classList.remove("d-none");
     conteudo.classList.add("d-none");
 
     document.getElementById("fluxoDiaModalTitulo").textContent = "Fluxo do dia";
     document.getElementById("fluxoDiaModalSubtitulo").textContent = "Carregando detalhamento...";
 
+    fluxoDiaResetarAccordion();
     modal.show();
 
     try {
@@ -446,16 +549,16 @@
       document.getElementById("fluxoDiaQtdManuais").textContent = dados.manuais.length;
 
       document.getElementById("fluxoDiaReceitas").innerHTML = dados.receitas.length
-        ? dados.receitas.map(montarCardReceita).join("")
-        : fluxoDiaVazio("Nenhuma conta recebida neste dia.");
+        ? dados.receitas.map(montarLinhaReceita).join("")
+        : fluxoDiaLinhaVazia("Nenhuma conta recebida neste dia.", 9);
 
       document.getElementById("fluxoDiaDespesas").innerHTML = dados.despesas.length
-        ? dados.despesas.map(montarCardDespesa).join("")
-        : fluxoDiaVazio("Nenhuma conta paga neste dia.");
+        ? dados.despesas.map(montarLinhaDespesa).join("")
+        : fluxoDiaLinhaVazia("Nenhuma conta paga neste dia.", 9);
 
       document.getElementById("fluxoDiaManuais").innerHTML = dados.manuais.length
-        ? dados.manuais.map(montarCardManual).join("")
-        : fluxoDiaVazio("Nenhum lançamento manual realizado neste dia.");
+        ? dados.manuais.map(montarLinhaManual).join("")
+        : fluxoDiaLinhaVazia("Nenhum lançamento manual realizado neste dia.", 8);
 
       loading.classList.add("d-none");
       conteudo.classList.remove("d-none");
@@ -463,13 +566,15 @@
       loading.innerHTML = `
         <div class="fluxo-dia-erro">
           <strong>Não foi possível carregar os detalhes.</strong>
-          <span>${erro.message}</span>
+          <span>${fluxoDiaEscapar(erro.message)}</span>
         </div>
       `;
     }
   }
 
   document.addEventListener("DOMContentLoaded", function () {
+    fluxoDiaPrepararAccordion();
+
     document.querySelectorAll("[data-fluxo-dia]").forEach(function (linha) {
       linha.addEventListener("click", function () {
         abrirDetalhesFluxoDia(this.dataset.fluxoDia);
@@ -484,5 +589,6 @@
     });
   });
 </script>
+
 
 {% endblock %}
