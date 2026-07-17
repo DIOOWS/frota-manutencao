@@ -12,6 +12,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/organized/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/organized/13-presenca.css') }}">
 </head>
 
 <body>
@@ -184,7 +185,39 @@
 
     </nav>
 
-    <div class="easy-user-menu">
+    <div class="easy-navbar-actions">
+
+      {% if pode_admin %}
+        <div class="easy-online-wrapper" id="easyOnlineWrapper">
+          <button type="button"
+                  class="easy-online-button"
+                  id="easyOnlineButton"
+                  aria-expanded="false"
+                  aria-controls="easyOnlinePopover"
+                  title="Ver usuários online">
+            <i class="bi bi-people-fill" aria-hidden="true"></i>
+            <span class="easy-online-button-label">Online</span>
+            <span class="easy-online-count" id="easyOnlineCount">0</span>
+          </button>
+
+          <div class="easy-online-popover"
+               id="easyOnlinePopover"
+               aria-hidden="true">
+            <div class="easy-online-header">
+              <strong>Usuários online</strong>
+              <span class="easy-online-header-total" id="easyOnlineHeaderTotal">0 usuários</span>
+            </div>
+
+            <div class="easy-online-list" id="easyOnlineList">
+              <div class="easy-online-state">Carregando...</div>
+            </div>
+
+            <div class="easy-online-footer" id="easyOnlineUpdated">
+              Atualizando...
+            </div>
+          </div>
+        </div>
+      {% endif %}
 
       {% if pode_gestao %}
         <button type="button"
@@ -197,28 +230,30 @@
         </button>
       {% endif %}
 
-      <button type="button" class="easy-user-button">
-        {% if session.get("user_foto") %}
-          <img src="{{ session.get('user_foto') }}" class="easy-user-img">
-        {% else %}
-          <div class="easy-user-img easy-user-placeholder">
-            <i class="bi bi-person-fill"></i>
+      <div class="easy-user-menu">
+        <button type="button" class="easy-user-button">
+          {% if session.get("user_foto") %}
+            <img src="{{ session.get('user_foto') }}" class="easy-user-img">
+          {% else %}
+            <div class="easy-user-img easy-user-placeholder">
+              <i class="bi bi-person-fill"></i>
+            </div>
+          {% endif %}
+
+          <i class="bi bi-chevron-down easy-user-arrow"></i>
+        </button>
+
+        <div class="easy-user-dropdown">
+          <div class="easy-user-info">
+            <strong>{{ session.get("user_nome") or session.get("user_name") or "Usuário" }}</strong>
+            <small>{{ role or "cliente" }}</small>
           </div>
-        {% endif %}
 
-        <i class="bi bi-chevron-down easy-user-arrow"></i>
-      </button>
-
-      <div class="easy-user-dropdown">
-        <div class="easy-user-info">
-          <strong>{{ session.get("user_nome") or session.get("user_name") or "Usuário" }}</strong>
-          <small>{{ role or "cliente" }}</small>
+          <a href="/logout" class="easy-user-logout">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Sair</span>
+          </a>
         </div>
-
-        <a href="/logout" class="easy-user-logout">
-          <i class="bi bi-box-arrow-right"></i>
-          <span>Sair</span>
-        </a>
       </div>
 
     </div>
@@ -294,6 +329,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 <!--<script src="{{ url_for('static', filename='js/sidinho.js') }}"></script>-->
+<script src="{{ url_for('static', filename='js/presenca.js') }}"></script>
 
 <script>
   setTimeout(() => {

@@ -27,6 +27,11 @@ class Usuario(db.Model):
 
     foto = db.Column(db.String(255))
 
+    # Atualizado pelo heartbeat do navegador.
+    # Um usuário é considerado online quando este horário está dentro
+    # da janela configurada na rota /api/usuarios-online.
+    ultima_atividade = db.Column(db.DateTime, nullable=True, index=True)
+
     def set_senha(self, senha):
         self.senha_hash = generate_password_hash(senha)
 
