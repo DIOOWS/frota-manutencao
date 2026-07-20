@@ -2180,3 +2180,78 @@
     max-height: 260px !important;
   }
 }
+
+
+
+/* =========================================================
+   MODAL DE IMAGEM DA FROTA
+========================================================= */
+
+#modalImagemFrota {
+  z-index: 1080;
+}
+
+#modalImagemFrota + .modal-backdrop {
+  z-index: 1075;
+}
+
+#modalImagemFrota .modal-dialog {
+  width: min(1100px, calc(100vw - 32px));
+  max-width: min(1100px, calc(100vw - 32px));
+  margin: 16px auto;
+}
+
+#modalImagemFrota .modal-content {
+  max-height: calc(100vh - 32px);
+  border: 0;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+#modalImagemFrota .modal-header {
+  min-height: 50px;
+  padding: 10px 16px;
+  flex: 0 0 auto;
+}
+
+#modalImagemFrota .modal-body {
+  min-height: 0;
+  max-height: calc(100vh - 82px);
+  padding: 10px;
+  overflow: auto;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#modalImagemFrota #imagemAmpliadaFrota {
+  display: block;
+  width: auto !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: calc(100vh - 110px) !important;
+  object-fit: contain;
+  margin: auto;
+  border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  #modalImagemFrota .modal-dialog {
+    width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
+    margin: 8px auto;
+  }
+
+  #modalImagemFrota .modal-content {
+    max-height: calc(100vh - 16px);
+  }
+
+  #modalImagemFrota .modal-body {
+    max-height: calc(100vh - 66px);
+  }
+
+  #modalImagemFrota #imagemAmpliadaFrota {
+    max-height: calc(100vh - 90px) !important;
+  }
+}

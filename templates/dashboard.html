@@ -214,47 +214,47 @@
     </div>
   </div>
 
-  <div class="row g-4 mt-1 dashboard-row">
-    <div class="col-12">
-      <div class="dashboard-executive-card h-100 ultimas-premium-card">
-        <div class="dashboard-executive-header">
-          <div>
-            <h5>Últimas Finalizações</h5>
-            <small>Registros finalizados mais recentes</small>
-          </div>
-          <a href="{{ url_for('manutencao.lista', filtro='finalizado', cliente=request.args.get('cliente', ''), mes=request.args.get('mes', ''), data_inicio=request.args.get('data_inicio', ''), data_fim=request.args.get('data_fim', '')) }}" class="ultimas-ver-todas">Ver todas →</a>
-        </div>
+<!--  <div class="row g-4 mt-1 dashboard-row">-->
+<!--    <div class="col-12">-->
+<!--      <div class="dashboard-executive-card h-100 ultimas-premium-card">-->
+<!--        <div class="dashboard-executive-header">-->
+<!--          <div>-->
+<!--            <h5>Últimas Finalizações</h5>-->
+<!--            <small>Registros finalizados mais recentes</small>-->
+<!--          </div>-->
+<!--          <a href="{{ url_for('manutencao.lista', filtro='finalizado', cliente=request.args.get('cliente', ''), mes=request.args.get('mes', ''), data_inicio=request.args.get('data_inicio', ''), data_fim=request.args.get('data_fim', '')) }}" class="ultimas-ver-todas">Ver todas →</a>-->
+<!--        </div>-->
 
-        <div class="dashboard-executive-body ultimas-premium-body">
-          <div class="ultimas-finalizacoes-box">
-            {% if ultimas_finalizacoes %}
-              {% for m in ultimas_finalizacoes %}
-                {% if m.numero_frota %}
-                  <a href="/frotas/{{ m.numero_frota }}" class="ultima-finalizacao-item ultima-finalizacao-link" title="Abrir histórico da frota {{ m.numero_frota }}">
-                {% else %}
-                  <div class="ultima-finalizacao-item">
-                {% endif %}
-                    <div class="ultima-finalizacao-icon">✓</div>
-                    <div class="ultima-finalizacao-info">
-                      <strong>OS {{ m.os or '-' }} • Frota {{ m.numero_frota or '-' }}</strong>
-                      <small>
-                        Finalizado em {{ m.data_saida.strftime('%d/%m/%Y') if m.data_saida else '-' }}
-                        {% if m.dtm is not none %} • ATM: {{ m.dtm }} dia{% if m.dtm != 1 %}s{% endif %}{% endif %}
-                      </small>
-                    </div>
-                    {% if m.numero_frota %}
-                      <div class="ultima-finalizacao-action">Ver frota →</div>
-                    {% endif %}
-                {% if m.numero_frota %}</a>{% else %}</div>{% endif %}
-              {% endfor %}
-            {% else %}
-              <div class="text-muted px-3 py-2">Nenhuma manutenção finalizada no período selecionado.</div>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+<!--&lt;!&ndash;        <div class="dashboard-executive-body ultimas-premium-body">&ndash;&gt;-->
+<!--&lt;!&ndash;          <div class="ultimas-finalizacoes-box">&ndash;&gt;-->
+<!--&lt;!&ndash;            {% if ultimas_finalizacoes %}&ndash;&gt;-->
+<!--&lt;!&ndash;              {% for m in ultimas_finalizacoes %}&ndash;&gt;-->
+<!--&lt;!&ndash;                {% if m.numero_frota %}&ndash;&gt;-->
+<!--&lt;!&ndash;                  <a href="/frotas/{{ m.numero_frota }}" class="ultima-finalizacao-item ultima-finalizacao-link" title="Abrir histórico da frota {{ m.numero_frota }}">&ndash;&gt;-->
+<!--&lt;!&ndash;                {% else %}&ndash;&gt;-->
+<!--&lt;!&ndash;                  <div class="ultima-finalizacao-item">&ndash;&gt;-->
+<!--&lt;!&ndash;                {% endif %}&ndash;&gt;-->
+<!--&lt;!&ndash;                    <div class="ultima-finalizacao-icon">✓</div>&ndash;&gt;-->
+<!--&lt;!&ndash;                    <div class="ultima-finalizacao-info">&ndash;&gt;-->
+<!--&lt;!&ndash;                      <strong>OS {{ m.os or '-' }} • Frota {{ m.numero_frota or '-' }}</strong>&ndash;&gt;-->
+<!--&lt;!&ndash;                      <small>&ndash;&gt;-->
+<!--&lt;!&ndash;                        Finalizado em {{ m.data_saida.strftime('%d/%m/%Y') if m.data_saida else '-' }}&ndash;&gt;-->
+<!--&lt;!&ndash;                        {% if m.dtm is not none %} • ATM: {{ m.dtm }} dia{% if m.dtm != 1 %}s{% endif %}{% endif %}&ndash;&gt;-->
+<!--&lt;!&ndash;                      </small>&ndash;&gt;-->
+<!--&lt;!&ndash;                    </div>&ndash;&gt;-->
+<!--&lt;!&ndash;                    {% if m.numero_frota %}&ndash;&gt;-->
+<!--&lt;!&ndash;                      <div class="ultima-finalizacao-action">Ver frota →</div>&ndash;&gt;-->
+<!--&lt;!&ndash;                    {% endif %}&ndash;&gt;-->
+<!--&lt;!&ndash;                {% if m.numero_frota %}</a>{% else %}</div>{% endif %}&ndash;&gt;-->
+<!--&lt;!&ndash;              {% endfor %}&ndash;&gt;-->
+<!--&lt;!&ndash;            {% else %}&ndash;&gt;-->
+<!--&lt;!&ndash;              <div class="text-muted px-3 py-2">Nenhuma manutenção finalizada no período selecionado.</div>&ndash;&gt;-->
+<!--&lt;!&ndash;            {% endif %}&ndash;&gt;-->
+<!--&lt;!&ndash;          </div>&ndash;&gt;-->
+<!--&lt;!&ndash;        </div>&ndash;&gt;-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
 
   <canvas id="graficoPareto" style="display:none;"></canvas>
   <canvas id="graficoCorretivaGrande" style="display:none;"></canvas>

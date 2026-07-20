@@ -2428,3 +2428,98 @@ body {
 .dashboard-page a.ultima-finalizacao-item{display:flex;width:100%;cursor:pointer}.dashboard-page a.ultima-finalizacao-item:hover,.dashboard-page a.ultima-finalizacao-item:focus{color:inherit;text-decoration:none!important}
 .dashboard-page .ultima-finalizacao-info{min-width:0;flex:1}.dashboard-page .ultima-finalizacao-action{margin-left:auto;flex:0 0 auto}
 @media(max-width:768px){.frota-detalhe-header{padding:16px;align-items:flex-start;flex-direction:column}.frota-detalhe-voltar{width:100%}.frota-detalhe-page .frota-resumo-card{min-height:105px}}
+
+
+/* =========================================================
+   MANUTENÇÕES OPERACIONAIS - PAGINAÇÃO DA TABELA
+========================================================= */
+
+.manutencoes-operacional-page .manutencoes-op-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.manutencoes-operacional-page .op-footer-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.manutencoes-operacional-page #opRegistrosPorPagina {
+  width: 72px;
+  min-width: 72px;
+  height: 38px;
+  padding: 4px 8px;
+  border-radius: 9px;
+}
+
+.manutencoes-operacional-page .op-pagination {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.manutencoes-operacional-page .op-page-numbers {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.manutencoes-operacional-page .op-page-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #dbe3ef;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.manutencoes-operacional-page .op-page-btn:hover:not(:disabled),
+.manutencoes-operacional-page .op-page-btn.active {
+  background: linear-gradient(135deg, #020024, #090979, #0052e0);
+  border-color: #090979;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(9, 9, 121, 0.18);
+}
+
+.manutencoes-operacional-page .op-page-btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  background: #f8fafc;
+}
+
+.manutencoes-operacional-page .op-page-ellipsis {
+  width: 24px;
+  text-align: center;
+  color: #64748b;
+  font-weight: 900;
+}
+
+@media (max-width: 768px) {
+  .manutencoes-operacional-page .manutencoes-op-footer {
+    align-items: flex-start;
+  }
+
+  .manutencoes-operacional-page .op-footer-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .manutencoes-operacional-page .op-page-btn {
+    width: 34px;
+    height: 34px;
+  }
+}

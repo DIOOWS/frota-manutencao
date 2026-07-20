@@ -400,10 +400,22 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function abrirImagemFrota(src) {
-  document.getElementById("imagemAmpliadaFrota").src = src;
+  const imagem = document.getElementById("imagemAmpliadaFrota");
+  const modalImagemEl = document.getElementById("modalImagemFrota");
 
-  const modal = new bootstrap.Modal(document.getElementById("modalImagemFrota"));
-  modal.show();
+  imagem.src = src;
+
+  let modalImagem = bootstrap.Modal.getInstance(modalImagemEl);
+
+  if (!modalImagem) {
+    modalImagem = new bootstrap.Modal(modalImagemEl, {
+      backdrop: true,
+      keyboard: true,
+      focus: true
+    });
+  }
+
+  modalImagem.show();
 }
 </script>
 

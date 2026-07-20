@@ -283,12 +283,21 @@
     </div>
 
     <div class="manutencoes-op-footer">
-      <span>Mostrando 1 até {{ registros|length }} de {{ registros|length }} registros</span>
+      <span id="opPaginacaoResumo">Mostrando 0 até 0 de 0 registros</span>
+
       <div class="op-footer-right">
         <span>Registros por página:</span>
-        <select class="form-control" disabled>
-          <option>10</option>
+        <select id="opRegistrosPorPagina" class="form-control" aria-label="Registros por página">
+          <option value="10" selected>10</option>
+          <option value="20">20</option>
+          <option value="30">30</option>
         </select>
+
+        <nav class="op-pagination" aria-label="Paginação das manutenções">
+          <button type="button" id="opPaginaAnterior" class="op-page-btn" aria-label="Página anterior">‹</button>
+          <div id="opNumerosPaginas" class="op-page-numbers"></div>
+          <button type="button" id="opProximaPagina" class="op-page-btn" aria-label="Próxima página">›</button>
+        </nav>
       </div>
     </div>
   </div>
@@ -518,41 +527,202 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-
   const filtroCliente = document.getElementById("filtroCliente");
   const filtroFrota = document.getElementById("filtroFrota");
   const filtroStatus = document.getElementById("filtroStatus");
-  const linhas = document.querySelectorAll("#tabelaManutencoes tbody tr");
+  const dataInicio = document.getElementById("dataInicio");
+  const dataFim = document.getElementById("dataFim");
 
-  function aplicarFiltro() {
-    const cliente = filtroCliente.value.toLowerCase();
-    const frota = filtroFrota.value.toLowerCase();
-    const status = filtroStatus.value.toLowerCase();
+  const tabela = document.getElementById("tabelaManutencoes");
+  const linhas = Array.from(tabela.querySelectorAll("tbody tr")).filter(linha => {
+    return !linha.querySelector(".op-empty");
+  });
 
-    linhas.forEach(linha => {
-      const texto = linha.innerText.toLowerCase();
+  const resumo = document.getElementById("opPaginacaoResumo");
+  const seletorPorPagina = document.getElementById("opRegistrosPorPagina");
+  const botaoAnterior = document.getElementById("opPaginaAnterior");
+  const botaoProximo = document.getElementById("opProximaPagina");
+  const numerosPaginas = document.getElementById("opNumerosPaginas");
 
-      const matchCliente = texto.includes(cliente);
-      const matchFrota = texto.includes(frota);
-      const matchStatus = texto.includes(status);
+  let paginaAtual = 1;
+  let registrosPorPagina = Number(seletorPorPagina.value) || 10;
+  let linhasFiltradas = [...linhas];
 
-      linha.style.display = (matchCliente && matchFrota && matchStatus) ? "" : "none";
+  function normalizarTexto(valor) {
+    return (valor || "")
+      .toString()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+  }
+
+  function converterDataBR(valor) {
+    const partes = (valor || "").trim().split("/");
+    if (partes.length !== 3) return null;
+
+    const [dia, mes, ano] = partes.map(Number);
+    if (!dia || !mes || !ano) return null;
+
+    return new Date(ano, mes - 1, dia);
+  }
+
+  function obterDataEntrada(linha) {
+    const celula = linha.cells[1];
+    return celula ? converterDataBR(celula.textContent) : null;
+  }
+
+  function aplicarFiltros() {
+    const cliente = normalizarTexto(filtroCliente.value);
+    const frota = normalizarTexto(filtroFrota.value);
+    const status = normalizarTexto(filtroStatus.value);
+
+    const inicio = dataInicio.value ? new Date(`${dataInicio.value}T00:00:00`) : null;
+    const fim = dataFim.value ? new Date(`${dataFim.value}T23:59:59`) : null;
+
+    linhasFiltradas = linhas.filter(linha => {
+      const clienteLinha = normalizarTexto(linha.cells[4]?.textContent);
+      const frotaLinha = normalizarTexto(linha.cells[5]?.textContent);
+      const statusLinha = normalizarTexto(linha.cells[11]?.textContent);
+      const dataLinha = obterDataEntrada(linha);
+
+      const matchCliente = !cliente || clienteLinha.includes(cliente);
+      const matchFrota = !frota || frotaLinha.includes(frota);
+      const matchStatus = !status || statusLinha.includes(status);
+      const matchInicio = !inicio || (dataLinha && dataLinha >= inicio);
+      const matchFim = !fim || (dataLinha && dataLinha <= fim);
+
+      return matchCliente && matchFrota && matchStatus && matchInicio && matchFim;
+    });
+
+    paginaAtual = 1;
+    renderizarPagina();
+  }
+
+  function criarBotaoPagina(numero) {
+    const botao = document.createElement("button");
+    botao.type = "button";
+    botao.className = "op-page-btn op-page-number";
+    botao.textContent = numero;
+    botao.setAttribute("aria-label", `Ir para a página ${numero}`);
+
+    if (numero === paginaAtual) {
+      botao.classList.add("active");
+      botao.setAttribute("aria-current", "page");
+    }
+
+    botao.addEventListener("click", function () {
+      paginaAtual = numero;
+      renderizarPagina();
+    });
+
+    return botao;
+  }
+
+  function criarReticencias() {
+    const span = document.createElement("span");
+    span.className = "op-page-ellipsis";
+    span.textContent = "…";
+    return span;
+  }
+
+  function renderizarNumerosPaginas(totalPaginas) {
+    numerosPaginas.innerHTML = "";
+
+    if (totalPaginas <= 1) return;
+
+    const paginas = new Set([1, totalPaginas, paginaAtual - 1, paginaAtual, paginaAtual + 1]);
+    const paginasValidas = Array.from(paginas)
+      .filter(numero => numero >= 1 && numero <= totalPaginas)
+      .sort((a, b) => a - b);
+
+    let anterior = 0;
+
+    paginasValidas.forEach(numero => {
+      if (anterior && numero - anterior > 1) {
+        numerosPaginas.appendChild(criarReticencias());
+      }
+
+      numerosPaginas.appendChild(criarBotaoPagina(numero));
+      anterior = numero;
     });
   }
 
-  filtroCliente.addEventListener("keyup", aplicarFiltro);
-  filtroFrota.addEventListener("keyup", aplicarFiltro);
-  filtroStatus.addEventListener("change", aplicarFiltro);
+  function renderizarPagina() {
+    const totalRegistros = linhasFiltradas.length;
+    const totalPaginas = Math.max(1, Math.ceil(totalRegistros / registrosPorPagina));
 
+    if (paginaAtual > totalPaginas) {
+      paginaAtual = totalPaginas;
+    }
+
+    const inicioIndice = (paginaAtual - 1) * registrosPorPagina;
+    const fimIndice = Math.min(inicioIndice + registrosPorPagina, totalRegistros);
+
+    linhas.forEach(linha => {
+      linha.style.display = "none";
+    });
+
+    linhasFiltradas.slice(inicioIndice, fimIndice).forEach(linha => {
+      linha.style.display = "";
+    });
+
+    if (totalRegistros === 0) {
+      resumo.textContent = "Mostrando 0 até 0 de 0 registros";
+    } else {
+      resumo.textContent = `Mostrando ${inicioIndice + 1} até ${fimIndice} de ${totalRegistros} registros`;
+    }
+
+    botaoAnterior.disabled = paginaAtual <= 1 || totalRegistros === 0;
+    botaoProximo.disabled = paginaAtual >= totalPaginas || totalRegistros === 0;
+
+    renderizarNumerosPaginas(totalPaginas);
+  }
+
+  filtroCliente.addEventListener("input", aplicarFiltros);
+  filtroFrota.addEventListener("input", aplicarFiltros);
+  filtroStatus.addEventListener("change", aplicarFiltros);
+  dataInicio.addEventListener("change", aplicarFiltros);
+  dataFim.addEventListener("change", aplicarFiltros);
+
+  seletorPorPagina.addEventListener("change", function () {
+    registrosPorPagina = Number(this.value) || 10;
+    paginaAtual = 1;
+    renderizarPagina();
+  });
+
+  botaoAnterior.addEventListener("click", function () {
+    if (paginaAtual > 1) {
+      paginaAtual -= 1;
+      renderizarPagina();
+    }
+  });
+
+  botaoProximo.addEventListener("click", function () {
+    const totalPaginas = Math.max(1, Math.ceil(linhasFiltradas.length / registrosPorPagina));
+
+    if (paginaAtual < totalPaginas) {
+      paginaAtual += 1;
+      renderizarPagina();
+    }
+  });
+
+  window.easyManutencoesAplicarFiltros = aplicarFiltros;
+  window.easyManutencoesRenderizarPagina = renderizarPagina;
+
+  aplicarFiltros();
 });
 
 function limparFiltrosManutencoes() {
   document.getElementById("filtroCliente").value = "";
   document.getElementById("filtroFrota").value = "";
   document.getElementById("filtroStatus").value = "";
-  document.querySelectorAll("#tabelaManutencoes tbody tr").forEach(linha => {
-    linha.style.display = "";
-  });
+  document.getElementById("dataInicio").value = "";
+  document.getElementById("dataFim").value = "";
+
+  if (typeof window.easyManutencoesAplicarFiltros === "function") {
+    window.easyManutencoesAplicarFiltros();
+  }
 }
 
 function exportarExcel() {
