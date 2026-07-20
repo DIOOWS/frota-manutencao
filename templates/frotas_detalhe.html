@@ -4,7 +4,9 @@
 
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="frota-detalhe-page">
+
+<div class="frota-detalhe-header">
 
   <div>
     <h3 class="mb-1">{% if tipo_identificador == "PLACA" %}Placa{% else %}Frota{% endif %} {{ frota }}</h3>
@@ -13,13 +15,13 @@
     </small>
   </div>
 
-  <a href="/frotas/" class="btn btn-dark">
+  <a href="/frotas/" class="frota-detalhe-voltar">
     ← Voltar
   </a>
 
 </div>
 
-<div class="row g-3 mb-4">
+<div class="row g-3 mb-4 frota-detalhe-kpis">
 
   <div class="col-md-4">
     <div class="frota-resumo-card">
@@ -68,7 +70,7 @@
 
 </div>
 
-<div class="x-card">
+<section class="x-card frota-historico-card">
 
   <h5>Histórico de Manutenções</h5>
 
@@ -171,7 +173,7 @@
 
   {% endif %}
 
-</div>
+</section>
 
 <div class="modal fade" id="modalDetalheFrota" tabindex="-1">
   <div class="modal-dialog modal-xl modal-dialog-centered">
@@ -290,6 +292,8 @@
 
     </div>
   </div>
+</div>
+
 </div>
 
 <script>
