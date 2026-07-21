@@ -2076,7 +2076,8 @@ select.pf-v2-control{
           </thead>
           <tbody>
             {% for item in planejadas + executadas %}
-              <tr class="pf-v2-row {% if item.status_execucao == 'PAGA' %}pf-v2-row-paid{% endif %}">
+              <tr class="pf-v2-row {% if item.status_execucao == 'PAGA' %}pf-v2-row-paid{% endif %}"
+                  data-pf-status-execucao="{{ 'paga' if item.status_execucao == 'PAGA' else 'planejada' }}">
                 <td class="pf-v2-status-cell">
                   {% if item.status_execucao == 'PAGA' %}
                     <span class="pf-v2-badge pf-v2-badge-green">PAGA</span>
@@ -2114,7 +2115,7 @@ select.pf-v2-control{
         </table>
       </div>
 
-      <footer class="pf-v2-panel-foot"><div class="pf-v2-page-info">Mostrando 0 de 0 conta(s)</div><div class="pf-v2-pagination"></div><strong>Falta pagar: {{ moeda(total_planejado) }}</strong></footer>
+      <footer class="pf-v2-panel-foot"><div class="pf-v2-page-info">Mostrando 0 de 0 conta(s)</div><div class="pf-v2-pagination"></div></footer>
     </article>
 
   </section>
@@ -2325,8 +2326,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const painelPlanejadas = painel.dataset.pfPanel === "planejadas";
 
     if (totalCount) totalCount.innerText = totalLinhas;
-    if (totalTopo) totalTopo.innerText = (painelPlanejadas ? "Falta: " : "") + total;
-    if (totalRodape) totalRodape.innerText = (painelPlanejadas ? "Falta pagar: " : "Total: ") + total;
+
+    // O painel da direita já possui os três KPIs próprios no cabeçalho.
+    // Não sobrescreve nenhum deles com o total genérico do painel.
+    if (totalTopo && !painelPlanejadas) totalTopo.innerText = total;
+    if (totalRodape && !painelPlanejadas) totalRodape.innerText = "Total: " + total;
   }
 
   function prepararLinhaParaPainel(linha, destino) {
