@@ -2523,3 +2523,314 @@ body {
     height: 34px;
   }
 }
+
+/* =========================================================
+   MODAL DE DETALHES DA MANUTENÇÃO - MODO COMPACTO
+   Escopo exclusivo: #modalDetalhe
+========================================================= */
+
+#modalDetalhe .easy-maint-dialog {
+  width: min(920px, calc(100vw - 32px)) !important;
+  max-width: 920px !important;
+  margin: 16px auto !important;
+}
+
+#modalDetalhe .easy-maint-content {
+  max-height: 84vh !important;
+  border: 0 !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28) !important;
+}
+
+#modalDetalhe .easy-maint-header {
+  min-height: 64px !important;
+  padding: 12px 16px !important;
+  gap: 12px !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+#modalDetalhe .easy-maint-title-wrap {
+  gap: 10px !important;
+}
+
+#modalDetalhe .easy-maint-main-icon {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  border-radius: 11px !important;
+  font-size: 18px !important;
+}
+
+#modalDetalhe .easy-maint-title-wrap h4 {
+  margin: 0 !important;
+  font-size: 20px !important;
+  line-height: 1.15 !important;
+  font-weight: 900 !important;
+}
+
+#modalDetalhe .easy-maint-title-wrap p {
+  margin: 3px 0 0 !important;
+  font-size: 11px !important;
+  line-height: 1.25 !important;
+}
+
+#modalDetalhe .easy-maint-header-actions {
+  gap: 8px !important;
+}
+
+#modalDetalhe .easy-print-btn {
+  min-height: 34px !important;
+  padding: 7px 11px !important;
+  border-radius: 9px !important;
+  font-size: 11px !important;
+}
+
+#modalDetalhe .easy-close-x {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  font-size: 22px !important;
+}
+
+#modalDetalhe .easy-maint-body {
+  padding: 12px 14px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  max-height: calc(84vh - 118px) !important;
+}
+
+#modalDetalhe .easy-section {
+  margin-bottom: 10px !important;
+  border-radius: 12px !important;
+}
+
+#modalDetalhe .easy-section:last-child {
+  margin-bottom: 0 !important;
+}
+
+#modalDetalhe .easy-section-title {
+  min-height: 40px !important;
+  padding: 9px 13px !important;
+  font-size: 12px !important;
+  line-height: 1.1 !important;
+}
+
+#modalDetalhe .easy-section-body {
+  padding: 10px 12px !important;
+}
+
+#modalDetalhe .easy-detail-table {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0 !important;
+  border-radius: 10px !important;
+}
+
+#modalDetalhe .easy-detail-cell {
+  min-height: 46px !important;
+  padding: 8px 10px !important;
+  gap: 3px !important;
+}
+
+#modalDetalhe .easy-detail-cell > span {
+  font-size: 10px !important;
+  line-height: 1.1 !important;
+}
+
+#modalDetalhe .easy-detail-cell > strong {
+  font-size: 12px !important;
+  line-height: 1.25 !important;
+}
+
+#modalDetalhe .easy-detail-cell-full {
+  grid-column: 1 / -1 !important;
+}
+
+#modalDetalhe #mObservacao {
+  display: block !important;
+  max-height: 76px !important;
+  overflow-y: auto !important;
+  padding-right: 6px !important;
+  font-size: 11px !important;
+  line-height: 1.45 !important;
+}
+
+#modalDetalhe .easy-km-layout-table {
+  grid-template-columns: 220px minmax(0, 1fr) !important;
+  gap: 10px !important;
+}
+
+#modalDetalhe .easy-km-info-card,
+#modalDetalhe .easy-km-image-wrap {
+  min-height: 96px !important;
+  padding: 10px 12px !important;
+  border-radius: 10px !important;
+}
+
+#modalDetalhe .easy-km-info-card small,
+#modalDetalhe .easy-km-image-wrap > strong {
+  font-size: 10px !important;
+}
+
+#modalDetalhe .easy-km-info-card strong {
+  margin: 4px 0 !important;
+  font-size: 18px !important;
+}
+
+#modalDetalhe .easy-refri-grid-table {
+  gap: 10px !important;
+}
+
+#modalDetalhe .easy-refri-card-table {
+  padding: 10px !important;
+  border-radius: 10px !important;
+}
+
+#modalDetalhe .easy-refri-card-table h6 {
+  margin: 0 0 8px !important;
+  font-size: 12px !important;
+}
+
+#modalDetalhe .easy-refri-mini-table {
+  gap: 0 !important;
+}
+
+#modalDetalhe .easy-refri-mini-table > div {
+  min-height: 36px !important;
+  padding: 6px 8px !important;
+}
+
+#modalDetalhe .easy-refri-mini-table span,
+#modalDetalhe .easy-refri-mini-table strong {
+  font-size: 10px !important;
+}
+
+#modalDetalhe .easy-refri-images-title {
+  margin: 8px 0 6px !important;
+  font-size: 10px !important;
+}
+
+#modalDetalhe .easy-modal-gallery {
+  gap: 7px !important;
+}
+
+#modalDetalhe .galeria-modal-img {
+  width: 82px !important;
+  height: 66px !important;
+  border-radius: 8px !important;
+}
+
+#modalDetalhe .easy-empty-gallery {
+  min-height: 58px !important;
+  padding: 8px !important;
+  font-size: 10px !important;
+}
+
+#modalDetalhe .easy-video-row {
+  grid-template-columns: 115px minmax(0, 1fr) !important;
+  gap: 10px !important;
+}
+
+#modalDetalhe .easy-modal-video-wrap {
+  padding: 6px !important;
+  border-radius: 10px !important;
+}
+
+#modalDetalhe #mVideo {
+  width: 150px !important;
+  max-width: 150px !important;
+  height: 210px !important;
+  max-height: 210px !important;
+}
+
+#modalDetalhe .easy-maint-footer {
+  min-height: 52px !important;
+  padding: 9px 14px !important;
+  border-top: 1px solid #e2e8f0 !important;
+}
+
+#modalDetalhe .easy-footer-close {
+  min-height: 34px !important;
+  padding: 7px 16px !important;
+  border-radius: 9px !important;
+  font-size: 11px !important;
+}
+
+/* Notebook com pouca altura */
+@media (max-height: 760px) and (min-width: 769px) {
+  #modalDetalhe .easy-maint-content {
+    max-height: 90vh !important;
+  }
+
+  #modalDetalhe .easy-maint-body {
+    max-height: calc(90vh - 108px) !important;
+    padding: 9px 12px !important;
+  }
+
+  #modalDetalhe .easy-section {
+    margin-bottom: 7px !important;
+  }
+
+  #modalDetalhe .easy-section-title {
+    min-height: 36px !important;
+    padding: 7px 11px !important;
+  }
+
+  #modalDetalhe .easy-detail-cell {
+    min-height: 40px !important;
+    padding: 6px 8px !important;
+  }
+}
+
+/* Tablet e celular */
+@media (max-width: 768px) {
+  #modalDetalhe .easy-maint-dialog {
+    width: calc(100vw - 16px) !important;
+    max-width: none !important;
+    margin: 8px auto !important;
+  }
+
+  #modalDetalhe .easy-maint-content {
+    max-height: 94vh !important;
+    border-radius: 13px !important;
+  }
+
+  #modalDetalhe .easy-maint-header {
+    padding: 10px 12px !important;
+  }
+
+  #modalDetalhe .easy-maint-title-wrap p,
+  #modalDetalhe .easy-print-btn {
+    display: none !important;
+  }
+
+  #modalDetalhe .easy-maint-title-wrap h4 {
+    font-size: 17px !important;
+  }
+
+  #modalDetalhe .easy-maint-body {
+    max-height: calc(94vh - 104px) !important;
+    padding: 9px !important;
+  }
+
+  #modalDetalhe .easy-detail-table,
+  #modalDetalhe .easy-refri-grid-table,
+  #modalDetalhe .easy-km-layout-table {
+    grid-template-columns: 1fr !important;
+  }
+
+  #modalDetalhe .easy-detail-cell-full {
+    grid-column: auto !important;
+  }
+
+  #modalDetalhe .easy-video-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  #modalDetalhe #mVideo {
+    width: 135px !important;
+    max-width: 135px !important;
+    height: 190px !important;
+    max-height: 190px !important;
+  }
+}
