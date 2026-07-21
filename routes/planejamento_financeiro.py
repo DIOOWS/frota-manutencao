@@ -513,6 +513,37 @@ def index():
     contas = buscar_contas_exportacao_e_tela(mes, ano)
     planejamentos_id, planejamentos_chave = buscar_planejamentos(mes, ano, contas)
 
+    # Planejamentos ativos em outras competências. Eles continuam aparecendo
+    # em Aguardando Decisão, porém marcados como indisponíveis na interface.
+    outros_planejamentos = PlanejamentoFinanceiro.query.filter(
+        PlanejamentoFinanceiro.origem == "IMPORTADA",
+        or_(
+            PlanejamentoFinanceiro.mes != mes,
+            PlanejamentoFinanceiro.ano != ano,
+        ),
+    ).order_by(
+        PlanejamentoFinanceiro.ano.asc(),
+        PlanejamentoFinanceiro.mes.asc(),
+    ).all()
+
+    outros_por_id = {}
+    outros_por_chave = {}
+
+    for planejamento_antigo in outros_planejamentos:
+        conta_antiga = None
+        if planejamento_antigo.conta_id is not None:
+            conta_antiga = ContaPagarImportada.query.get(int(planejamento_antigo.conta_id))
+
+        # Planejamentos de contas já pagas ou canceladas não bloqueiam.
+        if conta_antiga and (conta_esta_paga_local(conta_antiga) or conta_esta_cancelada(conta_antiga)):
+            continue
+
+        if planejamento_antigo.conta_id is not None:
+            outros_por_id.setdefault(int(planejamento_antigo.conta_id), planejamento_antigo)
+
+        if planejamento_antigo.chave_conta:
+            outros_por_chave.setdefault(planejamento_antigo.chave_conta, planejamento_antigo)
+
     aguardando = []
     planejadas = []
     executadas = []
@@ -536,6 +567,23 @@ def index():
         elif not conta_esta_paga_local(conta):
             item["status_execucao"] = "AGUARDANDO"
             item["data_pagamento"] = "-"
+
+            chave_atual = gerar_chave_conta(conta)
+            planejamento_outro_mes = (
+                outros_por_id.get(int(conta.id))
+                or outros_por_chave.get(chave_atual)
+            )
+
+            if planejamento_outro_mes:
+                item["planejada_outro_mes"] = True
+                item["competencia_planejada"] = (
+                    f"{nome_mes(planejamento_outro_mes.mes).upper()}/"
+                    f"{planejamento_outro_mes.ano}"
+                )
+            else:
+                item["planejada_outro_mes"] = False
+                item["competencia_planejada"] = ""
+
             aguardando.append(item)
 
     total_aguardando = sum(dinheiro_decimal(i.get("valor")) for i in aguardando)
@@ -772,6 +820,71 @@ def planejar(conta_id):
         return jsonify({"ok": False, "message": "Conta não encontrada. Sincronize a importação e tente novamente."}), 404
 
     chave = gerar_chave_conta(conta)
+
+    # Bloqueia a mesma conta/parcela enquanto existir planejamento ativo
+    # em outra competência.
+    #
+    # A verificação usa conta_id OU chave_conta:
+    # - conta_id cobre a mesma linha ainda existente na importação;
+    # - chave_conta cobre reimportações em que o ID foi recriado.
+    #
+    # Não limitamos apenas ao status "PLANEJADA", pois registros antigos
+    # podem ter status vazio ou outro texto. O que define se ainda está
+    # ativo é a conta vinculada continuar em aberto.
+    planejamentos_outros_meses = PlanejamentoFinanceiro.query.filter(
+        PlanejamentoFinanceiro.origem == "IMPORTADA",
+        or_(
+            PlanejamentoFinanceiro.conta_id == conta_id,
+            PlanejamentoFinanceiro.chave_conta == chave,
+        ),
+        or_(
+            PlanejamentoFinanceiro.mes != mes,
+            PlanejamentoFinanceiro.ano != ano,
+        ),
+    ).order_by(
+        PlanejamentoFinanceiro.ano.asc(),
+        PlanejamentoFinanceiro.mes.asc(),
+    ).all()
+
+    planejamento_ativo = None
+
+    for planejamento_anterior in planejamentos_outros_meses:
+        conta_vinculada = None
+
+        if planejamento_anterior.conta_id is not None:
+            conta_vinculada = ContaPagarImportada.query.get(
+                int(planejamento_anterior.conta_id)
+            )
+
+        # Se a conta vinculada existe e já foi paga ou cancelada,
+        # o planejamento antigo não deve bloquear uma nova competência.
+        if conta_vinculada:
+            if conta_esta_paga_local(conta_vinculada):
+                continue
+            if conta_esta_cancelada(conta_vinculada):
+                continue
+
+        # Se o vínculo antigo não existe mais, mas o planejamento permanece
+        # no banco, ele continua sendo considerado ativo até ser removido.
+        planejamento_ativo = planejamento_anterior
+        break
+
+    if planejamento_ativo:
+        competencia_existente = (
+            f"{nome_mes(planejamento_ativo.mes)}/"
+            f"{planejamento_ativo.ano}"
+        )
+
+        return jsonify({
+            "ok": False,
+            "message": (
+                "Esta mesma conta/parcela já está planejada em "
+                f"{competencia_existente} e ainda está em aberto. "
+                "Remova o planejamento anterior ou registre o pagamento."
+            ),
+            "competencia": competencia_existente,
+        }), 409
+
     existe = PlanejamentoFinanceiro.query.filter(
         PlanejamentoFinanceiro.origem == "IMPORTADA",
         PlanejamentoFinanceiro.mes == mes,

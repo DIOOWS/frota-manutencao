@@ -455,6 +455,24 @@ select.pf-v2-control{
 .pf-v2-panel-plan-resumo .pf-plan-pago{background:#effcf5;border-color:#c6f3dc;color:#087539;}
 .pf-v2-panel-plan-resumo .pf-plan-falta{background:#fff5f5;border-color:#ffd4d4;color:#e11d2e;}
 .pf-v2-panel-plan-resumo .pf-v2-panel-total:after{display:none;}
+.pf-v2-panel-plan-resumo .pf-plan-filter{
+  cursor:pointer;
+  user-select:none;
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.pf-v2-panel-plan-resumo .pf-plan-filter:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 18px rgba(15,23,42,.12);
+}
+.pf-v2-panel-plan-resumo .pf-plan-filter:focus-visible{
+  outline:3px solid rgba(11,78,219,.22);
+  outline-offset:2px;
+}
+.pf-v2-panel-plan-resumo .pf-plan-filter.active{
+  border-color:#0b4edb!important;
+  box-shadow:0 0 0 3px rgba(11,78,219,.12), 0 8px 18px rgba(15,23,42,.10);
+}
+
 
 /* TABELAS */
 .pf-v2-table-box{
@@ -1803,6 +1821,69 @@ select.pf-v2-control{
   }
 }
 
+
+
+/* =========================================================
+   CONTA JÁ PLANEJADA EM OUTRA COMPETÊNCIA
+   ========================================================= */
+.pf-v2-row-other-plan td,
+.pf-v2-table tbody tr.pf-v2-row-other-plan:nth-child(even) td,
+.pf-v2-table tbody tr.pf-v2-row-other-plan:hover td{
+  background:#eef1f4 !important;
+  border-bottom-color:#cbd3dc !important;
+  color:#6b7280 !important;
+}
+
+.pf-v2-row-other-plan .pf-v2-badge{
+  background:#dfe3e8 !important;
+  border-color:#c5ccd5 !important;
+  color:#4b5563 !important;
+}
+
+.pf-v2-row-other-plan .pf-v2-date-cell strong,
+.pf-v2-row-other-plan .pf-v2-date-cell small,
+.pf-v2-row-other-plan .pf-v2-account-cell strong,
+.pf-v2-row-other-plan .pf-v2-account-cell small,
+.pf-v2-row-other-plan .pf-v2-account-meta em,
+.pf-v2-row-other-plan .pf-v2-account-meta span,
+.pf-v2-row-other-plan .pf-v2-inline-obs,
+.pf-v2-row-other-plan .pf-v2-inline-obs b,
+.pf-v2-row-other-plan .pf-v2-value{
+  color:#6b7280 !important;
+}
+
+.pf-v2-other-plan-warning{
+  display:block !important;
+  height:14px !important;
+  line-height:14px !important;
+  margin-top:2px !important;
+  color:#4b5563 !important;
+  font-size:10px !important;
+  font-weight:950 !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+
+.pf-v2-already-planned-btn{
+  width:100%;
+  height:29px;
+  padding:0 7px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid #c5ccd5;
+  border-radius:8px;
+  background:#dfe3e8;
+  color:#5f6875;
+  font-size:10px;
+  line-height:1;
+  font-weight:950;
+  white-space:nowrap;
+  cursor:not-allowed;
+  opacity:1;
+}
+
 </style>
 
 
@@ -1897,11 +1978,16 @@ select.pf-v2-control{
           </thead>
           <tbody>
             {% for item in aguardando %}
-              <tr class="pf-v2-row {% if item.status_execucao == 'PAGA' %}pf-v2-row-paid{% endif %}">
+              <tr class="pf-v2-row {% if item.status_execucao == 'PAGA' %}pf-v2-row-paid{% endif %} {% if item.planejada_outro_mes %}pf-v2-row-other-plan{% endif %}"
+                  data-pf-status-execucao="{{ 'paga' if item.status_execucao == 'PAGA' else 'planejada' }}"
+                  {% if item.planejada_outro_mes %}title="Esta conta já está planejada em {{ item.competencia_planejada }}."{% endif %}>
                 <td class="pf-v2-status-cell">
                   {% if item.status_execucao == 'PAGA' %}
                     <span class="pf-v2-badge pf-v2-badge-green">PAGA</span>
                     <small class="pf-v2-neutral">Radar</small>
+                  {% elif item.planejada_outro_mes %}
+                    <span class="pf-v2-badge">PLANEJADA</span>
+                    <small class="pf-v2-neutral">outro mês</small>
                   {% else %}
                     <span class="pf-v2-badge {% if item.is_herdada %}pf-v2-badge-red{% elif item.status_planejamento_visual == 'VENCE HOJE' %}pf-v2-badge-orange{% else %}pf-v2-badge-blue{% endif %}">{{ item.status_planejamento_visual }}</span>
                     {% if item.dias_atraso and item.dias_atraso > 0 %}<small class="pf-v2-delay">{{ item.dias_atraso }}d vencida</small>{% elif item.dias_atraso and item.dias_atraso < 0 %}<small class="pf-v2-future">{{ (item.dias_atraso * -1) }}d para vencer</small>{% else %}<small class="pf-v2-neutral">0d</small>{% endif %}
@@ -1912,16 +1998,24 @@ select.pf-v2-control{
                   <strong title="{{ item.descricao }}">{{ item.descricao or '-' }}</strong>
                   <small title="{{ item.fornecedor }}">{{ item.fornecedor or '-' }}</small>
                   <div class="pf-v2-account-meta">{% if item.categoria and item.categoria != '-' %}<em>{{ item.categoria }}</em>{% endif %}{% if item.parcela_label %}<span>Parc. {{ item.parcela_label }}</span>{% endif %}</div>
-                  <div class="pf-v2-inline-obs" title="{{ item.observacao }}"><b>Obs:</b> {{ item.observacao or '-' }}</div>
+                  {% if item.planejada_outro_mes %}
+                    <div class="pf-v2-other-plan-warning" title="Esta conta já está planejada em {{ item.competencia_planejada }}.">Planejada em {{ item.competencia_planejada }}</div>
+                  {% else %}
+                    <div class="pf-v2-inline-obs" title="{{ item.observacao }}"><b>Obs:</b> {{ item.observacao or '-' }}</div>
+                  {% endif %}
                 </td>
                 <td class="pf-v2-doc-cell" title="{{ item.documento }}">{{ item.documento or '-' }}</td>
                 <td class="pf-v2-obs-cell" title="{{ item.observacao }}">{{ item.observacao or '-' }}</td>
                 <td class="pf-v2-value pf-v2-value-red">{{ item.valor_formatado }}</td>
                 <td class="pf-v2-action-cell">
-                  <form method="POST" action="/gestao/planejamento-financeiro/planejar/{{ item.id }}" class="pf-v2-ajax-form">
-                    <input type="hidden" name="mes" value="{{ mes }}"><input type="hidden" name="ano" value="{{ ano }}">
-                    <button type="submit" class="pf-v2-btn pf-v2-pay-btn">Vou pagar</button>
-                  </form>
+                  {% if item.planejada_outro_mes %}
+                    <button type="button" class="pf-v2-already-planned-btn" disabled title="Esta conta já está planejada em {{ item.competencia_planejada }}.">Já planejada</button>
+                  {% else %}
+                    <form method="POST" action="/gestao/planejamento-financeiro/planejar/{{ item.id }}" class="pf-v2-ajax-form">
+                      <input type="hidden" name="mes" value="{{ mes }}"><input type="hidden" name="ano" value="{{ ano }}">
+                      <button type="submit" class="pf-v2-btn pf-v2-pay-btn">Vou pagar</button>
+                    </form>
+                  {% endif %}
                 </td>
               </tr>
             {% else %}
@@ -1940,10 +2034,36 @@ select.pf-v2-control{
           <strong>Vou Pagar em {{ nome_mes(mes) }}/{{ ano }}</strong>
           <span class="pf-v2-panel-count"><b><span class="pf-v2-visible-count">{{ planejadas|length + executadas|length }}</span></b> visíveis de <b><span class="pf-v2-total-count">{{ planejadas|length + executadas|length }}</span></b> conta(s)</span>
         </div>
-        <div class="pf-v2-panel-plan-resumo">
-          <span><small>Planejado:</small><b>{{ moeda(total_planejado + total_executado) }}</b></span>
-          <span class="pf-plan-pago"><small>Pago:</small><b>{{ moeda(total_executado) }}</b></span>
-          <span class="pf-plan-falta pf-v2-panel-total pf-v2-panel-total-blue"><small>Falta pagar:</small><b>{{ moeda(total_planejado) }}</b></span>
+        <div class="pf-v2-panel-plan-resumo" aria-label="Filtros das contas planejadas">
+          <span class="pf-plan-filter active"
+                data-pf-status-filter="todos"
+                role="button"
+                tabindex="0"
+                aria-pressed="true"
+                title="Mostrar todas as contas planejadas">
+            <small>Planejado:</small>
+            <b>{{ moeda(total_planejado + total_executado) }}</b>
+          </span>
+
+          <span class="pf-plan-pago pf-plan-filter"
+                data-pf-status-filter="paga"
+                role="button"
+                tabindex="0"
+                aria-pressed="false"
+                title="Mostrar somente as contas pagas">
+            <small>Pago:</small>
+            <b>{{ moeda(total_executado) }}</b>
+          </span>
+
+          <span class="pf-plan-falta pf-v2-panel-total pf-v2-panel-total-blue pf-plan-filter"
+                data-pf-status-filter="planejada"
+                role="button"
+                tabindex="0"
+                aria-pressed="false"
+                title="Mostrar somente o que falta pagar">
+            <small>Falta pagar:</small>
+            <b>{{ moeda(total_planejado) }}</b>
+          </span>
         </div>
       </header>
 
@@ -2049,7 +2169,15 @@ document.addEventListener("DOMContentLoaded", function () {
     const paginacao = painel.querySelector(".pf-v2-pagination");
     const info = painel.querySelector(".pf-v2-page-info");
     const visivelCount = painel.querySelector(".pf-v2-visible-count");
-    const filtradas = linhas.filter(linha => !termo || normalizar(linha.innerText).includes(termo));
+    const filtroStatus = painel.dataset.pfStatusFiltro || "todos";
+    const filtradas = linhas.filter(linha => {
+      const correspondeBusca = !termo || normalizar(linha.innerText).includes(termo);
+
+      if (!correspondeBusca) return false;
+      if (painel.dataset.pfPanel !== "planejadas" || filtroStatus === "todos") return true;
+
+      return linha.dataset.pfStatusExecucao === filtroStatus;
+    });
     const total = filtradas.length;
     const totalPaginas = Math.max(1, Math.ceil(total / LIMITE_POR_PAGINA));
     let paginaAtual = Number(painel.dataset.paginaAtual || 1);
@@ -2094,6 +2222,34 @@ document.addEventListener("DOMContentLoaded", function () {
       renderizarPainel(painel);
     });
   }
+
+  const painelPlanejadas = document.querySelector('[data-pf-panel="planejadas"]');
+  const filtrosStatus = document.querySelectorAll("[data-pf-status-filter]");
+
+  function aplicarFiltroStatus(elemento) {
+    if (!painelPlanejadas || !elemento) return;
+
+    painelPlanejadas.dataset.pfStatusFiltro = elemento.dataset.pfStatusFilter || "todos";
+    painelPlanejadas.dataset.paginaAtual = 1;
+
+    filtrosStatus.forEach(item => {
+      const ativo = item === elemento;
+      item.classList.toggle("active", ativo);
+      item.setAttribute("aria-pressed", ativo ? "true" : "false");
+    });
+
+    renderizarPainel(painelPlanejadas, 1);
+  }
+
+  filtrosStatus.forEach(elemento => {
+    elemento.addEventListener("click", () => aplicarFiltroStatus(elemento));
+    elemento.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        aplicarFiltroStatus(elemento);
+      }
+    });
+  });
 
   if (busca) busca.addEventListener("input", () => renderizarTudo(true));
   if (limparBusca && busca) limparBusca.addEventListener("click", function () { busca.value = ""; busca.focus(); renderizarTudo(true); });
@@ -2232,14 +2388,23 @@ document.addEventListener("DOMContentLoaded", function () {
           body: new FormData(form),
           headers: { "X-Requested-With": "XMLHttpRequest" }
         });
-        if (!resposta.ok) throw new Error("Erro ao salvar planejamento.");
+
+        const dados = await resposta.json().catch(() => null);
+
+        if (!resposta.ok || !dados || !dados.ok) {
+          throw new Error(
+            dados && dados.message
+              ? dados.message
+              : "Erro ao salvar planejamento."
+          );
+        }
 
         moverLinha(linha, destino);
         atualizarResumoPainel(origem);
         atualizarResumoPainel(destino);
         renderizarTudo(false);
       } catch (erro) {
-        alert("Não foi possível atualizar o planejamento. Tente novamente.");
+        alert(erro.message || "Não foi possível atualizar o planejamento. Tente novamente.");
         button.disabled = false;
         button.innerText = textoOriginal;
       }
