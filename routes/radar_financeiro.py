@@ -1,3 +1,6 @@
+# Arquivo refatorado para desempenho, preservando rotas e regras de negócio.
+# Principais ganhos: montagem tardia dos cards e carregamento em lote nas ações múltiplas.
+
 import os
 import calendar
 import hashlib
@@ -434,6 +437,46 @@ def buscar_conta_operacional(id):
         return preparar_conta_importada_para_radar(conta_importada)
 
     return ContaRadarFinanceiro.query.get_or_404(id)
+
+
+def buscar_contas_operacionais(ids):
+    """
+    Carrega várias contas em no máximo duas consultas, preservando a prioridade
+    da base importada quando houver colisão de IDs entre as duas tabelas.
+
+    O retorno mantém a mesma ordem dos IDs recebidos e ignora IDs inexistentes,
+    reproduzindo o comportamento das rotas em lote anteriores sem consultas N+1.
+    """
+    ids_unicos = list(dict.fromkeys(int(item) for item in ids if item is not None))
+    if not ids_unicos:
+        return []
+
+    importadas = ContaPagarImportada.query.filter(
+        ContaPagarImportada.id.in_(ids_unicos),
+        ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA",
+    ).all()
+
+    importadas_por_id = {
+        conta.id: preparar_conta_importada_para_radar(conta)
+        for conta in importadas
+    }
+
+    ids_manuais = [conta_id for conta_id in ids_unicos if conta_id not in importadas_por_id]
+    manuais_por_id = {}
+
+    if ids_manuais:
+        manuais = ContaRadarFinanceiro.query.filter(
+            ContaRadarFinanceiro.id.in_(ids_manuais)
+        ).all()
+        manuais_por_id = {conta.id: conta for conta in manuais}
+
+    contas = []
+    for conta_id in ids_unicos:
+        conta = importadas_por_id.get(conta_id) or manuais_por_id.get(conta_id)
+        if conta is not None:
+            contas.append(conta)
+
+    return contas
 
 
 def atualizar_conta_importada_por_form(conta):
@@ -1029,16 +1072,21 @@ def index():
     ate_fim_mes_itens = []
     total_juros_mes = Decimal("0.00")
 
+    limite_proximos_7 = hoje + timedelta(days=7)
+
     for conta in contas:
+        # Calcula datas e status uma única vez. O item completo só é montado
+        # quando a conta realmente será exibida em alguma coluna.
         venc = data_para_date(conta.data_vencimento)
         pgto = data_para_date(conta.data_pagamento)
-        item = montar_item(conta, hoje)
+        status_conta = texto_upper(conta.status)
 
-        if conta_esta_paga(conta):
+        if status_conta == "PAGO":
             # PAGAS NO MÊS = tudo que saiu do caixa dentro do mês filtrado.
             # PAGAS DE MESES ANT. = subset das pagas no mês, mas com vencimento anterior
             # ao mês filtrado. Não aparece em meses seguintes e não soma duas vezes no fluxo.
             if pgto and primeiro_mes <= pgto <= ultimo_mes:
+                item = montar_item(conta, hoje)
                 pagas_mes_itens.append(item)
                 total_juros_mes += extrair_juros_observacao(conta.observacoes)
 
@@ -1047,11 +1095,11 @@ def index():
 
             continue
 
-        if not conta_esta_aberta(conta):
+        if status_conta not in ["", "PENDENTE", "ADIADO", "ABERTO", "EM ABERTO"]:
             continue
 
         if not venc:
-            ate_fim_mes_itens.append(item)
+            ate_fim_mes_itens.append(montar_item(conta, hoje))
             continue
 
         # DÍVIDA HERDADA:
@@ -1065,11 +1113,13 @@ def index():
         if venc > ultimo_mes:
             continue
 
+        item = montar_item(conta, hoje)
+
         if venc < hoje:
             atrasadas_mes_itens.append(item)
         elif venc == hoje:
             hoje_itens.append(item)
-        elif venc <= hoje + timedelta(days=7):
+        elif venc <= limite_proximos_7:
             proximos_7_itens.append(item)
         else:
             ate_fim_mes_itens.append(item)
@@ -1424,12 +1474,7 @@ def api_herdadas_pagar():
         return jsonify({"ok": False, "message": "Selecione ao menos uma parcela."}), 400
 
     try:
-        contas = []
-        for conta_id in ids:
-            try:
-                contas.append(buscar_conta_operacional(conta_id))
-            except Exception:
-                pass
+        contas = buscar_contas_operacionais(ids)
 
         for conta in contas:
             conta.status = "PAGO"
@@ -1459,12 +1504,7 @@ def api_herdadas_excluir():
         return jsonify({"ok": False, "message": "Selecione ao menos uma parcela."}), 400
 
     try:
-        contas = []
-        for conta_id in ids:
-            try:
-                contas.append(buscar_conta_operacional(conta_id))
-            except Exception:
-                pass
+        contas = buscar_contas_operacionais(ids)
 
         for conta in contas:
             db.session.delete(conta)
@@ -1602,12 +1642,7 @@ def transportar_lote():
     nao_pagas = 0
 
     try:
-        contas = []
-        for conta_id in ids:
-            try:
-                contas.append(buscar_conta_operacional(conta_id))
-            except Exception:
-                pass
+        contas = buscar_contas_operacionais(ids)
 
         for conta in contas:
             if not conta_esta_paga(conta):
@@ -1707,12 +1742,7 @@ def excluir_lote():
         return redirect(request.referrer or "/gestao/radar-financeiro/")
 
     try:
-        contas = []
-        for conta_id in ids:
-            try:
-                contas.append(buscar_conta_operacional(conta_id))
-            except Exception:
-                pass
+        contas = buscar_contas_operacionais(ids)
 
         total = len(contas)
 
