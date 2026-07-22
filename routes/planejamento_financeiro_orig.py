@@ -125,15 +125,7 @@ def gerar_chave_conta(conta):
 
     Usa os campos mais consistentes do relatório para reconhecer a mesma conta
     depois que a importação é apagada e recriada.
-
-    A chave é armazenada apenas no objeto carregado durante a requisição. Isso
-    evita recalcular SHA-256 várias vezes para a mesma conta sem persistir nada
-    no banco e sem alterar a regra de identificação.
     """
-    chave_cache = getattr(conta, "_chave_planejamento_cache", None)
-    if chave_cache:
-        return chave_cache
-
     vencimento = data_para_date_local(getattr(conta, "data_vencimento", None))
     vencimento_txt = vencimento.isoformat() if vencimento else ""
 
@@ -167,12 +159,7 @@ def gerar_chave_conta(conta):
         valor_chave(getattr(conta, "valor", 0)),
     ])
 
-    chave = hashlib.sha256(base.encode("utf-8")).hexdigest()
-    try:
-        setattr(conta, "_chave_planejamento_cache", chave)
-    except Exception:
-        pass
-    return chave
+    return hashlib.sha256(base.encode("utf-8")).hexdigest()
 
 
 def preencher_snapshot_planejamento(registro, conta, chave_conta=None):
@@ -208,12 +195,6 @@ def localizar_planejamento(conta, mes, ano, por_id=None, por_chave=None):
         if mudou:
             db.session.flush()
         return registro
-
-    # Quando os mapas foram fornecidos, eles já contêm todos os planejamentos
-    # da competência. Fazer outra consulta aqui criaria o padrão N+1 sem trazer
-    # resultado diferente.
-    if por_id is not None or por_chave is not None:
-        return None
 
     return PlanejamentoFinanceiro.query.filter(
         PlanejamentoFinanceiro.origem == "IMPORTADA",
@@ -548,24 +529,10 @@ def index():
     outros_por_id = {}
     outros_por_chave = {}
 
-    # Carrega de uma vez todas as contas referenciadas por planejamentos de
-    # outras competências. Antes havia um SELECT por planejamento (N+1).
-    ids_contas_antigas = {
-        int(p.conta_id)
-        for p in outros_planejamentos
-        if p.conta_id is not None
-    }
-    contas_antigas_por_id = {}
-    if ids_contas_antigas:
-        contas_antigas = ContaPagarImportada.query.filter(
-            ContaPagarImportada.id.in_(ids_contas_antigas)
-        ).all()
-        contas_antigas_por_id = {int(c.id): c for c in contas_antigas}
-
     for planejamento_antigo in outros_planejamentos:
         conta_antiga = None
         if planejamento_antigo.conta_id is not None:
-            conta_antiga = contas_antigas_por_id.get(int(planejamento_antigo.conta_id))
+            conta_antiga = ContaPagarImportada.query.get(int(planejamento_antigo.conta_id))
 
         # Planejamentos de contas já pagas ou canceladas não bloqueiam.
         if conta_antiga and (conta_esta_paga_local(conta_antiga) or conta_esta_cancelada(conta_antiga)):
@@ -881,23 +848,11 @@ def planejar(conta_id):
 
     planejamento_ativo = None
 
-    ids_vinculados = {
-        int(p.conta_id)
-        for p in planejamentos_outros_meses
-        if p.conta_id is not None
-    }
-    contas_vinculadas_por_id = {}
-    if ids_vinculados:
-        contas_vinculadas = ContaPagarImportada.query.filter(
-            ContaPagarImportada.id.in_(ids_vinculados)
-        ).all()
-        contas_vinculadas_por_id = {int(c.id): c for c in contas_vinculadas}
-
     for planejamento_anterior in planejamentos_outros_meses:
         conta_vinculada = None
 
         if planejamento_anterior.conta_id is not None:
-            conta_vinculada = contas_vinculadas_por_id.get(
+            conta_vinculada = ContaPagarImportada.query.get(
                 int(planejamento_anterior.conta_id)
             )
 
