@@ -867,7 +867,7 @@
                                     <p><span>Maior atraso:</span><strong>{{ grupo_selecionado.maior_atraso }} dias</strong></p>
                                 </div>
 
-                                {% if not grupo_selecionado.origem_importada %}
+                                {% if false %}
                                 <div class="radar-pagar-herdada">
                                     <h3>Pagar parcelas herdadas</h3>
 
@@ -911,7 +911,7 @@
                                 <div class="radar-historico-table-wrap">
                                     <h3>Histórico por mês</h3>
 
-                                    {% if not grupo_selecionado.origem_importada %}
+                                    {% if false %}
                                     <div class="radar-herdada-lote-actions">
                                         <label class="radar-herdada-check-all">
                                             <input type="checkbox" id="checkTodasHerdadas">
@@ -934,211 +934,192 @@
                                     </div>
                                     {% endif %}
 
-                                    <table class="radar-historico-table" id="tabelaHerdadasPendentes">
-                                        <thead>
-                                            <tr>
-                                                <th>Sel.</th>
-                                                <th>Mês origem</th>
-                                                <th>Parcela</th>
-                                                <th>Venc.</th>
-                                                <th>Valor</th>
-                                                <th>Dias</th>
-                                                <th>Status</th>
-                                                <th>Ação</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for h in grupo_selecionado.historico %}
-                                                <tr data-herdada-row-id="{{ h.id }}" data-valor="{{ h.valor }}">
-                                                    <td>
-                                                        <input type="checkbox"
-                                                               class="radar-herdada-check"
-                                                               value="{{ h.id }}"
-                                                               aria-label="Selecionar parcela herdada {{ h.id }}"
-                                                               {% if grupo_selecionado.origem_importada %}disabled{% endif %}>
-                                                    </td>
-                                                    <td data-herdada-cell="competencia">{{ h.competencia }}</td>
-                                                    <td data-herdada-cell="parcela">{{ h.parcela_label }}</td>
-                                                    <td data-herdada-cell="vencimento">{{ h.data_vencimento_formatada }}</td>
-                                                    <td data-herdada-cell="valor">{{ h.valor_formatado }}</td>
-                                                    <td data-herdada-cell="dias">{{ h.dias_atraso }}</td>
-                                                    <td>
-                                                        <span class="radar-status-pill vencido" data-herdada-cell="status">
-                                                            Em aberto
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        {% if grupo_selecionado.origem_importada %}
-                                                            <div class="radar-historico-actions">
-                                                                <button type="button"
-                                                                        class="radar-historico-action-btn ver js-open-detalhe-herdada"
-                                                                        onclick="event.preventDefault(); event.stopPropagation();"
-                                                                        data-bs-toggle="modal"
-                                                                        data-bs-target="#modalDetalheHerdada{{ h.id }}"
-                                                                        title="Ver dados completos da conta">
-                                                                    <i class="bi bi-eye-fill"></i>
-                                                                </button>
-                                                                <span class="text-muted">Importada</span>
-                                                            </div>
-                                                        {% else %}
-                                                        <div class="radar-historico-actions">
-                                                            <button type="button"
-                                                                    class="radar-historico-action-btn ver js-open-detalhe-herdada"
-                                                                    onclick="event.preventDefault(); event.stopPropagation();"
-                                                                    data-bs-toggle="modal"
-                                                                    data-bs-target="#modalDetalheHerdada{{ h.id }}"
-                                                                    title="Ver dados completos da conta">
-                                                                <i class="bi bi-eye-fill"></i>
-                                                            </button>
+                                    <div class="radar-historico-accordion" id="tabelaHerdadasPendentes">
+                                        <div class="radar-historico-accordion-head">
+                                            <span>Mês origem</span>
+                                            <span>Parcela</span>
+                                            <span>Venc.</span>
+                                            <span>Valor</span>
+                                            <span class="radar-historico-detalhes-head">Detalhes</span>
+                                        </div>
 
+                                        {% for h in grupo_selecionado.historico %}
+                                            <article class="radar-herdada-accordion-item"
+                                                     data-herdada-row-id="{{ h.id }}"
+                                                     data-valor="{{ h.valor }}">
+                                                <button type="button"
+                                                        class="radar-herdada-accordion-trigger js-toggle-herdada-detalhes"
+                                                        aria-expanded="false"
+                                                        aria-controls="detalhesHerdada{{ h.id }}"
+                                                        data-detail-row="{{ h.id }}">
+                                                    <span data-herdada-cell="competencia">{{ h.competencia }}</span>
+                                                    <span data-herdada-cell="parcela">{{ h.parcela_label or '-' }}</span>
+                                                    <span data-herdada-cell="vencimento">{{ h.data_vencimento_formatada }}</span>
+                                                    <strong data-herdada-cell="valor">{{ h.valor_formatado }}</strong>
+                                                    <span class="radar-herdada-chevron-wrap">
+                                                        <i class="bi bi-chevron-down radar-herdada-chevron" aria-hidden="true"></i>
+                                                    </span>
+                                                </button>
+
+                                                <div class="radar-herdada-accordion-panel"
+                                                     id="detalhesHerdada{{ h.id }}"
+                                                     hidden>
+                                                    <div class="radar-herdada-detail-title">
+                                                        <div>
+                                                            <strong>Detalhes da conta #{{ h.id }}</strong>
+                                                            <small>{{ h.descricao or 'Conta herdada' }}</small>
+                                                        </div>
+                                                        <span class="radar-status-pill vencido">{{ h.status or 'EM ABERTO' }}</span>
+                                                    </div>
+
+                                                    <div class="radar-herdada-detail-grid">
+                                                        <div class="radar-herdada-detail-column">
+                                                            <p><span>Descrição</span><strong>{{ h.descricao or '-' }}</strong></p>
+                                                            <p><span>Fornecedor</span><strong>{{ h.fornecedor or '-' }}</strong></p>
+                                                            <p><span>Categoria</span><strong>{{ h.categoria or '-' }}</strong></p>
+                                                            <p><span>Setor</span><strong>{{ h.setor or '-' }}</strong></p>
+                                                            <p><span>Competência</span><strong>{{ h.competencia or '-' }}</strong></p>
+                                                            <p><span>Tipo da conta</span><strong>{{ h.tipo_obrigacao or 'ÚNICA' }}</strong></p>
+                                                            <p><span>Recorrente</span><strong>{% if h.recorrente %}Sim{% else %}Não{% endif %}</strong></p>
+                                                            <p><span>Origem</span><strong>{% if grupo_selecionado.origem_importada %}Importada{% else %}Manual{% endif %}</strong></p>
+                                                        </div>
+
+                                                        <div class="radar-herdada-detail-column">
+                                                            <p><span>Valor da conta</span><strong class="text-success">{{ h.valor_formatado }}</strong></p>
+                                                            <p><span>Status</span><strong>{{ h.status or 'PENDENTE' }}</strong></p>
+                                                            <p><span>Dias em atraso</span><strong class="text-danger">{{ h.dias_atraso }} dias</strong></p>
+                                                            <p><span>Vencimento</span><strong>{{ h.data_vencimento_formatada }}</strong></p>
+                                                            <p><span>Pagamento</span><strong>{% if h.data_pagamento_formatada and h.data_pagamento_formatada != '-' %}{{ h.data_pagamento_formatada }}{% else %}NÃO PAGO{% endif %}</strong></p>
+                                                            <p><span>Parcela</span><strong>{{ h.parcela_label or 'CONTA ÚNICA' }}</strong></p>
+                                                            <p><span>ID da conta</span><strong>#{{ h.id }}</strong></p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="radar-herdada-detail-observacoes">
+                                                        <span>Observações</span>
+                                                        <p>{{ h.observacoes or 'Sem observações cadastradas.' }}</p>
+                                                    </div>
+
+                                                    <div class="radar-herdada-detail-actions">
+                                                        {% if not grupo_selecionado.origem_importada %}
                                                             <button type="button"
-                                                                    class="radar-historico-action-btn editar js-toggle-edicao-herdada"
-                                                                    title="Editar esta conta"
+                                                                    class="radar-herdada-detail-btn editar js-toggle-edicao-herdada"
                                                                     data-edit-row="{{ h.id }}">
                                                                 <i class="bi bi-pencil-fill"></i>
+                                                                Editar
                                                             </button>
 
                                                             <button type="button"
-                                                                    class="radar-historico-action-btn pagar js-pagar-herdada-unica"
-                                                                    data-id="{{ h.id }}"
-                                                                    title="Marcar como paga">
+                                                                    class="radar-herdada-detail-btn pagar js-pagar-herdada-unica"
+                                                                    data-id="{{ h.id }}">
                                                                 <i class="bi bi-check-lg"></i>
+                                                                Pagar
                                                             </button>
 
                                                             <button type="button"
-                                                                    class="radar-historico-action-btn excluir js-excluir-herdada-unica"
-                                                                    data-id="{{ h.id }}"
-                                                                    title="Excluir parcela herdada">
+                                                                    class="radar-herdada-detail-btn excluir js-excluir-herdada-unica"
+                                                                    data-id="{{ h.id }}">
                                                                 <i class="bi bi-trash3-fill"></i>
+                                                                Excluir
                                                             </button>
-                                                        </div>
+                                                        {% else %}
+                                                            <span class="radar-herdada-importada-aviso">
+                                                                <i class="bi bi-cloud-arrow-down-fill"></i>
+                                                                Conta importada — somente leitura no histórico.
+                                                            </span>
                                                         {% endif %}
-                                                    </td>
-                                                </tr>
-                                                <tr class="radar-herdada-edit-row" id="linhaEditarHerdada{{ h.id }}" style="display: none;">
-                                                    <td colspan="8">
-                                                        <form method="POST"
-                                                              class="js-form-editar-herdada radar-herdada-inline-form"
-                                                              action="/gestao/radar-financeiro/api/herdadas/editar/{{ h.id }}">
-                                                            <input type="hidden" name="mes_contexto" value="{{ mes }}">
-                                                            <input type="hidden" name="ano_contexto" value="{{ ano }}">
+                                                    </div>
+                                                </div>
 
-                                                            <div class="radar-inline-edit-head">
-                                                                <strong>Editar parcela herdada #{{ h.id }}</strong>
-                                                                <button type="button" class="radar-inline-edit-close js-toggle-edicao-herdada" data-edit-row="{{ h.id }}">
-                                                                    Fechar
-                                                                </button>
-                                                            </div>
+                                                <div class="radar-herdada-edit-row radar-herdada-edit-accordion"
+                                                     id="linhaEditarHerdada{{ h.id }}"
+                                                     style="display: none;">
+                                                    <form method="POST"
+                                                          class="js-form-editar-herdada radar-herdada-inline-form"
+                                                          action="/gestao/radar-financeiro/api/herdadas/editar/{{ h.id }}">
+                                                        <input type="hidden" name="mes_contexto" value="{{ mes }}">
+                                                        <input type="hidden" name="ano_contexto" value="{{ ano }}">
 
-                                                            <div class="radar-inline-edit-grid">
-                                                                <div>
-                                                                    <label>Descrição</label>
-                                                                    <input type="text" name="descricao" value="{{ h.descricao }}" class="form-control" required>
-                                                                </div>
-                                                                <div>
-                                                                    <label>Fornecedor</label>
-                                                                    <input type="text" name="fornecedor" value="{{ h.fornecedor }}" class="form-control">
-                                                                </div>
-                                                                <div>
-                                                                    <label>Categoria</label>
-                                                                    {{ categoria_select(h.categoria) }}
-                                                                </div>
-                                                                <div>
-                                                                    <label>Setor</label>
-                                                                    <select name="setor" class="form-control">
-                                                                        <option value="ASSISTÊNCIA" {% if h.setor == "ASSISTÊNCIA" %}selected{% endif %}>ASSISTÊNCIA</option>
-                                                                        <option value="LOGÍSTICA" {% if h.setor == "LOGÍSTICA" %}selected{% endif %}>LOGÍSTICA</option>
-                                                                        <option value="GERAL" {% if h.setor == "GERAL" %}selected{% endif %}>GERAL</option>
-                                                                    </select>
-                                                                </div>
-                                                                <div>
-                                                                    <label>Tipo</label>
-                                                                    <select name="tipo_obrigacao" class="form-control">
-                                                                        <option value="UNICA" {% if h.tipo_obrigacao == "UNICA" %}selected{% endif %}>Única</option>
-                                                                        <option value="RECORRENTE" {% if h.tipo_obrigacao == "RECORRENTE" %}selected{% endif %}>Recorrente mensal (gera até dezembro)</option>
-                                                                        <option value="PARCELADA" {% if h.tipo_obrigacao == "PARCELADA" %}selected{% endif %}>Parcelada</option>
-                                                                    </select>
-                                                                </div>
-                                                                <div class="radar-inline-edit-wide">
-                                                                    <div class="form-check radar-recorrencia-check">
-                                                                        <input class="form-check-input"
-                                                                               type="checkbox"
-                                                                               name="recorrente"
-                                                                               id="recorrenteHerdadaInline{{ h.id }}"
-                                                                               {% if h.recorrente or h.tipo_obrigacao == "RECORRENTE" %}checked{% endif %}>
-                                                                        <label class="form-check-label" for="recorrenteHerdadaInline{{ h.id }}">
-                                                                            Repetir todo mês até dezembro ao salvar
-                                                                        </label>
-                                                                        <small>Ao salvar, o sistema cria as próximas competências até dezembro sem duplicar meses já existentes.</small>
-                                                                    </div>
-                                                                </div>
-                                                                <div>
-                                                                    <label>Status</label>
-                                                                    <select name="status" class="form-control">
-                                                                        <option value="PENDENTE" {% if h.status == "PENDENTE" %}selected{% endif %}>PENDENTE</option>
-                                                                        <option value="ADIADO" {% if h.status == "ADIADO" %}selected{% endif %}>ADIADO</option>
-                                                                        <option value="PAGO" {% if h.status == "PAGO" %}selected{% endif %}>PAGO</option>
-                                                                        <option value="TRANSPORTADO" {% if h.status == "TRANSPORTADO" %}selected{% endif %}>TRANSPORTADO</option>
-                                                                        <option value="CANCELADO" {% if h.status == "CANCELADO" %}selected{% endif %}>CANCELADO</option>
-                                                                    </select>
-                                                                </div>
-                                                                <div>
-                                                                    <label>Valor da conta</label>
-                                                                    <input type="text" name="valor_visual"
-                                   data-hidden-name="valor" value="{{ h.valor_formatado }}" class="form-control js-moeda" inputmode="decimal" autocomplete="off" required>
-                                                                    <input type="hidden" name="valor" value="{{ h.valor }}" class="js-moeda-hidden">
-                                                                </div>
-                                                                <div>
-                                                                    <label>Valor com juros</label>
-                                                                    <input type="text"
-                                                                           name="valor_com_juros_visual"
-                                                                           data-hidden-name="valor_com_juros"
-                                                                           class="form-control js-moeda"
-                                                                           placeholder="R$ 0,00"
-                                                                           inputmode="decimal"
-                                                                           autocomplete="off">
-                                                                    <input type="hidden" name="valor_com_juros" class="js-moeda-hidden">
-                                                                    <small class="radar-juros-help">Opcional. Informe o valor final com juros; a diferença será calculada automaticamente.</small>
-                                                                </div>
-                                                                <div class="radar-juros-calculado-box">
-                                                                    <label>Juros calculado</label>
-                                                                    <input type="text"
-                                                                           class="form-control js-juros-calculado"
-                                                                           value="R$ 0,00"
-                                                                           readonly>
-                                                                </div>
-                                                                <div>
-                                                                    <label>Vencimento</label>
-                                                                    <input type="date" name="data_vencimento" value="{{ h.data_vencimento_input }}" class="form-control">
-                                                                </div>
-                                                                <div>
-                                                                    <label>Pagamento</label>
-                                                                    <input type="date" name="data_pagamento" value="{{ h.data_pagamento_input }}" class="form-control">
-                                                                </div>
-                                                                <div>
-                                                                    <label>Parcela atual</label>
-                                                                    <input type="number" name="parcela_atual" value="{{ h.parcela_atual }}" class="form-control">
-                                                                </div>
-                                                                <div>
-                                                                    <label>Total parcelas</label>
-                                                                    <input type="number" name="total_parcelas" value="{{ h.total_parcelas }}" class="form-control">
-                                                                </div>
-                                                                <div class="radar-inline-edit-wide">
-                                                                    <label>Observações</label>
-                                                                    <textarea name="observacoes" rows="2" class="form-control">{{ h.observacoes }}</textarea>
-                                                                </div>
-                                                            </div>
+                                                        <div class="radar-inline-edit-head">
+                                                            <strong>Editar parcela herdada #{{ h.id }}</strong>
+                                                            <button type="button" class="radar-inline-edit-close js-toggle-edicao-herdada" data-edit-row="{{ h.id }}">Fechar</button>
+                                                        </div>
 
-                                                            <div class="radar-inline-edit-actions">
-                                                                <button type="button" class="btn btn-secondary js-toggle-edicao-herdada" data-edit-row="{{ h.id }}">Cancelar</button>
-                                                                <button class="btn btn-primary">Salvar alterações</button>
+                                                        <div class="radar-inline-edit-grid">
+                                                            <div>
+                                                                <label>Descrição</label>
+                                                                <input type="text" name="descricao" value="{{ h.descricao }}" class="form-control" required>
                                                             </div>
-                                                        </form>
-                                                    </td>
-                                                </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
+                                                            <div>
+                                                                <label>Fornecedor</label>
+                                                                <input type="text" name="fornecedor" value="{{ h.fornecedor }}" class="form-control">
+                                                            </div>
+                                                            <div>
+                                                                <label>Categoria</label>
+                                                                {{ categoria_select(h.categoria) }}
+                                                            </div>
+                                                            <div>
+                                                                <label>Setor</label>
+                                                                <select name="setor" class="form-control">
+                                                                    <option value="ASSISTÊNCIA" {% if h.setor == "ASSISTÊNCIA" %}selected{% endif %}>ASSISTÊNCIA</option>
+                                                                    <option value="LOGÍSTICA" {% if h.setor == "LOGÍSTICA" %}selected{% endif %}>LOGÍSTICA</option>
+                                                                    <option value="GERAL" {% if h.setor == "GERAL" %}selected{% endif %}>GERAL</option>
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label>Tipo</label>
+                                                                <select name="tipo_obrigacao" class="form-control">
+                                                                    <option value="UNICA" {% if h.tipo_obrigacao == "UNICA" %}selected{% endif %}>Única</option>
+                                                                    <option value="RECORRENTE" {% if h.tipo_obrigacao == "RECORRENTE" %}selected{% endif %}>Recorrente mensal</option>
+                                                                    <option value="PARCELADA" {% if h.tipo_obrigacao == "PARCELADA" %}selected{% endif %}>Parcelada</option>
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label>Status</label>
+                                                                <select name="status" class="form-control">
+                                                                    <option value="PENDENTE" {% if h.status == "PENDENTE" %}selected{% endif %}>PENDENTE</option>
+                                                                    <option value="ADIADO" {% if h.status == "ADIADO" %}selected{% endif %}>ADIADO</option>
+                                                                    <option value="PAGO" {% if h.status == "PAGO" %}selected{% endif %}>PAGO</option>
+                                                                    <option value="TRANSPORTADO" {% if h.status == "TRANSPORTADO" %}selected{% endif %}>TRANSPORTADO</option>
+                                                                    <option value="CANCELADO" {% if h.status == "CANCELADO" %}selected{% endif %}>CANCELADO</option>
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label>Valor da conta</label>
+                                                                <input type="text" name="valor_visual" data-hidden-name="valor" value="{{ h.valor_formatado }}" class="form-control js-moeda" inputmode="decimal" autocomplete="off" required>
+                                                                <input type="hidden" name="valor" value="{{ h.valor }}" class="js-moeda-hidden">
+                                                            </div>
+                                                            <div>
+                                                                <label>Vencimento</label>
+                                                                <input type="date" name="data_vencimento" value="{{ h.data_vencimento_input }}" class="form-control">
+                                                            </div>
+                                                            <div>
+                                                                <label>Pagamento</label>
+                                                                <input type="date" name="data_pagamento" value="{{ h.data_pagamento_input }}" class="form-control">
+                                                            </div>
+                                                            <div>
+                                                                <label>Parcela atual</label>
+                                                                <input type="number" name="parcela_atual" value="{{ h.parcela_atual }}" class="form-control">
+                                                            </div>
+                                                            <div>
+                                                                <label>Total parcelas</label>
+                                                                <input type="number" name="total_parcelas" value="{{ h.total_parcelas }}" class="form-control">
+                                                            </div>
+                                                            <div class="radar-inline-edit-wide">
+                                                                <label>Observações</label>
+                                                                <textarea name="observacoes" rows="2" class="form-control">{{ h.observacoes }}</textarea>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="radar-inline-edit-actions">
+                                                            <button type="button" class="btn btn-secondary js-toggle-edicao-herdada" data-edit-row="{{ h.id }}">Cancelar</button>
+                                                            <button class="btn btn-primary">Salvar alterações</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </article>
+                                        {% endfor %}
+                                    </div>
 
                                     <div class="radar-herdadas-empty" id="herdadasModalVazio" style="display: none;">
                                         Nenhuma parcela herdada pendente neste grupo.
@@ -3489,261 +3470,1868 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 
-<script>
-/* =====================================================
-   CORREÇÃO: OLHINHO DA PARCELA HERDADA
-   Evita o abre/fecha quando abre detalhe por cima do histórico.
-===================================================== */
-(function () {
-    function modalAberto(selector) {
-        return document.querySelector(selector + '.show');
-    }
 
-    document.addEventListener('click', function (event) {
-        const btn = event.target.closest('.js-open-detalhe-herdada');
-        if (!btn) return;
-
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
-
-        const targetSelector = btn.getAttribute('data-bs-target');
-        const target = targetSelector ? document.querySelector(targetSelector) : null;
-        if (!target || typeof bootstrap === 'undefined') return;
-
-        const modal = bootstrap.Modal.getOrCreateInstance(target, {
-            backdrop: 'static',
-            keyboard: false,
-            focus: true
-        });
-
-        modal.show();
-    }, true);
-
-    document.addEventListener('show.bs.modal', function (event) {
-        const modal = event.target;
-        if (!modal || !modal.classList.contains('radar-detalhe-herdada-modal')) return;
-
-        const historicoAberto = modalAberto('#modalHistoricoHerdada');
-        if (historicoAberto) {
-            modal.dataset.abertoSobreHistorico = '1';
-            historicoAberto.classList.add('radar-modal-pai-ativo');
-        }
-    }, true);
-
-    document.addEventListener('shown.bs.modal', function (event) {
-        const modal = event.target;
-        if (!modal || !modal.classList.contains('radar-detalhe-herdada-modal')) return;
-
-        document.body.classList.add('modal-open');
-    });
-
-    document.addEventListener('hidden.bs.modal', function (event) {
-        const modal = event.target;
-        if (!modal || !modal.classList.contains('radar-detalhe-herdada-modal')) return;
-
-        const historicoAberto = modalAberto('#modalHistoricoHerdada');
-        if (historicoAberto) {
-            document.body.classList.add('modal-open');
-            historicoAberto.classList.remove('radar-modal-pai-ativo');
-        }
-    });
-})();
-</script>
 
 
 
 <style>
-/* Mantém a tabela do Radar aberta ao abrir o detalhe da conta por cima */
-.radar-excel-modal.radar-modal-pai-fixo {
-    display: block !important;
+/* =====================================================
+   RADAR — MODAL ÚNICO E COMPACTO EM TODAS AS TABELAS
+   Tabela -> Histórico (quando houver) -> Detalhes.
+===================================================== */
+.radar-excel-modal .radar-excel-dialog {
+    width: min(1180px, calc(100vw - 34px));
+    max-width: 1180px;
+    height: min(86vh, 820px);
+    margin: 1.75rem auto;
 }
 
-.radar-excel-modal.radar-modal-pai-fixo .radar-excel-content {
-    filter: none;
-}
-
-.radar-conta-modal-filho {
-    z-index: 1075 !important;
-}
-
-.radar-conta-modal-filho.show {
-    z-index: 1075 !important;
-}
-
-.radar-conta-modal-filho + .modal-backdrop {
-    z-index: 1070 !important;
-}
-
-body.modal-open {
+.radar-excel-modal .radar-excel-content {
+    position: relative;
+    height: 100%;
+    max-height: 100%;
     overflow: hidden;
+    border-radius: 14px;
+}
+
+.radar-excel-modal .radar-excel-body {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.radar-excel-modal .radar-excel-table-shell {
+    max-height: calc(86vh - 235px);
+    overflow: auto;
+}
+
+.radar-excel-modal .radar-unico-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: #f4f7fb;
+}
+
+.radar-excel-modal .radar-unico-layer[hidden] {
+    display: none !important;
+}
+
+.radar-excel-modal .radar-unico-nav {
+    flex: 0 0 auto;
+    min-height: 58px;
+    padding: 9px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: #fff;
+    background: linear-gradient(90deg, #0b1f70, #2052ba);
+}
+
+.radar-excel-modal .radar-unico-nav-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.radar-excel-modal .radar-unico-nav-title {
+    min-width: 0;
+}
+
+.radar-excel-modal .radar-unico-nav-title strong,
+.radar-excel-modal .radar-unico-nav-title small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.radar-excel-modal .radar-unico-nav-title strong {
+    font-size: .98rem;
+}
+
+.radar-excel-modal .radar-unico-nav-title small {
+    opacity: .82;
+    font-size: .76rem;
+}
+
+.radar-excel-modal .radar-unico-btn {
+    min-height: 36px;
+    padding: 7px 11px;
+    border: 1px solid rgba(255,255,255,.34);
+    border-radius: 8px;
+    background: rgba(255,255,255,.11);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.radar-excel-modal .radar-unico-btn:hover {
+    background: rgba(255,255,255,.20);
+}
+
+.radar-excel-modal .radar-unico-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    padding: 14px;
+    background: #f4f7fb;
+}
+
+.radar-excel-modal .radar-unico-body > .modal-content {
+    width: min(920px, 100%);
+    min-height: 0;
+    margin: 0 auto;
+    border: 0;
+    border-radius: 12px;
+    box-shadow: 0 10px 34px rgba(15, 23, 42, .12);
+    background: #fff;
+    overflow: hidden;
+}
+
+.radar-excel-modal .radar-unico-body > .modal-content > .modal-header {
+    display: none !important;
+}
+
+.radar-excel-modal .radar-unico-body > .modal-content > .modal-body {
+    overflow: visible;
+    padding: 14px;
+}
+
+.radar-excel-modal .radar-unico-body > .modal-content > .modal-footer {
+    position: static;
+    padding: 10px 14px;
+    border-top: 1px solid #e6ebf2;
+    background: #fff;
+}
+
+/* Histórico herdado compacto */
+.radar-excel-modal .radar-unico-body .radar-historico-modal-grid {
+    display: grid;
+    grid-template-columns: 245px minmax(0, 1fr);
+    gap: 14px;
+}
+
+.radar-excel-modal .radar-unico-body .radar-historico-modal-left,
+.radar-excel-modal .radar-unico-body .radar-historico-modal-right {
+    min-width: 0;
+}
+
+.radar-excel-modal .radar-unico-body .radar-historico-total,
+.radar-excel-modal .radar-unico-body .radar-historico-resumo,
+.radar-excel-modal .radar-unico-body .radar-historico-info,
+.radar-excel-modal .radar-unico-body .radar-pagar-herdada {
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+}
+
+.radar-excel-modal .radar-unico-body .radar-historico-table-wrap {
+    padding: 0;
+}
+
+.radar-excel-modal .radar-unico-body .radar-historico-table {
+    font-size: .76rem;
+}
+
+.radar-excel-modal .radar-unico-body .radar-historico-table th,
+.radar-excel-modal .radar-unico-body .radar-historico-table td {
+    padding: 8px 7px;
+}
+
+/* Detalhes compactos para qualquer conta */
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-unico-body > .modal-content {
+    width: min(860px, 100%);
+}
+
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-valor {
+    min-height: 112px;
+    padding: 16px 18px;
+    border-radius: 12px;
+}
+
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-valor strong {
+    font-size: 1.65rem;
+}
+
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-status {
+    min-width: 130px;
+    padding: 12px;
+    border-radius: 12px;
+}
+
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-sections {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-card {
+    padding: 12px 14px;
+    border-radius: 10px;
+}
+
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-card h3 {
+    margin: 0 0 8px;
+    font-size: .88rem;
+}
+
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-card p {
+    min-height: 31px;
+    margin: 0;
+    padding: 6px 0;
+    gap: 12px;
+    font-size: .78rem;
+}
+
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-wide {
+    grid-column: 1 / -1;
+}
+
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-observacoes {
+    max-height: 130px;
+    overflow: auto;
+    padding: 10px;
+    font-size: .8rem;
+    white-space: pre-wrap;
+}
+
+/* Modal normal antigo adaptado para o painel único */
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-grid {
+    grid-template-columns: 290px minmax(0, 1fr);
+    gap: 12px;
+}
+
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-form-wrap {
+    padding: 12px;
+}
+
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-form-wrap .row {
+    --bs-gutter-x: .75rem;
+    --bs-gutter-y: .75rem;
+}
+
+.radar-excel-modal .radar-unico-loading,
+.radar-excel-modal .radar-unico-erro {
+    min-height: 240px;
+    padding: 28px;
+    display: grid;
+    place-items: center;
+    text-align: center;
+}
+
+@media (max-width: 991px) {
+    .radar-excel-modal .radar-excel-dialog {
+        width: calc(100vw - 18px);
+        height: calc(100vh - 18px);
+        margin: 9px auto;
+    }
+    .radar-excel-modal .radar-historico-modal-grid,
+    .radar-excel-modal .radar-conta-detalhe-grid,
+    .radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-sections {
+        grid-template-columns: 1fr !important;
+    }
+    .radar-excel-modal .radar-unico-body > .modal-content {
+        width: 100%;
+    }
+}
+
+@media (max-width: 620px) {
+    .radar-excel-modal .radar-unico-nav-title small { display: none; }
+    .radar-excel-modal .radar-unico-btn { padding: 7px 9px; }
+    .radar-excel-modal .radar-unico-body { padding: 8px; }
+    .radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-hero {
+        grid-template-columns: 1fr;
+    }
+    .radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-status {
+        min-width: 0;
+    }
 }
 </style>
 
 <script>
 (function () {
-    let radarModalPaiAtual = null;
-    let radarScrollTabela = null;
+    'use strict';
 
-    function guardarPosicaoTabela(modalPai) {
-        if (!modalPai) return null;
+    const estados = new WeakMap();
 
-        const shell = modalPai.querySelector('.radar-excel-table-shell');
-        if (!shell) return null;
+    function criarEstado(modal) {
+        let estado = estados.get(modal);
+        if (estado) return estado;
+        estado = {
+            historicoHtml: '',
+            historicoTitulo: '',
+            historicoSubtitulo: '',
+            documentoGrupo: null,
+            detalhes: new Map(),
+            scroll: { top: 0, left: 0 },
+            filtros: null
+        };
+        estados.set(modal, estado);
+        return estado;
+    }
 
-        return {
-            el: shell,
-            top: shell.scrollTop,
-            left: shell.scrollLeft
+    function obterModalTabela(elemento) {
+        return elemento ? elemento.closest('.radar-excel-modal') : null;
+    }
+
+    function obterLayer(modal) {
+        if (!modal) return null;
+        const content = modal.querySelector('.radar-excel-content');
+        if (!content) return null;
+
+        let layer = content.querySelector(':scope > .radar-unico-layer');
+        if (layer) return layer;
+
+        layer = document.createElement('section');
+        layer.className = 'radar-unico-layer';
+        layer.hidden = true;
+        layer.innerHTML = `
+            <div class="radar-unico-nav">
+                <div class="radar-unico-nav-left">
+                    <button type="button" class="radar-unico-btn" data-radar-unico-voltar>
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </button>
+                    <div class="radar-unico-nav-title">
+                        <strong data-radar-unico-titulo>Detalhes</strong>
+                        <small data-radar-unico-subtitulo></small>
+                    </div>
+                </div>
+                <button type="button" class="radar-unico-btn" data-radar-unico-fechar>
+                    <i class="bi bi-x-lg"></i> Fechar tabela
+                </button>
+            </div>
+            <div class="radar-unico-body" data-radar-unico-body></div>
+        `;
+        content.appendChild(layer);
+
+        layer.querySelector('[data-radar-unico-fechar]').addEventListener('click', function () {
+            fecharLayer(modal);
+            if (window.bootstrap) bootstrap.Modal.getOrCreateInstance(modal).hide();
+        });
+        return layer;
+    }
+
+    function salvarTabela(modal) {
+        const estado = criarEstado(modal);
+        const shell = modal.querySelector('.radar-excel-table-shell');
+        if (shell) estado.scroll = { top: shell.scrollTop, left: shell.scrollLeft };
+        estado.filtros = {
+            busca: modal.querySelector('[data-radar-excel-search]')?.value || '',
+            categoria: modal.querySelector('[data-radar-excel-filter="categoria"]')?.value || '',
+            setor: modal.querySelector('[data-radar-excel-filter="setor"]')?.value || '',
+            status: modal.querySelector('[data-radar-excel-filter="status"]')?.value || ''
         };
     }
 
-    function restaurarPosicaoTabela() {
-        if (!radarScrollTabela || !radarScrollTabela.el) return;
-
-        radarScrollTabela.el.scrollTop = radarScrollTabela.top || 0;
-        radarScrollTabela.el.scrollLeft = radarScrollTabela.left || 0;
-    }
-
-    function manterModalPaiAberto(modalPai) {
-        if (!modalPai) return;
-
-        modalPai.classList.add('radar-modal-pai-fixo');
-        modalPai.style.display = 'block';
-        modalPai.removeAttribute('aria-hidden');
-        modalPai.setAttribute('aria-modal', 'true');
-        modalPai.classList.add('show');
-    }
-
-    function abrirDetalhePorCima(event) {
-        const botao = event.target.closest('.js-radar-open-conta-sobre-tabela');
-        if (!botao) return;
-
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
-
-        if (!window.bootstrap) return;
-
-        const modalPai = botao.closest('.radar-excel-modal');
-        const targetId = botao.getAttribute('data-radar-conta-target');
-        const modalFilho = document.getElementById(targetId);
-
-        if (!modalFilho) return;
-
-        radarModalPaiAtual = modalPai;
-        radarScrollTabela = guardarPosicaoTabela(modalPai);
-
-        manterModalPaiAberto(modalPai);
-
-        modalFilho.classList.add('radar-conta-modal-filho');
-        modalFilho.style.zIndex = '1075';
-
-        const instanciaFilho = bootstrap.Modal.getOrCreateInstance(modalFilho, {
-            backdrop: false,
-            keyboard: true,
-            focus: true
-        });
-
-        instanciaFilho.show();
-
-        setTimeout(function () {
-            manterModalPaiAberto(modalPai);
-            restaurarPosicaoTabela();
-            document.body.classList.add('modal-open');
-        }, 80);
-    }
-
-    document.addEventListener('click', abrirDetalhePorCima, true);
-
-    document.addEventListener('shown.bs.modal', function (event) {
-        if (event.target && event.target.classList.contains('radar-conta-modal-filho')) {
-            manterModalPaiAberto(radarModalPaiAtual);
-            restaurarPosicaoTabela();
-            document.body.classList.add('modal-open');
+    function restaurarTabela(modal) {
+        const estado = criarEstado(modal);
+        if (estado.filtros) {
+            const campos = {
+                busca: modal.querySelector('[data-radar-excel-search]'),
+                categoria: modal.querySelector('[data-radar-excel-filter="categoria"]'),
+                setor: modal.querySelector('[data-radar-excel-filter="setor"]'),
+                status: modal.querySelector('[data-radar-excel-filter="status"]')
+            };
+            Object.keys(campos).forEach(k => { if (campos[k]) campos[k].value = estado.filtros[k] || ''; });
+            Object.values(campos).filter(Boolean).forEach(campo => {
+                campo.dispatchEvent(new Event('input', { bubbles: true }));
+                campo.dispatchEvent(new Event('change', { bubbles: true }));
+            });
         }
-    });
+        requestAnimationFrame(function () {
+            const shell = modal.querySelector('.radar-excel-table-shell');
+            if (shell) {
+                shell.scrollTop = estado.scroll.top;
+                shell.scrollLeft = estado.scroll.left;
+            }
+        });
+    }
+
+    function neutralizar(container) {
+        if (!container) return;
+        container.querySelectorAll('[data-bs-toggle="modal"]').forEach(function (botao) {
+            const alvo = botao.getAttribute('data-bs-target');
+            if (alvo) botao.setAttribute('data-radar-detail-target', alvo);
+            botao.removeAttribute('data-bs-toggle');
+            botao.removeAttribute('data-bs-target');
+            botao.removeAttribute('onclick');
+        });
+        container.querySelectorAll('[data-bs-dismiss="modal"]').forEach(function (botao) {
+            botao.removeAttribute('data-bs-dismiss');
+            botao.setAttribute('data-radar-unico-fechar-conteudo', '1');
+        });
+    }
+
+    function definirConteudo(modal, html, titulo, subtitulo, modo) {
+        const layer = obterLayer(modal);
+        if (!layer) return;
+        layer.hidden = false;
+        layer.dataset.modo = modo || 'detalhe';
+        layer.querySelector('[data-radar-unico-titulo]').textContent = titulo || 'Detalhes';
+        layer.querySelector('[data-radar-unico-subtitulo]').textContent = subtitulo || '';
+        const body = layer.querySelector('[data-radar-unico-body]');
+        body.innerHTML = html;
+        neutralizar(body);
+        body.scrollTop = 0;
+        layer.querySelector('[data-radar-unico-voltar]').onclick = function () {
+            const estado = criarEstado(modal);
+            if (layer.dataset.modo === 'detalhe' && estado.historicoHtml) mostrarHistorico(modal);
+            else fecharLayer(modal);
+        };
+    }
+
+    function fecharLayer(modal) {
+        const layer = obterLayer(modal);
+        if (!layer) return;
+        layer.hidden = true;
+        layer.querySelector('[data-radar-unico-body]').innerHTML = '';
+        const estado = criarEstado(modal);
+        estado.historicoHtml = '';
+        estado.historicoTitulo = '';
+        estado.historicoSubtitulo = '';
+        estado.documentoGrupo = null;
+        estado.detalhes.clear();
+        restaurarTabela(modal);
+    }
+
+    function mostrarHistorico(modal) {
+        const estado = criarEstado(modal);
+        if (!estado.historicoHtml) return;
+        definirConteudo(modal, estado.historicoHtml, estado.historicoTitulo, estado.historicoSubtitulo, 'historico');
+    }
+
+    function obterDetalheDoDocumento(seletor, doc) {
+        if (!seletor || !doc) return null;
+        const alvo = doc.querySelector(seletor);
+        if (!alvo) return null;
+        const content = alvo.querySelector('.modal-content');
+        return {
+            html: content ? content.outerHTML : alvo.innerHTML,
+            titulo: alvo.querySelector('.modal-title')?.textContent?.trim() || 'Detalhes da conta',
+            subtitulo: alvo.querySelector('.radar-modal-subtitle')?.textContent?.trim() || 'Informações completas da conta.'
+        };
+    }
+
+    async function abrirHistorico(modal, link) {
+        salvarTabela(modal);
+        definirConteudo(modal,
+            '<div class="radar-unico-loading"><div><div class="spinner-border" role="status"></div><p class="mt-3">Carregando histórico...</p></div></div>',
+            'Carregando histórico', 'Aguarde um instante', 'historico');
+        try {
+            const resposta = await fetch(link.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            if (!resposta.ok) throw new Error('Falha ao carregar o histórico.');
+            const html = await resposta.text();
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const historico = doc.getElementById('modalHistoricoHerdada');
+            if (!historico) throw new Error('Histórico não encontrado.');
+
+            const estado = criarEstado(modal);
+            estado.documentoGrupo = doc;
+            estado.detalhes.clear();
+            doc.querySelectorAll('.radar-detalhe-herdada-modal[id], .radar-conta-modal[id]').forEach(function (alvo) {
+                const detalhe = obterDetalheDoDocumento('#' + alvo.id, doc);
+                if (detalhe) estado.detalhes.set('#' + alvo.id, detalhe);
+            });
+
+            const content = historico.querySelector('.modal-content');
+            const clone = content ? content.cloneNode(true) : historico.cloneNode(true);
+            neutralizar(clone);
+            estado.historicoHtml = clone.outerHTML;
+            estado.historicoTitulo = historico.querySelector('.modal-title')?.textContent?.trim() || 'Histórico da conta';
+            estado.historicoSubtitulo = 'Histórico dentro da tabela, sem abrir outro modal.';
+            mostrarHistorico(modal);
+        } catch (erro) {
+            console.error(erro);
+            definirConteudo(modal,
+                '<div class="radar-unico-erro"><div><i class="bi bi-exclamation-triangle fs-1"></i><p class="mt-3">Não foi possível carregar o histórico.</p></div></div>',
+                'Erro ao carregar', erro.message || 'Tente novamente', 'historico');
+        }
+    }
+
+    function abrirDetalhe(modal, seletor, documentoAlternativo) {
+        if (!seletor) return;
+        salvarTabela(modal);
+        const estado = criarEstado(modal);
+        let detalhe = estado.detalhes.get(seletor);
+        if (!detalhe) detalhe = obterDetalheDoDocumento(seletor, documentoAlternativo || document);
+        if (!detalhe && estado.documentoGrupo) detalhe = obterDetalheDoDocumento(seletor, estado.documentoGrupo);
+
+        if (!detalhe) {
+            definirConteudo(modal,
+                '<div class="radar-unico-erro"><div><i class="bi bi-exclamation-triangle fs-1"></i><p class="mt-3">Os detalhes desta conta não foram encontrados.</p></div></div>',
+                'Detalhes indisponíveis', 'Volte à tabela e tente novamente.', 'detalhe');
+            return;
+        }
+        definirConteudo(modal, detalhe.html, detalhe.titulo, detalhe.subtitulo, 'detalhe');
+    }
+
+    document.addEventListener('click', function (event) {
+        const linkHistorico = event.target.closest('.radar-excel-modal .js-abrir-historico');
+        if (linkHistorico) {
+            const modal = obterModalTabela(linkHistorico);
+            if (!modal) return;
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+            abrirHistorico(modal, linkHistorico);
+            return;
+        }
+
+        const botaoTabela = event.target.closest('.radar-excel-modal .js-radar-open-conta-sobre-tabela');
+        if (botaoTabela) {
+            const modal = obterModalTabela(botaoTabela);
+            const alvoId = botaoTabela.getAttribute('data-radar-conta-target');
+            if (!modal || !alvoId) return;
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+            abrirDetalhe(modal, '#' + alvoId, document);
+            return;
+        }
+
+        const botaoInterno = event.target.closest('.radar-excel-modal .radar-unico-layer [data-radar-detail-target], .radar-excel-modal .radar-unico-layer .js-open-detalhe-herdada');
+        if (botaoInterno) {
+            const modal = obterModalTabela(botaoInterno);
+            const seletor = botaoInterno.getAttribute('data-radar-detail-target') || botaoInterno.getAttribute('data-bs-target');
+            if (!modal || !seletor) return;
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+            abrirDetalhe(modal, seletor);
+            return;
+        }
+
+        const fecharConteudo = event.target.closest('.radar-excel-modal .radar-unico-layer [data-radar-unico-fechar-conteudo]');
+        if (fecharConteudo) {
+            const modal = obterModalTabela(fecharConteudo);
+            if (!modal) return;
+            event.preventDefault();
+            const layer = obterLayer(modal);
+            const estado = criarEstado(modal);
+            if (layer.dataset.modo === 'detalhe' && estado.historicoHtml) mostrarHistorico(modal);
+            else fecharLayer(modal);
+        }
+    }, true);
 
     document.addEventListener('hidden.bs.modal', function (event) {
-        if (!event.target || !event.target.classList.contains('radar-conta-modal-filho')) return;
-
-        const modalPai = radarModalPaiAtual;
-
-        if (modalPai) {
-            manterModalPaiAberto(modalPai);
-
-            setTimeout(function () {
-                manterModalPaiAberto(modalPai);
-                restaurarPosicaoTabela();
-                document.body.classList.add('modal-open');
-            }, 80);
+        const modal = event.target;
+        if (!modal || !modal.classList.contains('radar-excel-modal')) return;
+        const layer = modal.querySelector('.radar-unico-layer');
+        if (layer) {
+            layer.hidden = true;
+            const body = layer.querySelector('[data-radar-unico-body]');
+            if (body) body.innerHTML = '';
         }
+        estados.delete(modal);
     });
+})();
+</script>
+
+{# =========================================================
+   RADAR V3 — MODAIS COMPACTOS EM FORMATO DE TABELA
+   Mantém todas as rotas e ações existentes.
+========================================================= #}
+<style>
+/* Janela principal mais contida no desktop */
+.radar-excel-modal .radar-excel-dialog {
+    width: min(94vw, 1240px) !important;
+    max-width: 1240px !important;
+    height: min(84vh, 820px) !important;
+    max-height: 84vh !important;
+    margin: 1.5rem auto !important;
+}
+.radar-excel-modal .radar-excel-content {
+    height: 100% !important;
+    max-height: 84vh !important;
+    border-radius: 12px !important;
+}
+.radar-excel-modal .radar-excel-table-shell {
+    max-height: calc(84vh - 225px) !important;
+}
+
+/* Painel interno usa a mesma área da tabela, sem parecer outra tela */
+.radar-excel-modal .radar-unico-body {
+    padding: 10px !important;
+    overflow: auto !important;
+}
+.radar-excel-modal .radar-unico-body > .modal-content {
+    width: min(1080px, 100%) !important;
+    margin: 0 auto !important;
+    border: 1px solid #dfe6ef !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+}
+.radar-excel-modal .radar-unico-body > .modal-content > .modal-body {
+    padding: 10px !important;
+}
+.radar-excel-modal .radar-unico-nav {
+    min-height: 50px !important;
+    padding: 7px 10px !important;
+}
+
+/* Histórico: painel lateral estreito + tabela dominante */
+.radar-excel-modal .radar-unico-body .radar-historico-modal-grid {
+    grid-template-columns: 220px minmax(0, 1fr) !important;
+    gap: 10px !important;
+}
+.radar-excel-modal .radar-unico-body .radar-historico-total,
+.radar-excel-modal .radar-unico-body .radar-historico-resumo,
+.radar-excel-modal .radar-unico-body .radar-historico-info,
+.radar-excel-modal .radar-unico-body .radar-pagar-herdada {
+    padding: 9px 10px !important;
+    margin-bottom: 8px !important;
+    border-radius: 8px !important;
+}
+.radar-excel-modal .radar-unico-body .radar-historico-table {
+    font-size: .72rem !important;
+}
+.radar-excel-modal .radar-unico-body .radar-historico-table th,
+.radar-excel-modal .radar-unico-body .radar-historico-table td {
+    padding: 6px 6px !important;
+}
+
+/* Cabeçalho resumido da conta */
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-hero {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 8px !important;
+    margin: 0 0 8px !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-valor {
+    min-height: 74px !important;
+    padding: 10px 14px !important;
+    border-radius: 8px !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-valor strong {
+    font-size: 1.25rem !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-status {
+    min-width: 105px !important;
+    min-height: 74px !important;
+    padding: 8px !important;
+    border-radius: 8px !important;
+}
+
+/* Todos os blocos de detalhes viram uma grade de tabelas compactas */
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-sections {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-card {
+    padding: 0 !important;
+    border: 1px solid #dfe6ef !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    background: #fff !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-card > h3 {
+    margin: 0 !important;
+    padding: 7px 10px !important;
+    font-size: .76rem !important;
+    background: #f3f6fa !important;
+    border-bottom: 1px solid #dfe6ef !important;
+}
+.radar-v3-detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: .74rem;
+}
+.radar-v3-detail-table th,
+.radar-v3-detail-table td {
+    padding: 6px 9px;
+    border-bottom: 1px solid #edf1f5;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+}
+.radar-v3-detail-table tr:last-child th,
+.radar-v3-detail-table tr:last-child td {
+    border-bottom: 0;
+}
+.radar-v3-detail-table th {
+    width: 38%;
+    color: #52637a;
+    font-weight: 600;
+    text-align: left;
+    background: #fbfcfe;
+}
+.radar-v3-detail-table td {
+    color: #101828;
+    font-weight: 700;
+    text-align: right;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-wide {
+    grid-column: 1 / -1 !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-observacoes {
+    max-height: 90px !important;
+    padding: 8px 10px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    font-size: .75rem !important;
+    background: #fff !important;
+}
+
+/* Modais normais também ficam com leitura tabular */
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-grid {
+    grid-template-columns: 240px minmax(0, 1fr) !important;
+    gap: 8px !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-historico-resumo p {
+    min-height: 0 !important;
+    padding: 5px 0 !important;
+    margin: 0 !important;
+    font-size: .73rem !important;
+}
+.radar-excel-modal .radar-unico-body > .modal-content > .modal-footer {
+    padding: 7px 10px !important;
+}
+
+@media (max-width: 991px) {
+    .radar-excel-modal .radar-excel-dialog {
+        width: 96vw !important;
+        height: 90vh !important;
+        max-height: 90vh !important;
+        margin: 1rem auto !important;
+    }
+    .radar-excel-modal .radar-excel-content { max-height: 90vh !important; }
+    .radar-excel-modal .radar-unico-body .radar-historico-modal-grid,
+    .radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-grid,
+    .radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-sections {
+        grid-template-columns: 1fr !important;
+    }
+    .radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-wide {
+        grid-column: auto !important;
+    }
+}
+</style>
+
+<script>
+(function () {
+    'use strict';
+
+    function converterCardParaTabela(card) {
+        if (!card || card.dataset.radarV3Tabela === '1') return;
+        const paragrafos = Array.from(card.children).filter(function (el) {
+            return el.tagName === 'P' && el.querySelector('span') && el.querySelector('strong');
+        });
+        if (!paragrafos.length) {
+            card.dataset.radarV3Tabela = '1';
+            return;
+        }
+
+        const tabela = document.createElement('table');
+        tabela.className = 'radar-v3-detail-table';
+        const tbody = document.createElement('tbody');
+
+        paragrafos.forEach(function (p) {
+            const label = p.querySelector('span');
+            const valor = p.querySelector('strong');
+            const tr = document.createElement('tr');
+            const th = document.createElement('th');
+            const td = document.createElement('td');
+            th.textContent = (label.textContent || '').replace(/:\s*$/, '').trim();
+            td.innerHTML = valor.innerHTML;
+            tr.appendChild(th);
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+            p.remove();
+        });
+
+        tabela.appendChild(tbody);
+        card.appendChild(tabela);
+        card.dataset.radarV3Tabela = '1';
+    }
+
+    function aplicarFormatoTabela(raiz) {
+        if (!raiz || raiz.nodeType !== 1) return;
+        raiz.querySelectorAll('.radar-conta-detalhe-card').forEach(converterCardParaTabela);
+    }
+
+    document.querySelectorAll('.radar-excel-modal .radar-unico-body').forEach(function (body) {
+        aplicarFormatoTabela(body);
+        const observer = new MutationObserver(function () {
+            aplicarFormatoTabela(body);
+        });
+        observer.observe(body, { childList: true, subtree: true });
+    });
+})();
+</script>
+
+
+
+{# =========================================================
+   RADAR V4 — PADRÃO 100% DE ZOOM
+   Otimiza tabela, histórico e detalhes para visualização
+   integral em desktop, sem reduzir o zoom do navegador.
+========================================================= #}
+<style>
+/* ---------- Estrutura universal do modal ---------- */
+.radar-excel-modal .radar-excel-dialog {
+    width: calc(100vw - 18px) !important;
+    max-width: none !important;
+    height: calc(100vh - 18px) !important;
+    max-height: none !important;
+    margin: 9px auto !important;
+}
+.radar-excel-modal .radar-excel-content {
+    height: 100% !important;
+    max-height: none !important;
+    border-radius: 10px !important;
+}
+.radar-excel-modal .radar-excel-header {
+    min-height: 58px !important;
+    padding: 7px 14px !important;
+    gap: 10px !important;
+}
+.radar-excel-modal .radar-excel-titlebox h5 {
+    margin: 0 !important;
+    font-size: 1rem !important;
+    line-height: 1.1 !important;
+}
+.radar-excel-modal .radar-excel-titlebox small {
+    font-size: .65rem !important;
+}
+.radar-excel-modal .radar-excel-summary {
+    flex: 1 1 auto !important;
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(92px, 1fr)) !important;
+    gap: 0 !important;
+}
+.radar-excel-modal .radar-excel-summary > div {
+    min-width: 0 !important;
+    padding: 0 10px !important;
+}
+.radar-excel-modal .radar-excel-summary span {
+    font-size: .58rem !important;
+    line-height: 1 !important;
+}
+.radar-excel-modal .radar-excel-summary strong {
+    font-size: 1rem !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+}
+.radar-excel-modal .radar-excel-body {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    padding: 8px 12px 6px !important;
+}
+.radar-excel-modal .radar-excel-toolbar {
+    flex: 0 0 auto !important;
+    display: grid !important;
+    grid-template-columns: minmax(240px, 1.35fr) repeat(3, minmax(130px, .75fr)) auto auto !important;
+    gap: 7px !important;
+    margin-bottom: 7px !important;
+}
+.radar-excel-modal .radar-excel-toolbar .form-control,
+.radar-excel-modal .radar-excel-btn {
+    min-height: 34px !important;
+    height: 34px !important;
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+    font-size: .68rem !important;
+}
+.radar-excel-modal .radar-excel-table-shell {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: auto !important;
+}
+.radar-excel-modal .radar-excel-footer {
+    flex: 0 0 29px !important;
+    min-height: 29px !important;
+    padding: 6px 4px 0 !important;
+    font-size: .64rem !important;
+}
+
+/* ---------- Tabela principal: todas as colunas no zoom 100% ---------- */
+.radar-excel-modal .radar-excel-table {
+    width: 100% !important;
+    min-width: 1080px !important;
+    table-layout: fixed !important;
+    font-size: .65rem !important;
+}
+.radar-excel-modal .radar-excel-table th,
+.radar-excel-modal .radar-excel-table td {
+    height: 30px !important;
+    padding: 4px 6px !important;
+    line-height: 1.15 !important;
+    vertical-align: middle !important;
+}
+.radar-excel-modal .radar-excel-table thead th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 3 !important;
+    white-space: nowrap !important;
+}
+.radar-excel-modal .radar-excel-table th:nth-child(1) { width: 28px !important; }
+.radar-excel-modal .radar-excel-table th:nth-child(2) { width: 105px !important; }
+.radar-excel-modal .radar-excel-table th:nth-child(3) { width: 78px !important; }
+.radar-excel-modal .radar-excel-table th:nth-child(4) { width: 68px !important; }
+.radar-excel-modal .radar-excel-table th:nth-child(5) { width: 88px !important; }
+.radar-excel-modal .radar-excel-table th:nth-child(6) { width: 88px !important; }
+.radar-excel-modal .radar-excel-table th:nth-child(7) { width: 220px !important; }
+.radar-excel-modal .radar-excel-table th:nth-child(8) { width: 82px !important; }
+.radar-excel-modal .radar-excel-table th:nth-child(9) { width: 88px !important; }
+.radar-excel-modal .radar-excel-table th:nth-child(10) { width: 145px !important; }
+.radar-excel-modal .radar-excel-table th:nth-child(11) { width: 84px !important; }
+.radar-excel-modal .radar-excel-table td {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+.radar-excel-modal .radar-excel-table td:nth-child(7) small {
+    display: block !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: .61rem !important;
+}
+.radar-excel-modal .radar-excel-actions {
+    gap: 3px !important;
+    flex-wrap: nowrap !important;
+}
+.radar-excel-modal .radar-excel-action {
+    width: 26px !important;
+    height: 24px !important;
+    min-width: 26px !important;
+    padding: 0 !important;
+}
+
+/* ---------- Navegação interna ---------- */
+.radar-excel-modal .radar-unico-nav {
+    min-height: 44px !important;
+    height: 44px !important;
+    padding: 5px 9px !important;
+}
+.radar-excel-modal .radar-unico-nav-title strong {
+    font-size: .82rem !important;
+}
+.radar-excel-modal .radar-unico-nav-title small {
+    font-size: .61rem !important;
+}
+.radar-excel-modal .radar-unico-btn {
+    min-height: 30px !important;
+    height: 30px !important;
+    padding: 4px 8px !important;
+    font-size: .68rem !important;
+}
+.radar-excel-modal .radar-unico-body {
+    padding: 7px !important;
+    overflow: hidden !important;
+}
+.radar-excel-modal .radar-unico-body > .modal-content {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+.radar-excel-modal .radar-unico-body > .modal-content > .modal-body {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow: auto !important;
+    padding: 7px !important;
+}
+.radar-excel-modal .radar-unico-body > .modal-content > .modal-footer {
+    flex: 0 0 auto !important;
+    min-height: 38px !important;
+    padding: 5px 8px !important;
+}
+
+/* ---------- Histórico herdado: resumo horizontal + tabela dominante ---------- */
+.radar-excel-modal .radar-unico-body .radar-historico-modal-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 7px !important;
+    height: 100% !important;
+}
+.radar-excel-modal .radar-unico-body .radar-historico-modal-left {
+    flex: 0 0 auto !important;
+    display: grid !important;
+    grid-template-columns: minmax(190px, .8fr) minmax(230px, 1fr) minmax(260px, 1.2fr) !important;
+    gap: 7px !important;
+    align-items: stretch !important;
+}
+.radar-excel-modal .radar-unico-body .radar-historico-modal-left > * {
+    min-width: 0 !important;
+    height: 100% !important;
+    margin: 0 !important;
+}
+.radar-excel-modal .radar-unico-body .radar-historico-total,
+.radar-excel-modal .radar-unico-body .radar-historico-resumo,
+.radar-excel-modal .radar-unico-body .radar-historico-info,
+.radar-excel-modal .radar-unico-body .radar-pagar-herdada {
+    padding: 7px 9px !important;
+    border-radius: 7px !important;
+}
+.radar-excel-modal .radar-unico-body .radar-historico-total strong {
+    font-size: 1.15rem !important;
+    line-height: 1.1 !important;
+}
+.radar-excel-modal .radar-unico-body .radar-historico-total span,
+.radar-excel-modal .radar-unico-body .radar-historico-total small,
+.radar-excel-modal .radar-unico-body .radar-historico-resumo p,
+.radar-excel-modal .radar-unico-body .radar-historico-info p {
+    font-size: .64rem !important;
+    line-height: 1.25 !important;
+}
+.radar-excel-modal .radar-unico-body .radar-historico-resumo h3,
+.radar-excel-modal .radar-unico-body .radar-historico-info h3,
+.radar-excel-modal .radar-unico-body .radar-pagar-herdada h3 {
+    margin: 0 0 4px !important;
+    font-size: .7rem !important;
+}
+.radar-excel-modal .radar-unico-body .radar-historico-info p {
+    margin: 2px 0 !important;
+}
+.radar-excel-modal .radar-unico-body .radar-historico-modal-right {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+.radar-excel-modal .radar-unico-body .radar-historico-table-wrap {
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+.radar-excel-modal .radar-unico-body .radar-historico-table-wrap > h3 {
+    flex: 0 0 auto !important;
+    margin: 0 0 4px !important;
+    font-size: .78rem !important;
+}
+.radar-excel-modal .radar-unico-body .radar-herdada-lote-actions {
+    flex: 0 0 auto !important;
+    margin-bottom: 5px !important;
+    min-height: 30px !important;
+}
+.radar-excel-modal .radar-unico-body .radar-historico-table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    font-size: .66rem !important;
+}
+.radar-excel-modal .radar-unico-body .radar-historico-table th,
+.radar-excel-modal .radar-unico-body .radar-historico-table td {
+    height: 29px !important;
+    padding: 4px 5px !important;
+    white-space: nowrap !important;
+}
+.radar-excel-modal .radar-unico-body .radar-historico-table thead th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 2 !important;
+}
+
+/* ---------- Detalhes: quatro blocos na mesma linha ---------- */
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-hero {
+    grid-template-columns: minmax(0, 1fr) 118px !important;
+    gap: 7px !important;
+    margin-bottom: 7px !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-valor,
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-status {
+    min-height: 60px !important;
+    height: 60px !important;
+    padding: 8px 11px !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-valor span,
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-valor small {
+    font-size: .62rem !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-valor strong {
+    font-size: 1.05rem !important;
+    line-height: 1.1 !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-sections {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-card > h3 {
+    padding: 5px 7px !important;
+    font-size: .65rem !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-v3-detail-table {
+    font-size: .64rem !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-v3-detail-table th,
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-v3-detail-table td {
+    padding: 4px 6px !important;
+    line-height: 1.2 !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-v3-detail-table th {
+    width: 43% !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-wide {
+    grid-column: 1 / -1 !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-observacoes {
+    min-height: 52px !important;
+    max-height: 76px !important;
+    padding: 7px 9px !important;
+    font-size: .66rem !important;
+    line-height: 1.3 !important;
+}
+
+/* Conta normal: coluna de resumo reduzida, formulário/dados ganham espaço */
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-grid {
+    grid-template-columns: 225px minmax(0, 1fr) !important;
+    gap: 7px !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-historico-resumo,
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-historico-total,
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-pagar-herdada {
+    padding: 7px 8px !important;
+    margin-bottom: 6px !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-form-wrap {
+    padding: 7px !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-form-wrap .row {
+    --bs-gutter-x: .45rem !important;
+    --bs-gutter-y: .4rem !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .form-label,
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] label {
+    margin-bottom: 2px !important;
+    font-size: .63rem !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .form-control,
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .form-select {
+    min-height: 30px !important;
+    height: 30px !important;
+    padding: 4px 7px !important;
+    font-size: .66rem !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] textarea.form-control {
+    height: 52px !important;
+    min-height: 52px !important;
+}
+
+/* ---------- Breakpoints sem obrigar redução de zoom ---------- */
+@media (max-width: 1180px) {
+    .radar-excel-modal .radar-excel-summary strong { font-size: .88rem !important; }
+    .radar-excel-modal .radar-excel-toolbar {
+        grid-template-columns: minmax(210px, 1.2fr) repeat(3, minmax(110px, .7fr)) auto auto !important;
+    }
+    .radar-excel-modal .radar-unico-body .radar-historico-modal-left {
+        grid-template-columns: minmax(175px, .75fr) minmax(210px, 1fr) minmax(220px, 1.05fr) !important;
+    }
+}
+@media (max-width: 900px) {
+    .radar-excel-modal .radar-excel-header {
+        align-items: flex-start !important;
+    }
+    .radar-excel-modal .radar-excel-summary {
+        grid-template-columns: repeat(5, minmax(74px, 1fr)) !important;
+    }
+    .radar-excel-modal .radar-excel-toolbar {
+        grid-template-columns: minmax(200px, 1fr) repeat(2, minmax(115px, .55fr)) !important;
+    }
+    .radar-excel-modal .radar-excel-toolbar > *:nth-child(n+4) {
+        min-width: 0 !important;
+    }
+    .radar-excel-modal .radar-unico-body .radar-historico-modal-left {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+    .radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-sections {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+@media (max-width: 680px) {
+    .radar-excel-modal .radar-excel-dialog {
+        width: 100vw !important;
+        height: 100vh !important;
+        margin: 0 !important;
+    }
+    .radar-excel-modal .radar-excel-content { border-radius: 0 !important; }
+    .radar-excel-modal .radar-excel-summary { display: none !important; }
+    .radar-excel-modal .radar-excel-toolbar {
+        grid-template-columns: 1fr 1fr !important;
+    }
+    .radar-excel-modal .radar-excel-searchbox { grid-column: 1 / -1 !important; }
+    .radar-excel-modal .radar-unico-body .radar-historico-modal-left {
+        grid-template-columns: 1fr !important;
+    }
+    .radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-sections,
+    .radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+
+
+
+{# =========================================================
+   RADAR V5 — MASTER / DETAIL REAL EM 100% DE ZOOM
+   A tabela permanece visível e o detalhe ocupa um drawer
+   lateral dentro do mesmo modal, sem modal sobre modal.
+========================================================= #}
+<style>
+/* Modal realmente em tela útil total */
+.radar-excel-modal .radar-excel-dialog {
+    width: calc(100vw - 12px) !important;
+    height: calc(100vh - 12px) !important;
+    margin: 6px auto !important;
+}
+.radar-excel-modal .radar-excel-content {
+    position: relative !important;
+    height: 100% !important;
+    overflow: hidden !important;
+}
+
+/* Quando o painel estiver aberto, tabela e detalhe convivem lado a lado */
+.radar-excel-modal .radar-excel-content.radar-master-detail-open > .radar-excel-header,
+.radar-excel-modal .radar-excel-content.radar-master-detail-open > .radar-excel-body {
+    width: calc(100% - var(--radar-drawer-width, 440px)) !important;
+    transition: width .18s ease !important;
+}
+.radar-excel-modal .radar-excel-content.radar-master-detail-open > .radar-excel-header {
+    padding-right: 10px !important;
+}
+.radar-excel-modal .radar-excel-content.radar-master-detail-open .radar-excel-summary > div:nth-child(4),
+.radar-excel-modal .radar-excel-content.radar-master-detail-open .radar-excel-summary > div:nth-child(5) {
+    display: none !important;
+}
+.radar-excel-modal .radar-excel-content.radar-master-detail-open .radar-excel-summary {
+    grid-template-columns: repeat(3, minmax(80px, 1fr)) !important;
+}
+.radar-excel-modal .radar-excel-content.radar-master-detail-open .radar-excel-toolbar {
+    grid-template-columns: minmax(200px, 1.5fr) repeat(2, minmax(105px, .75fr)) auto !important;
+}
+.radar-excel-modal .radar-excel-content.radar-master-detail-open .radar-excel-toolbar > [data-radar-excel-filter="status"],
+.radar-excel-modal .radar-excel-content.radar-master-detail-open .radar-excel-toolbar > [data-radar-excel-export] {
+    display: none !important;
+}
+
+/* Drawer lateral verdadeiro */
+.radar-excel-modal .radar-unico-layer {
+    position: absolute !important;
+    inset: 0 0 0 auto !important;
+    width: var(--radar-drawer-width, 440px) !important;
+    max-width: 44vw !important;
+    z-index: 60 !important;
+    border-left: 1px solid #cbd5e1 !important;
+    box-shadow: -12px 0 28px rgba(15, 23, 42, .16) !important;
+    background: #f7f9fc !important;
+    overflow: hidden !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="historico"] {
+    --radar-drawer-width: 560px;
+    max-width: 52vw !important;
+}
+.radar-excel-modal .radar-unico-nav {
+    min-height: 46px !important;
+    height: 46px !important;
+    padding: 5px 8px !important;
+    gap: 6px !important;
+}
+.radar-excel-modal .radar-unico-nav-left { gap: 6px !important; }
+.radar-excel-modal .radar-unico-btn {
+    min-height: 30px !important;
+    padding: 4px 8px !important;
+    font-size: .68rem !important;
+    white-space: nowrap !important;
+}
+.radar-excel-modal .radar-unico-nav-title strong {
+    font-size: .76rem !important;
+    line-height: 1.1 !important;
+}
+.radar-excel-modal .radar-unico-nav-title small {
+    max-width: 240px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: .58rem !important;
+}
+.radar-excel-modal .radar-unico-body {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    padding: 6px !important;
+    overflow: auto !important;
+}
+.radar-excel-modal .radar-unico-body > .modal-content {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+/* O drawer já possui título e voltar */
+.radar-excel-modal .radar-unico-body > .modal-content > .modal-header {
+    display: none !important;
+}
+.radar-excel-modal .radar-unico-body > .modal-content > .modal-body {
+    padding: 0 !important;
+    overflow: visible !important;
+}
+.radar-excel-modal .radar-unico-body > .modal-content > .modal-footer {
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 5 !important;
+    min-height: 42px !important;
+    padding: 5px 7px !important;
+    margin-top: 6px !important;
+    background: rgba(255,255,255,.96) !important;
+    border-top: 1px solid #dbe3ee !important;
+}
+.radar-excel-modal .radar-unico-body .btn {
+    min-height: 30px !important;
+    padding: 4px 9px !important;
+    font-size: .68rem !important;
+}
+
+/* Detalhe compacto para caber no zoom 100% */
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-hero {
+    grid-template-columns: minmax(0, 1fr) 82px !important;
+    gap: 6px !important;
+    margin-bottom: 6px !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-valor,
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-status {
+    min-height: 62px !important;
+    padding: 7px 9px !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-valor strong {
+    font-size: 1.05rem !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-valor span,
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-valor small {
+    font-size: .58rem !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-sections {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 5px !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-card {
+    border-radius: 5px !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-card > h3 {
+    padding: 5px 7px !important;
+    font-size: .62rem !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-v3-detail-table {
+    font-size: .62rem !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-v3-detail-table th,
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-v3-detail-table td {
+    padding: 4px 6px !important;
+    line-height: 1.15 !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-observacoes {
+    min-height: 46px !important;
+    max-height: 76px !important;
+    padding: 6px 8px !important;
+    font-size: .64rem !important;
+}
+
+/* Detalhe de conta normal/importada */
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-detalhe-grid {
+    display: block !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-historico-modal-left,
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-historico-modal-right {
+    width: 100% !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-historico-total,
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-historico-resumo,
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-pagar-herdada,
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-form-wrap {
+    padding: 6px 7px !important;
+    margin-bottom: 5px !important;
+    border-radius: 5px !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-historico-total strong {
+    font-size: 1rem !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-historico-total span,
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-historico-total small,
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-historico-resumo p,
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-pagar-herdada,
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-conta-form-wrap {
+    font-size: .62rem !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-historico-resumo h3,
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-pagar-herdada h3 {
+    font-size: .66rem !important;
+    margin-bottom: 4px !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .radar-historico-resumo p {
+    padding: 3px 0 !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .form-control,
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] .form-select {
+    min-height: 29px !important;
+    height: 29px !important;
+    padding: 3px 6px !important;
+    font-size: .64rem !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="detalhe"] textarea.form-control {
+    height: 48px !important;
+}
+
+/* Histórico herdado: resumo horizontal e tabela dominante */
+.radar-excel-modal .radar-unico-layer[data-modo="historico"] .radar-historico-modal-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 5px !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="historico"] .radar-historico-modal-left {
+    display: grid !important;
+    grid-template-columns: 1fr 1.35fr !important;
+    gap: 5px !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="historico"] .radar-historico-modal-left > * {
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 6px 7px !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="historico"] .radar-historico-info,
+.radar-excel-modal .radar-unico-layer[data-modo="historico"] .radar-pagar-herdada {
+    display: none !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="historico"] .radar-historico-total strong {
+    font-size: 1rem !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="historico"] .radar-historico-total span,
+.radar-excel-modal .radar-unico-layer[data-modo="historico"] .radar-historico-total small,
+.radar-excel-modal .radar-unico-layer[data-modo="historico"] .radar-historico-resumo p {
+    font-size: .59rem !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="historico"] .radar-historico-resumo h3 {
+    font-size: .64rem !important;
+    margin-bottom: 3px !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="historico"] .radar-historico-resumo p {
+    padding: 2px 0 !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="historico"] .radar-historico-modal-right,
+.radar-excel-modal .radar-unico-layer[data-modo="historico"] .radar-historico-table-wrap {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="historico"] .radar-historico-table-wrap > h3 {
+    margin: 3px 0 5px !important;
+    font-size: .68rem !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="historico"] .radar-historico-table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    font-size: .58rem !important;
+}
+.radar-excel-modal .radar-unico-layer[data-modo="historico"] .radar-historico-table th,
+.radar-excel-modal .radar-unico-layer[data-modo="historico"] .radar-historico-table td {
+    padding: 4px 3px !important;
+    line-height: 1.1 !important;
+}
+
+/* Desktop menor: drawer proporcional, sem obrigar zoom */
+@media (max-width: 1280px) {
+    .radar-excel-modal .radar-excel-content.radar-master-detail-open {
+        --radar-drawer-width: 400px;
+    }
+    .radar-excel-modal .radar-unico-layer[data-modo="historico"] {
+        --radar-drawer-width: 500px;
+    }
+    .radar-excel-modal .radar-excel-content.radar-master-detail-open .radar-excel-summary {
+        display: none !important;
+    }
+}
+
+/* Celular/tablet: o painel ocupa a tela, pois não há largura para dividir */
+@media (max-width: 900px) {
+    .radar-excel-modal .radar-excel-content.radar-master-detail-open > .radar-excel-header,
+    .radar-excel-modal .radar-excel-content.radar-master-detail-open > .radar-excel-body {
+        width: 100% !important;
+    }
+    .radar-excel-modal .radar-unico-layer,
+    .radar-excel-modal .radar-unico-layer[data-modo="historico"] {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+
+/* =============================================================
+   RADAR V6 — HISTÓRICO HERDADO EM ACCORDION/DROPDOWN
+   Remove seleção por checkbox e mostra os dados no próprio histórico.
+============================================================= */
+.radar-historico-accordion {
+    border: 1px solid #d9e2ef;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+}
+.radar-historico-accordion-head,
+.radar-herdada-accordion-trigger {
+    display: grid;
+    grid-template-columns: minmax(112px, 1.35fr) minmax(62px, .65fr) minmax(90px, .9fr) minmax(104px, 1fr) 76px;
+    align-items: center;
+    column-gap: 12px;
+}
+.radar-historico-accordion-head {
+    min-height: 38px;
+    padding: 0 12px;
+    background: #f4f7fb;
+    border-bottom: 1px solid #d9e2ef;
+    color: #50617a;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+.radar-herdada-accordion-item + .radar-herdada-accordion-item {
+    border-top: 1px solid #e3e9f2;
+}
+.radar-herdada-accordion-trigger {
+    width: 100%;
+    min-height: 46px;
+    padding: 7px 10px 7px 12px;
+    border: 0;
+    background: #fff;
+    color: #101d35;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s ease;
+}
+.radar-herdada-accordion-trigger:hover,
+.radar-herdada-accordion-trigger[aria-expanded="true"] {
+    background: #f5f8ff;
+}
+.radar-herdada-accordion-trigger > span:first-child {
+    color: #0b4fca;
+}
+.radar-historico-detalhes-head {
+    text-align: center;
+}
+.radar-herdada-chevron-wrap {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+    box-sizing: border-box;
+    overflow: visible;
+}
+.radar-herdada-chevron {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    flex: 0 0 32px;
+    display: inline-grid;
+    place-items: center;
+    border: 1px solid #d8e1ee;
+    border-radius: 8px;
+    color: #0b5ed7;
+    background: #fff;
+    line-height: 1;
+    transition: transform .2s ease, background .15s ease, border-color .15s ease;
+}
+.radar-herdada-accordion-trigger:hover .radar-herdada-chevron {
+    border-color: #9fbbe8;
+    background: #eef5ff;
+}
+.radar-herdada-accordion-trigger[aria-expanded="true"] .radar-herdada-chevron {
+    transform: rotate(180deg);
+}
+.radar-historico-accordion {
+    overflow: hidden;
+}
+.radar-historico-accordion-head,
+.radar-herdada-accordion-trigger {
+    box-sizing: border-box;
+    padding-right: 8px;
+}
+.radar-herdada-accordion-panel {
+    padding: 14px;
+    background: #fbfcfe;
+    border-top: 1px solid #dce5f1;
+    box-shadow: inset 3px 0 0 #0b5ed7;
+}
+.radar-herdada-detail-title {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #dfe6f0;
+}
+.radar-herdada-detail-title strong {
+    display: block;
+    font-size: 14px;
+    color: #0c1930;
+}
+.radar-herdada-detail-title small {
+    display: block;
+    margin-top: 2px;
+    color: #65758d;
+    font-size: 11px;
+}
+.radar-herdada-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+.radar-herdada-detail-column p {
+    display: grid;
+    grid-template-columns: minmax(100px, .9fr) minmax(0, 1.35fr);
+    align-items: center;
+    gap: 10px;
+    min-height: 31px;
+    margin: 0;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 11.5px;
+}
+.radar-herdada-detail-column p span {
+    color: #53657e;
+}
+.radar-herdada-detail-column p strong {
+    color: #111d32;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+.radar-herdada-detail-observacoes {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border: 1px solid #dce4ef;
+    border-radius: 8px;
+    background: #fff;
+}
+.radar-herdada-detail-observacoes > span {
+    display: block;
+    margin-bottom: 5px;
+    color: #52647b;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+.radar-herdada-detail-observacoes p {
+    margin: 0;
+    color: #18243a;
+    font-size: 12px;
+    white-space: pre-wrap;
+}
+.radar-herdada-detail-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+.radar-herdada-detail-btn {
+    min-height: 34px;
+    padding: 0 14px;
+    border: 1px solid #bfd0ea;
+    border-radius: 7px;
+    background: #fff;
+    color: #0b5ed7;
+    font-size: 11.5px;
+    font-weight: 800;
+}
+.radar-herdada-detail-btn.pagar {
+    border-color: #18a957;
+    background: #18a957;
+    color: #fff;
+}
+.radar-herdada-detail-btn.excluir {
+    border-color: #e5484d;
+    background: #fff;
+    color: #cf252d;
+}
+.radar-herdada-importada-aviso {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: #5e6e84;
+    font-size: 11px;
+    font-weight: 700;
+}
+.radar-herdada-edit-accordion {
+    padding: 12px 14px 15px;
+    background: #f8fafc;
+    border-top: 1px solid #dce5f1;
+}
+/* A seleção em lote foi removida nesta visualização */
+.radar-historico-modal .radar-herdada-lote-actions,
+.radar-historico-modal .radar-pagar-herdada {
+    display: none !important;
+}
+@media (max-width: 720px) {
+    .radar-historico-accordion-head {
+        display: none;
+    }
+    .radar-herdada-accordion-trigger {
+        grid-template-columns: 1.15fr .8fr .8fr 32px;
+        gap: 7px;
+        min-height: 54px;
+    }
+    .radar-herdada-accordion-trigger > span:nth-child(2),
+    .radar-herdada-accordion-trigger > span:nth-child(3) {
+        display: none;
+    }
+    .radar-herdada-accordion-trigger > strong {
+        text-align: right;
+    }
+    .radar-herdada-dias::after {
+        content: "d";
+        margin-left: 2px;
+    }
+    .radar-herdada-detail-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+    .radar-herdada-detail-actions {
+        justify-content: stretch;
+    }
+    .radar-herdada-detail-btn {
+        flex: 1 1 30%;
+    }
+}
+
+</style>
+
+<script>
+(function () {
+    'use strict';
+
+    function sincronizarMasterDetail(modal) {
+        if (!modal) return;
+        const content = modal.querySelector('.radar-excel-content');
+        const layer = modal.querySelector('.radar-unico-layer');
+        if (!content) return;
+
+        const aberto = !!(layer && !layer.hidden);
+        content.classList.toggle('radar-master-detail-open', aberto);
+        content.classList.toggle('radar-master-detail-historico', aberto && layer.dataset.modo === 'historico');
+        content.classList.toggle('radar-master-detail-detalhe', aberto && layer.dataset.modo === 'detalhe');
+
+        if (aberto) {
+            content.style.setProperty('--radar-drawer-width', layer.dataset.modo === 'historico' ? '560px' : '440px');
+        } else {
+            content.style.removeProperty('--radar-drawer-width');
+        }
+    }
+
+    function observarModal(modal) {
+        if (!modal || modal.dataset.radarV5Observed === '1') return;
+        modal.dataset.radarV5Observed = '1';
+
+        const content = modal.querySelector('.radar-excel-content');
+        if (!content) return;
+
+        const observer = new MutationObserver(function () {
+            sincronizarMasterDetail(modal);
+        });
+        observer.observe(content, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['hidden', 'data-modo']
+        });
+
+        modal.addEventListener('shown.bs.modal', function () { sincronizarMasterDetail(modal); });
+        modal.addEventListener('hidden.bs.modal', function () {
+            content.classList.remove('radar-master-detail-open', 'radar-master-detail-historico', 'radar-master-detail-detalhe');
+            content.style.removeProperty('--radar-drawer-width');
+        });
+        sincronizarMasterDetail(modal);
+    }
+
+    document.querySelectorAll('.radar-excel-modal').forEach(observarModal);
+
+    document.addEventListener('click', function (event) {
+        const modal = event.target.closest('.radar-excel-modal');
+        if (!modal) return;
+        requestAnimationFrame(function () { sincronizarMasterDetail(modal); });
+        setTimeout(function () { sincronizarMasterDetail(modal); }, 40);
+    }, true);
 })();
 </script>
 
 
 <script>
-/* =====================================================
-   CORREÇÃO ANTI-TRAVAMENTO DE MODAIS DO RADAR
-   Problema corrigido:
-   - Ao fechar modal aberto pelo olhinho, podia sobrar body.modal-open
-     ou .modal-backdrop invisível, bloqueando clique/scroll da tela.
-   - Agora, ao fechar qualquer modal, o Radar normaliza o estado do Bootstrap.
-===================================================== */
 (function () {
-    function radarModalEstaVisivel(modal) {
-        if (!modal) return false;
-        return modal.classList.contains('show') && modal.style.display !== 'none';
-    }
-
-    function radarExisteModalAberto() {
-        return Array.from(document.querySelectorAll('.modal'))
-            .some(radarModalEstaVisivel);
-    }
-
-    function radarLimparEstadoModalTravado() {
-        setTimeout(function () {
-            const existeAberto = radarExisteModalAberto();
-
-            if (!existeAberto) {
-                document.querySelectorAll('.modal-backdrop').forEach(function (backdrop) {
-                    backdrop.remove();
-                });
-
-                document.querySelectorAll('.radar-modal-pai-fixo, .radar-modal-pai-ativo').forEach(function (modal) {
-                    modal.classList.remove('radar-modal-pai-fixo');
-                    modal.classList.remove('radar-modal-pai-ativo');
-                    modal.style.removeProperty('display');
-                    modal.removeAttribute('aria-modal');
-                    modal.setAttribute('aria-hidden', 'true');
-                });
-
-                document.body.classList.remove('modal-open');
-                document.body.style.removeProperty('overflow');
-                document.body.style.removeProperty('padding-right');
-                document.body.style.removeProperty('position');
-                document.body.style.removeProperty('top');
-                document.body.style.removeProperty('width');
-
-                return;
-            }
-
-            document.body.classList.add('modal-open');
-        }, 120);
-    }
-
-    document.addEventListener('hidden.bs.modal', radarLimparEstadoModalTravado, true);
-    document.addEventListener('hide.bs.modal', radarLimparEstadoModalTravado, true);
+    'use strict';
 
     document.addEventListener('click', function (event) {
-        const btnFechar = event.target.closest('[data-bs-dismiss="modal"], .btn-close');
-        if (!btnFechar) return;
-        setTimeout(radarLimparEstadoModalTravado, 180);
-    }, true);
+        const trigger = event.target.closest('.js-toggle-herdada-detalhes');
+        if (!trigger) return;
 
-    window.radarLimparEstadoModalTravado = radarLimparEstadoModalTravado;
+        const id = trigger.dataset.detailRow;
+        const panel = document.getElementById('detalhesHerdada' + id);
+        if (!panel) return;
+
+        const item = trigger.closest('.radar-herdada-accordion-item');
+        const accordion = trigger.closest('.radar-historico-accordion');
+        const abrir = trigger.getAttribute('aria-expanded') !== 'true';
+
+        if (accordion) {
+            accordion.querySelectorAll('.js-toggle-herdada-detalhes[aria-expanded="true"]').forEach(function (other) {
+                if (other === trigger) return;
+                other.setAttribute('aria-expanded', 'false');
+                const otherPanel = document.getElementById('detalhesHerdada' + other.dataset.detailRow);
+                if (otherPanel) otherPanel.hidden = true;
+                const otherItem = other.closest('.radar-herdada-accordion-item');
+                if (otherItem) otherItem.classList.remove('aberto');
+            });
+        }
+
+        trigger.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+        panel.hidden = !abrir;
+        if (item) item.classList.toggle('aberto', abrir);
+    });
 })();
 </script>
 
+
+<style id="radar-v6-1-seta-fix">
+@media (max-width: 680px) {
+    .radar-historico-accordion-head,
+    .radar-herdada-accordion-trigger {
+        grid-template-columns: minmax(92px, 1.25fr) minmax(48px, .55fr) minmax(78px, .85fr) minmax(92px, 1fr) 58px !important;
+        column-gap: 6px !important;
+        padding-left: 8px !important;
+        padding-right: 6px !important;
+    }
+    .radar-historico-detalhes-head {
+        font-size: 0;
+    }
+    .radar-historico-detalhes-head::after {
+        content: "Abrir";
+        font-size: 10px;
+    }
+    .radar-herdada-chevron-wrap {
+        padding: 0 3px;
+    }
+    .radar-herdada-chevron {
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        flex-basis: 30px;
+    }
+}
+</style>
 {% endblock %}
