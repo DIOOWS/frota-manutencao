@@ -125,15 +125,7 @@ def gerar_chave_conta(conta):
 
     Usa os campos mais consistentes do relatório para reconhecer a mesma conta
     depois que a importação é apagada e recriada.
-
-    A chave é armazenada apenas no objeto carregado durante a requisição. Isso
-    evita recalcular SHA-256 várias vezes para a mesma conta sem persistir nada
-    no banco e sem alterar a regra de identificação.
     """
-    chave_cache = getattr(conta, "_chave_planejamento_cache", None)
-    if chave_cache:
-        return chave_cache
-
     vencimento = data_para_date_local(getattr(conta, "data_vencimento", None))
     vencimento_txt = vencimento.isoformat() if vencimento else ""
 
@@ -167,12 +159,7 @@ def gerar_chave_conta(conta):
         valor_chave(getattr(conta, "valor", 0)),
     ])
 
-    chave = hashlib.sha256(base.encode("utf-8")).hexdigest()
-    try:
-        setattr(conta, "_chave_planejamento_cache", chave)
-    except Exception:
-        pass
-    return chave
+    return hashlib.sha256(base.encode("utf-8")).hexdigest()
 
 
 def preencher_snapshot_planejamento(registro, conta, chave_conta=None):
@@ -208,12 +195,6 @@ def localizar_planejamento(conta, mes, ano, por_id=None, por_chave=None):
         if mudou:
             db.session.flush()
         return registro
-
-    # Quando os mapas foram fornecidos, eles já contêm todos os planejamentos
-    # da competência. Fazer outra consulta aqui criaria o padrão N+1 sem trazer
-    # resultado diferente.
-    if por_id is not None or por_chave is not None:
-        return None
 
     return PlanejamentoFinanceiro.query.filter(
         PlanejamentoFinanceiro.origem == "IMPORTADA",
@@ -548,24 +529,10 @@ def index():
     outros_por_id = {}
     outros_por_chave = {}
 
-    # Carrega de uma vez todas as contas referenciadas por planejamentos de
-    # outras competências. Antes havia um SELECT por planejamento (N+1).
-    ids_contas_antigas = {
-        int(p.conta_id)
-        for p in outros_planejamentos
-        if p.conta_id is not None
-    }
-    contas_antigas_por_id = {}
-    if ids_contas_antigas:
-        contas_antigas = ContaPagarImportada.query.filter(
-            ContaPagarImportada.id.in_(ids_contas_antigas)
-        ).all()
-        contas_antigas_por_id = {int(c.id): c for c in contas_antigas}
-
     for planejamento_antigo in outros_planejamentos:
         conta_antiga = None
         if planejamento_antigo.conta_id is not None:
-            conta_antiga = contas_antigas_por_id.get(int(planejamento_antigo.conta_id))
+            conta_antiga = ContaPagarImportada.query.get(int(planejamento_antigo.conta_id))
 
         # Planejamentos de contas já pagas ou canceladas não bloqueiam.
         if conta_antiga and (conta_esta_paga_local(conta_antiga) or conta_esta_cancelada(conta_antiga)):
@@ -589,6 +556,7 @@ def index():
         registro = localizar_planejamento(conta, mes, ano, planejamentos_id, planejamentos_chave)
 
         if registro:
+            aplicar_dados_previsao_item(item, registro)
             if conta_esta_paga_local(conta):
                 item["status_execucao"] = "PAGA"
                 item["data_pagamento"] = formatar_data(getattr(conta, "data_pagamento", None))
@@ -619,8 +587,21 @@ def index():
 
             aguardando.append(item)
 
+    planejadas.sort(key=lambda i: (
+        data_para_date_local(i.get("data_prevista")) or date.max,
+        normalizar_chave(i.get("fornecedor")),
+        normalizar_chave(i.get("conta_nome")),
+    ))
+    executadas.sort(key=lambda i: (
+        data_para_date_local(i.get("data_prevista"))
+        or data_para_date_local(i.get("data_pagamento"))
+        or date.max,
+        normalizar_chave(i.get("fornecedor")),
+        normalizar_chave(i.get("conta_nome")),
+    ))
+
     total_aguardando = sum(dinheiro_decimal(i.get("valor")) for i in aguardando)
-    total_planejado = sum(dinheiro_decimal(i.get("valor")) for i in planejadas)
+    total_planejado = sum(dinheiro_decimal(i.get("valor_planejado", i.get("valor"))) for i in planejadas)
     total_executado = sum(dinheiro_decimal(i.get("valor")) for i in executadas)
     total_recebido, total_pago_competencia, saldo_competencia = calcular_resumo_caixa_competencia(mes, ano)
 
@@ -662,6 +643,7 @@ def montar_listas_planejamento(mes, ano):
         registro = localizar_planejamento(conta, mes, ano, planejamentos_id, planejamentos_chave)
 
         if registro:
+            aplicar_dados_previsao_item(item, registro)
             if conta_esta_paga_local(conta):
                 item["status_execucao"] = "PAGA"
                 pagas.append(item)
@@ -672,90 +654,416 @@ def montar_listas_planejamento(mes, ano):
             item["status_execucao"] = "AGUARDANDO"
             aguardando.append(item)
 
+    planejadas.sort(key=lambda i: (
+        data_para_date_local(i.get("data_prevista")) or date.max,
+        normalizar_chave(i.get("fornecedor")),
+        normalizar_chave(i.get("conta_nome")),
+    ))
+    pagas.sort(key=lambda i: (
+        data_para_date_local(i.get("data_prevista"))
+        or data_para_date_local(i.get("data_pagamento"))
+        or date.max,
+        normalizar_chave(i.get("fornecedor")),
+        normalizar_chave(i.get("conta_nome")),
+    ))
+
     return aguardando, planejadas, pagas
 
 
 def valor_decimal_item(item):
-    return dinheiro_decimal(item.get("valor", 0))
+    return dinheiro_decimal(item.get("valor_planejado", item.get("valor", 0)))
 
 
-def escrever_aba_planejamento(wb, titulo, competencia, itens, colunas):
-    ws = wb.create_sheet(titulo)
+def aplicar_dados_previsao_item(item, registro):
+    """Acrescenta ao item os dados previstos sem perder o valor original da conta."""
+    valor_original = dinheiro_decimal(item.get("valor", 0))
+    valor_planejado = dinheiro_decimal(getattr(registro, "valor_planejado", None))
+    if valor_planejado <= 0:
+        valor_planejado = valor_original
 
-    azul = "0B4EDB"
-    azul_escuro = "061B3D"
-    cinza = "F4F7FB"
-    branco = "FFFFFF"
-    borda_cor = "DCE5F1"
+    tipo = texto_limpo(getattr(registro, "tipo_planejamento", None), "TOTAL").upper()
+    data_prevista = data_para_date_local(getattr(registro, "data_prevista", None))
+    saldo_restante = max(Decimal("0"), valor_original - valor_planejado)
 
-    border = Border(
-        left=Side(style="thin", color=borda_cor),
-        right=Side(style="thin", color=borda_cor),
-        top=Side(style="thin", color=borda_cor),
-        bottom=Side(style="thin", color=borda_cor),
+    item["valor_original"] = valor_original
+    item["valor_original_formatado"] = moeda(valor_original)
+    item["valor_planejado"] = valor_planejado
+    item["valor_planejado_formatado"] = moeda(valor_planejado)
+    item["saldo_restante"] = saldo_restante
+    item["saldo_restante_formatado"] = moeda(saldo_restante)
+    item["tipo_planejamento"] = tipo
+    item["data_prevista"] = formatar_data(data_prevista)
+    item["observacao_previsao"] = texto_limpo(getattr(registro, "observacao_previsao", None), "-")
+    return item
+
+
+def estilos_excel():
+    cores = {
+        "azul": "0B4EDB",
+        "azul_escuro": "061B3D",
+        "azul_claro": "EAF2FF",
+        "verde": "087539",
+        "verde_claro": "EAF8F0",
+        "amarelo": "F59E0B",
+        "amarelo_claro": "FFF7DD",
+        "vermelho": "E11D2E",
+        "vermelho_claro": "FFECEE",
+        "cinza": "F4F7FB",
+        "cinza_texto": "64748B",
+        "branco": "FFFFFF",
+        "borda": "DCE5F1",
+    }
+    borda = Border(
+        left=Side(style="thin", color=cores["borda"]),
+        right=Side(style="thin", color=cores["borda"]),
+        top=Side(style="thin", color=cores["borda"]),
+        bottom=Side(style="thin", color=cores["borda"]),
+    )
+    return cores, borda
+
+
+def preparar_aba(ws, titulo, subtitulo, total_colunas):
+    cores, _ = estilos_excel()
+    ws.sheet_view.showGridLines = False
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=total_colunas)
+    titulo_cell = ws.cell(1, 1, titulo)
+    titulo_cell.font = Font(bold=True, color=cores["branco"], size=16)
+    titulo_cell.fill = PatternFill("solid", fgColor=cores["azul_escuro"])
+    titulo_cell.alignment = Alignment(horizontal="left", vertical="center")
+    ws.row_dimensions[1].height = 32
+
+    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=total_colunas)
+    sub_cell = ws.cell(2, 1, subtitulo)
+    sub_cell.font = Font(bold=True, color=cores["azul_escuro"], size=10)
+    sub_cell.fill = PatternFill("solid", fgColor=cores["cinza"])
+    sub_cell.alignment = Alignment(horizontal="left", vertical="center")
+    ws.row_dimensions[2].height = 23
+
+
+def escrever_cabecalho(ws, linha, colunas):
+    cores, borda = estilos_excel()
+    for indice, cabecalho in enumerate(colunas, start=1):
+        cell = ws.cell(linha, indice, cabecalho)
+        cell.font = Font(bold=True, color=cores["branco"], size=10)
+        cell.fill = PatternFill("solid", fgColor=cores["azul"])
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = borda
+    ws.row_dimensions[linha].height = 28
+
+
+def estilizar_status(cell, status):
+    cores, _ = estilos_excel()
+    status = texto_limpo(status, "-").upper()
+    if status == "PAGA":
+        cell.fill = PatternFill("solid", fgColor=cores["verde_claro"])
+        cell.font = Font(bold=True, color=cores["verde"])
+    elif status == "PLANEJADA":
+        cell.fill = PatternFill("solid", fgColor=cores["azul_claro"])
+        cell.font = Font(bold=True, color=cores["azul"])
+    elif status == "PARCIAL":
+        cell.fill = PatternFill("solid", fgColor=cores["amarelo_claro"])
+        cell.font = Font(bold=True, color="A65B00")
+    else:
+        cell.fill = PatternFill("solid", fgColor=cores["vermelho_claro"])
+        cell.font = Font(bold=True, color=cores["vermelho"])
+
+
+def valor_original_item(item):
+    return dinheiro_decimal(item.get("valor_original", item.get("valor", 0)))
+
+
+def valor_planejado_item(item):
+    if item.get("status_execucao") == "AGUARDANDO":
+        return Decimal("0")
+    return dinheiro_decimal(item.get("valor_planejado", item.get("valor", 0)))
+
+
+def saldo_item(item):
+    if item.get("status_execucao") == "AGUARDANDO":
+        return valor_original_item(item)
+    return dinheiro_decimal(item.get("saldo_restante", 0))
+
+
+def data_agenda_item(item):
+    return (
+        data_para_date_local(item.get("data_prevista"))
+        or data_para_date_local(item.get("data_pagamento"))
+        or data_para_date_local(item.get("vencimento"))
     )
 
-    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(colunas))
-    ws.cell(row=1, column=1).value = f"{titulo.upper()} - {competencia}"
-    ws.cell(row=1, column=1).font = Font(bold=True, color=branco, size=14)
-    ws.cell(row=1, column=1).fill = PatternFill("solid", fgColor=azul_escuro)
-    ws.cell(row=1, column=1).alignment = Alignment(horizontal="center", vertical="center")
-    ws.row_dimensions[1].height = 28
 
-    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=len(colunas))
-    ws.cell(row=2, column=1).value = f"Exportado em: {datetime.now().strftime('%d/%m/%Y às %H:%M')} | Total: {len(itens)} conta(s) | Valor: {moeda(sum(valor_decimal_item(i) for i in itens))}"
-    ws.cell(row=2, column=1).font = Font(bold=True, color=azul_escuro, size=10)
-    ws.cell(row=2, column=1).fill = PatternFill("solid", fgColor=cinza)
-    ws.cell(row=2, column=1).alignment = Alignment(horizontal="center", vertical="center")
-
-    for col_idx, (cabecalho, _) in enumerate(colunas, start=1):
-        cell = ws.cell(row=4, column=col_idx)
-        cell.value = cabecalho
-        cell.font = Font(bold=True, color=branco)
-        cell.fill = PatternFill("solid", fgColor=azul)
-        cell.alignment = Alignment(horizontal="center", vertical="center")
-        cell.border = border
-
+def escrever_aba_agenda(wb, competencia, planejadas, pagas):
+    ws = wb.create_sheet("Agenda de Pagamentos")
+    itens = list(planejadas) + list(pagas)
+    itens.sort(key=lambda i: (
+        data_agenda_item(i) or date.max,
+        normalizar_chave(i.get("fornecedor")),
+        normalizar_chave(i.get("conta_nome")),
+    ))
+    total = sum(valor_planejado_item(i) for i in itens)
+    preparar_aba(
+        ws,
+        f"AGENDA DE PAGAMENTOS - {competencia.upper()}",
+        f"Exportado em {datetime.now().strftime('%d/%m/%Y às %H:%M')} | "
+        f"{len(itens)} conta(s) | Total previsto: {moeda(total)}",
+        11,
+    )
+    colunas = [
+        "Data prevista", "Status", "Conta", "Fornecedor", "Parcela",
+        "Tipo", "Valor original", "Valor planejado", "Saldo restante",
+        "Pago em", "Observação",
+    ]
+    escrever_cabecalho(ws, 4, colunas)
+    _, borda = estilos_excel()
     linha = 5
     for item in itens:
-        for col_idx, (_, chave) in enumerate(colunas, start=1):
-            valor = item.get(chave, "-")
-            if chave == "valor":
-                valor = float(valor_decimal_item(item))
-            cell = ws.cell(row=linha, column=col_idx)
-            cell.value = valor
-            cell.border = border
-            cell.alignment = Alignment(vertical="center", wrap_text=True)
-            if chave == "valor":
+        data_prevista = data_agenda_item(item)
+        valores = [
+            data_prevista,
+            item.get("status_execucao", "-"),
+            item.get("conta_nome", "-"),
+            item.get("fornecedor", "-"),
+            item.get("parcela_label", "-"),
+            item.get("tipo_planejamento", "TOTAL"),
+            float(valor_original_item(item)),
+            float(valor_planejado_item(item)),
+            float(saldo_item(item)),
+            data_para_date_local(item.get("data_pagamento")),
+            item.get("observacao_previsao") or item.get("observacao", "-"),
+        ]
+        for coluna, valor in enumerate(valores, start=1):
+            cell = ws.cell(linha, coluna, valor)
+            cell.border = borda
+            cell.alignment = Alignment(vertical="center", wrap_text=coluna in (3, 4, 11))
+            if coluna in (1, 10) and valor:
+                cell.number_format = "dd/mm/yyyy"
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+            elif coluna in (7, 8, 9):
                 cell.number_format = 'R$ #,##0.00'
                 cell.alignment = Alignment(horizontal="right", vertical="center")
+        estilizar_status(ws.cell(linha, 2), item.get("status_execucao"))
+        if texto_limpo(item.get("tipo_planejamento"), "TOTAL").upper() == "PARCIAL":
+            estilizar_status(ws.cell(linha, 6), "PARCIAL")
         linha += 1
 
-    linha_total = linha + 1
-    ws.cell(row=linha_total, column=1).value = "TOTAL"
-    ws.cell(row=linha_total, column=1).font = Font(bold=True, color=azul_escuro)
-    ws.cell(row=linha_total, column=len(colunas)).value = float(sum(valor_decimal_item(i) for i in itens))
-    ws.cell(row=linha_total, column=len(colunas)).number_format = 'R$ #,##0.00'
-    ws.cell(row=linha_total, column=len(colunas)).font = Font(bold=True, color=azul_escuro)
-
-    larguras = {
-        "Status": 18,
-        "Vencimento": 14,
-        "Pago em": 14,
-        "Conta": 38,
-        "Fornecedor": 34,
-        "Observação": 45,
-        "Valor": 16,
-        "Origem": 16,
-        "Parcela": 12,
-    }
-    for col_idx, (cabecalho, _) in enumerate(colunas, start=1):
-        ws.column_dimensions[get_column_letter(col_idx)].width = larguras.get(cabecalho, 18)
-
+    if itens:
+        ws.auto_filter.ref = f"A4:K{linha - 1}"
     ws.freeze_panes = "A5"
-    ws.auto_filter.ref = f"A4:{get_column_letter(len(colunas))}{max(4, linha - 1)}"
+    larguras = [15, 14, 34, 30, 12, 12, 17, 18, 18, 14, 42]
+    for idx, largura in enumerate(larguras, start=1):
+        ws.column_dimensions[get_column_letter(idx)].width = largura
     return ws
 
+
+def escrever_aba_resumo_diario(wb, competencia, planejadas, pagas):
+    ws = wb.create_sheet("Resumo Diário")
+    itens = list(planejadas) + list(pagas)
+    resumo = {}
+    for item in itens:
+        dia = data_agenda_item(item)
+        if not dia:
+            continue
+        dados = resumo.setdefault(dia, {"quantidade": 0, "planejado": Decimal("0"), "pago": Decimal("0")})
+        dados["quantidade"] += 1
+        dados["planejado"] += valor_planejado_item(item)
+        if item.get("status_execucao") == "PAGA":
+            dados["pago"] += dinheiro_decimal(item.get("valor", 0))
+
+    preparar_aba(
+        ws,
+        f"RESUMO DIÁRIO - {competencia.upper()}",
+        "Consolidação do desembolso por data prevista.",
+        5,
+    )
+    escrever_cabecalho(ws, 4, ["Data", "Quantidade", "Valor planejado", "Valor pago", "Falta executar"])
+    _, borda = estilos_excel()
+    linha = 5
+    for dia in sorted(resumo):
+        dados = resumo[dia]
+        falta = max(Decimal("0"), dados["planejado"] - dados["pago"])
+        valores = [dia, dados["quantidade"], float(dados["planejado"]), float(dados["pago"]), float(falta)]
+        for coluna, valor in enumerate(valores, start=1):
+            cell = ws.cell(linha, coluna, valor)
+            cell.border = borda
+            cell.alignment = Alignment(horizontal="center" if coluna <= 2 else "right", vertical="center")
+            if coluna == 1:
+                cell.number_format = "dd/mm/yyyy"
+            elif coluna >= 3:
+                cell.number_format = 'R$ #,##0.00'
+        linha += 1
+    if resumo:
+        ws.auto_filter.ref = f"A4:E{linha - 1}"
+    ws.freeze_panes = "A5"
+    for idx, largura in enumerate([15, 14, 20, 18, 18], start=1):
+        ws.column_dimensions[get_column_letter(idx)].width = largura
+    return ws
+
+
+def escrever_aba_parciais(wb, competencia, planejadas, pagas):
+    ws = wb.create_sheet("Pagamentos Parciais")
+    itens = [
+        i for i in list(planejadas) + list(pagas)
+        if texto_limpo(i.get("tipo_planejamento"), "TOTAL").upper() == "PARCIAL"
+    ]
+    itens.sort(key=lambda i: (data_agenda_item(i) or date.max, normalizar_chave(i.get("conta_nome"))))
+    preparar_aba(
+        ws,
+        f"PAGAMENTOS PARCIAIS - {competencia.upper()}",
+        f"{len(itens)} conta(s) com pagamento parcial | Saldo total: {moeda(sum(saldo_item(i) for i in itens))}",
+        9,
+    )
+    escrever_cabecalho(ws, 4, [
+        "Data prevista", "Status", "Conta", "Fornecedor", "Valor original",
+        "Valor planejado", "Saldo restante", "% planejado", "Observação",
+    ])
+    _, borda = estilos_excel()
+    linha = 5
+    for item in itens:
+        original = valor_original_item(item)
+        planejado = valor_planejado_item(item)
+        percentual = float(planejado / original) if original > 0 else 0
+        valores = [
+            data_agenda_item(item), item.get("status_execucao", "-"),
+            item.get("conta_nome", "-"), item.get("fornecedor", "-"),
+            float(original), float(planejado), float(saldo_item(item)), percentual,
+            item.get("observacao_previsao") or item.get("observacao", "-"),
+        ]
+        for coluna, valor in enumerate(valores, start=1):
+            cell = ws.cell(linha, coluna, valor)
+            cell.border = borda
+            cell.alignment = Alignment(vertical="center", wrap_text=coluna in (3, 4, 9))
+            if coluna == 1 and valor:
+                cell.number_format = "dd/mm/yyyy"
+            elif coluna in (5, 6, 7):
+                cell.number_format = 'R$ #,##0.00'
+                cell.alignment = Alignment(horizontal="right", vertical="center")
+            elif coluna == 8:
+                cell.number_format = "0.00%"
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+        estilizar_status(ws.cell(linha, 2), item.get("status_execucao"))
+        linha += 1
+    if itens:
+        ws.auto_filter.ref = f"A4:I{linha - 1}"
+    ws.freeze_panes = "A5"
+    for idx, largura in enumerate([15, 14, 34, 30, 18, 18, 18, 15, 42], start=1):
+        ws.column_dimensions[get_column_letter(idx)].width = largura
+    return ws
+
+
+def escrever_aba_geral(wb, competencia, aguardando, planejadas, pagas):
+    ws = wb.create_sheet("Planejamento Geral")
+    itens = list(aguardando) + list(planejadas) + list(pagas)
+    itens.sort(key=lambda i: (
+        0 if i.get("status_execucao") == "PLANEJADA" else 1 if i.get("status_execucao") == "PAGA" else 2,
+        data_agenda_item(i) or date.max,
+        normalizar_chave(i.get("conta_nome")),
+    ))
+    preparar_aba(
+        ws,
+        f"PLANEJAMENTO GERAL - {competencia.upper()}",
+        f"{len(itens)} conta(s) entre aguardando, planejadas e pagas.",
+        13,
+    )
+    escrever_cabecalho(ws, 4, [
+        "Status", "Vencimento", "Data prevista", "Pago em", "Conta", "Fornecedor",
+        "Parcela", "Tipo", "Valor original", "Valor planejado", "Saldo restante",
+        "Observação da conta", "Observação do planejamento",
+    ])
+    _, borda = estilos_excel()
+    linha = 5
+    for item in itens:
+        valores = [
+            item.get("status_execucao", "-"),
+            data_para_date_local(item.get("vencimento")),
+            data_para_date_local(item.get("data_prevista")),
+            data_para_date_local(item.get("data_pagamento")),
+            item.get("conta_nome", "-"), item.get("fornecedor", "-"),
+            item.get("parcela_label", "-"), item.get("tipo_planejamento", "-"),
+            float(valor_original_item(item)), float(valor_planejado_item(item)),
+            float(saldo_item(item)), item.get("observacao", "-"),
+            item.get("observacao_previsao", "-"),
+        ]
+        for coluna, valor in enumerate(valores, start=1):
+            cell = ws.cell(linha, coluna, valor)
+            cell.border = borda
+            cell.alignment = Alignment(vertical="center", wrap_text=coluna in (5, 6, 12, 13))
+            if coluna in (2, 3, 4) and valor:
+                cell.number_format = "dd/mm/yyyy"
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+            elif coluna in (9, 10, 11):
+                cell.number_format = 'R$ #,##0.00'
+                cell.alignment = Alignment(horizontal="right", vertical="center")
+        estilizar_status(ws.cell(linha, 1), item.get("status_execucao"))
+        linha += 1
+    if itens:
+        ws.auto_filter.ref = f"A4:M{linha - 1}"
+    ws.freeze_panes = "A5"
+    larguras = [14, 14, 15, 14, 34, 30, 12, 12, 18, 18, 18, 38, 40]
+    for idx, largura in enumerate(larguras, start=1):
+        ws.column_dimensions[get_column_letter(idx)].width = largura
+    return ws
+
+
+def escrever_aba_executivo(wb, competencia, aguardando, planejadas, pagas, mes, ano):
+    ws = wb.create_sheet("Resumo Executivo")
+    preparar_aba(
+        ws,
+        f"RESUMO EXECUTIVO - {competencia.upper()}",
+        f"Posição gerencial exportada em {datetime.now().strftime('%d/%m/%Y às %H:%M')}",
+        6,
+    )
+    cores, borda = estilos_excel()
+    total_recebido, total_pago_caixa, saldo_caixa = calcular_resumo_caixa_competencia(mes, ano)
+    total_aguardando = sum(valor_original_item(i) for i in aguardando)
+    total_planejado = sum(valor_planejado_item(i) for i in planejadas)
+    total_executado = sum(dinheiro_decimal(i.get("valor", 0)) for i in pagas)
+    saldo_parcial = sum(saldo_item(i) for i in list(planejadas) + list(pagas))
+    quantidade_parciais = sum(
+        1 for i in list(planejadas) + list(pagas)
+        if texto_limpo(i.get("tipo_planejamento"), "TOTAL").upper() == "PARCIAL"
+    )
+    quantidade_integrais = len(planejadas) + len(pagas) - quantidade_parciais
+
+    indicadores = [
+        ("Recebido na competência", total_recebido, "moeda", cores["azul_claro"]),
+        ("Pago na competência", total_pago_caixa, "moeda", cores["verde_claro"]),
+        ("Saldo da conta", saldo_caixa, "moeda", cores["amarelo_claro"]),
+        ("Valor aguardando decisão", total_aguardando, "moeda", cores["vermelho_claro"]),
+        ("Valor planejado", total_planejado, "moeda", cores["azul_claro"]),
+        ("Valor executado", total_executado, "moeda", cores["verde_claro"]),
+        ("Saldo de pagamentos parciais", saldo_parcial, "moeda", cores["amarelo_claro"]),
+        ("Contas aguardando", len(aguardando), "numero", cores["cinza"]),
+        ("Contas planejadas", len(planejadas), "numero", cores["azul_claro"]),
+        ("Contas pagas", len(pagas), "numero", cores["verde_claro"]),
+        ("Planejamentos parciais", quantidade_parciais, "numero", cores["amarelo_claro"]),
+        ("Planejamentos integrais", quantidade_integrais, "numero", cores["cinza"]),
+    ]
+
+    linha = 4
+    for indice, (rotulo, valor, tipo, fundo) in enumerate(indicadores):
+        coluna_base = 1 if indice % 2 == 0 else 4
+        if indice % 2 == 0 and indice > 0:
+            linha += 3
+        ws.merge_cells(start_row=linha, start_column=coluna_base, end_row=linha, end_column=coluna_base + 2)
+        rotulo_cell = ws.cell(linha, coluna_base, rotulo)
+        rotulo_cell.font = Font(bold=True, color=cores["cinza_texto"], size=10)
+        rotulo_cell.fill = PatternFill("solid", fgColor=fundo)
+        rotulo_cell.border = borda
+        rotulo_cell.alignment = Alignment(horizontal="center", vertical="center")
+        ws.merge_cells(start_row=linha + 1, start_column=coluna_base, end_row=linha + 1, end_column=coluna_base + 2)
+        valor_cell = ws.cell(linha + 1, coluna_base, float(valor) if tipo == "moeda" else int(valor))
+        valor_cell.font = Font(bold=True, color=cores["azul_escuro"], size=15)
+        valor_cell.fill = PatternFill("solid", fgColor=fundo)
+        valor_cell.border = borda
+        valor_cell.alignment = Alignment(horizontal="center", vertical="center")
+        if tipo == "moeda":
+            valor_cell.number_format = 'R$ #,##0.00'
+        ws.row_dimensions[linha].height = 22
+        ws.row_dimensions[linha + 1].height = 30
+
+    for coluna in range(1, 7):
+        ws.column_dimensions[get_column_letter(coluna)].width = 18
+    return ws
 
 
 @planejamento_financeiro_bp.route("/sincronizar-radar", methods=["POST"])
@@ -783,6 +1091,7 @@ def sincronizar_radar():
             "message": f"Erro ao sincronizar Radar: {str(erro)}",
         }), 500
 
+
 @planejamento_financeiro_bp.route("/exportar")
 @gestao_required
 def exportar_planejamento():
@@ -797,40 +1106,20 @@ def exportar_planejamento():
     competencia = f"{nome_mes(mes)}/{ano}"
 
     wb = openpyxl.Workbook()
-    ws_default = wb.active
-    wb.remove(ws_default)
+    wb.remove(wb.active)
 
-    colunas_base = [
-        ("Status", "status_execucao"),
-        ("Vencimento", "vencimento"),
-        ("Conta", "conta_nome"),
-        ("Fornecedor", "fornecedor"),
-        ("Observação", "observacao"),
-        ("Parcela", "parcela_label"),
-        ("Valor", "valor"),
-    ]
+    escrever_aba_agenda(wb, competencia, planejadas, pagas)
+    escrever_aba_resumo_diario(wb, competencia, planejadas, pagas)
+    escrever_aba_parciais(wb, competencia, planejadas, pagas)
+    escrever_aba_geral(wb, competencia, aguardando, planejadas, pagas)
+    escrever_aba_executivo(wb, competencia, aguardando, planejadas, pagas, mes, ano)
 
-    colunas_pagas = [
-        ("Status", "status_execucao"),
-        ("Pago em", "data_pagamento"),
-        ("Vencimento", "vencimento"),
-        ("Conta", "conta_nome"),
-        ("Fornecedor", "fornecedor"),
-        ("Observação", "observacao"),
-        ("Parcela", "parcela_label"),
-        ("Valor", "valor"),
-    ]
-
-    escrever_aba_planejamento(wb, "Aguardando Decisão", competencia, aguardando, colunas_base)
-    escrever_aba_planejamento(wb, "Planejadas", competencia, planejadas, colunas_base)
-    escrever_aba_planejamento(wb, "Pagas", competencia, pagas, colunas_pagas)
-
+    wb.active = 0
     output = BytesIO()
     wb.save(output)
     output.seek(0)
 
     nome_arquivo = f"planejamento_financeiro_{nome_mes(mes).lower()}_{ano}.xlsx".replace(" ", "_")
-
     return send_file(
         output,
         as_attachment=True,
@@ -853,6 +1142,27 @@ def planejar(conta_id):
         return jsonify({"ok": False, "message": "Conta não encontrada. Sincronize a importação e tente novamente."}), 404
 
     chave = gerar_chave_conta(conta)
+
+    tipo_planejamento = texto_limpo(request.form.get("tipo_planejamento"), "TOTAL").upper()
+    if tipo_planejamento not in ("TOTAL", "PARCIAL"):
+        return jsonify({"ok": False, "message": "Tipo de planejamento inválido."}), 400
+
+    valor_original = dinheiro_decimal(getattr(conta, "valor", 0))
+    data_prevista = data_para_date_local(request.form.get("data_prevista"))
+    observacao_previsao = texto_limpo(request.form.get("observacao_previsao"), "")
+
+    if tipo_planejamento == "PARCIAL":
+        valor_planejado = dinheiro_decimal(request.form.get("valor_planejado"))
+        if valor_planejado <= 0:
+            return jsonify({"ok": False, "message": "Informe um valor previsto maior que zero."}), 400
+        if valor_planejado > valor_original:
+            return jsonify({"ok": False, "message": "O valor previsto não pode ultrapassar o valor total da conta."}), 400
+        if not data_prevista:
+            return jsonify({"ok": False, "message": "Informe a data prevista para o pagamento."}), 400
+    else:
+        valor_planejado = valor_original
+        if not data_prevista:
+            data_prevista = data_para_date_local(getattr(conta, "data_vencimento", None))
 
     # Bloqueia a mesma conta/parcela enquanto existir planejamento ativo
     # em outra competência.
@@ -881,23 +1191,11 @@ def planejar(conta_id):
 
     planejamento_ativo = None
 
-    ids_vinculados = {
-        int(p.conta_id)
-        for p in planejamentos_outros_meses
-        if p.conta_id is not None
-    }
-    contas_vinculadas_por_id = {}
-    if ids_vinculados:
-        contas_vinculadas = ContaPagarImportada.query.filter(
-            ContaPagarImportada.id.in_(ids_vinculados)
-        ).all()
-        contas_vinculadas_por_id = {int(c.id): c for c in contas_vinculadas}
-
     for planejamento_anterior in planejamentos_outros_meses:
         conta_vinculada = None
 
         if planejamento_anterior.conta_id is not None:
-            conta_vinculada = contas_vinculadas_por_id.get(
+            conta_vinculada = ContaPagarImportada.query.get(
                 int(planejamento_anterior.conta_id)
             )
 
@@ -955,8 +1253,14 @@ def planejar(conta_id):
         preencher_snapshot_planejamento(existe, conta, chave)
         db.session.add(existe)
 
+    existe.tipo_planejamento = tipo_planejamento
+    existe.valor_planejado = valor_planejado
+    existe.data_prevista = data_prevista
+    existe.observacao_previsao = observacao_previsao or None
+
     db.session.commit()
-    return jsonify({"ok": True, "message": "Conta planejada para pagamento."})
+    mensagem = "Valor parcial previsto com sucesso." if tipo_planejamento == "PARCIAL" else "Conta planejada pelo valor total."
+    return jsonify({"ok": True, "message": mensagem})
 
 
 @planejamento_financeiro_bp.route("/remover/<int:conta_id>", methods=["POST"])

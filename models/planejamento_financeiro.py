@@ -30,6 +30,13 @@ class PlanejamentoFinanceiro(db.Model):
     vencimento_snapshot = db.Column(db.Date, nullable=True)
     observacao_snapshot = db.Column(db.Text, nullable=True)
 
+    # Dados da decisão de pagamento. Mantém o valor original no snapshot
+    # e registra quanto e quando a empresa pretende pagar.
+    tipo_planejamento = db.Column(db.String(20), nullable=False, default="TOTAL")
+    valor_planejado = db.Column(db.Numeric(14, 2), nullable=True)
+    data_prevista = db.Column(db.Date, nullable=True)
+    observacao_previsao = db.Column(db.Text, nullable=True)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(
         db.DateTime,
