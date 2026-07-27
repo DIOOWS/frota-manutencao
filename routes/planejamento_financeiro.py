@@ -16,7 +16,7 @@ from utils.auth import gestao_required
 
 from models.conta_pagar_importada import ContaPagarImportada
 from models.conta_receber_importada import ContaReceberImportada
-from models.planejamento_financeiro import PlanejamentoFinanceiro
+from models.planejamento_financeiro import PlanejamentoFinanceiro, PlanejamentoPagamento
 
 from .radar_financeiro import (
     moeda,
@@ -556,15 +556,23 @@ def index():
         registro = localizar_planejamento(conta, mes, ano, planejamentos_id, planejamentos_chave)
 
         if registro:
-            aplicar_dados_previsao_item(item, registro)
-            if conta_esta_paga_local(conta):
-                item["status_execucao"] = "PAGA"
-                item["data_pagamento"] = formatar_data(getattr(conta, "data_pagamento", None))
-                executadas.append(item)
-            else:
-                item["status_execucao"] = "PLANEJADA"
-                item["data_pagamento"] = "-"
-                planejadas.append(item)
+            pagamentos = pagamentos_do_planejamento(registro)
+            if pagamentos:
+                for pagamento in pagamentos:
+                    item_pagamento = criar_item_pagamento(item, registro, pagamento)
+                    if conta_esta_paga_local(conta):
+                        item_pagamento["status_execucao"] = "PAGA"
+                        item_pagamento["data_pagamento"] = formatar_data(getattr(conta, "data_pagamento", None))
+                        executadas.append(item_pagamento)
+                    else:
+                        item_pagamento["status_execucao"] = "PLANEJADA"
+                        item_pagamento["data_pagamento"] = "-"
+                        planejadas.append(item_pagamento)
+
+            if not conta_esta_paga_local(conta):
+                item_saldo = criar_item_saldo_restante(item, registro)
+                if dinheiro_decimal(item_saldo.get("valor")) > 0:
+                    aguardando.append(item_saldo)
         elif not conta_esta_paga_local(conta):
             item["status_execucao"] = "AGUARDANDO"
             item["data_pagamento"] = "-"
@@ -643,13 +651,21 @@ def montar_listas_planejamento(mes, ano):
         registro = localizar_planejamento(conta, mes, ano, planejamentos_id, planejamentos_chave)
 
         if registro:
-            aplicar_dados_previsao_item(item, registro)
-            if conta_esta_paga_local(conta):
-                item["status_execucao"] = "PAGA"
-                pagas.append(item)
-            else:
-                item["status_execucao"] = "PLANEJADA"
-                planejadas.append(item)
+            pagamentos = pagamentos_do_planejamento(registro)
+            if pagamentos:
+                for pagamento in pagamentos:
+                    item_pagamento = criar_item_pagamento(item, registro, pagamento)
+                    if conta_esta_paga_local(conta):
+                        item_pagamento["status_execucao"] = "PAGA"
+                        pagas.append(item_pagamento)
+                    else:
+                        item_pagamento["status_execucao"] = "PLANEJADA"
+                        planejadas.append(item_pagamento)
+
+            if not conta_esta_paga_local(conta):
+                item_saldo = criar_item_saldo_restante(item, registro)
+                if dinheiro_decimal(item_saldo.get("valor")) > 0:
+                    aguardando.append(item_saldo)
         elif not conta_esta_paga_local(conta):
             item["status_execucao"] = "AGUARDANDO"
             aguardando.append(item)
@@ -672,6 +688,79 @@ def montar_listas_planejamento(mes, ano):
 
 def valor_decimal_item(item):
     return dinheiro_decimal(item.get("valor_planejado", item.get("valor", 0)))
+
+
+def pagamentos_do_planejamento(registro):
+    """Retorna os pagamentos separados; migra registros antigos de forma transparente."""
+    pagamentos = list(getattr(registro, "pagamentos_planejados", []) or [])
+    if pagamentos:
+        return sorted(
+            pagamentos,
+            key=lambda p: (data_para_date_local(p.data_prevista) or date.max, p.id or 0),
+        )
+
+    valor_legado = dinheiro_decimal(getattr(registro, "valor_planejado", None))
+    if valor_legado <= 0:
+        return []
+
+    # Objeto leve para compatibilidade com planejamentos criados antes da tabela filha.
+    class PagamentoLegado:
+        pass
+
+    pagamento = PagamentoLegado()
+    pagamento.id = None
+    pagamento.tipo = texto_limpo(getattr(registro, "tipo_planejamento", None), "TOTAL").upper()
+    pagamento.valor = valor_legado
+    pagamento.data_prevista = data_para_date_local(getattr(registro, "data_prevista", None))
+    pagamento.observacao = getattr(registro, "observacao_previsao", None)
+    return [pagamento]
+
+
+def total_ja_planejado(registro):
+    return sum(dinheiro_decimal(p.valor) for p in pagamentos_do_planejamento(registro))
+
+
+def criar_item_pagamento(item_base, registro, pagamento):
+    item = dict(item_base)
+    valor_original = dinheiro_decimal(item_base.get("valor", 0))
+    valor_pagamento = dinheiro_decimal(getattr(pagamento, "valor", 0))
+    total_planejado = total_ja_planejado(registro)
+    saldo_restante = max(Decimal("0"), valor_original - total_planejado)
+
+    item["valor_original"] = valor_original
+    item["valor_original_formatado"] = moeda(valor_original)
+    item["valor_planejado"] = valor_pagamento
+    item["valor_planejado_formatado"] = moeda(valor_pagamento)
+    item["saldo_restante"] = saldo_restante
+    item["saldo_restante_formatado"] = moeda(saldo_restante)
+    item["tipo_planejamento"] = texto_limpo(getattr(pagamento, "tipo", None), "PARCIAL").upper()
+    item["data_prevista"] = formatar_data(getattr(pagamento, "data_prevista", None))
+    item["observacao_previsao"] = texto_limpo(getattr(pagamento, "observacao", None), "-")
+    item["pagamento_planejado_id"] = getattr(pagamento, "id", None)
+    return item
+
+
+def criar_item_saldo_restante(item_base, registro):
+    item = dict(item_base)
+    valor_original = dinheiro_decimal(item_base.get("valor", 0))
+    saldo = max(Decimal("0"), valor_original - total_ja_planejado(registro))
+    item["valor"] = saldo
+    item["valor_formatado"] = moeda(saldo)
+    item["valor_original"] = valor_original
+    item["valor_original_formatado"] = moeda(valor_original)
+    item["saldo_restante"] = saldo
+    item["saldo_restante_formatado"] = moeda(saldo)
+    item["is_saldo_restante"] = True
+    item["status_planejamento_visual"] = "SALDO RESTANTE"
+    item["descricao"] = f"{item_base.get('descricao', 'CONTA')} (SALDO)"
+    item["conta_nome"] = item["descricao"]
+    item["observacao"] = (
+        f"Saldo ainda não planejado. Valor original: {moeda(valor_original)}."
+    )
+    item["status_execucao"] = "AGUARDANDO"
+    item["planejada_outro_mes"] = False
+    item["competencia_planejada"] = ""
+    return item
 
 
 def aplicar_dados_previsao_item(item, registro):
@@ -1238,6 +1327,7 @@ def planejar(conta_id):
         ),
     ).first()
 
+    registro_novo = existe is None
     if existe:
         preencher_snapshot_planejamento(existe, conta, chave)
         existe.status_planejamento = "PLANEJADA"
@@ -1252,15 +1342,72 @@ def planejar(conta_id):
         )
         preencher_snapshot_planejamento(existe, conta, chave)
         db.session.add(existe)
+        db.session.flush()
 
-    existe.tipo_planejamento = tipo_planejamento
-    existe.valor_planejado = valor_planejado
+    # Migra automaticamente um planejamento antigo para a nova tabela de pagamentos.
+    pagamentos_existentes = list(getattr(existe, "pagamentos_planejados", []) or [])
+    if not registro_novo and not pagamentos_existentes:
+        valor_legado = dinheiro_decimal(getattr(existe, "valor_planejado", None))
+        if valor_legado > 0:
+            pagamento_legado = PlanejamentoPagamento(
+                planejamento_id=existe.id,
+                tipo=texto_limpo(getattr(existe, "tipo_planejamento", None), "TOTAL").upper(),
+                valor=valor_legado,
+                data_prevista=data_para_date_local(getattr(existe, "data_prevista", None)),
+                observacao=getattr(existe, "observacao_previsao", None),
+            )
+            db.session.add(pagamento_legado)
+            db.session.flush()
+            pagamentos_existentes.append(pagamento_legado)
+
+    total_anterior = sum(dinheiro_decimal(p.valor) for p in pagamentos_existentes)
+    saldo_disponivel = max(Decimal("0"), valor_original - total_anterior)
+
+    if saldo_disponivel <= 0:
+        return jsonify({
+            "ok": False,
+            "message": "Esta conta já está totalmente planejada.",
+        }), 409
+
+    if tipo_planejamento == "TOTAL":
+        # Quando a linha representa um saldo, planeja somente o saldo restante.
+        valor_planejado = saldo_disponivel
+    elif valor_planejado > saldo_disponivel:
+        return jsonify({
+            "ok": False,
+            "message": f"O valor previsto não pode ultrapassar o saldo restante de {moeda(saldo_disponivel)}.",
+        }), 400
+
+    pagamento = PlanejamentoPagamento(
+        planejamento_id=existe.id,
+        tipo=tipo_planejamento,
+        valor=valor_planejado,
+        data_prevista=data_prevista,
+        observacao=observacao_previsao or None,
+    )
+    db.session.add(pagamento)
+
+    total_atualizado = total_anterior + valor_planejado
+    existe.valor_planejado = total_atualizado
+    existe.tipo_planejamento = "TOTAL" if total_atualizado >= valor_original else "PARCIAL"
     existe.data_prevista = data_prevista
     existe.observacao_previsao = observacao_previsao or None
 
     db.session.commit()
-    mensagem = "Valor parcial previsto com sucesso." if tipo_planejamento == "PARCIAL" else "Conta planejada pelo valor total."
-    return jsonify({"ok": True, "message": mensagem})
+    saldo_final = max(Decimal("0"), valor_original - total_atualizado)
+    if saldo_final > 0:
+        mensagem = (
+            f"Valor parcial previsto. O saldo de {moeda(saldo_final)} voltou para Aguardando Decisão."
+        )
+    else:
+        mensagem = "Conta totalmente planejada."
+
+    return jsonify({
+        "ok": True,
+        "message": mensagem,
+        "saldo_restante": float(saldo_final),
+        "saldo_restante_formatado": moeda(saldo_final),
+    })
 
 
 @planejamento_financeiro_bp.route("/remover/<int:conta_id>", methods=["POST"])

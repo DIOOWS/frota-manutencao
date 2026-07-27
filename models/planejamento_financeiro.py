@@ -60,3 +60,36 @@ class PlanejamentoFinanceiro(db.Model):
             "ano",
         ),
     )
+
+
+class PlanejamentoPagamento(db.Model):
+    """Cada decisão de pagamento feita para uma conta planejada."""
+    __tablename__ = "planejamento_pagamento"
+
+    id = db.Column(db.Integer, primary_key=True)
+    planejamento_id = db.Column(
+        db.Integer,
+        db.ForeignKey("planejamento_financeiro.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    tipo = db.Column(db.String(20), nullable=False, default="PARCIAL")
+    valor = db.Column(db.Numeric(14, 2), nullable=False)
+    data_prevista = db.Column(db.Date, nullable=True)
+    observacao = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+    planejamento = db.relationship(
+        "PlanejamentoFinanceiro",
+        backref=db.backref(
+            "pagamentos_planejados",
+            lazy="select",
+            cascade="all, delete-orphan",
+            passive_deletes=True,
+        ),
+    )
