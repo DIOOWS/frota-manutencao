@@ -18,6 +18,7 @@ from utils.auth import gestao_required
 
 from models.conta_pagar_importada import ContaPagarImportada
 from models.conta_receber_importada import ContaReceberImportada
+from models.lancamento_financeiro import LancamentoFinanceiro
 from models.planejamento_financeiro import PlanejamentoFinanceiro, PlanejamentoPagamento
 
 from .radar_financeiro import (
@@ -362,71 +363,101 @@ def valor_receber_decimal(conta):
 
 def calcular_resumo_caixa_competencia(mes, ano):
     """
-    Resumo do topo da tela.
+    Usa a mesma base do Fluxo Diário.
 
-    - Recebido: entradas confirmadas dentro do mês selecionado.
-    - Pago: despesas confirmadas dentro do mês selecionado.
-    - Saldo da conta: saldo acumulado no ano até o fim do mês selecionado.
+    Retorna:
+    - recebido no mês selecionado;
+    - pago no mês selecionado;
+    - saldo acumulado de janeiro até o mês selecionado.
 
-    Exemplo:
-        receitas acumuladas no ano - despesas acumuladas no ano = saldo da conta
+    Regras idênticas ao Fluxo Diário:
+    - despesas importadas: origem PAGAMENTO;
+    - receitas importadas: origem RECEBIMENTO;
+    - somente movimentos realizados pela data_pagamento;
+    - inclui lançamentos manuais pagos/recebidos;
+    - ignora lançamentos cancelados.
     """
     primeiro_mes = primeiro_dia_mes(mes, ano)
     ultimo_mes = ultimo_dia_mes(mes, ano)
 
     inicio_mes_dt = inicio_dia_datetime_local(primeiro_mes)
     fim_mes_dt = fim_dia_datetime(ultimo_mes)
-
     inicio_ano_dt = inicio_dia_datetime_local(date(ano, 1, 1))
 
-    # Movimento somente da competência selecionada.
-    contas_recebidas_mes = ContaReceberImportada.query.filter(
-        ContaReceberImportada.pago == True,
-        ContaReceberImportada.origem_importacao == "RECEBIMENTO",
-        ContaReceberImportada.data_pagamento >= inicio_mes_dt,
-        ContaReceberImportada.data_pagamento <= fim_mes_dt,
-    ).all()
+    status_realizados = ("PAGO", "RECEBIDO", "OK", "QUITADO", "BAIXADO")
+    status_cancelados = ("CANCELADO", "CANCELADA")
 
-    contas_pagas_mes = ContaPagarImportada.query.filter(
-        ContaPagarImportada.pago == True,
-        ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA",
-        ContaPagarImportada.data_pagamento >= inicio_mes_dt,
-        ContaPagarImportada.data_pagamento <= fim_mes_dt,
-    ).all()
+    def status_normalizado(valor):
+        return str(valor or "").strip().upper()
 
-    # Acumulado de janeiro até o fim da competência selecionada.
-    contas_recebidas_ano = ContaReceberImportada.query.filter(
-        ContaReceberImportada.pago == True,
-        ContaReceberImportada.origem_importacao == "RECEBIMENTO",
-        ContaReceberImportada.data_pagamento >= inicio_ano_dt,
-        ContaReceberImportada.data_pagamento <= fim_mes_dt,
-    ).all()
+    def somar_importados(inicio_dt, fim_dt):
+        recebimentos = ContaReceberImportada.query.filter(
+            ContaReceberImportada.pago == True,
+            ContaReceberImportada.origem_importacao == "RECEBIMENTO",
+            ContaReceberImportada.data_pagamento >= inicio_dt,
+            ContaReceberImportada.data_pagamento <= fim_dt,
+        ).all()
 
-    contas_pagas_ano = ContaPagarImportada.query.filter(
-        ContaPagarImportada.pago == True,
-        ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA",
-        ContaPagarImportada.data_pagamento >= inicio_ano_dt,
-        ContaPagarImportada.data_pagamento <= fim_mes_dt,
-    ).all()
+        pagamentos = ContaPagarImportada.query.filter(
+            ContaPagarImportada.pago == True,
+            ContaPagarImportada.origem_importacao == "PAGAMENTO",
+            ContaPagarImportada.data_pagamento >= inicio_dt,
+            ContaPagarImportada.data_pagamento <= fim_dt,
+        ).all()
 
-    total_recebido_mes = sum(
-        valor_receber_decimal(conta)
-        for conta in contas_recebidas_mes
+        total_recebido = sum(
+            valor_receber_decimal(conta)
+            for conta in recebimentos
+        )
+        total_pago = sum(
+            dinheiro_decimal(getattr(conta, "valor", 0))
+            for conta in pagamentos
+        )
+
+        return total_recebido, total_pago
+
+    def somar_manuais(mes_inicial, mes_final):
+        total_recebido = Decimal("0")
+        total_pago = Decimal("0")
+
+        lancamentos = LancamentoFinanceiro.query.filter(
+            LancamentoFinanceiro.ano == ano,
+            LancamentoFinanceiro.mes >= mes_inicial,
+            LancamentoFinanceiro.mes <= mes_final,
+        ).all()
+
+        for lancamento in lancamentos:
+            status = status_normalizado(getattr(lancamento, "status", None))
+            if status in status_cancelados or status not in status_realizados:
+                continue
+
+            tipo = status_normalizado(getattr(lancamento, "tipo", None))
+            valor = dinheiro_decimal(getattr(lancamento, "valor", 0))
+
+            if tipo == "RECEITA":
+                total_recebido += valor
+            elif tipo == "DESPESA":
+                total_pago += valor
+
+        return total_recebido, total_pago
+
+    recebido_importado_mes, pago_importado_mes = somar_importados(
+        inicio_mes_dt,
+        fim_mes_dt,
     )
-    total_pago_mes = sum(
-        dinheiro_decimal(getattr(conta, "valor", 0))
-        for conta in contas_pagas_mes
-    )
+    recebido_manual_mes, pago_manual_mes = somar_manuais(mes, mes)
 
-    total_recebido_ano = sum(
-        valor_receber_decimal(conta)
-        for conta in contas_recebidas_ano
+    recebido_importado_ano, pago_importado_ano = somar_importados(
+        inicio_ano_dt,
+        fim_mes_dt,
     )
-    total_pago_ano = sum(
-        dinheiro_decimal(getattr(conta, "valor", 0))
-        for conta in contas_pagas_ano
-    )
+    recebido_manual_ano, pago_manual_ano = somar_manuais(1, mes)
 
+    total_recebido_mes = recebido_importado_mes + recebido_manual_mes
+    total_pago_mes = pago_importado_mes + pago_manual_mes
+
+    total_recebido_ano = recebido_importado_ano + recebido_manual_ano
+    total_pago_ano = pago_importado_ano + pago_manual_ano
     saldo_acumulado_ano = total_recebido_ano - total_pago_ano
 
     return total_recebido_mes, total_pago_mes, saldo_acumulado_ano
