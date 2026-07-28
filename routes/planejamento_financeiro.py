@@ -363,34 +363,73 @@ def valor_receber_decimal(conta):
 def calcular_resumo_caixa_competencia(mes, ano):
     """
     Resumo do topo da tela.
-    - Recebido: entradas confirmadas no Radar/Importações dentro da competência.
-    - Pago: despesas confirmadas no Radar dentro da competência.
-    - Saldo da conta: recebido - pago.
+
+    - Recebido: entradas confirmadas dentro do mês selecionado.
+    - Pago: despesas confirmadas dentro do mês selecionado.
+    - Saldo da conta: saldo acumulado no ano até o fim do mês selecionado.
+
+    Exemplo:
+        receitas acumuladas no ano - despesas acumuladas no ano = saldo da conta
     """
     primeiro_mes = primeiro_dia_mes(mes, ano)
     ultimo_mes = ultimo_dia_mes(mes, ano)
-    inicio_dt = inicio_dia_datetime_local(primeiro_mes)
-    fim_dt = fim_dia_datetime(ultimo_mes)
 
-    contas_recebidas = ContaReceberImportada.query.filter(
+    inicio_mes_dt = inicio_dia_datetime_local(primeiro_mes)
+    fim_mes_dt = fim_dia_datetime(ultimo_mes)
+
+    inicio_ano_dt = inicio_dia_datetime_local(date(ano, 1, 1))
+
+    # Movimento somente da competência selecionada.
+    contas_recebidas_mes = ContaReceberImportada.query.filter(
         ContaReceberImportada.pago == True,
         ContaReceberImportada.origem_importacao == "RECEBIMENTO",
-        ContaReceberImportada.data_pagamento >= inicio_dt,
-        ContaReceberImportada.data_pagamento <= fim_dt,
+        ContaReceberImportada.data_pagamento >= inicio_mes_dt,
+        ContaReceberImportada.data_pagamento <= fim_mes_dt,
     ).all()
 
-    contas_pagas = ContaPagarImportada.query.filter(
+    contas_pagas_mes = ContaPagarImportada.query.filter(
         ContaPagarImportada.pago == True,
         ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA",
-        ContaPagarImportada.data_pagamento >= inicio_dt,
-        ContaPagarImportada.data_pagamento <= fim_dt,
+        ContaPagarImportada.data_pagamento >= inicio_mes_dt,
+        ContaPagarImportada.data_pagamento <= fim_mes_dt,
     ).all()
 
-    total_recebido = sum(valor_receber_decimal(c) for c in contas_recebidas)
-    total_pago = sum(dinheiro_decimal(getattr(c, "valor", 0)) for c in contas_pagas)
-    saldo_conta = total_recebido - total_pago
+    # Acumulado de janeiro até o fim da competência selecionada.
+    contas_recebidas_ano = ContaReceberImportada.query.filter(
+        ContaReceberImportada.pago == True,
+        ContaReceberImportada.origem_importacao == "RECEBIMENTO",
+        ContaReceberImportada.data_pagamento >= inicio_ano_dt,
+        ContaReceberImportada.data_pagamento <= fim_mes_dt,
+    ).all()
 
-    return total_recebido, total_pago, saldo_conta
+    contas_pagas_ano = ContaPagarImportada.query.filter(
+        ContaPagarImportada.pago == True,
+        ContaPagarImportada.origem_importacao == "DESPESA_COMPLETA",
+        ContaPagarImportada.data_pagamento >= inicio_ano_dt,
+        ContaPagarImportada.data_pagamento <= fim_mes_dt,
+    ).all()
+
+    total_recebido_mes = sum(
+        valor_receber_decimal(conta)
+        for conta in contas_recebidas_mes
+    )
+    total_pago_mes = sum(
+        dinheiro_decimal(getattr(conta, "valor", 0))
+        for conta in contas_pagas_mes
+    )
+
+    total_recebido_ano = sum(
+        valor_receber_decimal(conta)
+        for conta in contas_recebidas_ano
+    )
+    total_pago_ano = sum(
+        dinheiro_decimal(getattr(conta, "valor", 0))
+        for conta in contas_pagas_ano
+    )
+
+    saldo_acumulado_ano = total_recebido_ano - total_pago_ano
+
+    return total_recebido_mes, total_pago_mes, saldo_acumulado_ano
 
 
 def conta_paga_na_competencia(conta, mes, ano):
