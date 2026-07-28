@@ -3,6 +3,8 @@ from decimal import Decimal, ROUND_HALF_UP
 
 from flask import Blueprint, render_template, request, jsonify, send_file
 from sqlalchemy import or_
+from sqlalchemy.orm import selectinload
+from sqlalchemy.exc import IntegrityError
 import hashlib
 import re
 import unicodedata
@@ -172,7 +174,9 @@ def preencher_snapshot_planejamento(registro, conta, chave_conta=None):
     registro.fornecedor_snapshot = buscar_primeiro(
         conta, ["fornecedor_funcionario", "fornecedor", "cliente"], "-"
     )
-    registro.valor_snapshot = dinheiro_decimal(getattr(conta, "valor", 0))
+    valor_atual = dinheiro_decimal(getattr(conta, "valor", 0))
+    valor_snapshot_atual = dinheiro_decimal(getattr(registro, "valor_snapshot", None))
+    registro.valor_snapshot = max(valor_atual, valor_snapshot_atual)
     registro.vencimento_snapshot = data_para_date_local(getattr(conta, "data_vencimento", None))
     registro.observacao_snapshot = buscar_primeiro(
         conta, ["observacoes", "observacao", "historico", "descricao"], "-"
@@ -196,15 +200,9 @@ def localizar_planejamento(conta, mes, ano, por_id=None, por_chave=None):
             db.session.flush()
         return registro
 
-    return PlanejamentoFinanceiro.query.filter(
-        PlanejamentoFinanceiro.origem == "IMPORTADA",
-        PlanejamentoFinanceiro.mes == mes,
-        PlanejamentoFinanceiro.ano == ano,
-        or_(
-            PlanejamentoFinanceiro.conta_id == conta_id,
-            PlanejamentoFinanceiro.chave_conta == chave,
-        ),
-    ).first()
+    # Durante a montagem da tela, os planejamentos já foram carregados em lote.
+    # Não executa consulta individual por conta (evita N+1 queries).
+    return None
 
 
 def montar_item_planejamento(conta, mes, ano, hoje):
@@ -415,29 +413,154 @@ def conta_paga_na_competencia(conta, mes, ano):
     return False
 
 
+def pagamento_na_competencia(pagamento, mes, ano, registro=None):
+    """Define a competência pelo mês/ano da data prevista do pagamento."""
+    data_prevista = data_para_date_local(getattr(pagamento, "data_prevista", None))
+    if data_prevista:
+        return data_prevista.month == mes and data_prevista.year == ano
+
+    # Compatibilidade com registros antigos sem data prevista.
+    if registro is not None:
+        return registro.mes == mes and registro.ano == ano
+
+    return False
+
+
 def buscar_planejamentos(mes, ano, contas=None):
-    registros = PlanejamentoFinanceiro.query.filter_by(
-        origem="IMPORTADA",
-        mes=mes,
-        ano=ano,
-    ).all()
+    """
+    Carrega em lote os planejamentos ligados às contas exibidas.
 
-    por_id = {int(r.conta_id): r for r in registros if r.conta_id is not None}
-    por_chave = {r.chave_conta: r for r in registros if getattr(r, "chave_conta", None)}
+    Um pagamento pertence à competência da sua data prevista, mesmo quando o
+    registro-pai foi criado em outro mês. Isso permite, por exemplo, planejar
+    em julho um pagamento para agosto sem exibi-lo no painel de julho.
+    """
+    contas = list(contas or [])
+    ids = {int(c.id) for c in contas if getattr(c, "id", None) is not None}
+    chaves = {gerar_chave_conta(c) for c in contas}
+    chaves.discard("")
 
-    # Migra automaticamente os registros antigos ainda ligados ao ID atual.
+    consulta = (
+        PlanejamentoFinanceiro.query
+        .options(selectinload(PlanejamentoFinanceiro.pagamentos_planejados))
+        .filter(PlanejamentoFinanceiro.origem == "IMPORTADA")
+    )
+
+    vinculos = []
+    if ids:
+        vinculos.append(PlanejamentoFinanceiro.conta_id.in_(ids))
+    if chaves:
+        vinculos.append(PlanejamentoFinanceiro.chave_conta.in_(chaves))
+
+    if vinculos:
+        consulta = consulta.filter(or_(*vinculos))
+    else:
+        consulta = consulta.filter(
+            PlanejamentoFinanceiro.mes == mes,
+            PlanejamentoFinanceiro.ano == ano,
+        )
+
+    registros = consulta.order_by(PlanejamentoFinanceiro.id.desc()).all()
+
+    por_id = {}
+    por_chave = {}
+
+    def prioridade(registro):
+        pagamentos = pagamentos_do_planejamento(registro)
+        tem_pagamento_na_competencia = any(
+            pagamento_na_competencia(p, mes, ano, registro)
+            for p in pagamentos
+        )
+        pai_na_competencia = registro.mes == mes and registro.ano == ano
+        return (2 if tem_pagamento_na_competencia else 0) + (1 if pai_na_competencia else 0)
+
+    melhores_id = {}
+    melhores_chave = {}
+
+    for registro in registros:
+        prio = prioridade(registro)
+        if prio <= 0:
+            continue
+
+        if registro.conta_id is not None:
+            conta_id = int(registro.conta_id)
+            atual = melhores_id.get(conta_id)
+            if atual is None or prio > atual[0]:
+                melhores_id[conta_id] = (prio, registro)
+
+        if registro.chave_conta:
+            atual = melhores_chave.get(registro.chave_conta)
+            if atual is None or prio > atual[0]:
+                melhores_chave[registro.chave_conta] = (prio, registro)
+
+    por_id = {chave: valor[1] for chave, valor in melhores_id.items()}
+    por_chave = {chave: valor[1] for chave, valor in melhores_chave.items()}
+
+    # Atualiza snapshots antigos sem gerar consultas extras.
     alterou = False
-    for conta in contas or []:
+    for conta in contas:
         conta_id = int(getattr(conta, "id", 0))
-        registro = por_id.get(conta_id)
+        chave = gerar_chave_conta(conta)
+        registro = por_id.get(conta_id) or por_chave.get(chave)
         if registro and not getattr(registro, "chave_conta", None):
-            chave = gerar_chave_conta(conta)
             preencher_snapshot_planejamento(registro, conta, chave)
             por_chave[chave] = registro
             alterou = True
 
     if alterou:
         db.session.commit()
+
+    return por_id, por_chave
+
+def buscar_planejamentos_outros_meses(mes, ano, contas):
+    """
+    Carrega somente planejamentos de outras competências ligados às contas
+    atualmente exibidas. Tudo é buscado em lote, sem consulta dentro de loop.
+    """
+    contas_validas = [c for c in (contas or []) if not conta_esta_cancelada(c)]
+    if not contas_validas:
+        return {}, {}
+
+    ids = {int(c.id) for c in contas_validas if getattr(c, "id", None) is not None}
+    chaves = {gerar_chave_conta(c) for c in contas_validas}
+    chaves.discard("")
+
+    vinculos = []
+    if ids:
+        vinculos.append(PlanejamentoFinanceiro.conta_id.in_(ids))
+    if chaves:
+        vinculos.append(PlanejamentoFinanceiro.chave_conta.in_(chaves))
+    if not vinculos:
+        return {}, {}
+
+    registros = (
+        PlanejamentoFinanceiro.query
+        .options(selectinload(PlanejamentoFinanceiro.pagamentos_planejados))
+        .filter(
+            PlanejamentoFinanceiro.origem == "IMPORTADA",
+            or_(
+                PlanejamentoFinanceiro.mes != mes,
+                PlanejamentoFinanceiro.ano != ano,
+            ),
+            or_(*vinculos),
+        )
+        .order_by(
+            PlanejamentoFinanceiro.ano.asc(),
+            PlanejamentoFinanceiro.mes.asc(),
+        )
+        .all()
+    )
+
+    por_id = {}
+    por_chave = {}
+    for registro in registros:
+        # Só bloqueia planejamento que realmente possui valor planejado.
+        # Registros históricos/sincronizados sem pagamento não escondem a conta.
+        if total_ja_planejado(registro) <= 0:
+            continue
+        if registro.conta_id is not None:
+            por_id.setdefault(int(registro.conta_id), registro)
+        if registro.chave_conta:
+            por_chave.setdefault(registro.chave_conta, registro)
 
     return por_id, por_chave
 
@@ -498,120 +621,387 @@ def sincronizar_pagas_do_radar(mes, ano):
     return criadas, atualizadas
 
 
+def buscar_registros_por_conta(contas):
+    """Carrega todos os planejamentos e pagamentos das contas em poucas consultas."""
+    contas = list(contas or [])
+    ids = {int(c.id) for c in contas if getattr(c, "id", None) is not None}
+    chaves = {gerar_chave_conta(c) for c in contas}
+    chaves.discard("")
+
+    vinculos = []
+    if ids:
+        vinculos.append(PlanejamentoFinanceiro.conta_id.in_(ids))
+    if chaves:
+        vinculos.append(PlanejamentoFinanceiro.chave_conta.in_(chaves))
+    if not vinculos:
+        return {}, {}
+
+    registros = (
+        PlanejamentoFinanceiro.query
+        .options(selectinload(PlanejamentoFinanceiro.pagamentos_planejados))
+        .filter(
+            PlanejamentoFinanceiro.origem == "IMPORTADA",
+            or_(*vinculos),
+        )
+        .order_by(PlanejamentoFinanceiro.id.desc())
+        .all()
+    )
+
+    por_id = {}
+    por_chave = {}
+    for registro in registros:
+        if registro.conta_id is not None:
+            por_id.setdefault(int(registro.conta_id), []).append(registro)
+        if registro.chave_conta:
+            por_chave.setdefault(registro.chave_conta, []).append(registro)
+
+    return por_id, por_chave
+
+
+def registros_da_conta(conta, por_id, por_chave):
+    conta_id = int(getattr(conta, "id", 0))
+    chave = gerar_chave_conta(conta)
+    encontrados = []
+    vistos = set()
+
+    for registro in (por_id.get(conta_id, []) + por_chave.get(chave, [])):
+        marcador = getattr(registro, "id", None) or id(registro)
+        if marcador in vistos:
+            continue
+        vistos.add(marcador)
+        encontrados.append(registro)
+
+    return encontrados
+
+
+def _pagamentos_unicos_da_conta(registros):
+    encontrados = []
+    vistos = set()
+
+    for registro in registros:
+        for pagamento in pagamentos_do_planejamento(registro):
+            pagamento_id = getattr(pagamento, "id", None)
+            if pagamento_id is not None:
+                marcador = ("ID", int(pagamento_id))
+            else:
+                marcador = (
+                    "LEGADO",
+                    int(getattr(registro, "id", 0) or 0),
+                    valor_chave(getattr(pagamento, "valor", 0)),
+                    str(data_para_date_local(getattr(pagamento, "data_prevista", None)) or ""),
+                    texto_limpo(getattr(pagamento, "tipo", None), "TOTAL").upper(),
+                )
+
+            if marcador in vistos:
+                continue
+
+            vistos.add(marcador)
+            encontrados.append((registro, pagamento))
+
+    return encontrados
+
+
+def _valor_original_da_conta(item_base, registros):
+    valores = [dinheiro_decimal(item_base.get("valor", 0))]
+    valores.extend(
+        dinheiro_decimal(getattr(registro, "valor_snapshot", None))
+        for registro in registros
+    )
+    return max(valores or [Decimal("0")])
+
+
+def _registro_origem_do_saldo(registros, pagamentos):
+    """
+    O saldo permanece na competência onde o usuário fez a decisão parcial
+    mais recente.
+
+    Não usamos o registro mais antigo, pois podem existir planejamentos
+    históricos da mesma conta em outras competências. A origem correta é o
+    registro-pai do pagamento filho mais recente.
+    """
+    if not pagamentos:
+        return None
+
+    def chave_recencia(par):
+        registro, pagamento = par
+        pagamento_id = getattr(pagamento, "id", None)
+
+        # Pagamentos reais da tabela filha sempre têm ID. Eles têm prioridade
+        # sobre objetos legados montados em memória.
+        if pagamento_id is not None:
+            return (
+                2,
+                int(pagamento_id),
+                int(getattr(registro, "ano", 0) or 0),
+                int(getattr(registro, "mes", 0) or 0),
+                int(getattr(registro, "id", 0) or 0),
+            )
+
+        return (
+            1,
+            0,
+            int(getattr(registro, "ano", 0) or 0),
+            int(getattr(registro, "mes", 0) or 0),
+            int(getattr(registro, "id", 0) or 0),
+        )
+
+    registro_origem, _ = max(pagamentos, key=chave_recencia)
+    return registro_origem
+
+
+def _criar_item_saldo_agregado(item_base, registro_origem, valor_original, total_planejado):
+    saldo = max(Decimal("0"), valor_original - total_planejado)
+
+    item = dict(item_base)
+    item["valor"] = saldo
+    item["valor_formatado"] = moeda(saldo)
+    item["valor_original"] = valor_original
+    item["valor_original_formatado"] = moeda(valor_original)
+    item["saldo_restante"] = saldo
+    item["saldo_restante_formatado"] = moeda(saldo)
+    item["is_saldo_restante"] = True
+    item["status_planejamento_visual"] = "SALDO RESTANTE"
+    item["descricao"] = f"{item_base.get('descricao', 'CONTA')} (SALDO)"
+    item["conta_nome"] = item["descricao"]
+    observacao_original = texto_limpo(
+        item_base.get("observacao"),
+        "",
+    )
+    detalhe_saldo = (
+        f"Saldo ainda não planejado. Valor original: {moeda(valor_original)}. "
+        f"Total já planejado: {moeda(total_planejado)}."
+    )
+    # Mantém a observação original da conta para que a linha continue sendo
+    # encontrada pela busca após virar SALDO.
+    item["observacao"] = (
+        f"{observacao_original} | {detalhe_saldo}"
+        if observacao_original
+        else detalhe_saldo
+    )
+    item["status_execucao"] = "AGUARDANDO"
+    item["data_pagamento"] = "-"
+    item["planejada_outro_mes"] = False
+    item["competencia_planejada"] = ""
+    item["planejamento_origem_id"] = getattr(registro_origem, "id", None)
+    item["texto_busca"] = " ".join([
+        texto_limpo(item.get("descricao"), ""),
+        texto_limpo(item.get("conta_nome"), ""),
+        texto_limpo(item.get("fornecedor"), ""),
+        texto_limpo(item.get("categoria"), ""),
+        texto_limpo(item.get("documento"), ""),
+        texto_limpo(item.get("observacao"), ""),
+        texto_limpo(item.get("parcela_label"), ""),
+        texto_limpo(item.get("vencimento"), ""),
+        texto_limpo(item.get("valor_formatado"), ""),
+    ]).strip()
+    return item
+
+
+def _montar_listas_unificadas(mes, ano):
+    hoje = date.today()
+    contas = buscar_contas_exportacao_e_tela(mes, ano)
+    registros_id, registros_chave = buscar_registros_por_conta(contas)
+
+    aguardando = []
+    planejadas = []
+    pagas = []
+
+    for conta in contas:
+        if conta_esta_cancelada(conta):
+            continue
+
+        item_base = montar_item_planejamento(conta, mes, ano, hoje)
+        item_base["data_pagamento"] = formatar_data(
+            getattr(conta, "data_pagamento", None)
+        )
+
+        conta_paga = conta_esta_paga_local(conta)
+        registros = registros_da_conta(
+            conta,
+            registros_id,
+            registros_chave,
+        )
+        pagamentos = _pagamentos_unicos_da_conta(registros)
+
+        valor_original = _valor_original_da_conta(item_base, registros)
+        total_planejado = sum(
+            dinheiro_decimal(getattr(pagamento, "valor", 0))
+            for _, pagamento in pagamentos
+        )
+        total_planejado = min(total_planejado, valor_original)
+
+        # Conta quitada no Radar representa quitação integral.
+        # Exibe uma única linha paga com o valor total original da conta,
+        # independentemente de existirem previsões parciais anteriores.
+        if conta_paga:
+            if conta_paga_na_competencia(conta, mes, ano):
+                data_pagamento_formatada = formatar_data(
+                    getattr(conta, "data_pagamento", None)
+                )
+
+                item_pago = dict(item_base)
+                item_pago["status_execucao"] = "PAGA"
+                item_pago["data_pagamento"] = data_pagamento_formatada
+                item_pago["data_prevista"] = data_pagamento_formatada
+
+                item_pago["valor"] = valor_original
+                item_pago["valor_formatado"] = moeda(valor_original)
+                item_pago["valor_original"] = valor_original
+                item_pago["valor_original_formatado"] = moeda(valor_original)
+                item_pago["valor_planejado"] = valor_original
+                item_pago["valor_planejado_formatado"] = moeda(valor_original)
+
+                item_pago["saldo_restante"] = Decimal("0")
+                item_pago["saldo_restante_formatado"] = moeda(Decimal("0"))
+                item_pago["tipo_planejamento"] = "TOTAL"
+                item_pago["observacao_previsao"] = (
+                    "Conta quitada integralmente no Radar."
+                )
+                item_pago["pagamento_planejado_id"] = None
+                item_pago["planejada_outro_mes"] = False
+                item_pago["competencia_planejada"] = ""
+
+                pagas.append(item_pago)
+
+            # Conta paga nunca permanece em planejadas ou aguardando.
+            continue
+
+        # Enquanto a conta estiver aberta, cada previsão aparece somente
+        # na competência da data prevista escolhida.
+        for registro, pagamento in pagamentos:
+            if not pagamento_na_competencia(pagamento, mes, ano, registro):
+                continue
+
+            item_pagamento = criar_item_pagamento(
+                item_base,
+                registro,
+                pagamento,
+            )
+
+            valor_pagamento = dinheiro_decimal(
+                getattr(pagamento, "valor", 0)
+            )
+            saldo_agregado = max(
+                Decimal("0"),
+                valor_original - total_planejado,
+            )
+
+            item_pagamento["valor_original"] = valor_original
+            item_pagamento["valor_original_formatado"] = moeda(valor_original)
+            item_pagamento["valor_planejado"] = valor_pagamento
+            item_pagamento["valor_planejado_formatado"] = moeda(valor_pagamento)
+            item_pagamento["saldo_restante"] = saldo_agregado
+            item_pagamento["saldo_restante_formatado"] = moeda(saldo_agregado)
+            item_pagamento["status_execucao"] = "PLANEJADA"
+            item_pagamento["data_pagamento"] = "-"
+
+            planejadas.append(item_pagamento)
+
+        if pagamentos:
+            registro_origem = _registro_origem_do_saldo(
+                registros,
+                pagamentos,
+            )
+            saldo = max(
+                Decimal("0"),
+                valor_original - total_planejado,
+            )
+
+            # O saldo aparece na competência do registro-pai do pagamento
+            # parcial mais recente. Como proteção para dados antigos, se houver
+            # registro com pagamento na competência aberta, ele prevalece.
+            registros_com_pagamento_na_competencia = [
+                registro
+                for registro, pagamento in pagamentos
+                if int(getattr(registro, "mes", 0) or 0) == int(mes)
+                and int(getattr(registro, "ano", 0) or 0) == int(ano)
+            ]
+
+            if registros_com_pagamento_na_competencia:
+                registro_origem = max(
+                    registros_com_pagamento_na_competencia,
+                    key=lambda registro: int(getattr(registro, "id", 0) or 0),
+                )
+
+            if (
+                registro_origem is not None
+                and int(registro_origem.mes) == int(mes)
+                and int(registro_origem.ano) == int(ano)
+                and saldo > 0
+            ):
+                aguardando.append(
+                    _criar_item_saldo_agregado(
+                        item_base,
+                        registro_origem,
+                        valor_original,
+                        total_planejado,
+                    )
+                )
+        else:
+            item = dict(item_base)
+            item["status_execucao"] = "AGUARDANDO"
+            item["data_pagamento"] = "-"
+            item["planejada_outro_mes"] = False
+            item["competencia_planejada"] = ""
+            aguardando.append(item)
+
+    aguardando.sort(key=lambda item: (
+        data_para_date_local(item.get("data_vencimento_obj")) or date.max,
+        normalizar_chave(item.get("fornecedor")),
+        normalizar_chave(item.get("conta_nome")),
+    ))
+    planejadas.sort(key=lambda item: (
+        data_para_date_local(item.get("data_prevista")) or date.max,
+        normalizar_chave(item.get("fornecedor")),
+        normalizar_chave(item.get("conta_nome")),
+    ))
+    pagas.sort(key=lambda item: (
+        data_para_date_local(item.get("data_pagamento"))
+        or data_para_date_local(item.get("data_prevista"))
+        or date.max,
+        normalizar_chave(item.get("fornecedor")),
+        normalizar_chave(item.get("conta_nome")),
+    ))
+
+    return aguardando, planejadas, pagas
+
+
 @planejamento_financeiro_bp.route("/")
 @gestao_required
-def index():
-    hoje = date.today()
-    agora = datetime.now()
 
+def index():
+    agora = datetime.now()
     mes = request.args.get("mes", type=int) or agora.month
     ano = request.args.get("ano", type=int) or agora.year
 
     if not 1 <= mes <= 12:
         mes = agora.month
 
-    contas = buscar_contas_exportacao_e_tela(mes, ano)
-    planejamentos_id, planejamentos_chave = buscar_planejamentos(mes, ano, contas)
+    aguardando, planejadas, executadas = _montar_listas_unificadas(
+        mes,
+        ano,
+    )
 
-    # Planejamentos ativos em outras competências. Eles continuam aparecendo
-    # em Aguardando Decisão, porém marcados como indisponíveis na interface.
-    outros_planejamentos = PlanejamentoFinanceiro.query.filter(
-        PlanejamentoFinanceiro.origem == "IMPORTADA",
-        or_(
-            PlanejamentoFinanceiro.mes != mes,
-            PlanejamentoFinanceiro.ano != ano,
-        ),
-    ).order_by(
-        PlanejamentoFinanceiro.ano.asc(),
-        PlanejamentoFinanceiro.mes.asc(),
-    ).all()
+    total_aguardando = sum(
+        dinheiro_decimal(item.get("valor"))
+        for item in aguardando
+    )
+    total_planejado = sum(
+        dinheiro_decimal(
+            item.get("valor_planejado", item.get("valor"))
+        )
+        for item in planejadas
+    )
+    total_executado = sum(
+        dinheiro_decimal(item.get("valor", 0))
+        for item in executadas
+    )
 
-    outros_por_id = {}
-    outros_por_chave = {}
-
-    for planejamento_antigo in outros_planejamentos:
-        conta_antiga = None
-        if planejamento_antigo.conta_id is not None:
-            conta_antiga = ContaPagarImportada.query.get(int(planejamento_antigo.conta_id))
-
-        # Planejamentos de contas já pagas ou canceladas não bloqueiam.
-        if conta_antiga and (conta_esta_paga_local(conta_antiga) or conta_esta_cancelada(conta_antiga)):
-            continue
-
-        if planejamento_antigo.conta_id is not None:
-            outros_por_id.setdefault(int(planejamento_antigo.conta_id), planejamento_antigo)
-
-        if planejamento_antigo.chave_conta:
-            outros_por_chave.setdefault(planejamento_antigo.chave_conta, planejamento_antigo)
-
-    aguardando = []
-    planejadas = []
-    executadas = []
-
-    for conta in contas:
-        if conta_esta_cancelada(conta):
-            continue
-
-        item = montar_item_planejamento(conta, mes, ano, hoje)
-        registro = localizar_planejamento(conta, mes, ano, planejamentos_id, planejamentos_chave)
-
-        if registro:
-            pagamentos = pagamentos_do_planejamento(registro)
-            if pagamentos:
-                for pagamento in pagamentos:
-                    item_pagamento = criar_item_pagamento(item, registro, pagamento)
-                    if conta_esta_paga_local(conta):
-                        item_pagamento["status_execucao"] = "PAGA"
-                        item_pagamento["data_pagamento"] = formatar_data(getattr(conta, "data_pagamento", None))
-                        executadas.append(item_pagamento)
-                    else:
-                        item_pagamento["status_execucao"] = "PLANEJADA"
-                        item_pagamento["data_pagamento"] = "-"
-                        planejadas.append(item_pagamento)
-
-            if not conta_esta_paga_local(conta):
-                item_saldo = criar_item_saldo_restante(item, registro)
-                if dinheiro_decimal(item_saldo.get("valor")) > 0:
-                    aguardando.append(item_saldo)
-        elif not conta_esta_paga_local(conta):
-            item["status_execucao"] = "AGUARDANDO"
-            item["data_pagamento"] = "-"
-
-            chave_atual = gerar_chave_conta(conta)
-            planejamento_outro_mes = (
-                outros_por_id.get(int(conta.id))
-                or outros_por_chave.get(chave_atual)
-            )
-
-            if planejamento_outro_mes:
-                item["planejada_outro_mes"] = True
-                item["competencia_planejada"] = (
-                    f"{nome_mes(planejamento_outro_mes.mes).upper()}/"
-                    f"{planejamento_outro_mes.ano}"
-                )
-            else:
-                item["planejada_outro_mes"] = False
-                item["competencia_planejada"] = ""
-
-            aguardando.append(item)
-
-    planejadas.sort(key=lambda i: (
-        data_para_date_local(i.get("data_prevista")) or date.max,
-        normalizar_chave(i.get("fornecedor")),
-        normalizar_chave(i.get("conta_nome")),
-    ))
-    executadas.sort(key=lambda i: (
-        data_para_date_local(i.get("data_prevista"))
-        or data_para_date_local(i.get("data_pagamento"))
-        or date.max,
-        normalizar_chave(i.get("fornecedor")),
-        normalizar_chave(i.get("conta_nome")),
-    ))
-
-    total_aguardando = sum(dinheiro_decimal(i.get("valor")) for i in aguardando)
-    total_planejado = sum(dinheiro_decimal(i.get("valor_planejado", i.get("valor"))) for i in planejadas)
-    total_executado = sum(dinheiro_decimal(i.get("valor")) for i in executadas)
-    total_recebido, total_pago_competencia, saldo_competencia = calcular_resumo_caixa_competencia(mes, ano)
+    (
+        total_recebido,
+        total_pago_competencia,
+        saldo_competencia,
+    ) = calcular_resumo_caixa_competencia(mes, ano)
 
     return render_template(
         "gestao/planejamento_financeiro.html",
@@ -631,60 +1021,8 @@ def index():
     )
 
 
-
-
 def montar_listas_planejamento(mes, ano):
-    hoje = date.today()
-    contas = buscar_contas_exportacao_e_tela(mes, ano)
-    planejamentos_id, planejamentos_chave = buscar_planejamentos(mes, ano, contas)
-
-    aguardando = []
-    planejadas = []
-    pagas = []
-
-    for conta in contas:
-        if conta_esta_cancelada(conta):
-            continue
-
-        item = montar_item_planejamento(conta, mes, ano, hoje)
-        item["data_pagamento"] = formatar_data(getattr(conta, "data_pagamento", None))
-        registro = localizar_planejamento(conta, mes, ano, planejamentos_id, planejamentos_chave)
-
-        if registro:
-            pagamentos = pagamentos_do_planejamento(registro)
-            if pagamentos:
-                for pagamento in pagamentos:
-                    item_pagamento = criar_item_pagamento(item, registro, pagamento)
-                    if conta_esta_paga_local(conta):
-                        item_pagamento["status_execucao"] = "PAGA"
-                        pagas.append(item_pagamento)
-                    else:
-                        item_pagamento["status_execucao"] = "PLANEJADA"
-                        planejadas.append(item_pagamento)
-
-            if not conta_esta_paga_local(conta):
-                item_saldo = criar_item_saldo_restante(item, registro)
-                if dinheiro_decimal(item_saldo.get("valor")) > 0:
-                    aguardando.append(item_saldo)
-        elif not conta_esta_paga_local(conta):
-            item["status_execucao"] = "AGUARDANDO"
-            aguardando.append(item)
-
-    planejadas.sort(key=lambda i: (
-        data_para_date_local(i.get("data_prevista")) or date.max,
-        normalizar_chave(i.get("fornecedor")),
-        normalizar_chave(i.get("conta_nome")),
-    ))
-    pagas.sort(key=lambda i: (
-        data_para_date_local(i.get("data_prevista"))
-        or data_para_date_local(i.get("data_pagamento"))
-        or date.max,
-        normalizar_chave(i.get("fornecedor")),
-        normalizar_chave(i.get("conta_nome")),
-    ))
-
-    return aguardando, planejadas, pagas
-
+    return _montar_listas_unificadas(mes, ano)
 
 def valor_decimal_item(item):
     return dinheiro_decimal(item.get("valor_planejado", item.get("valor", 0)))
@@ -720,9 +1058,24 @@ def total_ja_planejado(registro):
     return sum(dinheiro_decimal(p.valor) for p in pagamentos_do_planejamento(registro))
 
 
+def valor_original_do_planejamento(item_base, registro):
+    """
+    Usa o snapshot gravado no momento do planejamento como valor original.
+
+    Isso evita perder o saldo quando a linha importada é recriada, alterada ou
+    passa a trazer apenas o valor parcial. O valor da conta atual fica apenas
+    como fallback para registros antigos sem snapshot.
+    """
+    valor_snapshot = dinheiro_decimal(getattr(registro, "valor_snapshot", None))
+    if valor_snapshot > 0:
+        return valor_snapshot
+
+    return dinheiro_decimal(item_base.get("valor", 0))
+
+
 def criar_item_pagamento(item_base, registro, pagamento):
     item = dict(item_base)
-    valor_original = dinheiro_decimal(item_base.get("valor", 0))
+    valor_original = valor_original_do_planejamento(item_base, registro)
     valor_pagamento = dinheiro_decimal(getattr(pagamento, "valor", 0))
     total_planejado = total_ja_planejado(registro)
     saldo_restante = max(Decimal("0"), valor_original - total_planejado)
@@ -742,7 +1095,7 @@ def criar_item_pagamento(item_base, registro, pagamento):
 
 def criar_item_saldo_restante(item_base, registro):
     item = dict(item_base)
-    valor_original = dinheiro_decimal(item_base.get("valor", 0))
+    valor_original = valor_original_do_planejamento(item_base, registro)
     saldo = max(Decimal("0"), valor_original - total_ja_planejado(registro))
     item["valor"] = saldo
     item["valor_formatado"] = moeda(saldo)
@@ -1105,10 +1458,17 @@ def escrever_aba_executivo(wb, competencia, aguardando, planejadas, pagas, mes, 
     total_recebido, total_pago_caixa, saldo_caixa = calcular_resumo_caixa_competencia(mes, ano)
     total_aguardando = sum(valor_original_item(i) for i in aguardando)
     total_planejado = sum(valor_planejado_item(i) for i in planejadas)
-    total_executado = sum(dinheiro_decimal(i.get("valor", 0)) for i in pagas)
-    saldo_parcial = sum(saldo_item(i) for i in list(planejadas) + list(pagas))
+    total_executado = sum(
+        dinheiro_decimal(i.get("valor", 0))
+        for i in pagas
+    )
+    saldo_parcial = sum(
+        saldo_item(i)
+        for i in planejadas
+    )
     quantidade_parciais = sum(
-        1 for i in list(planejadas) + list(pagas)
+        1
+        for i in planejadas
         if texto_limpo(i.get("tipo_planejamento"), "TOTAL").upper() == "PARCIAL"
     )
     quantidade_integrais = len(planejadas) + len(pagas) - quantidade_parciais
@@ -1219,120 +1579,72 @@ def exportar_planejamento():
 
 @planejamento_financeiro_bp.route("/planejar/<int:conta_id>", methods=["POST"])
 @gestao_required
+
 def planejar(conta_id):
     mes = request.form.get("mes", type=int)
     ano = request.form.get("ano", type=int)
 
-    if not mes or not ano:
+    if not mes or not ano or not 1 <= mes <= 12:
         return jsonify({"ok": False, "message": "Mês e ano inválidos."}), 400
 
-    conta = ContaPagarImportada.query.get(conta_id)
+    conta = db.session.get(ContaPagarImportada, conta_id)
     if not conta:
-        return jsonify({"ok": False, "message": "Conta não encontrada. Sincronize a importação e tente novamente."}), 404
-
-    chave = gerar_chave_conta(conta)
-
-    tipo_planejamento = texto_limpo(request.form.get("tipo_planejamento"), "TOTAL").upper()
-    if tipo_planejamento not in ("TOTAL", "PARCIAL"):
-        return jsonify({"ok": False, "message": "Tipo de planejamento inválido."}), 400
-
-    valor_original = dinheiro_decimal(getattr(conta, "valor", 0))
-    data_prevista = data_para_date_local(request.form.get("data_prevista"))
-    observacao_previsao = texto_limpo(request.form.get("observacao_previsao"), "")
-
-    if tipo_planejamento == "PARCIAL":
-        valor_planejado = dinheiro_decimal(request.form.get("valor_planejado"))
-        if valor_planejado <= 0:
-            return jsonify({"ok": False, "message": "Informe um valor previsto maior que zero."}), 400
-        if valor_planejado > valor_original:
-            return jsonify({"ok": False, "message": "O valor previsto não pode ultrapassar o valor total da conta."}), 400
-        if not data_prevista:
-            return jsonify({"ok": False, "message": "Informe a data prevista para o pagamento."}), 400
-    else:
-        valor_planejado = valor_original
-        if not data_prevista:
-            data_prevista = data_para_date_local(getattr(conta, "data_vencimento", None))
-
-    # Bloqueia a mesma conta/parcela enquanto existir planejamento ativo
-    # em outra competência.
-    #
-    # A verificação usa conta_id OU chave_conta:
-    # - conta_id cobre a mesma linha ainda existente na importação;
-    # - chave_conta cobre reimportações em que o ID foi recriado.
-    #
-    # Não limitamos apenas ao status "PLANEJADA", pois registros antigos
-    # podem ter status vazio ou outro texto. O que define se ainda está
-    # ativo é a conta vinculada continuar em aberto.
-    planejamentos_outros_meses = PlanejamentoFinanceiro.query.filter(
-        PlanejamentoFinanceiro.origem == "IMPORTADA",
-        or_(
-            PlanejamentoFinanceiro.conta_id == conta_id,
-            PlanejamentoFinanceiro.chave_conta == chave,
-        ),
-        or_(
-            PlanejamentoFinanceiro.mes != mes,
-            PlanejamentoFinanceiro.ano != ano,
-        ),
-    ).order_by(
-        PlanejamentoFinanceiro.ano.asc(),
-        PlanejamentoFinanceiro.mes.asc(),
-    ).all()
-
-    planejamento_ativo = None
-
-    for planejamento_anterior in planejamentos_outros_meses:
-        conta_vinculada = None
-
-        if planejamento_anterior.conta_id is not None:
-            conta_vinculada = ContaPagarImportada.query.get(
-                int(planejamento_anterior.conta_id)
-            )
-
-        # Se a conta vinculada existe e já foi paga ou cancelada,
-        # o planejamento antigo não deve bloquear uma nova competência.
-        if conta_vinculada:
-            if conta_esta_paga_local(conta_vinculada):
-                continue
-            if conta_esta_cancelada(conta_vinculada):
-                continue
-
-        # Se o vínculo antigo não existe mais, mas o planejamento permanece
-        # no banco, ele continua sendo considerado ativo até ser removido.
-        planejamento_ativo = planejamento_anterior
-        break
-
-    if planejamento_ativo:
-        competencia_existente = (
-            f"{nome_mes(planejamento_ativo.mes)}/"
-            f"{planejamento_ativo.ano}"
-        )
-
         return jsonify({
             "ok": False,
-            "message": (
-                "Esta mesma conta/parcela já está planejada em "
-                f"{competencia_existente} e ainda está em aberto. "
-                "Remova o planejamento anterior ou registre o pagamento."
-            ),
-            "competencia": competencia_existente,
+            "message": "Conta não encontrada. Sincronize a importação e tente novamente.",
+        }), 404
+
+    if conta_esta_cancelada(conta):
+        return jsonify({
+            "ok": False,
+            "message": "Não é possível planejar uma conta cancelada.",
         }), 409
 
-    existe = PlanejamentoFinanceiro.query.filter(
-        PlanejamentoFinanceiro.origem == "IMPORTADA",
-        PlanejamentoFinanceiro.mes == mes,
-        PlanejamentoFinanceiro.ano == ano,
-        or_(
-            PlanejamentoFinanceiro.conta_id == conta_id,
-            PlanejamentoFinanceiro.chave_conta == chave,
-        ),
+    if conta_esta_paga_local(conta):
+        return jsonify({
+            "ok": False,
+            "message": "Esta conta já está paga no Radar.",
+        }), 409
+
+    chave = gerar_chave_conta(conta)
+    tipo = texto_limpo(
+        request.form.get("tipo_planejamento"),
+        "TOTAL",
+    ).upper()
+
+    if tipo not in ("TOTAL", "PARCIAL"):
+        return jsonify({
+            "ok": False,
+            "message": "Tipo de planejamento inválido.",
+        }), 400
+
+    data_prevista = data_para_date_local(
+        request.form.get("data_prevista")
+    )
+    observacao = texto_limpo(
+        request.form.get("observacao_previsao"),
+        "",
+    )
+
+    registro = PlanejamentoFinanceiro.query.filter_by(
+        conta_id=conta_id,
+        origem="IMPORTADA",
+        mes=mes,
+        ano=ano,
     ).first()
 
-    registro_novo = existe is None
-    if existe:
-        preencher_snapshot_planejamento(existe, conta, chave)
-        existe.status_planejamento = "PLANEJADA"
-    else:
-        existe = PlanejamentoFinanceiro(
+    if registro is None and chave:
+        registro = PlanejamentoFinanceiro.query.filter_by(
+            chave_conta=chave,
+            origem="IMPORTADA",
+            mes=mes,
+            ano=ano,
+        ).first()
+        if registro is not None:
+            registro.conta_id = conta_id
+
+    if registro is None:
+        registro = PlanejamentoFinanceiro(
             conta_id=conta_id,
             chave_conta=chave,
             origem="IMPORTADA",
@@ -1340,94 +1652,251 @@ def planejar(conta_id):
             ano=ano,
             status_planejamento="PLANEJADA",
         )
-        preencher_snapshot_planejamento(existe, conta, chave)
-        db.session.add(existe)
+        db.session.add(registro)
+        preencher_snapshot_planejamento(registro, conta, chave)
         db.session.flush()
+    else:
+        preencher_snapshot_planejamento(registro, conta, chave)
+        registro.status_planejamento = "PLANEJADA"
 
-    # Migra automaticamente um planejamento antigo para a nova tabela de pagamentos.
-    pagamentos_existentes = list(getattr(existe, "pagamentos_planejados", []) or [])
-    if not registro_novo and not pagamentos_existentes:
-        valor_legado = dinheiro_decimal(getattr(existe, "valor_planejado", None))
+    pagamentos_filhos = list(
+        getattr(registro, "pagamentos_planejados", []) or []
+    )
+    if not pagamentos_filhos:
+        valor_legado = dinheiro_decimal(
+            getattr(registro, "valor_planejado", None)
+        )
         if valor_legado > 0:
             pagamento_legado = PlanejamentoPagamento(
-                planejamento_id=existe.id,
-                tipo=texto_limpo(getattr(existe, "tipo_planejamento", None), "TOTAL").upper(),
+                planejamento_id=registro.id,
+                tipo=texto_limpo(
+                    getattr(registro, "tipo_planejamento", None),
+                    "TOTAL",
+                ).upper(),
                 valor=valor_legado,
-                data_prevista=data_para_date_local(getattr(existe, "data_prevista", None)),
-                observacao=getattr(existe, "observacao_previsao", None),
+                data_prevista=data_para_date_local(
+                    getattr(registro, "data_prevista", None)
+                ),
+                observacao=getattr(
+                    registro,
+                    "observacao_previsao",
+                    None,
+                ),
             )
             db.session.add(pagamento_legado)
             db.session.flush()
-            pagamentos_existentes.append(pagamento_legado)
+            pagamentos_filhos.append(pagamento_legado)
 
-    total_anterior = sum(dinheiro_decimal(p.valor) for p in pagamentos_existentes)
-    saldo_disponivel = max(Decimal("0"), valor_original - total_anterior)
+    registros_mesma_conta = (
+        PlanejamentoFinanceiro.query
+        .options(
+            selectinload(
+                PlanejamentoFinanceiro.pagamentos_planejados
+            )
+        )
+        .filter(
+            PlanejamentoFinanceiro.origem == "IMPORTADA",
+            or_(
+                PlanejamentoFinanceiro.conta_id == conta_id,
+                PlanejamentoFinanceiro.chave_conta == chave,
+            ),
+        )
+        .all()
+    )
+
+    item_base = {
+        "valor": dinheiro_decimal(getattr(conta, "valor", 0))
+    }
+    valor_original = _valor_original_da_conta(
+        item_base,
+        registros_mesma_conta,
+    )
+
+    pagamentos_existentes = _pagamentos_unicos_da_conta(
+        registros_mesma_conta
+    )
+    total_anterior = sum(
+        dinheiro_decimal(getattr(pagamento, "valor", 0))
+        for _, pagamento in pagamentos_existentes
+    )
+    saldo_disponivel = max(
+        Decimal("0"),
+        valor_original - total_anterior,
+    )
 
     if saldo_disponivel <= 0:
+        db.session.rollback()
         return jsonify({
             "ok": False,
             "message": "Esta conta já está totalmente planejada.",
         }), 409
 
-    if tipo_planejamento == "TOTAL":
-        # Quando a linha representa um saldo, planeja somente o saldo restante.
+    if tipo == "PARCIAL":
+        valor_planejado = dinheiro_decimal(
+            request.form.get("valor_planejado")
+        )
+        if valor_planejado <= 0:
+            db.session.rollback()
+            return jsonify({
+                "ok": False,
+                "message": "Informe um valor previsto maior que zero.",
+            }), 400
+        if not data_prevista:
+            db.session.rollback()
+            return jsonify({
+                "ok": False,
+                "message": "Informe a data prevista para o pagamento.",
+            }), 400
+        if valor_planejado > saldo_disponivel:
+            db.session.rollback()
+            return jsonify({
+                "ok": False,
+                "message": (
+                    "O valor previsto não pode ultrapassar o saldo "
+                    f"restante de {moeda(saldo_disponivel)}."
+                ),
+            }), 400
+    else:
         valor_planejado = saldo_disponivel
-    elif valor_planejado > saldo_disponivel:
-        return jsonify({
-            "ok": False,
-            "message": f"O valor previsto não pode ultrapassar o saldo restante de {moeda(saldo_disponivel)}.",
-        }), 400
+
+        # O botão "Vou pagar" planeja o valor total na competência
+        # atualmente aberta. Não podemos usar automaticamente um vencimento
+        # herdado de outro mês, pois isso faria a conta desaparecer de
+        # Aguardando sem aparecer em Planejadas nesta tela.
+        if not data_prevista:
+            vencimento_conta = data_para_date_local(
+                getattr(conta, "data_vencimento", None)
+            )
+
+            if (
+                vencimento_conta
+                and vencimento_conta.month == mes
+                and vencimento_conta.year == ano
+            ):
+                data_prevista = vencimento_conta
+            else:
+                hoje = date.today()
+                if hoje.month == mes and hoje.year == ano:
+                    data_prevista = hoje
+                else:
+                    data_prevista = ultimo_dia_mes(mes, ano)
 
     pagamento = PlanejamentoPagamento(
-        planejamento_id=existe.id,
-        tipo=tipo_planejamento,
+        planejamento_id=registro.id,
+        tipo=tipo,
         valor=valor_planejado,
         data_prevista=data_prevista,
-        observacao=observacao_previsao or None,
+        observacao=observacao or None,
     )
     db.session.add(pagamento)
 
     total_atualizado = total_anterior + valor_planejado
-    existe.valor_planejado = total_atualizado
-    existe.tipo_planejamento = "TOTAL" if total_atualizado >= valor_original else "PARCIAL"
-    existe.data_prevista = data_prevista
-    existe.observacao_previsao = observacao_previsao or None
+    registro.valor_snapshot = valor_original
+    registro.valor_planejado = total_atualizado
+    registro.tipo_planejamento = (
+        "TOTAL"
+        if total_atualizado >= valor_original
+        else "PARCIAL"
+    )
+    registro.data_prevista = data_prevista
+    registro.observacao_previsao = observacao or None
+    registro.status_planejamento = "PLANEJADA"
 
-    db.session.commit()
-    saldo_final = max(Decimal("0"), valor_original - total_atualizado)
-    if saldo_final > 0:
-        mensagem = (
-            f"Valor parcial previsto. O saldo de {moeda(saldo_final)} voltou para Aguardando Decisão."
-        )
-    else:
-        mensagem = "Conta totalmente planejada."
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({
+            "ok": False,
+            "message": (
+                "Já existe um planejamento desta conta nesta competência. "
+                "Atualize a página e tente novamente."
+            ),
+        }), 409
+    except Exception as erro:
+        db.session.rollback()
+        return jsonify({
+            "ok": False,
+            "message": f"Erro ao salvar previsão: {erro}",
+        }), 500
+
+    saldo_final = max(
+        Decimal("0"),
+        valor_original - total_atualizado,
+    )
 
     return jsonify({
         "ok": True,
-        "message": mensagem,
+        "message": (
+            f"Valor parcial previsto. O saldo de "
+            f"{moeda(saldo_final)} permanece em Aguardando Decisão."
+            if saldo_final > 0
+            else "Conta totalmente planejada."
+        ),
         "saldo_restante": float(saldo_final),
         "saldo_restante_formatado": moeda(saldo_final),
+        "valor_planejado": float(valor_planejado),
+        "valor_planejado_formatado": moeda(valor_planejado),
+        "tipo_planejamento": tipo,
+        "data_prevista": formatar_data(data_prevista),
+        "pagamento_planejado_id": pagamento.id,
     })
-
 
 @planejamento_financeiro_bp.route("/remover/<int:conta_id>", methods=["POST"])
 @gestao_required
 def remover(conta_id):
     mes = request.form.get("mes", type=int)
     ano = request.form.get("ano", type=int)
+    pagamento_id = request.form.get("pagamento_planejado_id", type=int)
 
     if not mes or not ano:
         return jsonify({"ok": False, "message": "Mês e ano inválidos."}), 400
 
+    # Quando a linha representa uma parcela planejada, remove somente aquela
+    # previsão, inclusive quando a data prevista pertence a outro mês.
+    if pagamento_id:
+        pagamento = PlanejamentoPagamento.query.get(pagamento_id)
+        if not pagamento:
+            return jsonify({"ok": False, "message": "Previsão não encontrada."}), 404
+
+        registro = PlanejamentoFinanceiro.query.get(pagamento.planejamento_id)
+        db.session.delete(pagamento)
+        db.session.flush()
+
+        if registro:
+            pagamentos_restantes = list(registro.pagamentos_planejados or [])
+            total_restante = sum(
+                dinheiro_decimal(p.valor)
+                for p in pagamentos_restantes
+                if p.id != pagamento_id
+            )
+
+            registro.valor_planejado = total_restante if total_restante > 0 else None
+            registro.tipo_planejamento = (
+                "TOTAL"
+                if total_restante >= dinheiro_decimal(registro.valor_snapshot)
+                else "PARCIAL"
+            )
+
+            if pagamentos_restantes:
+                ultimo = sorted(
+                    [p for p in pagamentos_restantes if p.id != pagamento_id],
+                    key=lambda p: (data_para_date_local(p.data_prevista) or date.min, p.id or 0),
+                )[-1] if any(p.id != pagamento_id for p in pagamentos_restantes) else None
+                registro.data_prevista = getattr(ultimo, "data_prevista", None) if ultimo else None
+                registro.observacao_previsao = getattr(ultimo, "observacao", None) if ultimo else None
+            else:
+                registro.data_prevista = None
+                registro.observacao_previsao = None
+                registro.status_planejamento = "AGUARDANDO"
+
+        db.session.commit()
+        return jsonify({"ok": True, "message": "Previsão removida do planejamento."})
+
     conta = ContaPagarImportada.query.get(conta_id)
     chave = gerar_chave_conta(conta) if conta else None
 
-    filtros = [
-        PlanejamentoFinanceiro.origem == "IMPORTADA",
-        PlanejamentoFinanceiro.mes == mes,
-        PlanejamentoFinanceiro.ano == ano,
-    ]
-
+    filtros = [PlanejamentoFinanceiro.origem == "IMPORTADA"]
     if chave:
         filtros.append(or_(
             PlanejamentoFinanceiro.conta_id == conta_id,
@@ -1436,7 +1905,13 @@ def remover(conta_id):
     else:
         filtros.append(PlanejamentoFinanceiro.conta_id == conta_id)
 
-    registro = PlanejamentoFinanceiro.query.filter(*filtros).first()
+    registro = (
+        PlanejamentoFinanceiro.query
+        .options(selectinload(PlanejamentoFinanceiro.pagamentos_planejados))
+        .filter(*filtros)
+        .order_by(PlanejamentoFinanceiro.id.desc())
+        .first()
+    )
 
     if registro:
         db.session.delete(registro)

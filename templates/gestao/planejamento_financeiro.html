@@ -2117,6 +2117,7 @@ select.pf-v2-control{
                   {% else %}
                     <form method="POST" action="/gestao/planejamento-financeiro/remover/{{ item.id }}" class="pf-v2-ajax-form">
                       <input type="hidden" name="mes" value="{{ mes }}"><input type="hidden" name="ano" value="{{ ano }}">
+                      {% if item.pagamento_planejado_id %}<input type="hidden" name="pagamento_planejado_id" value="{{ item.pagamento_planejado_id }}">{% endif %}
                       <button type="submit" class="pf-v2-btn pf-v2-remove-btn">Remover</button>
                     </form>
                   {% endif %}
@@ -2446,9 +2447,64 @@ document.addEventListener("DOMContentLoaded", function () {
       const resposta = await fetch(predForm.action, {method:"POST",body:fd,headers:{"X-Requested-With":"XMLHttpRequest"}});
       const dados = await resposta.json().catch(() => null);
       if (!resposta.ok || !dados || !dados.ok) throw new Error(dados && dados.message ? dados.message : "Erro ao salvar previsão.");
-      window.location.reload();
+
+      predModal.classList.remove("open");
+      predModal.setAttribute("aria-hidden", "true");
+      await atualizarPlanejamentoSemReload();
+
+      botao.disabled = false;
+      botao.textContent = "Salvar previsão";
     } catch(erro) { alert(erro.message); botao.disabled=false; botao.textContent="Salvar previsão"; }
   });
+
+  async function atualizarPlanejamentoSemReload() {
+    const respostaPagina = await fetch(window.location.href, {
+      method: "GET",
+      headers: {
+        "X-Requested-With": "XMLHttpRequest",
+        "Cache-Control": "no-cache"
+      },
+      cache: "no-store"
+    });
+
+    if (!respostaPagina.ok) {
+      throw new Error("O planejamento foi salvo, mas não foi possível atualizar a tela.");
+    }
+
+    const htmlAtualizado = await respostaPagina.text();
+    const documentoAtualizado = new DOMParser().parseFromString(
+      htmlAtualizado,
+      "text/html"
+    );
+
+    const boardAtual = document.querySelector(".pf-v2-board");
+    const boardNovo = documentoAtualizado.querySelector(".pf-v2-board");
+
+    if (!boardAtual || !boardNovo) {
+      throw new Error("Não foi possível reconstruir as colunas do planejamento.");
+    }
+
+    boardAtual.replaceWith(boardNovo);
+
+    // Atualiza também os valores do cabeçalho sem recarregar a página.
+    const competenciaAtual = document.querySelector(".pf-v2-competencia-resumo");
+    const competenciaNova = documentoAtualizado.querySelector(".pf-v2-competencia-resumo");
+    if (competenciaAtual && competenciaNova) {
+      competenciaAtual.replaceWith(competenciaNova);
+    }
+
+    // Recria referências que dependem das novas linhas.
+    document.querySelectorAll(".pf-v2-ajax-form").forEach(vincularFormulario);
+
+    const novoPainelPlanejadas = document.querySelector(
+      '[data-pf-panel="planejadas"]'
+    );
+    if (novoPainelPlanejadas) {
+      novoPainelPlanejadas.dataset.pfStatusFiltro = "todos";
+    }
+
+    renderizarTudo(true);
+  }
 
   function normalizar(texto) {
     return (texto || "").toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
@@ -2719,7 +2775,7 @@ document.addEventListener("DOMContentLoaded", function () {
           );
         }
 
-        window.location.reload();
+        await atualizarPlanejamentoSemReload();
       } catch (erro) {
         alert(erro.message || "Não foi possível atualizar o planejamento. Tente novamente.");
         button.disabled = false;
