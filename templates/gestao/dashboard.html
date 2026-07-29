@@ -1,301 +1,860 @@
 {% extends "base.html" %}
-{% block title %}Dashboard{% endblock %}
+{% block title %}Painel Executivo Financeiro{% endblock %}
 
 {% block content %}
 
-<div class="dashboard-page dashboard-premium-page">
-
-  <!-- FILTRO -->
-  <form method="GET" class="dashboard-filter dashboard-premium-filter mb-4">
-
-    {% if session.get("user_role") in ["admin", "gestao", "gestor"] %}
-      <div class="dash-filter-field dash-filter-cliente">
-        <label>Cliente</label>
-        <div class="dash-input-shell">
-          <span>▣</span>
-          <select name="cliente" class="form-select">
-            <option value="">Todos os Clientes</option>
-            {% for cliente in clientes %}
-              <option value="{{ cliente }}" {% if cliente == cliente_filtro %}selected{% endif %}>
-                {{ cliente }}
-              </option>
-            {% endfor %}
-          </select>
-        </div>
-      </div>
-    {% endif %}
-
-    <div class="dash-filter-field">
-      <label>Período</label>
-      <div class="dash-date-group">
-        <input type="date"
-               name="data_inicio"
-               class="form-control"
-               value="{{ request.args.get('data_inicio', '') }}">
-        <span class="dash-date-separator">até</span>
-        <input type="date"
-               name="data_fim"
-               class="form-control"
-               value="{{ request.args.get('data_fim', '') }}">
-      </div>
-    </div>
-
-    <div class="dash-filter-field dash-filter-mes">
-      <label>Mês</label>
-      <select name="mes" class="form-select">
-        <option value="">Selecione o mês</option>
-        {% for m in range(1, 13) %}
-          {% set mes_valor = "2026-" ~ "%02d"|format(m) %}
-          <option value="{{ mes_valor }}" {% if request.args.get('mes') == mes_valor %}selected{% endif %}>
-            {{ "%02d"|format(m) }}/2026
-          </option>
-        {% endfor %}
-      </select>
-    </div>
-
-    <div class="dash-filter-actions">
-      <button class="btn btn-dashboard-filter" type="submit">⌕ Filtrar</button>
-      <a href="/" class="btn btn-dashboard-clear">↻ Limpar</a>
-    </div>
-
-  </form>
-
-  {% if request.args.get("mes") or cliente_filtro %}
-    <div class="alert alert-info d-flex align-items-center justify-content-between flex-wrap gap-2 dashboard-active-filter">
-      <div>
-        Filtro ativo:
-        {% if cliente_filtro %}
-          <strong>Cliente: {{ cliente_filtro }}</strong>
-        {% endif %}
-        {% if request.args.get("mes") %}
-          {% if cliente_filtro %} • {% endif %}
-          <strong>Mês: {{ request.args.get("mes") }}</strong>
-        {% endif %}
-      </div>
-      <a href="/" class="btn btn-sm btn-dark">Limpar filtro</a>
-    </div>
-  {% endif %}
-
-
-{% set url_total = url_for('manutencao.lista', cliente=request.args.get('cliente', ''), mes=request.args.get('mes', ''), data_inicio=request.args.get('data_inicio', ''), data_fim=request.args.get('data_fim', '')) %}
-{% set url_corretiva = url_for('manutencao.lista', filtro='corretiva', cliente=request.args.get('cliente', ''), mes=request.args.get('mes', ''), data_inicio=request.args.get('data_inicio', ''), data_fim=request.args.get('data_fim', '')) %}
-{% set url_preventiva = url_for('manutencao.lista', filtro='preventiva', cliente=request.args.get('cliente', ''), mes=request.args.get('mes', ''), data_inicio=request.args.get('data_inicio', ''), data_fim=request.args.get('data_fim', '')) %}
-{% set url_andamento = url_for('manutencao.lista', filtro='andamento', cliente=request.args.get('cliente', ''), mes=request.args.get('mes', ''), data_inicio=request.args.get('data_inicio', ''), data_fim=request.args.get('data_fim', '')) %}
-
 <style>
-  .dashboard-kpis-linkados{
-    display:grid;
-    grid-template-columns:repeat(4, minmax(0, 1fr));
-    gap:16px;
-    margin-bottom:18px;
-  }
-  .dashboard-kpi-link{
-    min-height:86px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:14px;
-    padding:18px 20px;
-    border-radius:8px;
-    color:#fff;
-    text-decoration:none;
-    box-shadow:0 10px 22px rgba(15,23,42,.18);
-    position:relative;
-    overflow:hidden;
-  }
-  .dashboard-kpi-link:hover{color:#fff;text-decoration:none;transform:translateY(-1px);}
-  .dashboard-kpi-link::after{
-    content:"";
-    position:absolute;
-    right:-32px;
-    bottom:-42px;
-    width:125px;
-    height:125px;
-    border-radius:50%;
-    background:rgba(255,255,255,.13);
-  }
-  .dash-kpi-left{display:flex;align-items:center;gap:16px;min-width:0;position:relative;z-index:1;}
-  .dash-kpi-icon{
-    width:44px;
-    height:44px;
-    border-radius:10px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:rgba(0,0,0,.25);
-    font-size:23px;
-    flex:0 0 auto;
-  }
-  .dash-kpi-main strong{display:block;font-size:28px;line-height:1;font-weight:950;}
-  .dash-kpi-main small{display:block;margin-top:7px;font-size:13px;line-height:1;font-weight:900;}
-  .dash-kpi-percent{position:relative;z-index:1;text-align:right;font-size:15px;font-weight:950;line-height:1.25;}
-  .dash-kpi-percent small{display:block;font-size:10px;font-weight:850;opacity:.95;}
-  .dash-kpi-total{background:linear-gradient(135deg,#05005f,#0b4edb);}
-  .dash-kpi-corretiva{background:linear-gradient(135deg,#7f1111,#dc2626);}
-  .dash-kpi-preventiva{background:linear-gradient(135deg,#047857,#10b981);}
-  .dash-kpi-andamento{background:linear-gradient(135deg,#92400e,#f59e0b);}
-  @media(max-width:1100px){.dashboard-kpis-linkados{grid-template-columns:repeat(2,1fr);}}
-  @media(max-width:640px){.dashboard-kpis-linkados{grid-template-columns:1fr;}}
+/* =========================================================
+   PATCH FORÇADO - PAINEL FINANCEIRO IGUAL AO MODELO
+   Este bloco fica dentro do HTML para sobrescrever qualquer CSS antigo.
+========================================================= */
+body { background:#f5f7fb !important; }
+.content, .content-top, .main-content, .page-content { background:#f5f7fb !important; }
+.dashboard-executivo-page{
+  --finance-bg:#f5f7fb; --finance-card:#fff; --finance-text:#071738; --finance-muted:#64748b;
+  --finance-border:#dde5f0; --finance-blue:#075dff; --finance-red:#f12d24; --finance-purple:#5f2eea;
+  --finance-green:#08a85e; --finance-orange:#f97316; --finance-yellow:#f5a400;
+  width:100% !important; max-width:1460px !important; margin:0 auto !important;
+  padding:18px 22px 16px !important; background:#f5f7fb !important; color:var(--finance-text) !important;
+}
+.dashboard-executivo-page *{ box-sizing:border-box !important; }
+.finance-hero,.finance-main-grid,.finance-panel,.finance-footnote{ width:100% !important; max-width:none !important; margin-left:0 !important; margin-right:0 !important; }
+.finance-hero{ display:flex !important; align-items:flex-start !important; justify-content:space-between !important; gap:16px !important; margin-bottom:16px !important; }
+.finance-title-box h1{ margin:0 !important; font-size:25px !important; line-height:1.05 !important; letter-spacing:-.035em !important; font-weight:950 !important; color:#071738 !important; }
+.finance-title-box p{ margin:4px 0 0 !important; font-size:11px !important; line-height:1.25 !important; color:#52627a !important; }
+.finance-filter{ display:flex !important; align-items:center !important; gap:8px !important; }
+.finance-month-input{ height:34px !important; width:154px !important; min-width:154px !important; border-radius:6px !important; border:1px solid var(--finance-border) !important; font-size:11px !important; font-weight:800 !important; padding:0 8px !important; background:#fff !important; color:#071738 !important; box-shadow:0 4px 12px rgba(15,23,42,.06) !important; }
+.finance-filter-btn{ height:34px !important; min-width:84px !important; border:0 !important; border-radius:6px !important; background:#075dff !important; color:#fff !important; font-size:12px !important; font-weight:850 !important; padding:0 14px !important; box-shadow:0 8px 18px rgba(11,99,246,.20) !important; }
+.finance-main-grid{ display:grid !important; grid-template-columns:1.05fr 1.32fr 1.32fr 1.32fr !important; gap:18px !important; margin-bottom:14px !important; }
+.finance-status-card,.finance-kpi-card,.finance-small-card,.finance-agenda-card,.finance-chart-card,.finance-panel{
+  border:1px solid var(--finance-border) !important; background:#fff !important; border-radius:7px !important; box-shadow:0 4px 14px rgba(15,23,42,.045) !important; color:#071738 !important; appearance:none !important; text-align:left !important;
+}
+.finance-status-card:hover,.finance-kpi-card:hover,.finance-small-card:hover,.finance-agenda-card:hover{ transform:none !important; box-shadow:0 4px 14px rgba(15,23,42,.045) !important; }
+.finance-status-card{ min-height:132px !important; padding:18px 18px 14px !important; }
+.finance-status-card.danger{ border-color:#f3c7c3 !important; background:linear-gradient(135deg,#fff 0%,#fff4f4 100%) !important; }
+.finance-status-card.success{ border-color:#bbf7d0 !important; background:linear-gradient(135deg,#fff 0%,#f0fdf4 100%) !important; }
+.finance-status-label,.finance-kpi-card span,.finance-small-card span,.finance-agenda-card span{ display:block !important; font-size:9px !important; letter-spacing:.045em !important; font-weight:950 !important; text-transform:uppercase !important; color:#071738 !important; }
+.finance-status-line{ display:flex !important; align-items:center !important; gap:12px !important; margin-top:18px !important; }
+.finance-status-line i{ width:31px !important; height:31px !important; border-radius:50% !important; display:inline-flex !important; align-items:center !important; justify-content:center !important; color:#fff !important; font-style:normal !important; font-size:18px !important; font-weight:950 !important; }
+.finance-status-card.danger .finance-status-line i{ background:#f12d24 !important; }
+.finance-status-card.success .finance-status-line i{ background:#08a85e !important; }
+.finance-status-card.danger .finance-status-line strong{ color:#f12d24 !important; }
+.finance-status-card.success .finance-status-line strong{ color:#08a85e !important; }
+.finance-status-line strong{ font-size:17px !important; font-weight:950 !important; letter-spacing:.01em !important; }
+.finance-status-card p{ margin:12px 0 0 !important; max-width:210px !important; font-size:11px !important; line-height:1.35 !important; color:#071738 !important; }
+.finance-status-card small{ display:inline-block !important; margin-top:10px !important; color:#075dff !important; font-size:10px !important; font-weight:900 !important; }
+.finance-kpi-card{ position:relative !important; min-height:132px !important; padding:26px 18px 14px 88px !important; overflow:hidden !important; }
+.finance-kpi-card::before{ content:"" !important; position:absolute !important; left:0 !important; top:0 !important; bottom:0 !important; width:4px !important; background:#075dff !important; }
+.finance-kpi-card.red::before{ background:#f12d24 !important; } .finance-kpi-card.purple::before{ background:#5f2eea !important; }
+.finance-kpi-icon{ position:absolute !important; left:34px !important; top:54px !important; width:40px !important; height:40px !important; border-radius:50% !important; display:inline-flex !important; align-items:center !important; justify-content:center !important; font-style:normal !important; font-size:18px !important; font-weight:950 !important; }
+.finance-kpi-card.blue .finance-kpi-icon{ background:#e8f0ff !important; color:#075dff !important; }
+.finance-kpi-card.red .finance-kpi-icon{ background:#fff0ef !important; color:#f12d24 !important; }
+.finance-kpi-card.purple .finance-kpi-icon{ background:#f1eaff !important; color:#5f2eea !important; }
+.finance-kpi-card strong{ display:block !important; margin-top:16px !important; font-size:26px !important; line-height:1 !important; font-weight:950 !important; letter-spacing:-.035em !important; white-space:nowrap !important; }
+.finance-kpi-card.blue strong{ color:#075dff !important; } .finance-kpi-card.red strong{ color:#f12d24 !important; } .finance-kpi-card.purple strong{ color:#5f2eea !important; }
+.finance-kpi-card small,.finance-kpi-card em{ display:block !important; margin-top:13px !important; font-size:10.5px !important; color:#64748b !important; font-style:normal !important; }
+.finance-panel{ padding:12px 14px 13px !important; margin-bottom:14px !important; }
+.finance-section-head{ display:flex !important; align-items:center !important; justify-content:space-between !important; margin-bottom:10px !important; }
+.finance-section-head h2{ margin:0 !important; font-size:13px !important; letter-spacing:.01em !important; font-weight:950 !important; text-transform:uppercase !important; color:#071738 !important; }
+.finance-section-head h2::after{ content:"  ⓘ" !important; color:#94a3b8 !important; font-size:11px !important; font-weight:700 !important; }
+.finance-section-head span{ display:none !important; }
+.finance-health-grid,.finance-agenda-grid{ display:grid !important; grid-template-columns:repeat(5,1fr) !important; gap:18px !important; }
+.finance-small-card{ min-height:88px !important; padding:19px 19px 12px !important; border-left-width:4px !important; }
+.finance-small-card.blue{ border-left-color:#075dff !important; } .finance-small-card.green{ border-left-color:#08a85e !important; } .finance-small-card.red{ border-left-color:#f12d24 !important; } .finance-small-card.purple{ border-left-color:#5f2eea !important; } .finance-small-card.orange{ border-left-color:#f5a400 !important; }
+.finance-small-card strong{ display:block !important; margin-top:14px !important; font-size:21px !important; line-height:1 !important; font-weight:950 !important; letter-spacing:-.025em !important; color:#071738 !important; }
+.finance-small-card small{ display:block !important; margin-top:10px !important; font-size:10px !important; color:#64748b !important; }
+.finance-agenda-card{ min-height:78px !important; display:flex !important; align-items:center !important; gap:14px !important; padding:14px 16px !important; }
+.finance-agenda-card i{ width:38px !important; height:38px !important; flex:0 0 38px !important; border-radius:50% !important; display:inline-flex !important; align-items:center !important; justify-content:center !important; font-style:normal !important; font-size:17px !important; font-weight:950 !important; }
+.finance-agenda-card.red i{ background:#fee2e2 !important; color:#f12d24 !important; } .finance-agenda-card.orange i{ background:#ffedd5 !important; color:#f97316 !important; } .finance-agenda-card.yellow i{ background:#fef3c7 !important; color:#f5a400 !important; } .finance-agenda-card.blue i{ background:#dbeafe !important; color:#075dff !important; } .finance-agenda-card.green i{ background:#d1fae5 !important; color:#08a85e !important; }
+.finance-agenda-card strong{ display:block !important; margin-top:7px !important; font-size:18px !important; line-height:1 !important; font-weight:950 !important; letter-spacing:-.025em !important; color:#071738 !important; }
+.finance-agenda-card small{ display:block !important; margin-top:9px !important; font-size:10px !important; font-weight:850 !important; }
+.finance-agenda-card.red small{ color:#f12d24 !important; } .finance-agenda-card.orange small{ color:#f97316 !important; } .finance-agenda-card.yellow small{ color:#f5a400 !important; } .finance-agenda-card.blue small{ color:#075dff !important; } .finance-agenda-card.green small{ color:#08a85e !important; }
+.finance-chart-grid{ display:grid !important; grid-template-columns:1fr 1fr !important; gap:18px !important; }
+.finance-chart-card{ padding:11px 13px 8px !important; min-height:252px !important; }
+.finance-chart-title{ display:flex !important; align-items:flex-start !important; justify-content:space-between !important; gap:10px !important; margin-bottom:4px !important; }
+.finance-chart-title h3{ margin:0 !important; font-size:10.5px !important; font-weight:950 !important; text-transform:uppercase !important; color:#071738 !important; }
+.finance-chart-title p{ margin:1px 0 0 !important; font-size:9.5px !important; color:#64748b !important; }
+.finance-chart-box{ position:relative !important; width:100% !important; height:164px !important; padding:0 !important; }
+.finance-chart-box canvas{ width:100% !important; height:100% !important; }
+.finance-chart-table-wrap{ width:100% !important; margin-top:4px !important; overflow-x:hidden !important; }
+.finance-chart-table{ width:100% !important; min-width:0 !important; table-layout:fixed !important; border-collapse:collapse !important; font-size:8px !important; }
+.finance-chart-table th,.finance-chart-table td{ border:1px solid #e2e8f0 !important; padding:4px 3px !important; vertical-align:middle !important; color:#071738 !important; }
+.finance-chart-table th{ width:70px !important; background:#f8fafc !important; text-align:left !important; font-size:8px !important; font-weight:950 !important; }
+.finance-chart-table td{ text-align:center !important; font-size:8px !important; font-weight:850 !important; white-space:nowrap !important; }
+.finance-chart-table td span{ display:block !important; margin-bottom:2px !important; font-size:7.5px !important; color:#64748b !important; font-weight:850 !important; }
+.finance-footnote{ padding:0 2px !important; font-size:10px !important; color:#64748b !important; }
+.finance-footnote strong{ color:#475569 !important; font-weight:950 !important; }
+@media(max-width:1100px){ .dashboard-executivo-page{ padding:16px 12px !important; } .finance-main-grid,.finance-health-grid,.finance-agenda-grid,.finance-chart-grid{ grid-template-columns:1fr !important; } .finance-chart-box{ height:220px !important; } .finance-chart-table-wrap{ overflow-x:auto !important; } .finance-chart-table{ min-width:680px !important; } .finance-hero{ flex-direction:column !important; } .finance-filter{ width:100% !important; } .finance-month-input{ flex:1 !important; width:auto !important; max-width:none !important; } }
 </style>
 
-<!-- KPIs -->
-<div class="dashboard-kpis dashboard-kpis-linkados">
-  <a class="dashboard-kpi-link dash-kpi-total" href="{{ url_total }}">
-    <div class="dash-kpi-left">
-      <span class="dash-kpi-icon">📊</span>
-      <div class="dash-kpi-main"><strong>{{ total }}</strong><small>Total</small></div>
-    </div>
-  </a>
 
-  <a class="dashboard-kpi-link dash-kpi-corretiva" href="{{ url_corretiva }}">
-    <div class="dash-kpi-left">
-      <span class="dash-kpi-icon">🛠️</span>
-      <div class="dash-kpi-main"><strong>{{ corretivas }}</strong><small>Corretivas</small></div>
-    </div>
-    <div class="dash-kpi-percent">{{ '%.1f'|format((corretivas / total * 100) if total else 0) }}%<small>do total</small></div>
-  </a>
+{% macro moeda(valor) %}
+  R$ {{ "{:,.2f}".format(valor or 0).replace(",", "X").replace(".", ",").replace("X", ".") }}
+{% endmacro %}
 
-  <a class="dashboard-kpi-link dash-kpi-preventiva" href="{{ url_preventiva }}">
-    <div class="dash-kpi-left">
-      <span class="dash-kpi-icon">🛡️</span>
-      <div class="dash-kpi-main"><strong>{{ preventivas }}</strong><small>Preventivas</small></div>
-    </div>
-    <div class="dash-kpi-percent">{{ '%.1f'|format((preventivas / total * 100) if total else 0) }}%<small>do total</small></div>
-  </a>
+{% set total_pagar_mes = obrigacoes_dashboard.a_pagar_total if obrigacoes_dashboard else total_a_pagar %}
+{% set qtd_pagar_mes = obrigacoes_dashboard.a_pagar_qtd if obrigacoes_dashboard else 0 %}
+{% set saldo_pos_pagar_mes = saldo_final - total_pagar_mes %}
+{% set saldo_pos_cenario = saldo_final - total_pagar_mes + total_a_receber %}
+{% set status_critico = saldo_pos_cenario < 0 or saldo_pos_pagar_mes < 0 %}
+{% set saldo_pagar_classe = 'danger' if saldo_pos_pagar_mes < 0 else 'success' %}
+{% set saldo_cenario_classe = 'danger' if saldo_pos_cenario < 0 else 'success' %}
 
-  <a class="dashboard-kpi-link dash-kpi-andamento" href="{{ url_andamento }}">
-    <div class="dash-kpi-left">
-      <span class="dash-kpi-icon">⌛</span>
-      <div class="dash-kpi-main"><strong>{{ andamento }}</strong><small>Em andamento</small></div>
+<div class="gestao-page dashboard-decisao-page dashboard-executivo-page">
+
+  <section class="finance-hero">
+    <div class="finance-title-box">
+      <h1>Painel Executivo Financeiro</h1>
+      <p>Visão consolidada do caixa e compromissos financeiros da competência.</p>
     </div>
-    <div class="dash-kpi-percent">{{ '%.1f'|format((andamento / total * 100) if total else 0) }}%<small>do total</small></div>
-  </a>
+
+    <form method="GET" class="finance-filter" id="dashFiltroCompetencia">
+      <input type="hidden" name="mes" id="dashFiltroMes" value="{{ mes }}">
+      <input type="hidden" name="ano" id="dashFiltroAno" value="{{ ano }}">
+      <input type="month" id="dashCompetencia" value="{{ ano }}-{{ '%02d'|format(mes) }}" class="form-control finance-month-input" aria-label="Competência">
+      <button class="btn finance-filter-btn" type="submit">Filtrar</button>
+    </form>
+  </section>
+
+  <section class="finance-main-grid">
+    <button type="button" class="finance-status-card {% if status_critico %}danger{% else %}success{% endif %}">
+      <span class="finance-status-label">Status do mês</span>
+      <div class="finance-status-line">
+        <i>{% if status_critico %}!{% else %}✓{% endif %}</i>
+        <strong>{% if status_critico %}ATENÇÃO{% else %}SAUDÁVEL{% endif %}</strong>
+      </div>
+      <p>
+        {% if status_critico %}
+          O caixa atual não cobre todas as obrigações da competência.
+        {% else %}
+          O caixa projetado cobre as obrigações da competência.
+        {% endif %}
+      </p>
+      <small>Ver detalhes</small>
+    </button>
+
+    <button type="button" class="finance-kpi-card blue">
+      <i class="finance-kpi-icon">▣</i>
+      <span>Caixa atual</span>
+      <strong class="valor-financeiro">{{ moeda(saldo_final) }}</strong>
+      <small>Caixa disponível</small>
+      <em>Atualizado em {{ "%02d"|format(mes) }}/{{ ano }}</em>
+    </button>
+
+    <button type="button" class="finance-kpi-card red">
+      <i class="finance-kpi-icon">↗</i>
+      <span>Resultado projetado</span>
+      <strong class="valor-financeiro">{{ moeda(saldo_pos_cenario) }}</strong>
+      <small>Após pagamentos da competência</small>
+      <em>Base: despesa completa</em>
+    </button>
+
+    <button type="button" class="finance-kpi-card purple dashboard-clickable-kpi" data-dashboard-kpi="obrigacoes_total">
+      <i class="finance-kpi-icon">▤</i>
+      <span>Total a pagar no mês</span>
+      <strong class="valor-financeiro">{{ moeda(total_pagar_mes) }}</strong>
+      <small>{{ qtd_pagar_mes }} contas a pagar</small>
+      <em>Vencimentos até {{ ultimo_dia_mes(mes, ano).strftime('%d/%m/%Y') if ultimo_dia_mes is defined else "%02d"|format(mes) ~ "/" ~ ano }}</em>
+    </button>
+  </section>
+
+  <section class="finance-panel">
+    <div class="finance-section-head">
+      <h2>Saúde do Caixa</h2>
+      <span>Indicadores realizados da competência</span>
+    </div>
+
+    <div class="finance-health-grid">
+      <button type="button" class="finance-small-card blue">
+        <span>Caixa inicial</span>
+        <strong class="valor-financeiro">{{ moeda(saldo_inicial) }}</strong>
+        <small>Saldo inicial da competência</small>
+      </button>
+
+      <button type="button" class="finance-small-card green dashboard-clickable-kpi" data-dashboard-kpi="entradas">
+        <span>Entradas</span>
+        <strong class="valor-financeiro">{{ moeda(total_entradas) }}</strong>
+        <small>Recebido no mês</small>
+      </button>
+
+      <button type="button" class="finance-small-card red dashboard-clickable-kpi" data-dashboard-kpi="saidas">
+        <span>Saídas</span>
+        <strong class="valor-financeiro">{{ moeda(total_saidas) }}</strong>
+        <small>Pago no mês</small>
+      </button>
+
+      <button type="button" class="finance-small-card purple">
+        <span>Ajustes</span>
+        <strong class="valor-financeiro">{{ moeda(total_entradas - total_saidas) }}</strong>
+        <small>Resultado do mês</small>
+      </button>
+
+      <button type="button" class="finance-small-card orange">
+        <span>Eficiência financeira</span>
+        <strong>{{ "%.2f"|format(margem_operacional) }}%</strong>
+        <small>Índice de eficiência do mês</small>
+      </button>
+    </div>
+  </section>
+
+  <section class="finance-panel">
+    <div class="finance-section-head">
+      <h2>Agenda Financeira</h2>
+      <span>Prioridade de pagamento e recebimento</span>
+    </div>
+
+    <div class="finance-agenda-grid">
+      <button type="button" class="finance-agenda-card red dashboard-clickable-kpi" data-dashboard-kpi="obrigacoes_atrasadas">
+        <i>◷</i>
+        <div>
+          <span>Em atraso</span>
+          <strong class="valor-financeiro">{{ moeda(obrigacoes_dashboard.atrasadas if obrigacoes_dashboard else 0) }}</strong>
+          <small>{{ obrigacoes_dashboard.atrasadas_qtd if obrigacoes_dashboard else 0 }} contas</small>
+        </div>
+      </button>
+
+      <button type="button" class="finance-agenda-card orange dashboard-clickable-kpi" data-dashboard-kpi="obrigacoes_hoje">
+        <i>□</i>
+        <div>
+          <span>Vence hoje</span>
+          <strong class="valor-financeiro">{{ moeda(obrigacoes_dashboard.vence_hoje if obrigacoes_dashboard else 0) }}</strong>
+          <small>{{ obrigacoes_dashboard.vence_hoje_qtd if obrigacoes_dashboard else 0 }} conta</small>
+        </div>
+      </button>
+
+      <button type="button" class="finance-agenda-card yellow dashboard-clickable-kpi" data-dashboard-kpi="obrigacoes_proximos_7">
+        <i>□</i>
+        <div>
+          <span>Próximos 7 dias</span>
+          <strong class="valor-financeiro">{{ moeda(obrigacoes_dashboard.proximos_7 if obrigacoes_dashboard else 0) }}</strong>
+          <small>{{ obrigacoes_dashboard.proximos_7_qtd if obrigacoes_dashboard else 0 }} contas</small>
+        </div>
+      </button>
+
+      <button type="button" class="finance-agenda-card blue dashboard-clickable-kpi" data-dashboard-kpi="obrigacoes_ate_fim_mes">
+        <i>□</i>
+        <div>
+          <span>Até fim do mês</span>
+          <strong class="valor-financeiro">{{ moeda(obrigacoes_dashboard.ate_fim_mes if obrigacoes_dashboard else 0) }}</strong>
+          <small>{{ obrigacoes_dashboard.ate_fim_mes_qtd if obrigacoes_dashboard else 0 }} contas</small>
+        </div>
+      </button>
+
+      <button type="button" class="finance-agenda-card green dashboard-clickable-kpi" data-dashboard-kpi="a_receber">
+        <i>$</i>
+        <div>
+          <span>A receber</span>
+          <strong class="valor-financeiro">{{ moeda(total_a_receber) }}</strong>
+          <small>Recebíveis em aberto</small>
+        </div>
+      </button>
+    </div>
+  </section>
+
+  <section class="finance-panel finance-trend-panel">
+    <div class="finance-section-head">
+      <h2>Tendência Financeira</h2>
+      <span>Evolução anual com valores visíveis nos gráficos</span>
+    </div>
+
+    <script type="application/json" id="dados-evolucao-financeira">
+      {{ evolucao_mensal|tojson }}
+    </script>
+
+    <div class="finance-chart-grid">
+      <div class="finance-chart-card">
+        <div class="finance-chart-title">
+          <h3>Fluxo mensal</h3>
+          <p>Entradas x Saídas</p>
+        </div>
+        <div class="finance-chart-box"><canvas id="graficoEvolucaoEntradasSaidas"></canvas></div>
+        <div class="finance-chart-table-wrap">
+          <table class="finance-chart-table" id="tabelaFluxoMensal"></table>
+        </div>
+      </div>
+
+      <div class="finance-chart-card">
+        <div class="finance-chart-title">
+          <h3>Resultado acumulado</h3>
+          <p>Evolução do saldo acumulado no ano</p>
+        </div>
+        <div class="finance-chart-box"><canvas id="graficoEvolucaoLucro"></canvas></div>
+        <div class="finance-chart-table-wrap">
+          <table class="finance-chart-table" id="tabelaSaldoAcumulado"></table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="finance-footnote">
+    Dados baseados em <strong>DESPESA COMPLETA</strong> • Vencimentos de {{ "%02d"|format(mes) }}/{{ ano }}
+  </div>
 </div>
 
-  <div class="row g-4 dashboard-row">
+<!-- =======================================================
+     MODAL DETALHADO DOS KPIs DO DASHBOARD
+======================================================== -->
+<div class="dashboard-kpi-modal" id="dashboardKpiModal" aria-hidden="true">
+  <div class="dashboard-kpi-modal-backdrop" data-dashboard-modal-close></div>
 
-    <div class="col-md-6">
-      <div class="dashboard-executive-card h-100">
-        <div class="dashboard-executive-header">
-          <div>
-            <h5>Tipo de Atendimento</h5>
-            <small>Distribuição entre atendimento interno e externo</small>
-          </div>
-        </div>
-        <div class="dashboard-executive-body atendimento-body-premium">
-          <div class="grafico-box atendimento-grafico-box">
-            <canvas id="graficoAtendimento"></canvas>
-          </div>
-        </div>
+  <div class="dashboard-kpi-modal-dialog" role="dialog" aria-modal="true">
+    <div class="dashboard-kpi-modal-header">
+      <div>
+        <h3 id="dashboardKpiModalTitulo">Detalhes do KPI</h3>
+        <p id="dashboardKpiModalSubtitulo">Tabela analítica das movimentações</p>
       </div>
+      <button type="button" class="dashboard-kpi-modal-close" data-dashboard-modal-close>×</button>
     </div>
 
-    <div class="col-md-6">
-      <div class="dashboard-executive-card h-100">
-        <div class="dashboard-executive-header">
-          <div>
-            <h5>Atendimento Mensal</h5>
-            <small>Evolução mensal das manutenções registradas</small>
-          </div>
-        </div>
-        <div class="dashboard-executive-body">
-          <div class="grafico-box mensal-grafico-box">
-            <canvas id="graficoMes"></canvas>
-          </div>
-        </div>
-      </div>
+    <div class="dashboard-kpi-modal-resumo">
+      <div><span>Quantidade</span><strong id="dashboardResumoQuantidade">0</strong></div>
+      <div><span>Total</span><strong id="dashboardResumoTotal">R$ 0,00</strong></div>
+      <div><span>Maior valor</span><strong id="dashboardResumoMaior">R$ 0,00</strong></div>
+      <div><span>Menor valor</span><strong id="dashboardResumoMenor">R$ 0,00</strong></div>
+      <div><span>Média</span><strong id="dashboardResumoMedia">R$ 0,00</strong></div>
     </div>
 
+    <div class="dashboard-kpi-modal-toolbar">
+      <input type="text" id="dashboardKpiBusca" placeholder="Buscar por fornecedor, cliente, categoria, setor, observação...">
+      <select id="dashboardKpiFiltroTipo">
+        <option value="">Todos os tipos</option>
+        <option value="DESPESA">Despesas</option>
+        <option value="RECEITA">Receitas</option>
+      </select>
+      <select id="dashboardKpiFiltroStatus">
+        <option value="">Todos os status</option>
+        <option value="PAGO">Pago</option>
+        <option value="RECEBIDO">Recebido</option>
+        <option value="PENDENTE">Pendente</option>
+        <option value="EM ABERTO">Em aberto</option>
+      </select>
+      <button type="button" id="dashboardKpiLimparFiltros">Limpar filtros</button>
+    </div>
+
+    <div class="dashboard-kpi-loading" id="dashboardKpiLoading">Carregando detalhes...</div>
+    <div class="dashboard-kpi-empty d-none" id="dashboardKpiEmpty">Nenhuma movimentação encontrada para este KPI.</div>
+
+    <div class="dashboard-kpi-table-wrap d-none" id="dashboardKpiTableWrap">
+      <table class="dashboard-kpi-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Tipo</th><th>Origem</th><th>Data</th><th>Documento</th><th>Fornecedor / Cliente</th>
+            <th>Categoria</th><th>Setor</th><th>Vencimento</th><th>Pagamento</th><th>Status</th><th>Valor</th><th>Observação</th>
+          </tr>
+        </thead>
+        <tbody id="dashboardKpiTableBody"></tbody>
+      </table>
+    </div>
   </div>
+</div>
 
-  <div class="row g-4 mt-1 dashboard-row">
-    <div class="col-12">
-      {% include "partials/funil_causas.html" %}
-    </div>
-  </div>
+<script>
+(function () {
+  const formCompetencia = document.getElementById("dashFiltroCompetencia");
+  const inputCompetencia = document.getElementById("dashCompetencia");
+  const inputMes = document.getElementById("dashFiltroMes");
+  const inputAno = document.getElementById("dashFiltroAno");
 
-  <div class="row g-4 mt-1 dashboard-row">
-    <div class="col-12">
-      <div class="dashboard-executive-card h-100 ultimas-premium-card">
-        <div class="dashboard-executive-header">
-          <div>
-            <h5>Últimas Finalizações</h5>
-            <small>Registros finalizados mais recentes</small>
-          </div>
-          <a href="{{ url_for('manutencao.lista', filtro='finalizado', cliente=request.args.get('cliente', ''), mes=request.args.get('mes', ''), data_inicio=request.args.get('data_inicio', ''), data_fim=request.args.get('data_fim', '')) }}" class="ultimas-ver-todas">Ver todas →</a>
-        </div>
+  if (formCompetencia && inputCompetencia && inputMes && inputAno) {
+    formCompetencia.addEventListener("submit", function () {
+      const valor = inputCompetencia.value || "{{ ano }}-{{ '%02d'|format(mes) }}";
+      const partes = valor.split("-");
+      if (partes.length === 2) {
+        inputAno.value = partes[0];
+        inputMes.value = String(Number(partes[1] || {{ mes }}));
+      }
+    });
+  }
+})();
+</script>
 
-        <div class="dashboard-executive-body ultimas-premium-body">
-          <div class="ultimas-finalizacoes-box">
-            {% if ultimas_finalizacoes %}
-              {% for m in ultimas_finalizacoes %}
-                {% set identificador_veiculo = m.numero_frota or m.placa %}
-                {% set tipo_veiculo = "Frota" if m.numero_frota else ("Placa" if m.placa else "Veículo") %}
+<script>
+(function () {
+  const mesAtual = {{ mes }};
+  const anoAtual = {{ ano }};
+  const modal = document.getElementById("dashboardKpiModal");
+  const titulo = document.getElementById("dashboardKpiModalTitulo");
+  const subtitulo = document.getElementById("dashboardKpiModalSubtitulo");
+  const loading = document.getElementById("dashboardKpiLoading");
+  const empty = document.getElementById("dashboardKpiEmpty");
+  const wrap = document.getElementById("dashboardKpiTableWrap");
+  const tbody = document.getElementById("dashboardKpiTableBody");
+  const busca = document.getElementById("dashboardKpiBusca");
+  const filtroTipo = document.getElementById("dashboardKpiFiltroTipo");
+  const filtroStatus = document.getElementById("dashboardKpiFiltroStatus");
+  const limpar = document.getElementById("dashboardKpiLimparFiltros");
+  let itensAtuais = [];
 
-                {% if identificador_veiculo %}
-                  <a href="/frotas/{{ identificador_veiculo }}"
-                     class="ultima-finalizacao-item ultima-finalizacao-link"
-                     title="Abrir histórico de {{ tipo_veiculo|lower }} {{ identificador_veiculo }}">
-                {% else %}
-                  <a href="{{ url_for('manutencao.lista', filtro='finalizado') }}"
-                     class="ultima-finalizacao-item ultima-finalizacao-link"
-                     title="Abrir manutenções finalizadas">
-                {% endif %}
+  function dinheiro(valor) {
+    const numero = Number(valor || 0);
+    return numero.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  }
 
-                    <div class="ultima-finalizacao-icon">✓</div>
+  function abrirModal() {
+    modal.classList.add("show");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("dashboard-modal-open");
+  }
 
-                    <div class="ultima-finalizacao-info">
-                      <strong>
-                        OS {{ m.os or '-' }} • {{ tipo_veiculo }} {{ identificador_veiculo or '-' }}
-                      </strong>
-                      <small>
-                        Finalizado em {{ m.data_saida.strftime('%d/%m/%Y') if m.data_saida else '-' }}
-                        {% if m.dtm is not none %} • ATM: {{ m.dtm }} dia{% if m.dtm != 1 %}s{% endif %}{% endif %}
-                      </small>
+  function fecharModal() {
+    modal.classList.remove("show");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("dashboard-modal-open");
+  }
+
+  function atualizarResumo(itens) {
+    const valores = itens.map(item => Number(item.valor || 0));
+    const total = valores.reduce((acc, val) => acc + val, 0);
+    const qtd = valores.length;
+    document.getElementById("dashboardResumoQuantidade").textContent = qtd;
+    document.getElementById("dashboardResumoTotal").textContent = dinheiro(total);
+    document.getElementById("dashboardResumoMaior").textContent = dinheiro(qtd ? Math.max(...valores) : 0);
+    document.getElementById("dashboardResumoMenor").textContent = dinheiro(qtd ? Math.min(...valores) : 0);
+    document.getElementById("dashboardResumoMedia").textContent = dinheiro(qtd ? total / qtd : 0);
+  }
+
+  function itemPassaFiltros(item) {
+    const termo = (busca.value || "").trim().toLowerCase();
+    const tipo = filtroTipo.value;
+    const status = filtroStatus.value;
+    if (tipo && item.tipo !== tipo) return false;
+    if (status && String(item.status || "").toUpperCase() !== status) return false;
+    if (!termo) return true;
+    return [item.tipo, item.origem, item.data, item.documento, item.nome, item.categoria, item.setor, item.vencimento, item.pagamento, item.status, item.observacao, item.valor].join(" ").toLowerCase().includes(termo);
+  }
+
+  function renderizarTabela() {
+    const filtrados = itensAtuais.filter(itemPassaFiltros);
+    tbody.innerHTML = "";
+    atualizarResumo(filtrados);
+    if (!filtrados.length) {
+      empty.classList.remove("d-none");
+      wrap.classList.add("d-none");
+      return;
+    }
+    empty.classList.add("d-none");
+    wrap.classList.remove("d-none");
+    filtrados.forEach((item, index) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${index + 1}</td>
+        <td><span class="dash-badge ${item.tipo === "RECEITA" ? "success" : "danger"}">${item.tipo || "-"}</span></td>
+        <td>${item.origem || "-"}</td>
+        <td>${item.data || "-"}</td>
+        <td>${item.documento || "-"}</td>
+        <td>${item.nome || "-"}</td>
+        <td>${item.categoria || "-"}</td>
+        <td>${item.setor || "-"}</td>
+        <td>${item.vencimento || "-"}</td>
+        <td>${item.pagamento || "-"}</td>
+        <td><span class="dash-status">${item.status || "-"}</span></td>
+        <td class="dash-money">${dinheiro(item.valor)}</td>
+        <td class="dash-observacao">${item.observacao || "-"}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function carregarKpi(tipo) {
+    abrirModal();
+    loading.classList.remove("d-none");
+    empty.classList.add("d-none");
+    wrap.classList.add("d-none");
+    tbody.innerHTML = "";
+    itensAtuais = [];
+    busca.value = "";
+    filtroTipo.value = "";
+    filtroStatus.value = "";
+    try {
+      const url = `/gestao/api/dashboard-kpi-detalhes?tipo=${encodeURIComponent(tipo)}&mes=${mesAtual}&ano=${anoAtual}`;
+      const resp = await fetch(url);
+      const data = await resp.json();
+      if (!data.ok) throw new Error(data.mensagem || "Erro ao carregar detalhes.");
+      titulo.textContent = data.titulo || "Detalhes do KPI";
+      subtitulo.textContent = `${String(mesAtual).padStart(2, "0")}/${anoAtual} • ${data.itens.length} registro(s)`;
+      itensAtuais = data.itens || [];
+      loading.classList.add("d-none");
+      renderizarTabela();
+    } catch (error) {
+      loading.classList.add("d-none");
+      empty.classList.remove("d-none");
+      empty.textContent = error.message || "Erro ao carregar detalhes.";
+    }
+  }
+
+  document.querySelectorAll("[data-dashboard-kpi]").forEach(el => {
+    el.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      carregarKpi(el.dataset.dashboardKpi);
+    });
+  });
+  document.querySelectorAll("[data-dashboard-modal-close]").forEach(el => {
+    el.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      fecharModal();
+    });
+  });
+
+  const modalDialog = modal ? modal.querySelector(".dashboard-kpi-modal-dialog") : null;
+  if (modalDialog) {
+    modalDialog.addEventListener("click", (event) => {
+      event.stopPropagation();
+    });
+  }
+
+  document.querySelectorAll(
+    ".btn-ver-detalhes, .btn-detalhe-categoria, [data-categoria-detalhe], [data-bs-toggle='modal']"
+  ).forEach(el => {
+    el.addEventListener("click", (event) => {
+      event.stopPropagation();
+    });
+  });
+  busca.addEventListener("input", renderizarTabela);
+  filtroTipo.addEventListener("change", renderizarTabela);
+  filtroStatus.addEventListener("change", renderizarTabela);
+  limpar.addEventListener("click", () => { busca.value = ""; filtroTipo.value = ""; filtroStatus.value = ""; renderizarTabela(); });
+  document.addEventListener("keydown", event => { if (event.key === "Escape" && modal.classList.contains("show")) fecharModal(); });
+})();
+</script>
+
+<!-- =========================================
+     🔥 MODAL DETALHE CATEGORIA
+========================================= -->
+<div
+    class="modal fade"
+    id="modalDetalheCategoriaDespesa"
+    tabindex="-1"
+    aria-hidden="true"
+>
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+
+        <!-- =====================================
+             🔥 CONTENT
+        ====================================== -->
+        <div class="modal-content modal-despesa-categoria">
+
+            <!-- =====================================
+                 🔥 HEADER
+            ====================================== -->
+            <div class="modal-header border-0">
+
+                <div>
+
+                    <div class="modal-subtitle">
+                        DETALHAMENTO DA CATEGORIA
                     </div>
 
-                    <div class="ultima-finalizacao-action">
-                      {% if identificador_veiculo %}Ver histórico →{% else %}Ver registro →{% endif %}
+                    <h2
+                        class="modal-title"
+                        id="modalCategoriaTitulo"
+                    >
+                        Categoria
+                    </h2>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="btn-close btn-close-white"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                ></button>
+
+            </div>
+
+            <!-- =====================================
+                 🔥 BODY
+            ====================================== -->
+            <div class="modal-body">
+
+                <!-- =================================
+                     🔥 RESUMOS
+                ================================== -->
+                <div class="modal-resumo-grid">
+
+                    <!-- TOTAL -->
+                    <div class="modal-resumo-card">
+
+                        <span>Total</span>
+
+                        <strong id="modalCategoriaTotal">
+                            R$ 0,00
+                        </strong>
+
                     </div>
-                  </a>
-              {% endfor %}
-            {% else %}
-              <div class="text-muted px-3 py-2">Nenhuma manutenção finalizada no período selecionado.</div>
-            {% endif %}
-          </div>
+
+                    <!-- PAGO -->
+                    <div class="modal-resumo-card success">
+
+                        <span>Pago</span>
+
+                        <strong id="modalCategoriaPago">
+                            R$ 0,00
+                        </strong>
+
+                    </div>
+
+                    <!-- ABERTO -->
+                    <div class="modal-resumo-card danger">
+
+                        <span>Em aberto</span>
+
+                        <strong id="modalCategoriaAberto">
+                            R$ 0,00
+                        </strong>
+
+                    </div>
+
+                    <!-- QUANTIDADE -->
+                    <div class="modal-resumo-card warning">
+
+                        <span>Quantidade</span>
+
+                        <strong id="modalCategoriaQuantidade">
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+                <!-- =================================
+                     🔥 LOADING
+                ================================== -->
+                <div
+                    id="modalCategoriaLoading"
+                    class="text-center py-5"
+                >
+
+                    <div
+                        class="spinner-border text-primary mb-3"
+                        role="status"
+                    ></div>
+
+                    <div class="fw-bold">
+                        Carregando dados...
+                    </div>
+
+                </div>
+
+                <!-- =================================
+                     🔥 VAZIO
+                ================================== -->
+                <div
+                    id="modalCategoriaVazio"
+                    class="alert alert-light border d-none"
+                >
+
+                    Nenhuma conta encontrada.
+
+                </div>
+
+                <!-- =================================
+                     🔥 TABELA
+                ================================== -->
+                <div
+                    id="modalCategoriaTabelaWrap"
+                    class="table-responsive d-none"
+                >
+
+                    <table
+                        class="table modal-tabela align-middle"
+                    >
+
+                        <!-- HEADER -->
+                        <thead>
+
+                            <tr>
+
+                                <th>Data</th>
+
+                                <th>Conta</th>
+
+                                <th>
+                                    Fornecedor /
+                                    Funcionário
+                                </th>
+
+                                <th>Observações</th>
+
+                                <th>Setor</th>
+
+                                <th>Origem</th>
+
+                                <th>Status</th>
+
+                                <th class="text-end">
+                                    Valor
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <!-- BODY -->
+                        <tbody
+                            id="modalCategoriaTabelaBody"
+                        ></tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
         </div>
-      </div>
+
     </div>
-  </div>
-
-  <canvas id="graficoPareto" style="display:none;"></canvas>
-  <canvas id="graficoCorretivaGrande" style="display:none;"></canvas>
-
-  <script id="dados-atendimento" type="application/json">
-  {{ {"labels": labels_atendimento, "valores": valores_atendimento} | tojson }}
-  </script>
-
-  <script id="dados-mes" type="application/json">
-  {{ {
-    "labels": labels,
-    "valores": valores,
-    "corretivas": valores_corretiva_mes,
-    "preventivas": valores_preventiva_mes
-  } | tojson }}
-  </script>
-
-  <script id="dados-pareto" type="application/json">
-  {{ {
-    "labels": labels_frota,
-    "valores": valores_frota,
-    "percentual": []
-  } | tojson }}
-  </script>
-
-  <script id="dados-corretiva" type="application/json">
-  {{ dados_corretiva | tojson }}
-  </script>
 
 </div>
+
+
+
+<script>
+(function () {
+  const dadosEl = document.getElementById("dados-evolucao-financeira");
+  if (!dadosEl || typeof Chart === "undefined") return;
+
+  let dados = {};
+  try { dados = JSON.parse(dadosEl.textContent || "{}"); } catch (e) { dados = {}; }
+
+  const labels = dados.labels || [];
+  const entradas = dados.entradas || [];
+  const saidas = dados.saidas || [];
+  const saldos = dados.saldos_finais || dados.lucros || [];
+
+  const moeda = (valor) => Number(valor || 0).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 0
+  });
+
+  const moedaTabela = (valor) => Number(valor || 0).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
+
+  const labelPlugin = {
+    id: "financeLabels",
+    afterDatasetsDraw(chart) {
+      const { ctx } = chart;
+      ctx.save();
+      ctx.font = "900 10px Segoe UI, Arial";
+      ctx.fillStyle = "#071738";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "bottom";
+
+      chart.data.datasets.forEach((dataset, datasetIndex) => {
+        const meta = chart.getDatasetMeta(datasetIndex);
+        if (meta.hidden) return;
+        meta.data.forEach((element, index) => {
+          const value = Number(dataset.data[index] || 0);
+          if (!value) return;
+          const pos = element.tooltipPosition();
+          const y = value < 0 ? pos.y + 18 : pos.y - 7;
+          ctx.fillText(moeda(value).replace("R$", "R$ "), pos.x, y);
+        });
+      });
+      ctx.restore();
+    }
+  };
+
+  Chart.register(labelPlugin);
+
+  const comum = {
+    responsive: true,
+    maintainAspectRatio: false,
+    layout: { padding: { top: 30, right: 12, left: 8, bottom: 0 } },
+    plugins: {
+      legend: {
+        position: "top",
+        align: "end",
+        labels: { boxWidth: 10, color: "#475569", font: { size: 9, weight: "800" } }
+      },
+      tooltip: {
+        callbacks: { label: (ctx) => `${ctx.dataset.label}: ${moedaTabela(ctx.raw)}` }
+      }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { color: "#64748b", font: { size: 9, weight: "700" } } },
+      y: {
+        beginAtZero: true,
+        grid: { color: "rgba(148, 163, 184, .22)" },
+        ticks: { color: "#64748b", font: { size: 9, weight: "700" }, callback: (v) => moeda(v) }
+      }
+    }
+  };
+
+  const canvasFluxo = document.getElementById("graficoEvolucaoEntradasSaidas");
+  if (canvasFluxo) {
+    new Chart(canvasFluxo, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          { label: "Entradas", data: entradas, backgroundColor: "#10b981", borderRadius: 4, maxBarThickness: 24 },
+          { label: "Saídas", data: saidas, backgroundColor: "#ef4444", borderRadius: 4, maxBarThickness: 24 }
+        ]
+      },
+      options: comum
+    });
+  }
+
+  const canvasSaldo = document.getElementById("graficoEvolucaoLucro");
+  if (canvasSaldo) {
+    new Chart(canvasSaldo, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          label: "Saldo acumulado",
+          data: saldos,
+          borderColor: "#2563eb",
+          backgroundColor: "rgba(37, 99, 235, .12)",
+          pointBackgroundColor: "#ffffff",
+          pointBorderColor: "#2563eb",
+          pointRadius: 3.5,
+          pointHoverRadius: 5,
+          borderWidth: 2.5,
+          fill: true,
+          tension: .35
+        }]
+      },
+      options: {
+        ...comum,
+        scales: {
+          ...comum.scales,
+          y: { ...comum.scales.y, beginAtZero: false }
+        }
+      }
+    });
+  }
+
+  function montarTabelaFluxo() {
+    const tabela = document.getElementById("tabelaFluxoMensal");
+    if (!tabela) return;
+    tabela.innerHTML = `
+      <tbody>
+        <tr><th>Entradas</th>${labels.map((m, i) => `<td><span>${m}</span>${entradas[i] ? moedaTabela(entradas[i]) : "-"}</td>`).join("")}</tr>
+        <tr><th>Saídas</th>${labels.map((m, i) => `<td><span>${m}</span>${saidas[i] ? moedaTabela(saidas[i]) : "-"}</td>`).join("")}</tr>
+        <tr><th>Saldo do mês</th>${labels.map((m, i) => `<td><span>${m}</span>${(entradas[i] || saidas[i]) ? moedaTabela((entradas[i] || 0) - (saidas[i] || 0)) : "-"}</td>`).join("")}</tr>
+      </tbody>`;
+  }
+
+  function montarTabelaSaldo() {
+    const tabela = document.getElementById("tabelaSaldoAcumulado");
+    if (!tabela) return;
+    tabela.innerHTML = `
+      <tbody>
+        <tr><th>Saldo acumulado</th>${labels.map((m, i) => `<td><span>${m}</span>${saldos[i] ? moedaTabela(saldos[i]) : "-"}</td>`).join("")}</tr>
+      </tbody>`;
+  }
+
+  montarTabelaFluxo();
+  montarTabelaSaldo();
+})();
+</script>
 
 {% endblock %}
