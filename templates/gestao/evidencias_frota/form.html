@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Novo Painel de Evidências{% endblock %}
+
+{% block content %}
+<div class="evidencias-page evidencias-form-page">
+  <section class="evidencias-hero compact">
+    <div>
+      <span class="evidencias-eyebrow">Novo painel</span>
+      <h1>Criar Painel de Evidências</h1>
+      <p>Informe somente o cliente e a frota ou placa. Os demais campos serão criados livremente no detalhe.</p>
+    </div>
+  </section>
+
+  <section class="evidencias-form-card">
+    <form method="POST" action="/gestao/evidencias/novo">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Cliente</label>
+          <select name="cliente_id" class="form-control" required>
+            <option value="">Selecione</option>
+            {% for cliente in clientes %}
+              <option value="{{ cliente.id }}">{{ cliente.nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Frota</label>
+          <input type="text" name="frota" class="form-control" placeholder="Ex: 336">
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Placa</label>
+          <input type="text" name="placa" class="form-control" placeholder="Ex: ABC1234">
+        </div>
+      </div>
+
+      <div class="evidencias-form-actions">
+        <a href="/gestao/evidencias/" class="evidencias-btn">Cancelar</a>
+        <button class="evidencias-btn primary">Criar painel</button>
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}

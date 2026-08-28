@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}Painel de Evidências{% endblock %}
+
+{% block content %}
+<div class="evidencias-page evidencias-page-v3 evidencias-page-table">
+  <section class="evidencias-table-header">
+    <div>
+      <span class="evidencias-eyebrow">Painel visual</span>
+      <h1>Painel de Evidências</h1>
+      <p>Controle visual por cliente, frota/placa, campo pai e campos filhos livres.</p>
+    </div>
+
+    <div class="evidencias-table-header-actions">
+      <a href="/gestao/evidencias/novo" class="evidencias-btn primary">
+        <i class="bi bi-plus-lg"></i>
+        Novo painel
+      </a>
+      <a href="/gestao/evidencias/exportar/excel?cliente_id={{ cliente_id or '' }}&busca={{ busca or '' }}&campo={{ campo or '' }}" class="evidencias-btn">
+        <i class="bi bi-file-earmark-spreadsheet"></i>
+        Excel
+      </a>
+      <a href="/gestao/evidencias/exportar/imagens.zip?cliente_id={{ cliente_id or '' }}&busca={{ busca or '' }}&campo={{ campo or '' }}" class="evidencias-btn">
+        <i class="bi bi-file-earmark-zip"></i>
+        Imagens
+      </a>
+    </div>
+  </section>
+
+  <section class="evidencias-table-filters">
+    <form method="GET" action="/gestao/evidencias/" class="evidencias-table-filter-form">
+      <div>
+        <label>Cliente</label>
+        <select name="cliente_id" class="form-control">
+          <option value="">Todos</option>
+          {% for cliente in clientes %}
+            <option value="{{ cliente.id }}" {% if cliente_id == cliente.id %}selected{% endif %}>{{ cliente.nome }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label>Frota, placa ou cliente</label>
+        <input type="text" name="busca" value="{{ busca or '' }}" class="form-control" placeholder="Ex: 336, ABC1234, Kibon">
+      </div>
+
+      <div>
+        <label>Campo pai</label>
+        <input type="text" name="campo" value="{{ campo or '' }}" class="form-control" placeholder="Ex: Termômetros, Desencarroçamento">
+      </div>
+
+      <div class="evidencias-table-filter-actions">
+        <button class="evidencias-btn primary" type="submit">
+          <i class="bi bi-funnel"></i>
+          Filtrar
+        </button>
+        <a class="evidencias-btn" href="/gestao/evidencias/">
+          <i class="bi bi-arrow-counterclockwise"></i>
+          Limpar
+        </a>
+      </div>
+    </form>
+  </section>
+
+  <section class="evidencias-table-layout">
+    <div class="evidencias-table-main-card">
+      <div class="evidencias-table-title-row">
+        <div>
+          <strong>{{ registros|length }} registro(s) encontrado(s)</strong>
+          <small>Visualização compacta para gestão e conferência rápida.</small>
+        </div>
+      </div>
+
+      <div class="evidencias-table-wrap">
+        <table class="evidencias-table">
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Frota/Placa</th>
+              <th>Campos Pai</th>
+              <th class="text-center">Filhos</th>
+              <th class="text-center">Imagens</th>
+              <th>Atualizado</th>
+              <th class="text-end">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for registro in registros %}
+              <tr>
+                <td>
+                  <div class="evidencias-td-cliente">
+                    <span class="evidencias-cliente-avatar">{{ (registro.cliente_nome or 'S')[:1] }}</span>
+                    <div>
+                      <strong>{{ registro.cliente_nome or 'Sem cliente' }}</strong>
+                      <small>Painel #{{ registro.id }}</small>
+                    </div>
+                  </div>
+                </td>
+
+                <td>
+                  <span class="evidencias-identificador-pill">
+                    <i class="bi bi-truck-front"></i>
+                    {{ registro.identificador() }}
+                  </span>
+                </td>
+
+                <td>
+                  <div class="evidencias-campos-lista">
+                    {% for pai in registro.campos_pai[:3] %}
+                      <span>{{ pai.nome }}</span>
+                    {% else %}
+                      <em>Nenhum campo criado</em>
+                    {% endfor %}
+                    {% if registro.campos_pai|length > 3 %}
+                      <span class="more">+{{ registro.campos_pai|length - 3 }}</span>
+                    {% endif %}
+                  </div>
+                </td>
+
+                <td class="text-center">
+                  <span class="evidencias-count-chip">{{ registro.total_filhos }}</span>
+                </td>
+
+                <td class="text-center">
+                  <span class="evidencias-count-chip blue">{{ registro.total_imagens }}</span>
+                </td>
+
+                <td>
+                  <span class="evidencias-date-small">
+                    {{ registro.atualizado_em.strftime('%d/%m/%Y') if registro.atualizado_em else '-' }}
+                  </span>
+                </td>
+
+                <td>
+                  <div class="evidencias-row-actions">
+                    <a href="/gestao/evidencias/{{ registro.id }}" class="evidencias-action-btn open" title="Abrir painel">
+                      <i class="bi bi-folder2-open"></i>
+                      Abrir
+                    </a>
+                    <a href="/gestao/evidencias/{{ registro.id }}/exportar/excel" class="evidencias-action-btn excel" title="Baixar Excel">
+                      <i class="bi bi-file-earmark-spreadsheet"></i>
+                      Excel
+                    </a>
+                    <a href="/gestao/evidencias/{{ registro.id }}/exportar/imagens.zip" class="evidencias-action-btn zip" title="Baixar imagens ZIP">
+                      <i class="bi bi-file-earmark-zip"></i>
+                      ZIP
+                    </a>
+                    <a href="/gestao/evidencias/{{ registro.id }}#boxGerarLinkCliente" class="evidencias-action-btn link" title="Gerar ou copiar link do cliente">
+                      <i class="bi bi-link-45deg"></i>
+                      Link
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="7">
+                  <div class="evidencias-table-empty">
+                    <i class="bi bi-folder2-open"></i>
+                    <h3>Nenhum painel encontrado</h3>
+                    <p>Crie o primeiro painel para agrupar evidências por cliente e frota/placa.</p>
+                    <a href="/gestao/evidencias/novo" class="evidencias-btn primary">Criar painel</a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% block title %}Evidências - {{ registro.identificador() }}{% endblock %}
+
+{% block content %}
+<div class="evidencias-page evidencias-page-v3 evidencias-detalhe-clean-page">
+  <section class="ev-detail-hero">
+    <div class="ev-detail-hero-main">
+      <a href="/gestao/evidencias/" class="ev-back-link">
+        <i class="bi bi-arrow-left"></i>
+        Voltar
+      </a>
+      <span class="ev-kicker">{{ registro.cliente_nome }}</span>
+      <div class="ev-detail-title-row">
+        <h1>{{ registro.identificador() }}</h1>
+        <span class="ev-status-pill"><i class="bi bi-images"></i> Painel de evidências</span>
+      </div>
+      <p>Organize fotos por campo pai e campos filhos livres, com visual compacto para conferência rápida.</p>
+    </div>
+
+    <div class="ev-detail-actions">
+      <a href="/gestao/evidencias/{{ registro.id }}/exportar/excel" class="ev-btn ghost">
+        <i class="bi bi-file-earmark-spreadsheet"></i>
+        Excel
+      </a>
+      <a href="/gestao/evidencias/{{ registro.id }}/exportar/imagens.zip" class="ev-btn ghost">
+        <i class="bi bi-file-earmark-zip"></i>
+        Imagens
+      </a>
+      {% if pode_gerar_link %}
+        <button type="button" class="ev-btn success" data-bs-toggle="collapse" data-bs-target="#boxGerarLinkCliente">
+          <i class="bi bi-link-45deg"></i>
+          Link cliente
+        </button>
+      {% endif %}
+      <form method="POST" action="/gestao/evidencias/{{ registro.id }}/excluir" onsubmit="return confirm('Excluir este painel e todas as imagens vinculadas?');">
+        <button class="ev-icon-danger" type="submit" title="Excluir painel">
+          <i class="bi bi-trash3"></i>
+        </button>
+      </form>
+    </div>
+  </section>
+
+  {% if pode_gerar_link %}
+    <section class="ev-link-panel collapse" id="boxGerarLinkCliente">
+      <div class="ev-link-panel-head">
+        <div>
+          <strong>Link do cliente</strong>
+          <small>Visualização limpa, somente leitura, sem menu do sistema.</small>
+        </div>
+      </div>
+
+      <form method="POST" action="/gestao/evidencias/{{ registro.id }}/links/criar" class="ev-link-form">
+        <div>
+          <label>Validade</label>
+          <select name="validade_dias" class="form-control">
+            <option value="7">7 dias</option>
+            <option value="30" selected>30 dias</option>
+            <option value="90">90 dias</option>
+            <option value="0">Sem validade</option>
+          </select>
+        </div>
+        <label class="ev-check"><input type="checkbox" name="permitir_excel" checked> Excel</label>
+        <label class="ev-check"><input type="checkbox" name="permitir_zip" checked> ZIP imagens</label>
+        <button class="ev-btn primary" type="submit"><i class="bi bi-link-45deg"></i> Gerar</button>
+      </form>
+
+      {% set ns = namespace(ativos=0, historico=0) %}
+      <div class="ev-links-list">
+        {% for link in links_publicos %}
+          {% if link.esta_disponivel() %}
+            {% set ns.ativos = ns.ativos + 1 %}
+            {% set link_url = request.url_root.rstrip('/') ~ '/gestao/evidencias/publico/' ~ link.token %}
+            <article class="ev-link-item ativo">
+              <div>
+                <span>Ativo</span>
+                <strong>{{ link_url }}</strong>
+                <small>
+                  Expira em {{ link.expira_em.strftime('%d/%m/%Y %H:%M') if link.expira_em else 'sem validade' }}
+                  • Excel: {{ 'sim' if link.permitir_excel else 'não' }}
+                  • ZIP: {{ 'sim' if link.permitir_zip else 'não' }}
+                </small>
+              </div>
+              <div class="ev-link-actions">
+                <button type="button" class="ev-mini" onclick="navigator.clipboard.writeText('{{ link_url }}'); this.innerHTML='Copiado';">
+                  <i class="bi bi-clipboard-check"></i>
+                </button>
+                <form method="POST" action="/gestao/evidencias/links/{{ link.id }}/desativar" onsubmit="return confirm('Desativar este link público?');">
+                  <button class="ev-mini danger" type="submit"><i class="bi bi-x-circle"></i></button>
+                </form>
+              </div>
+            </article>
+          {% else %}
+            {% set ns.historico = ns.historico + 1 %}
+          {% endif %}
+        {% endfor %}
+
+        {% if ns.ativos == 0 %}
+          <div class="ev-empty-line">Nenhum link ativo no momento.</div>
+        {% endif %}
+      </div>
+
+      {% if ns.historico > 0 %}
+        <button class="ev-history-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#historicoLinksCliente">
+          Mostrar histórico de links inativos/expirados <i class="bi bi-chevron-down"></i>
+        </button>
+        <div class="collapse" id="historicoLinksCliente">
+          <div class="ev-links-list history">
+            {% for link in links_publicos %}
+              {% if not link.esta_disponivel() %}
+                {% set link_url = request.url_root.rstrip('/') ~ '/gestao/evidencias/publico/' ~ link.token %}
+                <article class="ev-link-item inativo">
+                  <div>
+                    <span>Inativo/expirado</span>
+                    <strong>{{ link_url }}</strong>
+                    <small>
+                      Criado em {{ link.criado_em.strftime('%d/%m/%Y %H:%M') if link.criado_em else '-' }}
+                      • Expira em {{ link.expira_em.strftime('%d/%m/%Y %H:%M') if link.expira_em else 'sem validade' }}
+                      • Excel: {{ 'sim' if link.permitir_excel else 'não' }}
+                      • ZIP: {{ 'sim' if link.permitir_zip else 'não' }}
+                    </small>
+                  </div>
+                </article>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  <section class="ev-add-parent">
+    <form method="POST" action="/gestao/evidencias/{{ registro.id }}/pai/novo">
+      <div>
+        <strong>Novo campo pai</strong>
+        <small>Ex: Troca de Termômetros, Desencarroçamento, Checklist do Baú.</small>
+      </div>
+      <input type="text" name="nome" class="form-control" placeholder="Nome do campo pai" required>
+      <button class="ev-btn primary" type="submit"><i class="bi bi-plus-lg"></i> Adicionar</button>
+    </form>
+  </section>
+
+  <section class="ev-parent-list">
+    {% for pai in registro.campos_pai %}
+      {% set total_imgs = namespace(qtd=0) %}
+      {% for filho in pai.filhos %}
+        {% set total_imgs.qtd = total_imgs.qtd + (filho.imagens|length) %}
+      {% endfor %}
+
+      <article class="ev-parent-card">
+        <header class="ev-parent-head">
+          <button class="ev-parent-title" type="button" data-bs-toggle="collapse" data-bs-target="#painelPai{{ pai.id }}" aria-expanded="true">
+            <span class="ev-folder-icon"><i class="bi bi-folder2-open"></i></span>
+            <div>
+              <span>Campo pai</span>
+              <h2>{{ pai.nome }}</h2>
+              <small>{{ pai.filhos|length }} filho(s) • {{ total_imgs.qtd }} imagem(ns)</small>
+            </div>
+          </button>
+
+          <div class="ev-card-actions">
+            <button type="button" class="ev-mini" data-bs-toggle="collapse" data-bs-target="#editarPai{{ pai.id }}" title="Editar campo pai">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <form method="POST" action="/gestao/evidencias/pai/{{ pai.id }}/excluir" onsubmit="return confirm('Excluir este campo pai e todos os filhos/imagens?');">
+              <button class="ev-mini danger" type="submit" title="Excluir campo pai"><i class="bi bi-trash3"></i></button>
+            </form>
+          </div>
+        </header>
+
+        <div class="collapse" id="editarPai{{ pai.id }}">
+          <form method="POST" action="/gestao/evidencias/pai/{{ pai.id }}/editar" class="ev-inline-edit">
+            <input type="text" name="nome" value="{{ pai.nome }}" class="form-control" required>
+            <button class="ev-btn">Salvar</button>
+          </form>
+        </div>
+
+        <div class="collapse show" id="painelPai{{ pai.id }}">
+          <form method="POST" action="/gestao/evidencias/pai/{{ pai.id }}/filho/novo" class="ev-add-child">
+            <input type="text" name="nome" class="form-control" placeholder="Novo filho. Ex: Antes, Depois, Finalizado" required>
+            <button class="ev-btn" type="submit"><i class="bi bi-plus-lg"></i> Filho</button>
+          </form>
+
+          <div class="ev-child-grid">
+            {% for filho in pai.filhos %}
+              <section class="ev-child-card">
+                <header class="ev-child-head">
+                  <button type="button" class="ev-child-title" data-bs-toggle="collapse" data-bs-target="#filhoConteudo{{ filho.id }}" aria-expanded="true">
+                    <span class="ev-child-icon"><i class="bi bi-images"></i></span>
+                    <div>
+                      <span>Campo filho</span>
+                      <h3>{{ filho.nome }}</h3>
+                      <small>{{ filho.imagens|length }} imagem(ns)</small>
+                    </div>
+                  </button>
+                  <div class="ev-card-actions">
+                    <button type="button" class="ev-mini" data-bs-toggle="collapse" data-bs-target="#editarFilho{{ filho.id }}" title="Editar filho">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <form method="POST" action="/gestao/evidencias/filho/{{ filho.id }}/excluir" onsubmit="return confirm('Excluir este filho e as imagens?');">
+                      <button class="ev-mini danger" type="submit" title="Excluir filho"><i class="bi bi-trash3"></i></button>
+                    </form>
+                  </div>
+                </header>
+
+                <div class="collapse" id="editarFilho{{ filho.id }}">
+                  <form method="POST" action="/gestao/evidencias/filho/{{ filho.id }}/editar" class="ev-inline-edit compact">
+                    <input type="text" name="nome" value="{{ filho.nome }}" class="form-control" required>
+                    <button class="ev-btn">Salvar</button>
+                  </form>
+                </div>
+
+                <div class="collapse show" id="filhoConteudo{{ filho.id }}">
+                  <button class="ev-upload-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#uploadFilho{{ filho.id }}">
+                    <i class="bi bi-cloud-arrow-up"></i> Adicionar fotos
+                  </button>
+
+                  <div class="collapse" id="uploadFilho{{ filho.id }}">
+                    <form method="POST" action="/gestao/evidencias/filho/{{ filho.id }}/imagens" enctype="multipart/form-data" class="ev-upload-box">
+                      <input type="file" name="imagens" class="form-control" accept="image/*" multiple required>
+                      <input type="text" name="legenda" class="form-control" placeholder="Legenda opcional">
+                      <button class="ev-btn primary" type="submit"><i class="bi bi-cloud-arrow-up"></i> Enviar</button>
+                    </form>
+                  </div>
+
+                  <div class="ev-photo-grid">
+                    {% for img in filho.imagens %}
+                      <figure class="ev-photo-card">
+                        <a href="{{ img.imagem_url }}" target="_blank">
+                          <img src="{{ img.imagem_url }}" alt="{{ img.legenda or img.nome_original or 'Imagem' }}">
+                        </a>
+                        <figcaption>
+                          <form method="POST" action="/gestao/evidencias/imagem/{{ img.id }}/editar" class="ev-caption-form">
+                            <input type="text" name="legenda" value="{{ img.legenda or '' }}" class="form-control" placeholder="Legenda">
+                            <button class="ev-mini ok" type="submit"><i class="bi bi-check-lg"></i></button>
+                          </form>
+                          <form method="POST" action="/gestao/evidencias/imagem/{{ img.id }}/excluir" onsubmit="return confirm('Excluir esta imagem?');">
+                            <button class="ev-mini danger" type="submit"><i class="bi bi-trash3"></i></button>
+                          </form>
+                        </figcaption>
+                      </figure>
+                    {% else %}
+                      <div class="ev-child-empty">Nenhuma imagem neste filho.</div>
+                    {% endfor %}
+                  </div>
+                </div>
+              </section>
+            {% else %}
+              <div class="ev-child-empty full">Nenhum campo filho criado ainda.</div>
+            {% endfor %}
+          </div>
+        </div>
+      </article>
+    {% else %}
+      <div class="ev-empty-state">
+        <i class="bi bi-diagram-3"></i>
+        <h3>Nenhum campo pai criado</h3>
+        <p>Crie um campo pai para começar a organizar as imagens.</p>
+      </div>
+    {% endfor %}
+  </section>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    if (window.location.hash === "#boxGerarLinkCliente") {
+      const box = document.getElementById("boxGerarLinkCliente");
+      if (box && window.bootstrap) {
+        new bootstrap.Collapse(box, { show: true });
+        box.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  });
+</script>
+{% endblock %}

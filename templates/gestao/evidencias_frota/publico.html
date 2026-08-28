@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Evidências - {{ registro.cliente_nome }}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/organized/evidencias_frota.css') }}">
+</head>
+<body class="evidencias-public-body">
+  <main class="evidencias-page evidencias-public-page">
+    <section class="evidencias-public-hero">
+      <div>
+        <span class="evidencias-eyebrow">Visualização do cliente</span>
+        <h1>{{ registro.cliente_nome }}</h1>
+        <p>{{ registro.identificador() }} • Evidências organizadas por campo pai e campo filho.</p>
+      </div>
+
+      <div class="evidencias-hero-actions">
+        {% if link.permitir_excel %}
+          <a href="/gestao/evidencias/publico/{{ link.token }}/excel" class="evidencias-btn">
+            <i class="bi bi-file-earmark-spreadsheet"></i>
+            Baixar Excel
+          </a>
+        {% endif %}
+
+        {% if link.permitir_zip %}
+          <a href="/gestao/evidencias/publico/{{ link.token }}/imagens.zip" class="evidencias-btn">
+            <i class="bi bi-file-earmark-zip"></i>
+            Baixar imagens
+          </a>
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="evidencias-public-info">
+      <div>
+        <strong>Cliente</strong>
+        <span>{{ registro.cliente_nome }}</span>
+      </div>
+      <div>
+        <strong>Frota</strong>
+        <span>{{ registro.frota or '-' }}</span>
+      </div>
+      <div>
+        <strong>Placa</strong>
+        <span>{{ registro.placa or '-' }}</span>
+      </div>
+      <div>
+        <strong>Atualizado</strong>
+        <span>{{ registro.atualizado_em.strftime('%d/%m/%Y %H:%M') if registro.atualizado_em else '-' }}</span>
+      </div>
+    </section>
+
+    <section class="evidencias-pais-lista public">
+      {% for pai in registro.campos_pai %}
+        <article class="evidencias-pai-card">
+          <div class="evidencias-pai-header">
+            <div>
+              <span>Campo pai</span>
+              <h2>{{ pai.nome }}</h2>
+            </div>
+          </div>
+
+          <div class="evidencias-filhos-grid">
+            {% for filho in pai.filhos %}
+              <section class="evidencias-filho-card">
+                <div class="evidencias-filho-header">
+                  <div>
+                    <span>Campo filho</span>
+                    <h3>{{ filho.nome }}</h3>
+                  </div>
+                </div>
+
+                <div class="evidencias-imagens-grid">
+                  {% for img in filho.imagens %}
+                    <figure class="evidencias-img-card public">
+                      <a href="{{ img.imagem_url }}" target="_blank">
+                        <img src="{{ img.imagem_url }}" alt="{{ img.legenda or img.nome_original or 'Imagem' }}">
+                      </a>
+                      <figcaption>
+                        <span>{{ img.legenda or img.nome_original or 'Sem legenda' }}</span>
+                      </figcaption>
+                    </figure>
+                  {% else %}
+                    <div class="evidencias-filho-empty">Nenhuma imagem neste filho.</div>
+                  {% endfor %}
+                </div>
+              </section>
+            {% else %}
+              <div class="evidencias-filho-empty full">Nenhum campo filho criado.</div>
+            {% endfor %}
+          </div>
+        </article>
+      {% else %}
+        <div class="evidencias-empty">
+          <i class="bi bi-folder2-open"></i>
+          <h3>Nenhuma evidência disponível</h3>
+          <p>Este painel ainda não possui campos cadastrados.</p>
+        </div>
+      {% endfor %}
+    </section>
+  </main>
+</body>
+</html>
