@@ -2,273 +2,787 @@
 {% block title %}Evidências - {{ registro.identificador() }}{% endblock %}
 
 {% block content %}
-<div class="evidencias-page evidencias-page-v3 evidencias-detalhe-clean-page">
-  <section class="ev-detail-hero">
-    <div class="ev-detail-hero-main">
-      <a href="/gestao/evidencias/" class="ev-back-link">
-        <i class="bi bi-arrow-left"></i>
-        Voltar
-      </a>
-      <span class="ev-kicker">{{ registro.cliente_nome }}</span>
-      <div class="ev-detail-title-row">
-        <h1>{{ registro.identificador() }}</h1>
-        <span class="ev-status-pill"><i class="bi bi-images"></i> Painel de evidências</span>
-      </div>
-      <p>Organize fotos por campo pai e campos filhos livres, com visual compacto para conferência rápida.</p>
+<div class="evidencias-page evidencias-page-v7 evidencias-page-v8 ev-detail-page ev92-page">
+  <section class="ev92-main-card">
+    <div class="ev92-breadcrumb">
+      <a href="/gestao/evidencias/"><i class="bi bi-house-door"></i> Painel de Evidências</a>
+      <span><i class="bi bi-chevron-right"></i> {{ registro.cliente_nome }}</span>
+      <span><i class="bi bi-chevron-right"></i> {{ registro.identificador() }}</span>
     </div>
 
-    <div class="ev-detail-actions">
-      <a href="/gestao/evidencias/{{ registro.id }}/exportar/excel" class="ev-btn ghost">
-        <i class="bi bi-file-earmark-spreadsheet"></i>
-        Excel
-      </a>
-      <a href="/gestao/evidencias/{{ registro.id }}/exportar/imagens.zip" class="ev-btn ghost">
-        <i class="bi bi-file-earmark-zip"></i>
-        Imagens
-      </a>
-      {% if pode_gerar_link %}
-        <button type="button" class="ev-btn success" data-bs-toggle="collapse" data-bs-target="#boxGerarLinkCliente">
-          <i class="bi bi-link-45deg"></i>
-          Link cliente
-        </button>
-      {% endif %}
-      <form method="POST" action="/gestao/evidencias/{{ registro.id }}/excluir" onsubmit="return confirm('Excluir este painel e todas as imagens vinculadas?');">
-        <button class="ev-icon-danger" type="submit" title="Excluir painel">
-          <i class="bi bi-trash3"></i>
-        </button>
-      </form>
-    </div>
-  </section>
-
-  {% if pode_gerar_link %}
-    <section class="ev-link-panel collapse" id="boxGerarLinkCliente">
-      <div class="ev-link-panel-head">
-        <div>
-          <strong>Link do cliente</strong>
-          <small>Visualização limpa, somente leitura, sem menu do sistema.</small>
-        </div>
-      </div>
-
-      <form method="POST" action="/gestao/evidencias/{{ registro.id }}/links/criar" class="ev-link-form">
-        <div>
-          <label>Validade</label>
-          <select name="validade_dias" class="form-control">
-            <option value="7">7 dias</option>
-            <option value="30" selected>30 dias</option>
-            <option value="90">90 dias</option>
-            <option value="0">Sem validade</option>
-          </select>
-        </div>
-        <label class="ev-check"><input type="checkbox" name="permitir_excel" checked> Excel</label>
-        <label class="ev-check"><input type="checkbox" name="permitir_zip" checked> ZIP imagens</label>
-        <button class="ev-btn primary" type="submit"><i class="bi bi-link-45deg"></i> Gerar</button>
-      </form>
-
-      {% set ns = namespace(ativos=0, historico=0) %}
-      <div class="ev-links-list">
-        {% for link in links_publicos %}
-          {% if link.esta_disponivel() %}
-            {% set ns.ativos = ns.ativos + 1 %}
-            {% set link_url = request.url_root.rstrip('/') ~ '/gestao/evidencias/publico/' ~ link.token %}
-            <article class="ev-link-item ativo">
-              <div>
-                <span>Ativo</span>
-                <strong>{{ link_url }}</strong>
-                <small>
-                  Expira em {{ link.expira_em.strftime('%d/%m/%Y %H:%M') if link.expira_em else 'sem validade' }}
-                  • Excel: {{ 'sim' if link.permitir_excel else 'não' }}
-                  • ZIP: {{ 'sim' if link.permitir_zip else 'não' }}
-                </small>
-              </div>
-              <div class="ev-link-actions">
-                <button type="button" class="ev-mini" onclick="navigator.clipboard.writeText('{{ link_url }}'); this.innerHTML='Copiado';">
-                  <i class="bi bi-clipboard-check"></i>
-                </button>
-                <form method="POST" action="/gestao/evidencias/links/{{ link.id }}/desativar" onsubmit="return confirm('Desativar este link público?');">
-                  <button class="ev-mini danger" type="submit"><i class="bi bi-x-circle"></i></button>
-                </form>
-              </div>
-            </article>
-          {% else %}
-            {% set ns.historico = ns.historico + 1 %}
-          {% endif %}
-        {% endfor %}
-
-        {% if ns.ativos == 0 %}
-          <div class="ev-empty-line">Nenhum link ativo no momento.</div>
-        {% endif %}
-      </div>
-
-      {% if ns.historico > 0 %}
-        <button class="ev-history-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#historicoLinksCliente">
-          Mostrar histórico de links inativos/expirados <i class="bi bi-chevron-down"></i>
-        </button>
-        <div class="collapse" id="historicoLinksCliente">
-          <div class="ev-links-list history">
-            {% for link in links_publicos %}
-              {% if not link.esta_disponivel() %}
-                {% set link_url = request.url_root.rstrip('/') ~ '/gestao/evidencias/publico/' ~ link.token %}
-                <article class="ev-link-item inativo">
-                  <div>
-                    <span>Inativo/expirado</span>
-                    <strong>{{ link_url }}</strong>
-                    <small>
-                      Criado em {{ link.criado_em.strftime('%d/%m/%Y %H:%M') if link.criado_em else '-' }}
-                      • Expira em {{ link.expira_em.strftime('%d/%m/%Y %H:%M') if link.expira_em else 'sem validade' }}
-                      • Excel: {{ 'sim' if link.permitir_excel else 'não' }}
-                      • ZIP: {{ 'sim' if link.permitir_zip else 'não' }}
-                    </small>
-                  </div>
-                </article>
-              {% endif %}
-            {% endfor %}
+    <header class="ev92-hero">
+      <div class="ev92-hero-info">
+        <div class="ev92-title-line">
+          <span class="ev92-folder"><i class="bi bi-folder2-open"></i></span>
+          <div>
+            <span class="ev92-label">Campo Pai</span>
+            <h1>{{ registro.identificador() }}</h1>
           </div>
+          <span class="ev92-status">Ativo</span>
         </div>
+        <div class="ev92-meta">
+          <span>Cliente: <strong>{{ registro.cliente_nome }}</strong></span>
+          <span>Criado em: {{ registro.criado_em.strftime('%d/%m/%Y') if registro.criado_em else '-' }}</span>
+          <span>Responsável: {{ session.get('user_nome') or session.get('user_name') or 'Diogo Silva' }}</span>
+        </div>
+      </div>
+
+      <div class="ev92-hero-actions">
+        <a href="/gestao/evidencias/{{ registro.id }}/exportar/excel" class="ev92-btn primary"><i class="bi bi-file-earmark-spreadsheet"></i> Excel</a>
+        <a href="/gestao/evidencias/{{ registro.id }}/exportar/imagens.zip" class="ev92-btn"><i class="bi bi-file-earmark-zip"></i> Imagens</a>
+        <form method="POST" action="/gestao/evidencias/{{ registro.id }}/excluir" data-ajax-form="true" class="ev95-ajax-form">
+          <button class="ev92-icon-danger" type="submit" title="Excluir painel"><i class="bi bi-trash3"></i></button>
+        </form>
+      </div>
+    </header>
+
+    <section class="ev92-create-area">
+      <form method="POST" action="/gestao/evidencias/{{ registro.id }}/pai/novo" class="ev92-create-parent">
+        <div>
+          <strong>Novo campo pai</strong>
+          <small>Ex: Troca de Termômetros, Desencarroçamento, Checklist do Baú.</small>
+        </div>
+        <input type="text" name="nome" class="form-control" placeholder="Nome do campo pai" required>
+        <button class="ev92-btn success" type="submit"><i class="bi bi-plus-lg"></i> Adicionar</button>
+      </form>
+
+      {% if pode_gerar_link %}
+        <form method="POST" action="/gestao/evidencias/tipos/novo" class="ev92-create-type">
+          <input type="hidden" name="registro_id" value="{{ registro.id }}">
+          <div>
+            <strong>Cadastrar tipo de foto</strong>
+            <small>Entra no dropdown das imagens.</small>
+          </div>
+          <input type="text" name="nome" class="form-control" placeholder="Ex: Antes, Depois, Finalizado">
+          <button class="ev92-btn" type="submit"><i class="bi bi-bookmark-plus"></i> Salvar</button>
+        </form>
       {% endif %}
     </section>
-  {% endif %}
 
-  <section class="ev-add-parent">
-    <form method="POST" action="/gestao/evidencias/{{ registro.id }}/pai/novo">
-      <div>
-        <strong>Novo campo pai</strong>
-        <small>Ex: Troca de Termômetros, Desencarroçamento, Checklist do Baú.</small>
-      </div>
-      <input type="text" name="nome" class="form-control" placeholder="Nome do campo pai" required>
-      <button class="ev-btn primary" type="submit"><i class="bi bi-plus-lg"></i> Adicionar</button>
-    </form>
-  </section>
+    <section class="ev92-parent-list">
+      {% for pai in registro.campos_pai %}
+        {% set imagens_pai = pai.imagens_tela if pai.imagens_tela is defined else pai.imagens %}
+        {% set tabela = pai.tabela_controle %}
 
-  <section class="ev-parent-list">
-    {% for pai in registro.campos_pai %}
-      {% set total_imgs = namespace(qtd=0) %}
-      {% for filho in pai.filhos %}
-        {% set total_imgs.qtd = total_imgs.qtd + (filho.imagens|length) %}
-      {% endfor %}
-
-      <article class="ev-parent-card">
-        <header class="ev-parent-head">
-          <button class="ev-parent-title" type="button" data-bs-toggle="collapse" data-bs-target="#painelPai{{ pai.id }}" aria-expanded="true">
-            <span class="ev-folder-icon"><i class="bi bi-folder2-open"></i></span>
-            <div>
-              <span>Campo pai</span>
-              <h2>{{ pai.nome }}</h2>
-              <small>{{ pai.filhos|length }} filho(s) • {{ total_imgs.qtd }} imagem(ns)</small>
+        <article class="ev92-parent-card" id="campoPai{{ pai.id }}">
+          <header class="ev92-parent-header">
+            <div class="ev92-parent-title">
+              <span class="ev92-folder sm"><i class="bi bi-folder2-open"></i></span>
+              <div>
+                <span>Campo Pai</span>
+                <h2>{{ pai.nome }}</h2>
+                <small>{{ imagens_pai|length }} foto(s) • {{ 'com tabela' if tabela else 'sem tabela' }}</small>
+              </div>
             </div>
-          </button>
 
-          <div class="ev-card-actions">
-            <button type="button" class="ev-mini" data-bs-toggle="collapse" data-bs-target="#editarPai{{ pai.id }}" title="Editar campo pai">
-              <i class="bi bi-pencil"></i>
-            </button>
-            <form method="POST" action="/gestao/evidencias/pai/{{ pai.id }}/excluir" onsubmit="return confirm('Excluir este campo pai e todos os filhos/imagens?');">
-              <button class="ev-mini danger" type="submit" title="Excluir campo pai"><i class="bi bi-trash3"></i></button>
+            <div class="ev92-parent-actions">
+              <button type="button" class="ev92-mini" data-bs-toggle="collapse" data-bs-target="#editarPai{{ pai.id }}" title="Editar campo pai"><i class="bi bi-pencil"></i></button>
+              {% if not tabela %}
+                <button class="ev92-mini success" type="button" data-bs-toggle="collapse" data-bs-target="#criarTabela{{ pai.id }}" title="Criar tabela"><i class="bi bi-table"></i></button>
+              {% endif %}
+              <form method="POST" action="/gestao/evidencias/pai/{{ pai.id }}/excluir" data-ajax-form="true" class="ev95-ajax-form">
+                <button class="ev92-mini danger" type="submit" title="Excluir campo pai"><i class="bi bi-trash3"></i></button>
+              </form>
+            </div>
+          </header>
+
+          <div class="collapse" id="editarPai{{ pai.id }}">
+            <form method="POST" action="/gestao/evidencias/pai/{{ pai.id }}/editar" class="ev92-inline-edit">
+              <input type="text" name="nome" value="{{ pai.nome }}" class="form-control" required>
+              <button class="ev92-btn">Salvar</button>
             </form>
           </div>
-        </header>
 
-        <div class="collapse" id="editarPai{{ pai.id }}">
-          <form method="POST" action="/gestao/evidencias/pai/{{ pai.id }}/editar" class="ev-inline-edit">
-            <input type="text" name="nome" value="{{ pai.nome }}" class="form-control" required>
-            <button class="ev-btn">Salvar</button>
-          </form>
-        </div>
+          {% if not tabela %}
+            <div class="collapse" id="criarTabela{{ pai.id }}">
+              <form method="POST" action="/gestao/evidencias/pai/{{ pai.id }}/tabela/criar" class="ev92-create-table">
+                <div>
+                  <strong>Criar tabela de controle</strong>
+                  <small>Escolha o tamanho inicial. Depois você edita grupos, colunas e células direto na tabela.</small>
+                </div>
+                <label>Título <input type="text" name="titulo" class="form-control" value="{{ pai.nome }}"></label>
+                <label>Colunas <input type="number" name="qtd_colunas" class="form-control" value="5" min="1" max="40"></label>
+                <label>Linhas <input type="number" name="qtd_linhas" class="form-control" value="10" min="1" max="300"></label>
+                <button class="ev92-btn success" type="submit"><i class="bi bi-table"></i> Criar grade</button>
+              </form>
+            </div>
+          {% endif %}
 
-        <div class="collapse show" id="painelPai{{ pai.id }}">
-          <form method="POST" action="/gestao/evidencias/pai/{{ pai.id }}/filho/novo" class="ev-add-child">
-            <input type="text" name="nome" class="form-control" placeholder="Novo filho. Ex: Antes, Depois, Finalizado" required>
-            <button class="ev-btn" type="submit"><i class="bi bi-plus-lg"></i> Filho</button>
-          </form>
+          <ul class="nav ev92-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="tabTabelaBtn{{ pai.id }}" data-bs-toggle="tab" data-bs-target="#tabTabela{{ pai.id }}" type="button" role="tab">
+                <i class="bi bi-table"></i> Tabela
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="tabFotosBtn{{ pai.id }}" data-bs-toggle="tab" data-bs-target="#tabFotos{{ pai.id }}" type="button" role="tab">
+                <i class="bi bi-images"></i> Imagens <span>{{ imagens_pai|length }}</span>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="tabLinkBtn{{ pai.id }}" data-bs-toggle="tab" data-bs-target="#tabLink{{ pai.id }}" type="button" role="tab">
+                <i class="bi bi-link-45deg"></i> Link
+              </button>
+            </li>
+          </ul>
 
-          <div class="ev-child-grid">
-            {% for filho in pai.filhos %}
-              <section class="ev-child-card">
-                <header class="ev-child-head">
-                  <button type="button" class="ev-child-title" data-bs-toggle="collapse" data-bs-target="#filhoConteudo{{ filho.id }}" aria-expanded="true">
-                    <span class="ev-child-icon"><i class="bi bi-images"></i></span>
-                    <div>
-                      <span>Campo filho</span>
-                      <h3>{{ filho.nome }}</h3>
-                      <small>{{ filho.imagens|length }} imagem(ns)</small>
+          <div class="tab-content ev92-tab-content">
+            <section class="tab-pane fade show active" id="tabTabela{{ pai.id }}" role="tabpanel" aria-labelledby="tabTabelaBtn{{ pai.id }}">
+              {% if tabela %}
+                <div class="ev92-board" id="tabelaPai{{ pai.id }}" data-table-shell="{{ tabela.id }}" data-pai-shell="{{ pai.id }}">
+                  <form method="POST" action="/gestao/evidencias/tabela/{{ tabela.id }}/celulas/salvar" class="ev92-sheet-form ev93-autosave-form ev95-ajax-form" id="formTabela{{ tabela.id }}" data-ajax-form="true" data-autosave-url="/gestao/evidencias/tabela/{{ tabela.id }}/autosave" data-table-id="{{ tabela.id }}">
+                    <div class="ev92-board-head">
+                      <div class="ev92-table-title">
+                        <strong>Tabela: </strong>
+                        <input type="text" name="tabela_titulo" value="{{ tabela.titulo }}" class="ev92-title-input" placeholder="Título da tabela">
+                        <span class="ev92-pill">Ativa</span>
+                      </div>
+
+                      <div class="ev92-board-actions">
+                        <button class="ev92-btn" type="button" data-bs-toggle="collapse" data-bs-target="#configTabela{{ tabela.id }}">
+                          <i class="bi bi-sliders"></i> Configurar
+                        </button>
+                        <button class="ev92-btn" type="button" disabled title="Em breve"><i class="bi bi-upload"></i> Importar</button>
+                        <a class="ev92-btn success" href="/gestao/evidencias/{{ registro.id }}/exportar/excel"><i class="bi bi-file-earmark-spreadsheet"></i> Exportar</a>
+                        <button class="ev92-btn primary ev95-ajax-submit" type="submit" formaction="/gestao/evidencias/tabela/{{ tabela.id }}/coluna/nova" formmethod="post" name="quantidade" value="1"><i class="bi bi-plus-lg"></i> Coluna</button>
+                        <button class="ev92-btn primary ev95-ajax-submit" type="submit" formaction="/gestao/evidencias/tabela/{{ tabela.id }}/linha/nova" formmethod="post" name="quantidade" value="1"><i class="bi bi-plus-lg"></i> Linha</button>
+                        <button class="ev92-btn danger ev95-delete-selected" type="button" data-delete-selected-row disabled><i class="bi bi-trash3"></i> Excluir linha selecionada</button>
+                      </div>
                     </div>
-                  </button>
-                  <div class="ev-card-actions">
-                    <button type="button" class="ev-mini" data-bs-toggle="collapse" data-bs-target="#editarFilho{{ filho.id }}" title="Editar filho">
-                      <i class="bi bi-pencil"></i>
-                    </button>
-                    <form method="POST" action="/gestao/evidencias/filho/{{ filho.id }}/excluir" onsubmit="return confirm('Excluir este filho e as imagens?');">
-                      <button class="ev-mini danger" type="submit" title="Excluir filho"><i class="bi bi-trash3"></i></button>
-                    </form>
-                  </div>
-                </header>
 
-                <div class="collapse" id="editarFilho{{ filho.id }}">
-                  <form method="POST" action="/gestao/evidencias/filho/{{ filho.id }}/editar" class="ev-inline-edit compact">
-                    <input type="text" name="nome" value="{{ filho.nome }}" class="form-control" required>
-                    <button class="ev-btn">Salvar</button>
+                    <div class="collapse" id="configTabela{{ tabela.id }}">
+                      <div class="ev92-config-panel">
+                        {% for coluna in tabela.colunas %}
+                          <div class="ev92-config-col">
+                            <span>Coluna {{ loop.index }}</span>
+                            <select name="coluna_cor_{{ coluna.id }}" class="form-control">
+                              <option value="padrao" {% if (coluna.cor or 'padrao') == 'padrao' %}selected{% endif %}>Padrão</option>
+                              <option value="verde" {% if coluna.cor == 'verde' %}selected{% endif %}>Verde</option>
+                              <option value="laranja" {% if coluna.cor == 'laranja' %}selected{% endif %}>Laranja</option>
+                              <option value="azul" {% if coluna.cor == 'azul' %}selected{% endif %}>Azul</option>
+                            </select>
+                            <button class="ev92-mini danger" type="submit" formaction="/gestao/evidencias/tabela/coluna/{{ coluna.id }}/excluir" formmethod="post" title="Excluir coluna"><i class="bi bi-trash3"></i></button>
+                          </div>
+                        {% endfor %}
+                        <button class="ev92-icon-danger" type="submit" formaction="/gestao/evidencias/tabela/{{ tabela.id }}/excluir" formmethod="post" title="Excluir tabela"><i class="bi bi-trash3"></i></button>
+                      </div>
+                    </div>
+
+                    {% if tabela.colunas and tabela.linhas %}
+                      <div class="ev92-sheet-scroll">
+                        <table class="ev92-sheet" data-draggable-sheet="true">
+                          <thead>
+                            <tr class="ev92-group-row ev94-group-row">
+                              {% for grupo in tabela.grupos_cabecalho %}
+                                {% set ids_grupo = grupo.colunas|map(attribute='id')|join('_') %}
+                                <th class="ev92-group-cell ev94-group-cell ev95-group-drop ev84-col-{{ grupo.cor or 'padrao' }}" colspan="{{ grupo.colspan }}" data-group-cols="{{ ids_grupo }}" data-group-title="{{ grupo.titulo or '' }}">
+                                  <div class="ev95-group-wrap">
+                                    <textarea name="grupo_bulk_{{ ids_grupo }}" rows="2" class="ev92-group-input ev94-group-input ev95-autoresize" placeholder="Digite o grupo">{{ grupo.titulo or '' }}</textarea>
+                                    <div class="dropdown ev95-group-menu">
+                                      <button class="ev95-dots" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Ações do grupo"><i class="bi bi-three-dots-vertical"></i></button>
+                                      <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><button class="dropdown-item ev95-add-col-in-group" type="submit" formaction="/gestao/evidencias/tabela/{{ tabela.id }}/coluna/nova" formmethod="post" name="quantidade" value="1" data-group-cols="{{ ids_grupo }}"><i class="bi bi-plus-lg"></i> Coluna dentro do grupo</button></li>
+                                        <li><button class="dropdown-item ev95-clear-group" type="button" data-group-cols="{{ ids_grupo }}"><i class="bi bi-eraser"></i> Limpar grupo</button></li>
+                                      </ul>
+                                    </div>
+                                  </div>
+                                  {% for coluna_grupo in grupo.colunas %}
+                                    <input type="hidden" name="coluna_grupo_{{ coluna_grupo.id }}" value="{{ grupo.titulo or '' }}" data-group-hidden-for="{{ coluna_grupo.id }}">
+                                    <input type="hidden" name="coluna_ordem_{{ coluna_grupo.id }}" value="{{ loop.index }}" data-col-order="{{ coluna_grupo.id }}">
+                                    <input type="hidden" name="coluna_cor_{{ coluna_grupo.id }}" value="{{ coluna_grupo.cor or 'padrao' }}">
+                                  {% endfor %}
+                                </th>
+                              {% endfor %}
+                            </tr>
+                            <tr class="ev92-column-row ev94-column-row">
+                              {% for coluna in tabela.colunas %}
+                                <th class="ev92-col-head ev94-col-head ev84-col-{{ coluna.cor or 'padrao' }}" data-col-id="{{ coluna.id }}" draggable="true">
+                                  <span class="ev92-drag" title="Arraste para mudar a coluna"><i class="bi bi-grip-vertical"></i></span>
+                                  <textarea name="coluna_nome_{{ coluna.id }}" rows="2" class="ev92-col-title ev94-col-title ev95-autoresize" placeholder="Coluna" data-excel-cell data-row="0" data-col="{{ loop.index }}">{{ coluna.nome }}</textarea>
+                                  <div class="dropdown ev95-col-menu">
+                                    <button class="ev95-dots" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Ações da coluna"><i class="bi bi-three-dots-vertical"></i></button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                      <li><button class="dropdown-item ev95-add-col-right" type="submit" formaction="/gestao/evidencias/tabela/{{ tabela.id }}/coluna/nova" formmethod="post" name="inserir_apos_coluna_id" value="{{ coluna.id }}"><i class="bi bi-plus-lg"></i> Coluna à direita</button></li>
+                                      <li><button class="dropdown-item text-danger" type="submit" formaction="/gestao/evidencias/tabela/coluna/{{ coluna.id }}/excluir" formmethod="post"><i class="bi bi-trash3"></i> Excluir coluna</button></li>
+                                    </ul>
+                                  </div>
+                                  <span class="ev93-resizer" data-resize-col="{{ coluna.id }}" title="Arraste para ajustar a largura"></span>
+                                </th>
+                              {% endfor %}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for linha in tabela.linhas %}
+                              {% set linha_pos = loop.index %}
+                              <tr data-row-id="{{ linha.id }}" data-row-delete-url="/gestao/evidencias/tabela/linha/{{ linha.id }}/excluir">
+                                <input type="hidden" name="linha_rotulo_{{ linha.id }}" value="{{ linha.rotulo }}">
+                                {% for coluna in tabela.colunas %}
+                                  {% set key = linha.id ~ '_' ~ coluna.id %}
+                                  {% set valor = tabela.mapa_celulas.get(key, '') if tabela.mapa_celulas is defined else '' %}
+                                  <td class="ev92-cell" data-col-id="{{ coluna.id }}">
+                                    <input type="text" name="celula_{{ linha.id }}_{{ coluna.id }}" value="{{ valor }}" class="ev92-cell-input" data-excel-cell data-row="{{ linha_pos }}" data-col="{{ loop.index }}">
+
+                                  </td>
+                                {% endfor %}
+                              </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div class="ev92-footer-bar ev93-footer-bar">
+                        <span>Total de linhas: {{ tabela.linhas|length }} • Colunas: {{ tabela.colunas|length }}</span>
+                        <span class="ev93-autosave-status" data-save-status="{{ tabela.id }}"><i class="bi bi-cloud-check"></i> Salvamento automático ativo</span>
+                        <button class="ev92-save-main ev95-ajax-submit" type="submit"><i class="bi bi-save"></i> Salvar agora</button>
+                      </div>
+                    {% else %}
+                      <div class="ev92-empty"><i class="bi bi-grid-3x3-gap"></i><strong>Tabela sem estrutura</strong><span>Adicione colunas e linhas para começar.</span></div>
+                    {% endif %}
                   </form>
                 </div>
+              {% else %}
+                <div class="ev92-empty big">
+                  <i class="bi bi-table"></i>
+                  <strong>Este campo pai ainda não tem tabela.</strong>
+                  <span>Clique no ícone de tabela no topo do campo pai para criar a grade.</span>
+                </div>
+              {% endif %}
+            </section>
 
-                <div class="collapse show" id="filhoConteudo{{ filho.id }}">
-                  <button class="ev-upload-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#uploadFilho{{ filho.id }}">
-                    <i class="bi bi-cloud-arrow-up"></i> Adicionar fotos
-                  </button>
+            <section class="tab-pane fade" id="tabFotos{{ pai.id }}" role="tabpanel" aria-labelledby="tabFotosBtn{{ pai.id }}">
+              <div class="ev92-photo-head">
+                <div>
+                  <span>Evidências do Campo Pai</span>
+                  <h3>Fotos</h3>
+                </div>
+                <button class="ev92-btn primary" type="button" data-bs-toggle="collapse" data-bs-target="#uploadPai{{ pai.id }}"><i class="bi bi-plus-lg"></i> Nova foto</button>
+              </div>
 
-                  <div class="collapse" id="uploadFilho{{ filho.id }}">
-                    <form method="POST" action="/gestao/evidencias/filho/{{ filho.id }}/imagens" enctype="multipart/form-data" class="ev-upload-box">
-                      <input type="file" name="imagens" class="form-control" accept="image/*" multiple required>
-                      <input type="text" name="legenda" class="form-control" placeholder="Legenda opcional">
-                      <button class="ev-btn primary" type="submit"><i class="bi bi-cloud-arrow-up"></i> Enviar</button>
-                    </form>
+              <div class="collapse" id="uploadPai{{ pai.id }}">
+                <form method="POST" action="/gestao/evidencias/pai/{{ pai.id }}/imagens" enctype="multipart/form-data" class="ev92-upload-box ev95-ajax-form" data-ajax-form="true">
+                  <label>Tipo da foto
+                    <select name="tipo_foto" class="form-control">{% for tipo in tipos_foto %}<option value="{{ tipo.nome }}">{{ tipo.nome }}</option>{% endfor %}</select>
+                  </label>
+                  <label>Novo tipo opcional <input type="text" name="tipo_foto_novo" class="form-control" placeholder="Ex: Lacre, Etiqueta, Motor"></label>
+                  <label>Legenda livre <input type="text" name="legenda" class="form-control" placeholder="Detalhe opcional da imagem"></label>
+                  <label>Fotos <input type="file" name="imagens" class="form-control" accept="image/*" multiple required></label>
+                  <button class="ev92-btn primary" type="submit"><i class="bi bi-cloud-arrow-up"></i> Enviar</button>
+                </form>
+              </div>
+
+              <div class="ev92-photo-grid">
+                {% for img in imagens_pai %}
+                  <figure class="ev92-photo-card">
+                    <a href="{{ img.imagem_url }}" target="_blank" class="ev92-photo-thumb">
+                      <img src="{{ img.imagem_url }}" alt="{{ img.legenda or img.nome_original or 'Imagem' }}">
+                      <span>{{ img.tipo_resolvido() if img.tipo_resolvido is defined else (img.tipo_foto or 'Sem tipo') }}</span>
+                    </a>
+                    <figcaption>
+                      <small>{{ img.enviado_em.strftime('%d/%m/%Y %H:%M') if img.enviado_em else '-' }}</small>
+                      <form method="POST" action="/gestao/evidencias/imagem/{{ img.id }}/editar" class="ev92-caption-form ev95-ajax-form" data-ajax-form="true">
+                        <select name="tipo_foto" class="form-control">
+                          {% for tipo in tipos_foto %}
+                            <option value="{{ tipo.nome }}" {% if (img.tipo_resolvido() if img.tipo_resolvido is defined else img.tipo_foto) == tipo.nome %}selected{% endif %}>{{ tipo.nome }}</option>
+                          {% endfor %}
+                        </select>
+                        <input type="text" name="legenda" value="{{ img.legenda or '' }}" class="form-control" placeholder="Legenda livre">
+                        <button class="ev92-mini ok" type="submit"><i class="bi bi-check-lg"></i></button>
+                      </form>
+                      <form method="POST" action="/gestao/evidencias/imagem/{{ img.id }}/excluir" class="ev95-ajax-form" data-ajax-form="true">
+                        <button class="ev92-mini danger" type="submit"><i class="bi bi-trash3"></i></button>
+                      </form>
+                    </figcaption>
+                  </figure>
+                {% else %}
+                  <div class="ev92-empty small"><i class="bi bi-images"></i><strong>Nenhuma imagem neste campo pai</strong><span>Adicione fotos para comprovar o serviço.</span></div>
+                {% endfor %}
+              </div>
+            </section>
+
+            <section class="tab-pane fade" id="tabLink{{ pai.id }}" role="tabpanel" aria-labelledby="tabLinkBtn{{ pai.id }}">
+              {% if pode_gerar_link %}
+                <div class="ev92-link-box">
+                  <div class="ev92-link-head">
+                    <div>
+                      <strong>Link do cliente</strong>
+                      <small>Visualização somente leitura, sem menu do sistema.</small>
+                    </div>
                   </div>
 
-                  <div class="ev-photo-grid">
-                    {% for img in filho.imagens %}
-                      <figure class="ev-photo-card">
-                        <a href="{{ img.imagem_url }}" target="_blank">
-                          <img src="{{ img.imagem_url }}" alt="{{ img.legenda or img.nome_original or 'Imagem' }}">
-                        </a>
-                        <figcaption>
-                          <form method="POST" action="/gestao/evidencias/imagem/{{ img.id }}/editar" class="ev-caption-form">
-                            <input type="text" name="legenda" value="{{ img.legenda or '' }}" class="form-control" placeholder="Legenda">
-                            <button class="ev-mini ok" type="submit"><i class="bi bi-check-lg"></i></button>
-                          </form>
-                          <form method="POST" action="/gestao/evidencias/imagem/{{ img.id }}/excluir" onsubmit="return confirm('Excluir esta imagem?');">
-                            <button class="ev-mini danger" type="submit"><i class="bi bi-trash3"></i></button>
-                          </form>
-                        </figcaption>
-                      </figure>
-                    {% else %}
-                      <div class="ev-child-empty">Nenhuma imagem neste filho.</div>
+                  <form method="POST" action="/gestao/evidencias/{{ registro.id }}/links/criar" class="ev92-link-form">
+                    <label>Validade
+                      <select name="validade_dias" class="form-control">
+                        <option value="7">7 dias</option>
+                        <option value="30" selected>30 dias</option>
+                        <option value="90">90 dias</option>
+                        <option value="0">Sem validade</option>
+                      </select>
+                    </label>
+                    <label class="ev92-check"><input type="checkbox" name="permitir_excel" checked> Excel</label>
+                    <label class="ev92-check"><input type="checkbox" name="permitir_zip" checked> ZIP imagens</label>
+                    <button class="ev92-btn success" type="submit"><i class="bi bi-link-45deg"></i> Gerar link</button>
+                  </form>
+
+                  {% set ns = namespace(ativos=0) %}
+                  <div class="ev92-links-list">
+                    {% for link in links_publicos %}
+                      {% if link.esta_disponivel() %}
+                        {% set ns.ativos = ns.ativos + 1 %}
+                        {% set link_url = request.url_root.rstrip('/') ~ '/gestao/evidencias/publico/' ~ link.token %}
+                        <article class="ev92-link-item">
+                          <div>
+                            <span>Ativo</span>
+                            <strong>{{ link_url }}</strong>
+                            <small>Expira em {{ link.expira_em.strftime('%d/%m/%Y %H:%M') if link.expira_em else 'sem validade' }}</small>
+                          </div>
+                          <div class="ev92-link-actions">
+                            <button type="button" class="ev92-mini" onclick="navigator.clipboard.writeText('{{ link_url }}'); this.innerHTML='Copiado';"><i class="bi bi-clipboard-check"></i></button>
+                            <form method="POST" action="/gestao/evidencias/links/{{ link.id }}/desativar" class="ev95-ajax-form" data-ajax-form="true">
+                              <button class="ev92-mini danger" type="submit"><i class="bi bi-x-circle"></i></button>
+                            </form>
+                          </div>
+                        </article>
+                      {% endif %}
                     {% endfor %}
+                    {% if ns.ativos == 0 %}<div class="ev92-empty-line">Nenhum link ativo no momento.</div>{% endif %}
                   </div>
                 </div>
-              </section>
-            {% else %}
-              <div class="ev-child-empty full">Nenhum campo filho criado ainda.</div>
-            {% endfor %}
+              {% else %}
+                <div class="ev92-empty"><i class="bi bi-lock"></i><strong>Sem permissão</strong><span>Somente gestão pode gerar link público.</span></div>
+              {% endif %}
+            </section>
           </div>
-        </div>
-      </article>
-    {% else %}
-      <div class="ev-empty-state">
-        <i class="bi bi-diagram-3"></i>
-        <h3>Nenhum campo pai criado</h3>
-        <p>Crie um campo pai para começar a organizar as imagens.</p>
-      </div>
-    {% endfor %}
+        </article>
+      {% else %}
+        <div class="ev92-empty big"><i class="bi bi-diagram-3"></i><h3>Nenhum campo pai criado</h3><p>Crie um campo pai para começar.</p></div>
+      {% endfor %}
+    </section>
   </section>
 </div>
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    if (window.location.hash === "#boxGerarLinkCliente") {
-      const box = document.getElementById("boxGerarLinkCliente");
-      if (box && window.bootstrap) {
-        new bootstrap.Collapse(box, { show: true });
-        box.scrollIntoView({ behavior: "smooth", block: "start" });
+    const SCROLL_KEY = "ev95_scroll_" + location.pathname;
+    const TAB_KEY = "ev95_tab_" + location.pathname;
+    let lastSubmitter = null;
+
+    function debounce(fn, wait) {
+      let timeout;
+      return function () {
+        clearTimeout(timeout);
+        const args = arguments;
+        const ctx = this;
+        timeout = setTimeout(function () { fn.apply(ctx, args); }, wait);
+      };
+    }
+
+    function rememberScroll() {
+      sessionStorage.setItem(SCROLL_KEY, String(window.scrollY || document.documentElement.scrollTop || 0));
+    }
+
+    function restoreScroll() {
+      const y = parseInt(sessionStorage.getItem(SCROLL_KEY) || "0", 10);
+      if (!Number.isNaN(y)) window.scrollTo({ top: y, left: 0, behavior: "auto" });
+    }
+
+    function setSaveStatus(form, text, state) {
+      const tableId = form ? form.getAttribute("data-table-id") : null;
+      const el = tableId ? document.querySelector('[data-save-status="' + tableId + '"]') : null;
+      if (!el) return;
+      el.classList.remove("saving", "saved", "error");
+      if (state) el.classList.add(state);
+      el.innerHTML = text;
+    }
+
+    function formAction(form, submitter) {
+      if (submitter && submitter.getAttribute("formaction")) return submitter.getAttribute("formaction");
+      return form.getAttribute("action");
+    }
+
+    function formMethod(form, submitter) {
+      if (submitter && submitter.getAttribute("formmethod")) return submitter.getAttribute("formmethod").toUpperCase();
+      return (form.getAttribute("method") || "POST").toUpperCase();
+    }
+
+    function buildFormData(form, submitter) {
+      const data = new FormData(form);
+      if (submitter && submitter.name) data.set(submitter.name, submitter.value || "");
+      if (submitter && submitter.classList.contains("ev95-add-col-in-group")) {
+        const groupCell = submitter.closest(".ev95-group-drop");
+        const groupText = groupCell ? (groupCell.querySelector(".ev92-group-input")?.value || "") : "";
+        data.set("grupo", groupText);
+        const ids = (submitter.getAttribute("data-group-cols") || "").split("_").filter(Boolean);
+        if (ids.length) data.set("inserir_apos_coluna_id", ids[ids.length - 1]);
+        data.set("nome", "Nova coluna");
+      }
+      if (submitter && submitter.classList.contains("ev95-add-col-right")) {
+        const th = submitter.closest("[data-col-id]");
+        if (th) {
+          const hidden = form.querySelector('[data-group-hidden-for="' + th.dataset.colId + '"]');
+          if (hidden && hidden.value) data.set("grupo", hidden.value);
+        }
+        data.set("nome", "Nova coluna");
+      }
+      return data;
+    }
+
+    async function fetchJson(url, options) {
+      const response = await fetch(url, options);
+      const contentType = response.headers.get("content-type") || "";
+      const json = contentType.includes("application/json") ? await response.json() : { ok: response.ok };
+      if (!response.ok || json.ok === false) throw new Error(json.erro || "Falha na operação");
+      return json;
+    }
+
+    async function refreshBoardByTableId(tableId) {
+      if (!tableId) return;
+      rememberScroll();
+      const currentShell = document.querySelector('[data-table-shell="' + tableId + '"]');
+      if (!currentShell) return;
+      const response = await fetch(window.location.href, { headers: { "X-Requested-With": "XMLHttpRequest" } });
+      const html = await response.text();
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const freshShell = doc.querySelector('[data-table-shell="' + tableId + '"]');
+      if (freshShell) {
+        currentShell.replaceWith(freshShell);
+        initEvidenciasFeatures(freshShell.parentElement || document);
+        restoreActiveTabs();
+        restoreScroll();
       }
     }
+
+    async function refreshCurrentCardFromResponse(json, fallbackForm) {
+      if (json && json.tabela_id) {
+        await refreshBoardByTableId(json.tabela_id);
+        return;
+      }
+      rememberScroll();
+      const response = await fetch(window.location.href, { headers: { "X-Requested-With": "XMLHttpRequest" } });
+      const html = await response.text();
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const card = fallbackForm ? fallbackForm.closest(".ev92-parent-card") : null;
+      if (card && card.id) {
+        const fresh = doc.getElementById(card.id);
+        if (fresh) {
+          card.replaceWith(fresh);
+          initEvidenciasFeatures(fresh);
+        }
+      }
+      restoreActiveTabs();
+      restoreScroll();
+    }
+
+    async function autosaveForm(form) {
+      if (!form || !form.dataset.autosaveUrl) return;
+      setSaveStatus(form, '<i class="bi bi-arrow-repeat"></i> Salvando...', "saving");
+      try {
+        const data = new FormData(form);
+        const json = await fetchJson(form.dataset.autosaveUrl, {
+          method: "POST",
+          body: data,
+          headers: { "X-Requested-With": "XMLHttpRequest" }
+        });
+        setSaveStatus(form, '<i class="bi bi-cloud-check"></i> Salvo automaticamente', "saved");
+        return json;
+      } catch (err) {
+        setSaveStatus(form, '<i class="bi bi-exclamation-triangle"></i> Não salvou automático', "error");
+      }
+    }
+
+    function autoResizeTextareas(root) {
+      root.querySelectorAll("textarea.ev95-autoresize").forEach(function (ta) {
+        const resize = function () {
+          ta.style.height = "auto";
+          ta.style.height = Math.max(38, ta.scrollHeight) + "px";
+        };
+        resize();
+        ta.addEventListener("input", resize);
+      });
+    }
+
+    function syncGroupCell(groupCell) {
+      const bulkInput = groupCell.querySelector('.ev92-group-input');
+      if (!bulkInput) return;
+      groupCell.querySelectorAll('[data-group-hidden-for]').forEach(function (hidden) {
+        hidden.value = bulkInput.value;
+      });
+      groupCell.dataset.groupTitle = bulkInput.value;
+    }
+
+    function syncAllGroups(root) {
+      root.querySelectorAll('.ev95-group-drop').forEach(syncGroupCell);
+    }
+
+    function updateColumnOrders(table) {
+      const ids = Array.from(table.querySelectorAll('thead tr.ev92-column-row [data-col-id]')).map(function (cell) {
+        return cell.getAttribute('data-col-id');
+      });
+      ids.forEach(function (id, index) {
+        const inputOrder = table.querySelector('[data-col-order="' + id + '"]');
+        if (inputOrder) inputOrder.value = index + 1;
+        table.querySelectorAll('[data-col-id="' + id + '"] [data-excel-cell], td[data-col-id="' + id + '"] [data-excel-cell]').forEach(function (input) {
+          input.dataset.col = index + 1;
+        });
+      });
+    }
+
+    function applyColumnWidth(table, colId, width) {
+      const safeWidth = Math.max(70, Math.min(width, 620));
+      table.querySelectorAll('[data-col-id="' + colId + '"]').forEach(function (cell) {
+        cell.style.width = safeWidth + 'px';
+        cell.style.minWidth = safeWidth + 'px';
+        cell.style.maxWidth = safeWidth + 'px';
+      });
+    }
+
+    function loadColumnWidths(table) {
+      const tableId = table.closest('form') ? table.closest('form').getAttribute('data-table-id') : 'default';
+      table.querySelectorAll('[data-col-id]').forEach(function (cell) {
+        const colId = cell.getAttribute('data-col-id');
+        const stored = localStorage.getItem('ev_col_width_' + tableId + '_' + colId);
+        if (stored) applyColumnWidth(table, colId, parseInt(stored, 10));
+      });
+    }
+
+    function moveColumnBeforeOrAfter(table, fromId, toId, after) {
+      if (!fromId || !toId || fromId === toId) return;
+      table.querySelectorAll('tr').forEach(function (row) {
+        const fromCell = row.querySelector('[data-col-id="' + fromId + '"]');
+        const toCell = row.querySelector('[data-col-id="' + toId + '"]');
+        if (fromCell && toCell) row.insertBefore(fromCell, after ? toCell.nextSibling : toCell);
+      });
+      updateColumnOrders(table);
+    }
+
+    function moveColumnToGroup(table, fromId, groupCell) {
+      if (!fromId || !groupCell) return;
+      const groupText = groupCell.querySelector('.ev92-group-input')?.value || groupCell.dataset.groupTitle || "";
+      const ids = (groupCell.dataset.groupCols || "").split("_").filter(Boolean).filter(function (id) { return id !== fromId; });
+      const lastId = ids.length ? ids[ids.length - 1] : null;
+      const hidden = table.querySelector('[data-group-hidden-for="' + fromId + '"]');
+      if (hidden) hidden.value = groupText;
+      if (lastId) moveColumnBeforeOrAfter(table, fromId, lastId, true);
+      updateColumnOrders(table);
+    }
+
+    function restoreActiveTabs() {
+      const saved = JSON.parse(sessionStorage.getItem(TAB_KEY) || "{}");
+      Object.keys(saved).forEach(function (cardId) {
+        const btn = document.querySelector('#' + CSS.escape(cardId) + ' [data-bs-target="' + saved[cardId] + '"]');
+        if (btn && window.bootstrap && bootstrap.Tab) bootstrap.Tab.getOrCreateInstance(btn).show();
+      });
+    }
+
+    function initTabs(root) {
+      root.querySelectorAll('.ev92-parent-card').forEach(function (card) {
+        card.querySelectorAll('[data-bs-toggle="tab"]').forEach(function (btn) {
+          btn.addEventListener('shown.bs.tab', function (event) {
+            const saved = JSON.parse(sessionStorage.getItem(TAB_KEY) || "{}");
+            saved[card.id] = event.target.getAttribute('data-bs-target');
+            sessionStorage.setItem(TAB_KEY, JSON.stringify(saved));
+            rememberScroll();
+            restoreScroll();
+          });
+        });
+      });
+    }
+
+    function initAjaxForms(root) {
+      root.querySelectorAll('button[type="submit"]').forEach(function (btn) {
+        btn.addEventListener('click', function () { lastSubmitter = btn; });
+      });
+
+      root.querySelectorAll('form[data-ajax-form="true"], .ev92-sheet-form').forEach(function (form) {
+        form.addEventListener('submit', async function (event) {
+          event.preventDefault();
+          const submitter = event.submitter || lastSubmitter;
+          const url = formAction(form, submitter);
+          const method = formMethod(form, submitter);
+          syncAllGroups(form);
+          setSaveStatus(form, '<i class="bi bi-arrow-repeat"></i> Salvando...', "saving");
+          rememberScroll();
+          try {
+            const data = buildFormData(form, submitter);
+            const json = await fetchJson(url, { method, body: data, headers: { "X-Requested-With": "XMLHttpRequest" } });
+            setSaveStatus(form, '<i class="bi bi-cloud-check"></i> Salvo', "saved");
+            await refreshCurrentCardFromResponse(json, form);
+          } catch (err) {
+            setSaveStatus(form, '<i class="bi bi-exclamation-triangle"></i> Erro ao salvar', "error");
+            alert(err.message || "Erro ao executar ação");
+          } finally {
+            lastSubmitter = null;
+          }
+        });
+      });
+    }
+
+    function initAutosave(root) {
+      root.querySelectorAll('.ev93-autosave-form').forEach(function (form) {
+        const debouncedSave = debounce(function () { syncAllGroups(form); autosaveForm(form); }, 650);
+        form.querySelectorAll('.ev95-group-drop').forEach(function (groupCell) {
+          const bulkInput = groupCell.querySelector('.ev92-group-input');
+          if (!bulkInput) return;
+          bulkInput.addEventListener('input', function () { syncGroupCell(groupCell); debouncedSave(); });
+          bulkInput.addEventListener('change', function () { syncGroupCell(groupCell); debouncedSave(); });
+        });
+        form.querySelectorAll('input[type="text"], textarea, input[type="hidden"], select').forEach(function (field) {
+          field.addEventListener('input', debouncedSave);
+          field.addEventListener('change', debouncedSave);
+          field.addEventListener('blur', function () { syncAllGroups(form); autosaveForm(form); });
+        });
+      });
+    }
+
+    function initWidths(root) {
+      root.querySelectorAll('[data-draggable-sheet="true"]').forEach(function (table) {
+        loadColumnWidths(table);
+        table.querySelectorAll('.ev93-resizer').forEach(function (handle) {
+          handle.addEventListener('mousedown', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const colId = handle.getAttribute('data-resize-col');
+            const form = table.closest('form');
+            const tableId = form ? form.getAttribute('data-table-id') : 'default';
+            const startX = event.clientX;
+            const firstCell = table.querySelector('[data-col-id="' + colId + '"]');
+            const startWidth = firstCell ? firstCell.getBoundingClientRect().width : 120;
+            document.body.classList.add('ev93-resizing');
+            function onMove(moveEvent) { applyColumnWidth(table, colId, startWidth + (moveEvent.clientX - startX)); }
+            function onUp() {
+              const first = table.querySelector('[data-col-id="' + colId + '"]');
+              if (first) localStorage.setItem('ev_col_width_' + tableId + '_' + colId, Math.round(first.getBoundingClientRect().width));
+              document.body.classList.remove('ev93-resizing');
+              document.removeEventListener('mousemove', onMove);
+              document.removeEventListener('mouseup', onUp);
+            }
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+          });
+        });
+      });
+    }
+
+    function initKeyboard(root) {
+      root.querySelectorAll('[data-excel-cell]').forEach(function (input) {
+        input.addEventListener('keydown', function (event) {
+          if (input.tagName === 'TEXTAREA' && event.key === 'Enter') return;
+          const key = event.key;
+          if (!['Enter', 'Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) return;
+          const table = input.closest('table');
+          if (!table) return;
+          const row = parseInt(input.dataset.row || '0', 10);
+          const col = parseInt(input.dataset.col || '1', 10);
+          let nextRow = row, nextCol = col;
+          if (key === 'Enter' || key === 'ArrowDown') { nextRow = row + 1; event.preventDefault(); }
+          if (key === 'ArrowUp') { nextRow = row - 1; event.preventDefault(); }
+          if (key === 'ArrowRight') { nextCol = col + 1; }
+          if (key === 'ArrowLeft') { nextCol = col - 1; }
+          if (key === 'Tab') { nextCol = event.shiftKey ? col - 1 : col + 1; }
+          const target = table.querySelector('[data-excel-cell][data-row="' + nextRow + '"][data-col="' + nextCol + '"]');
+          if (target) { event.preventDefault(); target.focus(); target.select(); }
+        });
+      });
+    }
+
+    function initDrag(root) {
+      root.querySelectorAll('[data-draggable-sheet="true"]').forEach(function (table) {
+        let draggedId = null;
+        updateColumnOrders(table);
+        table.querySelectorAll('thead [data-col-id]').forEach(function (cell) {
+          cell.addEventListener('dragstart', function (event) {
+            if (event.target.closest('.ev95-dots, textarea, input, select, button, .ev93-resizer')) { event.preventDefault(); return; }
+            draggedId = cell.getAttribute('data-col-id');
+            event.dataTransfer.setData('text/plain', draggedId);
+            table.classList.add('ev92-dragging');
+          });
+          cell.addEventListener('dragover', function (event) { event.preventDefault(); cell.classList.add('ev92-drop-target'); });
+          cell.addEventListener('dragleave', function () { cell.classList.remove('ev92-drop-target'); });
+          cell.addEventListener('drop', async function (event) {
+            event.preventDefault();
+            const targetId = cell.getAttribute('data-col-id');
+            moveColumnBeforeOrAfter(table, draggedId || event.dataTransfer.getData('text/plain'), targetId, false);
+            table.querySelectorAll('.ev92-drop-target').forEach(function (el) { el.classList.remove('ev92-drop-target'); });
+            table.classList.remove('ev92-dragging');
+            const form = table.closest('form');
+            if (form) { await autosaveForm(form); await refreshBoardByTableId(form.dataset.tableId); }
+          });
+          cell.addEventListener('dragend', function () { table.classList.remove('ev92-dragging'); });
+        });
+        table.querySelectorAll('.ev95-group-drop').forEach(function (groupCell) {
+          groupCell.addEventListener('dragover', function (event) { event.preventDefault(); groupCell.classList.add('ev95-group-target'); });
+          groupCell.addEventListener('dragleave', function () { groupCell.classList.remove('ev95-group-target'); });
+          groupCell.addEventListener('drop', async function (event) {
+            event.preventDefault();
+            moveColumnToGroup(table, draggedId || event.dataTransfer.getData('text/plain'), groupCell);
+            groupCell.classList.remove('ev95-group-target');
+            const form = table.closest('form');
+            if (form) { syncAllGroups(form); await autosaveForm(form); await refreshBoardByTableId(form.dataset.tableId); }
+          });
+        });
+      });
+    }
+
+    function initRows(root) {
+      root.querySelectorAll('[data-draggable-sheet="true"]').forEach(function (table) {
+        const form = table.closest('form');
+        const btn = form ? form.querySelector('[data-delete-selected-row]') : null;
+        table.querySelectorAll('tbody tr[data-row-id]').forEach(function (row) {
+          row.addEventListener('click', function (event) {
+            if (event.target.closest('input, textarea, select, button, a')) return;
+            table.querySelectorAll('tbody tr.ev95-row-selected').forEach(function (r) { r.classList.remove('ev95-row-selected'); });
+            row.classList.add('ev95-row-selected');
+            if (btn) {
+              btn.disabled = false;
+              btn.dataset.deleteUrl = row.dataset.rowDeleteUrl;
+            }
+          });
+        });
+        if (btn && form) {
+          btn.addEventListener('click', async function () {
+            if (!btn.dataset.deleteUrl) return;
+            rememberScroll();
+            try {
+              syncAllGroups(form);
+              const data = new FormData(form);
+              const json = await fetchJson(btn.dataset.deleteUrl, { method: 'POST', body: data, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+              await refreshCurrentCardFromResponse(json, form);
+            } catch (err) { alert(err.message || 'Erro ao excluir linha'); }
+          });
+        }
+      });
+    }
+
+    function initGroupMenus(root) {
+      root.querySelectorAll('.ev95-clear-group').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const groupCell = btn.closest('.ev95-group-drop');
+          if (!groupCell) return;
+          const ta = groupCell.querySelector('.ev92-group-input');
+          if (ta) ta.value = '';
+          syncGroupCell(groupCell);
+          const form = btn.closest('form');
+          if (form) autosaveForm(form).then(function () { refreshBoardByTableId(form.dataset.tableId); });
+        });
+      });
+    }
+
+    window.initEvidenciasFeatures = function (root) {
+      root = root || document;
+      autoResizeTextareas(root);
+      syncAllGroups(root);
+      initTabs(root);
+      initAjaxForms(root);
+      initAutosave(root);
+      initWidths(root);
+      initKeyboard(root);
+      initDrag(root);
+      initRows(root);
+      initGroupMenus(root);
+    };
+
+    window.initEvidenciasFeatures(document);
+    restoreActiveTabs();
+    restoreScroll();
   });
 </script>
 {% endblock %}

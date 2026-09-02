@@ -9,96 +9,106 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/organized/evidencias_frota.css') }}">
 </head>
 <body class="evidencias-public-body">
-  <main class="evidencias-page evidencias-public-page">
-    <section class="evidencias-public-hero">
+  <main class="evidencias-page evidencias-page-v7 evidencias-page-v8 evidencias-public-page">
+    <section class="ev7-hero public ev8-hero">
       <div>
-        <span class="evidencias-eyebrow">Visualização do cliente</span>
-        <h1>{{ registro.cliente_nome }}</h1>
-        <p>{{ registro.identificador() }} • Evidências organizadas por campo pai e campo filho.</p>
+        <span class="ev7-kicker">Visualização do cliente</span>
+        <div class="ev7-title-row">
+          <h1>{{ registro.cliente_nome }}</h1>
+          <span>{{ registro.identificador() }}</span>
+        </div>
+        <p>Tabelas de controle e evidências visuais por campo pai.</p>
       </div>
 
-      <div class="evidencias-hero-actions">
+      <div class="ev7-actions">
         {% if link.permitir_excel %}
-          <a href="/gestao/evidencias/publico/{{ link.token }}/excel" class="evidencias-btn">
-            <i class="bi bi-file-earmark-spreadsheet"></i>
-            Baixar Excel
-          </a>
+          <a href="/gestao/evidencias/publico/{{ link.token }}/excel" class="ev7-btn soft"><i class="bi bi-file-earmark-spreadsheet"></i> Baixar Excel</a>
         {% endif %}
-
         {% if link.permitir_zip %}
-          <a href="/gestao/evidencias/publico/{{ link.token }}/imagens.zip" class="evidencias-btn">
-            <i class="bi bi-file-earmark-zip"></i>
-            Baixar imagens
-          </a>
+          <a href="/gestao/evidencias/publico/{{ link.token }}/imagens.zip" class="ev7-btn soft"><i class="bi bi-file-earmark-zip"></i> Baixar imagens</a>
         {% endif %}
       </div>
     </section>
 
     <section class="evidencias-public-info">
-      <div>
-        <strong>Cliente</strong>
-        <span>{{ registro.cliente_nome }}</span>
-      </div>
-      <div>
-        <strong>Frota</strong>
-        <span>{{ registro.frota or '-' }}</span>
-      </div>
-      <div>
-        <strong>Placa</strong>
-        <span>{{ registro.placa or '-' }}</span>
-      </div>
-      <div>
-        <strong>Atualizado</strong>
-        <span>{{ registro.atualizado_em.strftime('%d/%m/%Y %H:%M') if registro.atualizado_em else '-' }}</span>
-      </div>
+      <div><strong>Cliente</strong><span>{{ registro.cliente_nome }}</span></div>
+      <div><strong>Frota</strong><span>{{ registro.frota or '-' }}</span></div>
+      <div><strong>Placa</strong><span>{{ registro.placa or '-' }}</span></div>
+      <div><strong>Atualizado</strong><span>{{ registro.atualizado_em.strftime('%d/%m/%Y %H:%M') if registro.atualizado_em else '-' }}</span></div>
     </section>
 
-    <section class="evidencias-pais-lista public">
+    <section class="ev7-parent-list ev8-parent-list">
       {% for pai in registro.campos_pai %}
-        <article class="evidencias-pai-card">
-          <div class="evidencias-pai-header">
-            <div>
-              <span>Campo pai</span>
-              <h2>{{ pai.nome }}</h2>
+        {% set imagens_pai = pai.imagens_tela if pai.imagens_tela is defined else pai.imagens %}
+        {% set tabela = pai.tabela_controle %}
+        <article class="ev7-parent-card ev8-parent-card public">
+          <header class="ev7-parent-head ev8-parent-head">
+            <div class="ev7-parent-title readonly">
+              <span class="ev7-folder"><i class="bi bi-folder2-open"></i></span>
+              <div>
+                <span>Campo pai</span>
+                <h2>{{ pai.nome }}</h2>
+                <small>{{ imagens_pai|length }} imagem(ns) • {{ 'com tabela' if tabela else 'sem tabela' }}</small>
+              </div>
             </div>
-          </div>
+          </header>
 
-          <div class="evidencias-filhos-grid">
-            {% for filho in pai.filhos %}
-              <section class="evidencias-filho-card">
-                <div class="evidencias-filho-header">
-                  <div>
-                    <span>Campo filho</span>
-                    <h3>{{ filho.nome }}</h3>
-                  </div>
-                </div>
+          {% if tabela and tabela.colunas and tabela.linhas %}
+            <section class="ev8-table-panel public" id="tabelaPai{{ pai.id }}">
+              <div class="ev8-table-head">
+                <div><span>Tabela de controle</span><h3>{{ tabela.titulo }}</h3></div>
+              </div>
+              <div class="ev8-table-wrap">
+                <table class="ev8-control-table public">
+                  <thead>
+                    <tr>
+                      <th class="sticky-col">Item/Frota</th>
+                      {% for coluna in tabela.colunas %}
+                        <th class="ev8-col-{{ coluna.cor or 'padrao' }}">
+                          {% if coluna.grupo %}<small>{{ coluna.grupo }}</small>{% endif %}
+                          <strong>{{ coluna.nome }}</strong>
+                        </th>
+                      {% endfor %}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for linha in tabela.linhas %}
+                      <tr>
+                        <td class="sticky-col ev8-row-label">{{ linha.rotulo }}</td>
+                        {% for coluna in tabela.colunas %}
+                          {% set key = linha.id ~ '_' ~ coluna.id %}
+                          <td>{{ tabela.mapa_celulas.get(key, '') if tabela.mapa_celulas is defined else '' }}</td>
+                        {% endfor %}
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          {% endif %}
 
-                <div class="evidencias-imagens-grid">
-                  {% for img in filho.imagens %}
-                    <figure class="evidencias-img-card public">
-                      <a href="{{ img.imagem_url }}" target="_blank">
-                        <img src="{{ img.imagem_url }}" alt="{{ img.legenda or img.nome_original or 'Imagem' }}">
-                      </a>
-                      <figcaption>
-                        <span>{{ img.legenda or img.nome_original or 'Sem legenda' }}</span>
-                      </figcaption>
-                    </figure>
-                  {% else %}
-                    <div class="evidencias-filho-empty">Nenhuma imagem neste filho.</div>
-                  {% endfor %}
-                </div>
-              </section>
-            {% else %}
-              <div class="evidencias-filho-empty full">Nenhum campo filho criado.</div>
-            {% endfor %}
-          </div>
+          <section class="ev8-photo-section public">
+            <div class="ev8-section-title"><div><span>Evidências do campo pai</span><h3>Fotos</h3></div></div>
+            <div class="ev7-photo-grid ev8-photo-grid public">
+              {% for img in imagens_pai %}
+                <figure class="ev7-photo-card public">
+                  <a href="{{ img.imagem_url }}" target="_blank" class="ev7-photo-thumb">
+                    <img src="{{ img.imagem_url }}" alt="{{ img.legenda or img.nome_original or 'Imagem' }}">
+                    <span>{{ img.tipo_resolvido() if img.tipo_resolvido is defined else (img.tipo_foto or 'Sem tipo') }}</span>
+                  </a>
+                  <figcaption>
+                    <strong>{{ img.tipo_resolvido() if img.tipo_resolvido is defined else (img.tipo_foto or 'Sem tipo') }}</strong>
+                    <small>{{ img.legenda or img.nome_original or 'Sem legenda' }}</small>
+                  </figcaption>
+                </figure>
+              {% else %}
+                <div class="ev7-empty-state small">Nenhuma imagem neste campo pai.</div>
+              {% endfor %}
+            </div>
+          </section>
         </article>
       {% else %}
-        <div class="evidencias-empty">
-          <i class="bi bi-folder2-open"></i>
-          <h3>Nenhuma evidência disponível</h3>
-          <p>Este painel ainda não possui campos cadastrados.</p>
-        </div>
+        <div class="ev7-empty-state"><i class="bi bi-folder2-open"></i><h3>Nenhuma evidência disponível</h3><p>Este painel ainda não possui campos cadastrados.</p></div>
       {% endfor %}
     </section>
   </main>
