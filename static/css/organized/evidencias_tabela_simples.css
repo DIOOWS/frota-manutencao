@@ -1,0 +1,260 @@
+/* Tabela simples sem grupo - V9.22 */
+.ev-simple-toolbar,
+.ev-simple-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border: 1px solid #d7e0ec;
+}
+
+.ev-simple-toolbar { border-radius: 8px 8px 0 0; border-bottom: 0; }
+.ev-simple-footer { border-radius: 0 0 8px 8px; border-top: 0; }
+
+.ev-simple-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 260px;
+}
+
+.ev-simple-title strong {
+  font-size: 13px;
+  font-weight: 900;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.ev-simple-title-input {
+  height: 32px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  padding: 5px 8px;
+  font-size: 12px;
+  font-weight: 800;
+  outline: none;
+}
+
+.ev-simple-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  justify-content: flex-end;
+}
+
+.ev-simple-btn {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #0f172a;
+  border-radius: 7px;
+  height: 32px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.ev-simple-btn.primary { background: #2563eb; border-color: #2563eb; color: #fff; }
+.ev-simple-btn.save { background: #16a34a; border-color: #16a34a; color: #fff; }
+.ev-simple-btn.danger { background: #fee2e2; border-color: #fecaca; color: #b91c1c; }
+
+.ev-simple-table-wrap {
+  width: 100%;
+  overflow: auto;
+  border-left: 1px solid #d7e0ec;
+  border-right: 1px solid #d7e0ec;
+  background: #fff;
+}
+
+.ev-simple-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 12px;
+  background: #fff;
+}
+
+.ev-simple-table thead th {
+  background: #0f172a;
+  color: #fff;
+  border: 1px solid #1e293b;
+  height: 34px;
+  padding: 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 900;
+  vertical-align: middle;
+}
+
+.ev-simple-num-head,
+.ev-simple-row-number {
+  text-align: center;
+  font-weight: 900;
+}
+
+.ev-simple-col-input {
+  width: 100%;
+  min-height: 34px;
+  height: 34px;
+  border: 0;
+  outline: none;
+  padding: 8px 6px;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-align: left;
+}
+
+.ev-simple-table tbody td {
+  border: 1px solid #d7e0ec;
+  background: #fff;
+  height: 31px;
+  padding: 0;
+  vertical-align: middle;
+}
+
+.ev-simple-table tbody tr:hover td { background: #f8fafc; }
+
+.ev-simple-cell-input {
+  width: 100%;
+  height: 31px;
+  border: 0;
+  outline: none;
+  padding: 5px 7px;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.ev-simple-cell-input:focus,
+.ev-simple-col-input:focus,
+.ev-simple-title-input:focus {
+  background: #eaf2ff;
+  color: #0f172a;
+  box-shadow: inset 0 0 0 2px #2563eb;
+}
+
+.ev-simple-actions-cell {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.ev-simple-icon {
+  width: 25px;
+  height: 25px;
+  border: 0;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 2px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.ev-simple-icon.ok { background: #dcfce7; color: #15803d; }
+.ev-simple-icon.danger { background: #fee2e2; color: #b91c1c; }
+
+@media (max-width: 900px) {
+  .ev-simple-toolbar,
+  .ev-simple-footer { align-items: flex-start; flex-direction: column; }
+  .ev-simple-actions { justify-content: flex-start; }
+}
+
+/* Pintura de célula e coluna - V9.23 */
+.ev-simple-colorbar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  padding: 6px 8px;
+  border: 1px solid #d7e0ec;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.ev-simple-colorbar small {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.ev-simple-color-label {
+  font-size: 11px;
+  font-weight: 900;
+  color: #334155;
+  text-transform: uppercase;
+}
+
+.ev-simple-color-select {
+  height: 30px;
+  min-width: 120px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 0 8px;
+  background: #ffffff;
+}
+
+.ev-simple-cell-selected,
+.ev-simple-col-selected {
+  box-shadow: inset 0 0 0 2px #2563eb !important;
+}
+
+.ev-simple-col-padrao { background: #0f172a !important; color: #fff !important; }
+.ev-simple-col-verde_claro { background: #bbf7d0 !important; color: #052e16 !important; }
+.ev-simple-col-verde { background: #22c55e !important; color: #052e16 !important; }
+.ev-simple-col-amarelo { background: #fef08a !important; color: #422006 !important; }
+.ev-simple-col-laranja { background: #fed7aa !important; color: #7c2d12 !important; }
+.ev-simple-col-azul_claro { background: #bfdbfe !important; color: #172554 !important; }
+.ev-simple-col-azul { background: #38bdf8 !important; color: #082f49 !important; }
+.ev-simple-col-vermelho { background: #fecaca !important; color: #7f1d1d !important; }
+.ev-simple-col-cinza { background: #e5e7eb !important; color: #111827 !important; }
+.ev-simple-col-roxo { background: #e9d5ff !important; color: #581c87 !important; }
+
+.ev-simple-col-verde_claro .ev-simple-col-input,
+.ev-simple-col-verde .ev-simple-col-input,
+.ev-simple-col-amarelo .ev-simple-col-input,
+.ev-simple-col-laranja .ev-simple-col-input,
+.ev-simple-col-azul_claro .ev-simple-col-input,
+.ev-simple-col-azul .ev-simple-col-input,
+.ev-simple-col-vermelho .ev-simple-col-input,
+.ev-simple-col-cinza .ev-simple-col-input,
+.ev-simple-col-roxo .ev-simple-col-input {
+  color: inherit !important;
+}
+
+.ev-simple-cell-padrao { background: #fff !important; }
+.ev-simple-cell-verde_claro { background: #dcfce7 !important; }
+.ev-simple-cell-verde { background: #86efac !important; }
+.ev-simple-cell-amarelo { background: #fef9c3 !important; }
+.ev-simple-cell-laranja { background: #ffedd5 !important; }
+.ev-simple-cell-azul_claro { background: #dbeafe !important; }
+.ev-simple-cell-azul { background: #bae6fd !important; }
+.ev-simple-cell-vermelho { background: #fee2e2 !important; }
+.ev-simple-cell-cinza { background: #f3f4f6 !important; }
+.ev-simple-cell-roxo { background: #f3e8ff !important; }
+
+.ev-simple-cell-padrao .ev-simple-cell-input,
+.ev-simple-cell-verde_claro .ev-simple-cell-input,
+.ev-simple-cell-verde .ev-simple-cell-input,
+.ev-simple-cell-amarelo .ev-simple-cell-input,
+.ev-simple-cell-laranja .ev-simple-cell-input,
+.ev-simple-cell-azul_claro .ev-simple-cell-input,
+.ev-simple-cell-azul .ev-simple-cell-input,
+.ev-simple-cell-vermelho .ev-simple-cell-input,
+.ev-simple-cell-cinza .ev-simple-cell-input,
+.ev-simple-cell-roxo .ev-simple-cell-input {
+  background: transparent !important;
+}

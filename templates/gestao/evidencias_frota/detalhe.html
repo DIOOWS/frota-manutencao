@@ -2,6 +2,7 @@
 {% block title %}Evidências - {{ registro.identificador() }}{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/organized/evidencias_tabela_simples.css') }}">
 <div class="evidencias-page evidencias-page-v7 evidencias-page-v8 ev-detail-page ev92-page">
   <section class="ev92-main-card">
     <div class="ev92-breadcrumb">
@@ -95,16 +96,31 @@
 
           {% if not tabela %}
             <div class="collapse" id="criarTabela{{ pai.id }}">
-              <form method="POST" action="/gestao/evidencias/pai/{{ pai.id }}/tabela/criar" class="ev92-create-table">
-                <div>
-                  <strong>Criar tabela de controle</strong>
-                  <small>Escolha o tamanho inicial. Depois você edita grupos, colunas e células direto na tabela.</small>
-                </div>
-                <label>Título <input type="text" name="titulo" class="form-control" value="{{ pai.nome }}"></label>
-                <label>Colunas <input type="number" name="qtd_colunas" class="form-control" value="5" min="1" max="40"></label>
-                <label>Linhas <input type="number" name="qtd_linhas" class="form-control" value="10" min="1" max="300"></label>
-                <button class="ev92-btn success" type="submit"><i class="bi bi-table"></i> Criar grade</button>
-              </form>
+              <div class="ev910-create-wrap">
+                <form method="POST" action="/gestao/evidencias/pai/{{ pai.id }}/tabela/criar" class="ev92-create-table ev95-ajax-form" data-ajax-form="true" data-pai-shell-form="{{ pai.id }}">
+                  <div>
+                    <strong>Criar tabela de controle</strong>
+                    <small>Escolha o tamanho inicial. Depois você edita grupos, colunas e células direto na tabela.</small>
+                  </div>
+                  <label>Título <input type="text" name="titulo" class="form-control" value="{{ pai.nome }}"></label>
+                  <label>Colunas <input type="number" name="qtd_colunas" class="form-control" value="5" min="1" max="40"></label>
+                  <label>Linhas <input type="number" name="qtd_linhas" class="form-control" value="10" min="1" max="300"></label>
+                  <button class="ev92-btn success" type="submit"><i class="bi bi-table"></i> Criar grade</button>
+                  <button class="ev92-btn primary ev921-simple-create" type="submit" name="modelo_tabela" value="manual_simples"><i class="bi bi-list-check"></i> Criar tabela manual simples</button>
+                </form>
+
+                <form method="POST" action="/gestao/evidencias/pai/{{ pai.id }}/tabela/importar_excel" enctype="multipart/form-data" class="ev917-import-real-form ev917-import-top">
+                  <div>
+                    <strong>Importar tabela pronta</strong>
+                    <small>Escolha o Excel para criar e mostrar a tabela automaticamente.</small>
+                  </div>
+                  <label class="ev917-import-field compact">
+                    <span>Arquivo Excel</span>
+                    <input id="importPaiTop{{ pai.id }}" type="file" name="arquivo_excel" accept=".xlsx,.xlsm" class="form-control ev917-file-input" required>
+                  </label>
+                  <button class="ev92-btn primary ev918-import-submit" type="submit" style="display:inline-flex !important; visibility:visible !important; opacity:1 !important;"><i class="bi bi-upload"></i> Importar e montar tabela agora</button>
+                </form>
+              </div>
             </div>
           {% endif %}
 
@@ -128,8 +144,12 @@
 
           <div class="tab-content ev92-tab-content">
             <section class="tab-pane fade show active" id="tabTabela{{ pai.id }}" role="tabpanel" aria-labelledby="tabTabelaBtn{{ pai.id }}">
+              {% if request.args.get('importado') and request.args.get('pai') == pai.id|string %}
+                <div class="ev916-import-success"><i class="bi bi-check-circle"></i> Importação concluída. A tabela abaixo foi carregada do Excel.</div>
+              {% endif %}
               {% if tabela %}
                 <div class="ev92-board" id="tabelaPai{{ pai.id }}" data-table-shell="{{ tabela.id }}" data-pai-shell="{{ pai.id }}">
+                  <form id="importTabelaForm{{ tabela.id }}" method="POST" action="/gestao/evidencias/tabela/{{ tabela.id }}/importar_excel" enctype="multipart/form-data" class="ev916-import-real-form"></form>
                   <form method="POST" action="/gestao/evidencias/tabela/{{ tabela.id }}/celulas/salvar" class="ev92-sheet-form ev93-autosave-form ev95-ajax-form" id="formTabela{{ tabela.id }}" data-ajax-form="true" data-autosave-url="/gestao/evidencias/tabela/{{ tabela.id }}/autosave" data-table-id="{{ tabela.id }}">
                     <div class="ev92-board-head">
                       <div class="ev92-table-title">
@@ -142,7 +162,12 @@
                         <button class="ev92-btn" type="button" data-bs-toggle="collapse" data-bs-target="#configTabela{{ tabela.id }}">
                           <i class="bi bi-sliders"></i> Configurar
                         </button>
-                        <button class="ev92-btn" type="button" disabled title="Em breve"><i class="bi bi-upload"></i> Importar</button>
+                        <label class="ev916-file-label">
+                          <span><i class="bi bi-file-earmark-spreadsheet"></i> Excel</span>
+                          <input type="file" name="arquivo_excel" accept=".xlsx,.xlsm" class="form-control ev916-file-input" form="importTabelaForm{{ tabela.id }}" required>
+                        </label>
+                        <button class="ev92-btn primary" type="submit" form="importTabelaForm{{ tabela.id }}"><i class="bi bi-upload"></i> Importar agora</button>
+                        <button class="ev92-btn success ev95-ajax-submit ev920-save-top" type="submit"><i class="bi bi-save"></i> Salvar tabela</button>
                         <a class="ev92-btn success" href="/gestao/evidencias/{{ registro.id }}/exportar/excel"><i class="bi bi-file-earmark-spreadsheet"></i> Exportar</a>
                         <button class="ev92-btn primary ev95-ajax-submit" type="submit" formaction="/gestao/evidencias/tabela/{{ tabela.id }}/coluna/nova" formmethod="post" name="quantidade" value="1"><i class="bi bi-plus-lg"></i> Coluna</button>
                         <button class="ev92-btn primary ev95-ajax-submit" type="submit" formaction="/gestao/evidencias/tabela/{{ tabela.id }}/linha/nova" formmethod="post" name="quantidade" value="1"><i class="bi bi-plus-lg"></i> Linha</button>
@@ -158,8 +183,14 @@
                             <select name="coluna_cor_{{ coluna.id }}" class="form-control">
                               <option value="padrao" {% if (coluna.cor or 'padrao') == 'padrao' %}selected{% endif %}>Padrão</option>
                               <option value="verde" {% if coluna.cor == 'verde' %}selected{% endif %}>Verde</option>
+                              <option value="verde_claro" {% if coluna.cor == 'verde_claro' %}selected{% endif %}>Verde claro</option>
                               <option value="laranja" {% if coluna.cor == 'laranja' %}selected{% endif %}>Laranja</option>
+                              <option value="amarelo" {% if coluna.cor == 'amarelo' %}selected{% endif %}>Amarelo</option>
                               <option value="azul" {% if coluna.cor == 'azul' %}selected{% endif %}>Azul</option>
+                              <option value="azul_claro" {% if coluna.cor == 'azul_claro' %}selected{% endif %}>Azul claro</option>
+                              <option value="vermelho" {% if coluna.cor == 'vermelho' %}selected{% endif %}>Vermelho</option>
+                              <option value="cinza" {% if coluna.cor == 'cinza' %}selected{% endif %}>Cinza</option>
+                              <option value="roxo" {% if coluna.cor == 'roxo' %}selected{% endif %}>Roxo</option>
                             </select>
                             <button class="ev92-mini danger" type="submit" formaction="/gestao/evidencias/tabela/coluna/{{ coluna.id }}/excluir" formmethod="post" title="Excluir coluna"><i class="bi bi-trash3"></i></button>
                           </div>
@@ -169,71 +200,93 @@
                     </div>
 
                     {% if tabela.colunas and tabela.linhas %}
-                      <div class="ev92-sheet-scroll">
-                        <table class="ev92-sheet" data-draggable-sheet="true">
+                      <div class="ev-simple-toolbar">
+                        <div class="ev-simple-title">
+                          <strong>Tabela simples</strong>
+                          <input type="text" name="tabela_titulo" value="{{ tabela.titulo }}" class="ev-simple-title-input" placeholder="Título da tabela">
+                        </div>
+
+                        <div class="ev-simple-colorbar" data-simple-colorbar>
+                          <span class="ev-simple-color-label">Pintura</span>
+                          <select class="ev-simple-color-select" data-simple-color-select>
+                            <option value="padrao">Sem cor</option>
+                            <option value="verde_claro">Verde claro</option>
+                            <option value="verde">Verde</option>
+                            <option value="amarelo">Amarelo</option>
+                            <option value="laranja">Laranja</option>
+                            <option value="azul_claro">Azul claro</option>
+                            <option value="azul">Azul</option>
+                            <option value="vermelho">Vermelho</option>
+                            <option value="cinza">Cinza</option>
+                            <option value="roxo">Roxo</option>
+                          </select>
+                          <button class="ev-simple-btn" type="button" data-paint-cell><i class="bi bi-paint-bucket"></i> Célula</button>
+                          <button class="ev-simple-btn" type="button" data-paint-col><i class="bi bi-columns-gap"></i> Coluna</button>
+                          <small>Clique na célula ou no título da coluna, escolha a cor e aplique.</small>
+                        </div>
+
+                        <div class="ev-simple-actions">
+                          <button class="ev-simple-btn save ev95-ajax-submit" type="submit"><i class="bi bi-save"></i> Salvar tabela</button>
+                          <button class="ev-simple-btn primary ev95-ajax-submit" type="submit" formaction="/gestao/evidencias/tabela/{{ tabela.id }}/linha/nova" formmethod="post" name="quantidade" value="1"><i class="bi bi-plus-lg"></i> Linha</button>
+                          <button class="ev-simple-btn primary ev95-ajax-submit" type="submit" formaction="/gestao/evidencias/tabela/{{ tabela.id }}/coluna/nova" formmethod="post" name="quantidade" value="1"><i class="bi bi-plus-lg"></i> Coluna</button>
+                          <button class="ev-simple-btn danger" type="submit" formaction="/gestao/evidencias/tabela/{{ tabela.id }}/excluir" formmethod="post"><i class="bi bi-trash3"></i> Excluir tabela</button>
+                        </div>
+                      </div>
+
+                      <div class="ev-simple-table-wrap">
+                        <table class="ev-simple-table">
+                          <colgroup>
+                            <col style="width:48px; min-width:48px;">
+                            {% for coluna in tabela.colunas %}
+                              <col style="width: {{ coluna.largura or 150 }}px; min-width: {{ coluna.largura or 150 }}px;">
+                            {% endfor %}
+                            <col style="width:92px; min-width:92px;">
+                          </colgroup>
                           <thead>
-                            <tr class="ev92-group-row ev94-group-row">
-                              {% for grupo in tabela.grupos_cabecalho %}
-                                {% set ids_grupo = grupo.colunas|map(attribute='id')|join('_') %}
-                                <th class="ev92-group-cell ev94-group-cell ev95-group-drop ev84-col-{{ grupo.cor or 'padrao' }}" colspan="{{ grupo.colspan }}" data-group-cols="{{ ids_grupo }}" data-group-title="{{ grupo.titulo or '' }}">
-                                  <div class="ev95-group-wrap">
-                                    <textarea name="grupo_bulk_{{ ids_grupo }}" rows="2" class="ev92-group-input ev94-group-input ev95-autoresize" placeholder="Digite o grupo">{{ grupo.titulo or '' }}</textarea>
-                                    <div class="dropdown ev95-group-menu">
-                                      <button class="ev95-dots" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Ações do grupo"><i class="bi bi-three-dots-vertical"></i></button>
-                                      <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><button class="dropdown-item ev95-add-col-in-group" type="submit" formaction="/gestao/evidencias/tabela/{{ tabela.id }}/coluna/nova" formmethod="post" name="quantidade" value="1" data-group-cols="{{ ids_grupo }}"><i class="bi bi-plus-lg"></i> Coluna dentro do grupo</button></li>
-                                        <li><button class="dropdown-item ev95-clear-group" type="button" data-group-cols="{{ ids_grupo }}"><i class="bi bi-eraser"></i> Limpar grupo</button></li>
-                                      </ul>
-                                    </div>
-                                  </div>
-                                  {% for coluna_grupo in grupo.colunas %}
-                                    <input type="hidden" name="coluna_grupo_{{ coluna_grupo.id }}" value="{{ grupo.titulo or '' }}" data-group-hidden-for="{{ coluna_grupo.id }}">
-                                    <input type="hidden" name="coluna_ordem_{{ coluna_grupo.id }}" value="{{ loop.index }}" data-col-order="{{ coluna_grupo.id }}">
-                                    <input type="hidden" name="coluna_cor_{{ coluna_grupo.id }}" value="{{ coluna_grupo.cor or 'padrao' }}">
-                                  {% endfor %}
-                                </th>
-                              {% endfor %}
-                            </tr>
-                            <tr class="ev92-column-row ev94-column-row">
+                            <tr>
+                              <th class="ev-simple-num-head">#</th>
                               {% for coluna in tabela.colunas %}
-                                <th class="ev92-col-head ev94-col-head ev84-col-{{ coluna.cor or 'padrao' }}" data-col-id="{{ coluna.id }}" draggable="true">
-                                  <span class="ev92-drag" title="Arraste para mudar a coluna"><i class="bi bi-grip-vertical"></i></span>
-                                  <textarea name="coluna_nome_{{ coluna.id }}" rows="2" class="ev92-col-title ev94-col-title ev95-autoresize" placeholder="Coluna" data-excel-cell data-row="0" data-col="{{ loop.index }}">{{ coluna.nome }}</textarea>
-                                  <div class="dropdown ev95-col-menu">
-                                    <button class="ev95-dots" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Ações da coluna"><i class="bi bi-three-dots-vertical"></i></button>
-                                    <ul class="dropdown-menu dropdown-menu-end">
-                                      <li><button class="dropdown-item ev95-add-col-right" type="submit" formaction="/gestao/evidencias/tabela/{{ tabela.id }}/coluna/nova" formmethod="post" name="inserir_apos_coluna_id" value="{{ coluna.id }}"><i class="bi bi-plus-lg"></i> Coluna à direita</button></li>
-                                      <li><button class="dropdown-item text-danger" type="submit" formaction="/gestao/evidencias/tabela/coluna/{{ coluna.id }}/excluir" formmethod="post"><i class="bi bi-trash3"></i> Excluir coluna</button></li>
-                                    </ul>
-                                  </div>
-                                  <span class="ev93-resizer" data-resize-col="{{ coluna.id }}" title="Arraste para ajustar a largura"></span>
+                                <th class="ev-simple-head-cell ev-simple-col-{{ coluna.cor or 'padrao' }}" data-simple-col-id="{{ coluna.id }}">
+                                  <textarea name="coluna_nome_{{ coluna.id }}" rows="1" class="ev-simple-col-input" placeholder="Nome da coluna">{{ coluna.nome }}</textarea>
+                                  <input type="hidden" name="coluna_grupo_{{ coluna.id }}" value="">
+                                  <input type="hidden" name="coluna_cor_{{ coluna.id }}" value="{{ coluna.cor or 'padrao' }}" data-simple-col-color="{{ coluna.id }}">
+                                  <input type="hidden" name="coluna_ordem_{{ coluna.id }}" value="{{ loop.index }}">
+                                  <input type="hidden" name="coluna_largura_{{ coluna.id }}" value="{{ coluna.largura or 150 }}">
                                 </th>
                               {% endfor %}
+                              <th class="ev-simple-actions-head">Ações</th>
                             </tr>
                           </thead>
                           <tbody>
                             {% for linha in tabela.linhas %}
                               {% set linha_pos = loop.index %}
-                              <tr data-row-id="{{ linha.id }}" data-row-delete-url="/gestao/evidencias/tabela/linha/{{ linha.id }}/excluir">
+                              <tr data-row-id="{{ linha.id }}">
+                                <td class="ev-simple-row-number">{{ linha_pos }}</td>
                                 <input type="hidden" name="linha_rotulo_{{ linha.id }}" value="{{ linha.rotulo }}">
                                 {% for coluna in tabela.colunas %}
                                   {% set key = linha.id ~ '_' ~ coluna.id %}
                                   {% set valor = tabela.mapa_celulas.get(key, '') if tabela.mapa_celulas is defined else '' %}
-                                  <td class="ev92-cell" data-col-id="{{ coluna.id }}">
-                                    <input type="text" name="celula_{{ linha.id }}_{{ coluna.id }}" value="{{ valor }}" class="ev92-cell-input" data-excel-cell data-row="{{ linha_pos }}" data-col="{{ loop.index }}">
-
+                                  {% set celula_obj = tabela.mapa_celulas_obj.get(key) if tabela.mapa_celulas_obj is defined else none %}
+                                  {% set cell_cor = celula_obj.cor if celula_obj and celula_obj.cor is defined else '' %}
+                                  <td class="ev-simple-cell ev-simple-cell-{{ cell_cor or 'padrao' }}" data-simple-cell="true" data-simple-col-id="{{ coluna.id }}">
+                                    <input type="text" name="celula_{{ linha.id }}_{{ coluna.id }}" value="{{ valor }}" class="ev-simple-cell-input" autocomplete="off">
+                                    <input type="hidden" name="celula_cor_{{ linha.id }}_{{ coluna.id }}" value="{{ cell_cor or '' }}" data-simple-cell-color>
                                   </td>
                                 {% endfor %}
+                                <td class="ev-simple-actions-cell">
+                                  <button class="ev-simple-icon ok ev95-ajax-submit" type="submit" title="Salvar linha"><i class="bi bi-check2"></i></button>
+                                  <button class="ev-simple-icon danger" type="submit" formaction="/gestao/evidencias/tabela/linha/{{ linha.id }}/excluir" formmethod="post" title="Excluir linha"><i class="bi bi-trash3"></i></button>
+                                </td>
                               </tr>
                             {% endfor %}
                           </tbody>
                         </table>
                       </div>
 
-                      <div class="ev92-footer-bar ev93-footer-bar">
+                      <div class="ev-simple-footer">
                         <span>Total de linhas: {{ tabela.linhas|length }} • Colunas: {{ tabela.colunas|length }}</span>
-                        <span class="ev93-autosave-status" data-save-status="{{ tabela.id }}"><i class="bi bi-cloud-check"></i> Salvamento automático ativo</span>
-                        <button class="ev92-save-main ev95-ajax-submit" type="submit"><i class="bi bi-save"></i> Salvar agora</button>
+                        <span class="ev93-autosave-status" data-save-status="{{ tabela.id }}"><i class="bi bi-cloud-check"></i> Salvamento ativo</span>
+                        <button class="ev-simple-btn save ev95-ajax-submit" type="submit"><i class="bi bi-save"></i> Salvar tabela</button>
                       </div>
                     {% else %}
                       <div class="ev92-empty"><i class="bi bi-grid-3x3-gap"></i><strong>Tabela sem estrutura</strong><span>Adicione colunas e linhas para começar.</span></div>
@@ -241,10 +294,33 @@
                   </form>
                 </div>
               {% else %}
-                <div class="ev92-empty big">
+                <div class="ev92-empty big ev910-empty-import">
                   <i class="bi bi-table"></i>
                   <strong>Este campo pai ainda não tem tabela.</strong>
-                  <span>Clique no ícone de tabela no topo do campo pai para criar a grade.</span>
+                  <span>Importe um Excel para a tabela aparecer pronta aqui, ou crie uma grade manual.</span>
+                  <div class="ev917-import-box">
+                    <form method="POST" action="/gestao/evidencias/pai/{{ pai.id }}/tabela/importar_excel" enctype="multipart/form-data" class="ev917-import-real-form">
+                      <label class="ev917-import-field">
+                        <span>1. Escolha o Excel</span>
+                        <input id="importPaiEmpty{{ pai.id }}" type="file" name="arquivo_excel" accept=".xlsx,.xlsm" class="form-control ev917-file-input" required>
+                      </label>
+                      <button class="ev92-btn primary ev918-import-submit" type="submit" style="display:inline-flex !important; visibility:visible !important; opacity:1 !important;">
+                        <i class="bi bi-upload"></i>
+                        <span>Importar e montar tabela agora</span>
+                      </button>
+                      <small class="ev917-import-note">Escolha o arquivo e clique em Importar e montar tabela agora.</small>
+                    </form>
+                    <form method="POST" action="/gestao/evidencias/pai/{{ pai.id }}/tabela/criar" class="ev921-simple-empty-form">
+                      <input type="hidden" name="titulo" value="{{ pai.nome }}">
+                      <input type="hidden" name="qtd_linhas" value="10">
+                      <button class="ev92-btn success ev921-simple-create" type="submit" name="modelo_tabela" value="manual_simples">
+                        <i class="bi bi-list-check"></i> Criar tabela manual simples
+                      </button>
+                    </form>
+                    <button class="ev92-btn" type="button" data-bs-toggle="collapse" data-bs-target="#criarTabela{{ pai.id }}">
+                      <i class="bi bi-grid-3x3-gap"></i> Criar grade manual
+                    </button>
+                  </div>
                 </div>
               {% endif %}
             </section>
@@ -435,10 +511,10 @@
     }
 
     async function refreshBoardByTableId(tableId) {
-      if (!tableId) return;
+      if (!tableId) return false;
       rememberScroll();
       const currentShell = document.querySelector('[data-table-shell="' + tableId + '"]');
-      if (!currentShell) return;
+      if (!currentShell) return false;
       const response = await fetch(window.location.href, { headers: { "X-Requested-With": "XMLHttpRequest" } });
       const html = await response.text();
       const doc = new DOMParser().parseFromString(html, "text/html");
@@ -448,28 +524,40 @@
         initEvidenciasFeatures(freshShell.parentElement || document);
         restoreActiveTabs();
         restoreScroll();
+        return true;
       }
+      return false;
     }
 
-    async function refreshCurrentCardFromResponse(json, fallbackForm) {
-      if (json && json.tabela_id) {
-        await refreshBoardByTableId(json.tabela_id);
-        return;
-      }
+    async function refreshParentCardById(campoPaiId, fallbackForm) {
       rememberScroll();
       const response = await fetch(window.location.href, { headers: { "X-Requested-With": "XMLHttpRequest" } });
       const html = await response.text();
       const doc = new DOMParser().parseFromString(html, "text/html");
-      const card = fallbackForm ? fallbackForm.closest(".ev92-parent-card") : null;
+      let card = null;
+      if (campoPaiId) card = document.getElementById('campoPai' + campoPaiId);
+      if (!card && fallbackForm) card = fallbackForm.closest(".ev92-parent-card");
       if (card && card.id) {
         const fresh = doc.getElementById(card.id);
         if (fresh) {
           card.replaceWith(fresh);
           initEvidenciasFeatures(fresh);
+          const tabBtn = fresh.querySelector('[id^="tabTabelaBtn"]');
+          if (tabBtn && window.bootstrap) {
+            window.bootstrap.Tab.getOrCreateInstance(tabBtn).show();
+          }
         }
       }
       restoreActiveTabs();
       restoreScroll();
+    }
+
+    async function refreshCurrentCardFromResponse(json, fallbackForm) {
+      if (json && json.tabela_id) {
+        const refreshed = await refreshBoardByTableId(json.tabela_id);
+        if (refreshed) return;
+      }
+      await refreshParentCardById(json ? json.campo_pai_id : null, fallbackForm);
     }
 
     async function autosaveForm(form) {
@@ -526,13 +614,32 @@
       });
     }
 
+    function resizeTableToColumns(table) {
+      const widths = Array.from(table.querySelectorAll('colgroup col')).map(function (col) {
+        return parseInt(col.style.width || '140', 10) || 140;
+      });
+      const total = widths.reduce(function (acc, item) { return acc + item; }, 0);
+      if (total) {
+        table.style.width = total + 'px';
+        table.style.minWidth = total + 'px';
+      }
+    }
+
     function applyColumnWidth(table, colId, width) {
-      const safeWidth = Math.max(70, Math.min(width, 620));
+      const safeWidth = Math.max(60, Math.min(width, 900));
+      const col = table.querySelector('colgroup col[data-col-id="' + colId + '"]');
+      if (col) {
+        col.style.width = safeWidth + 'px';
+        col.style.minWidth = safeWidth + 'px';
+      }
       table.querySelectorAll('[data-col-id="' + colId + '"]').forEach(function (cell) {
         cell.style.width = safeWidth + 'px';
         cell.style.minWidth = safeWidth + 'px';
         cell.style.maxWidth = safeWidth + 'px';
       });
+      const widthInput = table.querySelector('[data-col-width-input="' + colId + '"]');
+      if (widthInput) widthInput.value = String(Math.round(safeWidth));
+      resizeTableToColumns(table);
     }
 
     function loadColumnWidths(table) {
@@ -554,14 +661,44 @@
       updateColumnOrders(table);
     }
 
+    function setGroupCellIds(groupCell, ids) {
+      const clean = ids.filter(Boolean);
+      groupCell.dataset.groupCols = clean.join('_');
+      const bulk = groupCell.querySelector('.ev92-group-input');
+      if (bulk) bulk.name = 'grupo_bulk_' + clean.join('_');
+    }
+
+    function removeColumnFromGroupBulk(table, colId) {
+      table.querySelectorAll('.ev95-group-drop').forEach(function (g) {
+        const ids = (g.dataset.groupCols || '').split('_').filter(Boolean);
+        if (!ids.includes(colId)) return;
+        setGroupCellIds(g, ids.filter(function (id) { return id !== colId; }));
+      });
+    }
+
     function moveColumnToGroup(table, fromId, groupCell) {
       if (!fromId || !groupCell) return;
       const groupText = groupCell.querySelector('.ev92-group-input')?.value || groupCell.dataset.groupTitle || "";
-      const ids = (groupCell.dataset.groupCols || "").split("_").filter(Boolean).filter(function (id) { return id !== fromId; });
-      const lastId = ids.length ? ids[ids.length - 1] : null;
-      const hidden = table.querySelector('[data-group-hidden-for="' + fromId + '"]');
+      const form = table.closest('form');
+      const targetIdsBefore = (groupCell.dataset.groupCols || "").split("_").filter(Boolean).filter(function (id) { return id !== fromId; });
+      const lastId = targetIdsBefore.length ? targetIdsBefore[targetIdsBefore.length - 1] : null;
+
+      removeColumnFromGroupBulk(table, fromId);
+      setGroupCellIds(groupCell, targetIdsBefore.concat([fromId]));
+
+      let hidden = table.querySelector('[data-group-hidden-for="' + fromId + '"]');
+      if (!hidden && form) {
+        hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'coluna_grupo_' + fromId;
+        hidden.setAttribute('data-group-hidden-for', fromId);
+        form.appendChild(hidden);
+      }
       if (hidden) hidden.value = groupText;
-      if (lastId) moveColumnBeforeOrAfter(table, fromId, lastId, true);
+
+      if (lastId) {
+        moveColumnBeforeOrAfter(table, fromId, lastId, true);
+      }
       updateColumnOrders(table);
     }
 
@@ -636,6 +773,7 @@
     function initWidths(root) {
       root.querySelectorAll('[data-draggable-sheet="true"]').forEach(function (table) {
         loadColumnWidths(table);
+        resizeTableToColumns(table);
         table.querySelectorAll('.ev93-resizer').forEach(function (handle) {
           handle.addEventListener('mousedown', function (event) {
             event.preventDefault();
@@ -652,6 +790,8 @@
               const first = table.querySelector('[data-col-id="' + colId + '"]');
               if (first) localStorage.setItem('ev_col_width_' + tableId + '_' + colId, Math.round(first.getBoundingClientRect().width));
               document.body.classList.remove('ev93-resizing');
+              const f = table.closest('form');
+              if (f) autosaveForm(f);
               document.removeEventListener('mousemove', onMove);
               document.removeEventListener('mouseup', onUp);
             }
@@ -700,7 +840,13 @@
           cell.addEventListener('drop', async function (event) {
             event.preventDefault();
             const targetId = cell.getAttribute('data-col-id');
-            moveColumnBeforeOrAfter(table, draggedId || event.dataTransfer.getData('text/plain'), targetId, false);
+            const fromId = draggedId || event.dataTransfer.getData('text/plain');
+            moveColumnBeforeOrAfter(table, fromId, targetId, false);
+            const form = table.closest('form');
+            const targetGroupHidden = form ? form.querySelector('[data-group-hidden-for="' + targetId + '"]') : null;
+            const fromGroupHidden = form ? form.querySelector('[data-group-hidden-for="' + fromId + '"]') : null;
+            if (targetGroupHidden && fromGroupHidden) fromGroupHidden.value = targetGroupHidden.value || '';
+            syncAllGroups(form || table);
             table.querySelectorAll('.ev92-drop-target').forEach(function (el) { el.classList.remove('ev92-drop-target'); });
             table.classList.remove('ev92-dragging');
             const form = table.closest('form');
@@ -713,6 +859,7 @@
           groupCell.addEventListener('dragleave', function () { groupCell.classList.remove('ev95-group-target'); });
           groupCell.addEventListener('drop', async function (event) {
             event.preventDefault();
+            event.stopPropagation();
             moveColumnToGroup(table, draggedId || event.dataTransfer.getData('text/plain'), groupCell);
             groupCell.classList.remove('ev95-group-target');
             const form = table.closest('form');
@@ -722,23 +869,109 @@
       });
     }
 
+
+    function clearCellColorClasses(cell) {
+      ['verde_claro','verde','amarelo','laranja','azul_claro','azul','vermelho','cinza','roxo','semcor'].forEach(function (c) {
+        cell.classList.remove('ev97-cell-' + c);
+      });
+    }
+
+    function clearCellAlignClasses(cell) {
+      ['left','center','right'].forEach(function (c) { cell.classList.remove('ev97-align-' + c); });
+    }
+
+    function initCellFormatting(root) {
+      root.querySelectorAll('[data-draggable-sheet="true"]').forEach(function (table) {
+        const form = table.closest('form');
+        const toolbar = form ? form.querySelector('[data-excel-toolbar]') : null;
+        const colorSelect = toolbar ? toolbar.querySelector('[data-apply-cell-color]') : null;
+        let selectedCell = null;
+
+        function selectCell(cell) {
+          table.querySelectorAll('.ev97-cell-selected').forEach(function (c) { c.classList.remove('ev97-cell-selected'); });
+          selectedCell = cell;
+          cell.classList.add('ev97-cell-selected');
+          const colorInput = cell.querySelector('[data-cell-color-input]');
+          if (colorSelect && colorInput) colorSelect.value = colorInput.value || '';
+          const alignInput = cell.querySelector('[data-cell-align-input]');
+          const align = alignInput ? (alignInput.value || 'center') : 'center';
+          const inp = cell.querySelector('.ev97-cell-input');
+          if (inp) inp.style.textAlign = align;
+          if (toolbar) {
+            toolbar.querySelectorAll('[data-apply-align]').forEach(function (b) {
+              b.classList.toggle('active', b.getAttribute('data-apply-align') === align);
+            });
+          }
+        }
+
+        table.querySelectorAll('td.ev97-cell').forEach(function (cell) {
+          cell.addEventListener('click', function () { selectCell(cell); });
+          const inp = cell.querySelector('.ev97-cell-input');
+          if (inp) inp.addEventListener('focus', function () { selectCell(cell); });
+        });
+
+        if (colorSelect) {
+          colorSelect.addEventListener('change', function () {
+            if (!selectedCell) return;
+            const val = colorSelect.value || '';
+            const hidden = selectedCell.querySelector('[data-cell-color-input]');
+            if (hidden) hidden.value = val;
+            clearCellColorClasses(selectedCell);
+            selectedCell.classList.add('ev97-cell-' + (val || 'semcor'));
+            if (form) autosaveForm(form);
+          });
+        }
+
+        if (toolbar) {
+          toolbar.querySelectorAll('[data-apply-align]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              if (!selectedCell) return;
+              const val = btn.getAttribute('data-apply-align') || 'center';
+              const hidden = selectedCell.querySelector('[data-cell-align-input]');
+              if (hidden) hidden.value = val;
+              clearCellAlignClasses(selectedCell);
+              selectedCell.classList.add('ev97-align-' + val);
+              const input = selectedCell.querySelector('.ev97-cell-input');
+              if (input) input.style.textAlign = val;
+              toolbar.querySelectorAll('[data-apply-align]').forEach(function (b) { b.classList.remove('active'); });
+              btn.classList.add('active');
+              if (form) autosaveForm(form);
+            });
+          });
+        }
+      });
+    }
+
     function initRows(root) {
       root.querySelectorAll('[data-draggable-sheet="true"]').forEach(function (table) {
         const form = table.closest('form');
         const btn = form ? form.querySelector('[data-delete-selected-row]') : null;
+        function selectRow(row) {
+          if (!row) return;
+          table.querySelectorAll('tbody tr.ev95-row-selected').forEach(function (r) { r.classList.remove('ev95-row-selected'); });
+          row.classList.add('ev95-row-selected');
+          if (btn) {
+            btn.disabled = false;
+            btn.dataset.deleteUrl = row.dataset.rowDeleteUrl || '';
+            btn.dataset.rowId = row.dataset.rowId || '';
+          }
+        }
         table.querySelectorAll('tbody tr[data-row-id]').forEach(function (row) {
           row.addEventListener('click', function (event) {
-            if (event.target.closest('input, textarea, select, button, a')) return;
-            table.querySelectorAll('tbody tr.ev95-row-selected').forEach(function (r) { r.classList.remove('ev95-row-selected'); });
-            row.classList.add('ev95-row-selected');
-            if (btn) {
-              btn.disabled = false;
-              btn.dataset.deleteUrl = row.dataset.rowDeleteUrl;
-            }
+            if (event.target.closest('button, a, select')) return;
+            selectRow(row);
+          });
+          row.querySelectorAll('input, textarea').forEach(function (field) {
+            field.addEventListener('focus', function () { selectRow(row); });
+            field.addEventListener('click', function () { selectRow(row); });
           });
         });
         if (btn && form) {
           btn.addEventListener('click', async function () {
+            if (!btn.dataset.deleteUrl) {
+              const selected = table.querySelector('tbody tr.ev95-row-selected');
+              if (selected) btn.dataset.deleteUrl = selected.dataset.rowDeleteUrl || '';
+            }
             if (!btn.dataset.deleteUrl) return;
             rememberScroll();
             try {
@@ -766,6 +999,85 @@
       });
     }
 
+
+
+    function initExcelImport(root) {
+      root.querySelectorAll('[data-open-import]').forEach(function (btn) {
+        if (btn.dataset.evOpenImportReady === '1') return;
+        btn.dataset.evOpenImportReady = '1';
+        btn.addEventListener('click', function (event) {
+          event.preventDefault();
+          event.stopPropagation();
+          const input = document.getElementById(btn.getAttribute('data-open-import'));
+          if (input) input.click();
+        });
+      });
+
+      root.querySelectorAll('[data-import-excel-url]').forEach(function (input) {
+        if (input.dataset.evImportReady === '1') return;
+        input.dataset.evImportReady = '1';
+        input.addEventListener('change', async function () {
+          if (!input.files || !input.files.length) return;
+          const form = input.closest('form');
+          const url = input.getAttribute('data-import-excel-url') || (form ? form.action : '');
+          const data = new FormData();
+          data.append('arquivo_excel', input.files[0]);
+          rememberScroll();
+
+          const button = form ? form.querySelector('[data-open-import="' + input.id + '"]') : document.querySelector('[data-open-import="' + input.id + '"]');
+          if (button) {
+            button.disabled = true;
+            button.dataset.oldHtml = button.innerHTML;
+            button.innerHTML = '<i class="bi bi-arrow-repeat"></i> Importando...';
+          }
+          if (form && form.dataset.tableId) setSaveStatus(form, '<i class="bi bi-arrow-repeat"></i> Importando Excel...', 'saving');
+
+          try {
+            const json = await fetchJson(url, {
+              method: 'POST',
+              body: data,
+              headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            });
+            if (form && form.dataset.tableId) setSaveStatus(form, '<i class="bi bi-cloud-check"></i> Planilha importada', 'saved');
+            const redirectUrl = json.redirect_url || (window.location.pathname + '?aba=tabela#campoPai' + (json.campo_pai_id || ''));
+            window.location.href = redirectUrl;
+          } catch (err) {
+            if (form) {
+              form.submit();
+              return;
+            }
+            alert(err.message || 'Erro ao importar Excel');
+          } finally {
+            if (button) {
+              button.disabled = false;
+              button.innerHTML = button.dataset.oldHtml || '<i class="bi bi-upload"></i> Importar Excel';
+            }
+            input.value = '';
+          }
+        });
+      });
+    }
+
+
+    function initImportacaoReal(root) {
+      root.querySelectorAll('input[data-auto-submit-import="true"]').forEach(function(input){
+        if (input.dataset.ev917Ready === '1') return;
+        input.dataset.ev917Ready = '1';
+        input.addEventListener('change', function(){
+          if (!input.files || !input.files.length) return;
+          const form = input.closest('form');
+          const btn = form ? form.querySelector('button[type="submit"]') : null;
+          if (btn) {
+            btn.disabled = true;
+            btn.dataset.oldHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Importando e montando tabela...';
+          }
+          if (form) form.submit();
+        });
+      });
+    }
+
+
     window.initEvidenciasFeatures = function (root) {
       root = root || document;
       autoResizeTextareas(root);
@@ -775,9 +1087,13 @@
       initAutosave(root);
       initWidths(root);
       initKeyboard(root);
+      initCellFormatting(root);
       initDrag(root);
       initRows(root);
       initGroupMenus(root);
+      initExcelImport(root);
+      initSimpleTablePaint(root);
+      initImportacaoReal(root);
     };
 
     window.initEvidenciasFeatures(document);

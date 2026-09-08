@@ -2,18 +2,38 @@
 {% block title %}Novo Painel de Evidências{% endblock %}
 
 {% block content %}
-<div class="evidencias-page evidencias-form-page">
-  <section class="evidencias-hero compact">
+<div class="evidencias-page evidencias-form-page ev96-form-page">
+  <section class="evidencias-hero compact ev96-form-hero">
     <div>
       <span class="evidencias-eyebrow">Novo painel</span>
       <h1>Criar Painel de Evidências</h1>
-      <p>Informe somente o cliente e a frota ou placa. Os demais campos serão criados livremente no detalhe.</p>
+      <p>Crie um painel para uma frota/placa ou um painel livre, sem precisar vincular a uma frota real.</p>
     </div>
   </section>
 
-  <section class="evidencias-form-card">
-    <form method="POST" action="/gestao/evidencias/novo">
-      <div class="row g-3">
+  <section class="evidencias-form-card ev96-form-card">
+    <form method="POST" action="/gestao/evidencias/novo" id="formNovoPainelEvidencias">
+      <div class="ev96-mode-grid">
+        <label class="ev96-mode-card active" data-mode-card="frota">
+          <input type="radio" name="tipo_painel" value="frota" checked>
+          <span class="ev96-mode-icon"><i class="bi bi-truck"></i></span>
+          <span>
+            <strong>Painel por frota/placa</strong>
+            <small>Use quando o painel pertence a uma frota, placa ou veículo específico.</small>
+          </span>
+        </label>
+
+        <label class="ev96-mode-card" data-mode-card="livre">
+          <input type="radio" name="tipo_painel" value="livre">
+          <span class="ev96-mode-icon"><i class="bi bi-folder2-open"></i></span>
+          <span>
+            <strong>Painel livre</strong>
+            <small>Use para termômetros, desencarroçamento, checklist, relatório ou outro controle sem frota real.</small>
+          </span>
+        </label>
+      </div>
+
+      <div class="row g-3 ev96-main-fields">
         <div class="col-md-6">
           <label class="form-label">Cliente</label>
           <select name="cliente_id" class="form-control" required>
@@ -24,22 +44,65 @@
           </select>
         </div>
 
-        <div class="col-md-3">
+        <div class="col-md-6 ev96-free-field d-none" id="campoPainelLivre">
+          <label class="form-label">Nome do painel</label>
+          <input type="text" name="nome_painel" class="form-control" placeholder="Ex: Troca de Termômetros, Checklist Geral, Desencarroçamento">
+        </div>
+
+        <div class="col-md-3 ev96-frota-field">
           <label class="form-label">Frota</label>
           <input type="text" name="frota" class="form-control" placeholder="Ex: 336">
         </div>
 
-        <div class="col-md-3">
+        <div class="col-md-3 ev96-frota-field">
           <label class="form-label">Placa</label>
           <input type="text" name="placa" class="form-control" placeholder="Ex: ABC1234">
         </div>
       </div>
 
-      <div class="evidencias-form-actions">
+      <div class="ev96-help-box" id="ajudaPainelLivre" hidden>
+        <i class="bi bi-info-circle"></i>
+        <span>Nesta opção você cria um painel sem frota ou placa real. O nome informado será usado como identificação principal do painel.</span>
+      </div>
+
+      <div class="evidencias-form-actions ev96-form-actions">
         <a href="/gestao/evidencias/" class="evidencias-btn">Cancelar</a>
-        <button class="evidencias-btn primary">Criar painel</button>
+        <button class="evidencias-btn primary" type="submit">Criar painel</button>
       </div>
     </form>
   </section>
 </div>
+
+<script>
+(function(){
+  const form = document.getElementById('formNovoPainelEvidencias');
+  if (!form) return;
+
+  const radios = form.querySelectorAll('input[name="tipo_painel"]');
+  const cards = form.querySelectorAll('[data-mode-card]');
+  const freeField = document.getElementById('campoPainelLivre');
+  const help = document.getElementById('ajudaPainelLivre');
+  const frotaFields = form.querySelectorAll('.ev96-frota-field');
+  const nomePainel = form.querySelector('input[name="nome_painel"]');
+  const frotaInput = form.querySelector('input[name="frota"]');
+  const placaInput = form.querySelector('input[name="placa"]');
+
+  function atualizarModo(){
+    const modo = form.querySelector('input[name="tipo_painel"]:checked')?.value || 'frota';
+    const livre = modo === 'livre';
+
+    cards.forEach(card => card.classList.toggle('active', card.dataset.modeCard === modo));
+    freeField.classList.toggle('d-none', !livre);
+    frotaFields.forEach(el => el.classList.toggle('d-none', livre));
+    help.hidden = !livre;
+
+    if (nomePainel) nomePainel.required = livre;
+    if (frotaInput) frotaInput.required = false;
+    if (placaInput) placaInput.required = false;
+  }
+
+  radios.forEach(radio => radio.addEventListener('change', atualizarModo));
+  atualizarModo();
+})();
+</script>
 {% endblock %}

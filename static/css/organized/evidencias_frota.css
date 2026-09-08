@@ -4699,3 +4699,696 @@ body.ev93-resizing * {
   right: -4px;
   z-index: 30;
 }
+
+/* V9.6 - Novo painel livre */
+.ev96-form-hero p {
+  margin-bottom: 0;
+}
+
+.ev96-form-card {
+  border-radius: 18px;
+}
+
+.ev96-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.ev96-mode-card {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px;
+  border: 1px solid #dbe4f0;
+  border-radius: 16px;
+  background: #fff;
+  cursor: pointer;
+  transition: .18s ease;
+  min-height: 92px;
+}
+
+.ev96-mode-card:hover,
+.ev96-mode-card.active {
+  border-color: #2563eb;
+  background: #eff6ff;
+  box-shadow: 0 10px 22px rgba(37, 99, 235, .10);
+}
+
+.ev96-mode-card input {
+  margin-top: 4px;
+}
+
+.ev96-mode-card strong {
+  display: block;
+  color: #0f172a;
+  font-weight: 900;
+  margin-bottom: 3px;
+}
+
+.ev96-mode-card small {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.ev96-mode-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: #e0ecff;
+  color: #2563eb;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  font-size: 17px;
+}
+
+.ev96-main-fields {
+  align-items: end;
+}
+
+.ev96-help-box {
+  margin-top: 14px;
+  padding: 11px 13px;
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #1e3a8a;
+  border-radius: 14px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ev96-form-actions {
+  margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+  .ev96-mode-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ================= V9.7 - Tabela estilo Excel avançada ================= */
+.ev97-sheet-scroll{
+  overflow:auto;
+  background:#f8fafc;
+  border:1px solid #b8c6d8;
+  border-radius:0;
+  max-width:100%;
+}
+.ev97-excel-sheet{
+  border-collapse:collapse !important;
+  border-spacing:0 !important;
+  table-layout:fixed !important;
+  width:max-content;
+  min-width:max-content;
+  background:#fff;
+  font-family:Arial, Helvetica, sans-serif;
+}
+.ev97-excel-sheet th,
+.ev97-excel-sheet td{
+  border:1px solid #9fb2ca !important;
+  padding:0 !important;
+  vertical-align:middle !important;
+  box-sizing:border-box;
+}
+.ev97-excel-sheet thead th{
+  background:#e8f0fa;
+  color:#0f172a;
+  font-weight:800;
+  text-align:center;
+}
+.ev92-group-cell,
+.ev94-group-cell,
+.ev92-col-head,
+.ev94-col-head{
+  white-space:normal !important;
+  word-break:normal !important;
+  overflow-wrap:anywhere !important;
+  height:auto !important;
+  min-height:34px !important;
+}
+.ev92-group-input,
+.ev94-group-input,
+.ev92-col-title,
+.ev94-col-title{
+  white-space:normal !important;
+  word-break:normal !important;
+  overflow-wrap:anywhere !important;
+  line-height:1.18 !important;
+  text-align:center !important;
+  height:auto !important;
+  min-height:38px !important;
+  padding:5px 22px 5px 8px !important;
+  border:0 !important;
+  background:transparent !important;
+  font-size:11px !important;
+  font-weight:800 !important;
+  resize:none !important;
+  width:100% !important;
+  box-sizing:border-box !important;
+}
+.ev92-cell-input,
+.ev97-cell-input{
+  border:0 !important;
+  background:transparent !important;
+  width:100% !important;
+  min-height:25px !important;
+  height:25px !important;
+  padding:2px 5px !important;
+  font-size:12px !important;
+  font-weight:600 !important;
+  outline:none !important;
+  box-sizing:border-box !important;
+}
+.ev97-align-left .ev97-cell-input{ text-align:left !important; }
+.ev97-align-center .ev97-cell-input{ text-align:center !important; }
+.ev97-align-right .ev97-cell-input{ text-align:right !important; }
+.ev97-cell-selected{ outline:2px solid #2563eb !important; outline-offset:-2px; position:relative; z-index:2; }
+.ev97-cell-semcor{ background:#fff !important; }
+.ev97-cell-verde_claro{ background:#d9ead3 !important; }
+.ev97-cell-verde{ background:#b6d7a8 !important; }
+.ev97-cell-amarelo{ background:#fff2cc !important; }
+.ev97-cell-laranja{ background:#f4b183 !important; }
+.ev97-cell-azul_claro{ background:#cfe2f3 !important; }
+.ev97-cell-azul{ background:#5bc0de !important; }
+.ev97-cell-vermelho{ background:#f4cccc !important; }
+.ev97-cell-cinza{ background:#d9d9d9 !important; }
+.ev97-cell-roxo{ background:#d9d2e9 !important; }
+.ev84-col-verde_claro{ background:#d9ead3 !important; }
+.ev84-col-amarelo{ background:#fff2cc !important; }
+.ev84-col-azul_claro{ background:#cfe2f3 !important; }
+.ev84-col-vermelho{ background:#f4cccc !important; }
+.ev84-col-cinza{ background:#d9d9d9 !important; }
+.ev84-col-roxo{ background:#d9d2e9 !important; }
+.ev97-excel-toolbar{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  padding:8px 10px;
+  background:#eef5ff;
+  border:1px solid #c8d7ee;
+  border-bottom:0;
+  font-size:12px;
+}
+.ev97-toolbar-label{ font-weight:800; color:#0f172a; }
+.ev97-cell-color{
+  height:30px;
+  border:1px solid #b8c6d8;
+  border-radius:6px;
+  padding:0 8px;
+  font-size:12px;
+  background:#fff;
+}
+.ev97-align-btn{
+  height:30px;
+  min-width:32px;
+  border:1px solid #b8c6d8;
+  background:#fff;
+  border-radius:6px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+.ev97-align-btn:hover{ background:#e0ecff; }
+.ev97-hint{ color:#64748b; margin-left:auto; }
+.ev93-resizer{
+  position:absolute !important;
+  top:0 !important;
+  right:-3px !important;
+  width:7px !important;
+  height:100% !important;
+  cursor:col-resize !important;
+  z-index:15 !important;
+  background:transparent !important;
+}
+.ev93-resizer:hover{ background:#2563eb33 !important; }
+.ev92-col-head{ position:relative !important; }
+.ev92-drag{ cursor:grab; }
+.ev92-drop-target{ outline:2px dashed #2563eb !important; outline-offset:-3px; }
+.ev95-group-target{ outline:3px solid #22c55e !important; outline-offset:-3px; }
+
+
+/* V9.8 - correcoes solicitadas: alinhamento, excluir coluna no titulo, linha selecionada */
+.ev98-col-title-wrap{
+  position:relative !important;
+  display:flex !important;
+  align-items:stretch !important;
+  min-height:40px !important;
+  width:100% !important;
+}
+.ev98-col-title-wrap .ev92-col-title{
+  padding-right:28px !important;
+}
+.ev98-col-delete-inline{
+  position:absolute !important;
+  top:3px !important;
+  right:18px !important;
+  width:20px !important;
+  height:20px !important;
+  border:1px solid #fecaca !important;
+  background:#fff1f2 !important;
+  color:#dc2626 !important;
+  border-radius:5px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  font-size:10px !important;
+  padding:0 !important;
+  z-index:20 !important;
+  cursor:pointer !important;
+}
+.ev98-col-delete-inline:hover{ background:#fee2e2 !important; }
+.ev97-align-left,
+.ev97-align-left .ev97-cell-input,
+.ev97-align-left input{ text-align:left !important; }
+.ev97-align-center,
+.ev97-align-center .ev97-cell-input,
+.ev97-align-center input{ text-align:center !important; }
+.ev97-align-right,
+.ev97-align-right .ev97-cell-input,
+.ev97-align-right input{ text-align:right !important; }
+.ev97-align-btn.active{
+  background:#2563eb !important;
+  color:#fff !important;
+  border-color:#2563eb !important;
+}
+.ev95-row-selected td,
+.ev95-row-selected .ev97-cell-input{
+  background:#dbeafe !important;
+}
+.ev95-delete-selected:not(:disabled){
+  opacity:1 !important;
+  cursor:pointer !important;
+}
+.ev92-group-input,
+.ev94-group-input,
+.ev92-col-title,
+.ev94-col-title{
+  white-space:pre-wrap !important;
+  overflow:hidden !important;
+  text-overflow:clip !important;
+}
+.ev97-excel-sheet{
+  table-layout:fixed !important;
+}
+
+
+/* V9.9 - Importação Excel */
+.ev99-import-label {
+  cursor: pointer;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+.ev99-import-label input { display: none !important; }
+.ev92-sheet-table,
+.ev97-excel-table {
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+}
+.ev92-sheet-table th,
+.ev92-sheet-table td,
+.ev97-excel-table th,
+.ev97-excel-table td {
+  border: 1px solid #cfd7e3 !important;
+}
+.ev92-group-input,
+.ev92-col-input,
+.ev92-cell-input,
+.ev97-cell-input {
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere !important;
+  word-break: normal !important;
+  text-align: center;
+}
+
+/* V9.10 - Importação direta quando ainda não existe tabela */
+.ev910-create-wrap {
+  display: grid;
+  gap: 10px;
+}
+.ev910-import-empty-form {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px;
+  border: 1px dashed #b9c9df;
+  border-radius: 10px;
+  background: #f8fbff;
+}
+.ev910-import-empty-form strong {
+  display: block;
+  color: #061833;
+  font-weight: 900;
+}
+.ev910-import-empty-form small {
+  display: block;
+  color: #526987;
+  font-size: 12px;
+}
+.ev910-empty-import {
+  gap: 8px;
+}
+.ev910-empty-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.ev910-import-btn.loading {
+  opacity: .75;
+  pointer-events: none;
+}
+
+/* V9.14 - importação robusta */
+.ev914-file-hidden {
+  position: fixed !important;
+  left: -9999px !important;
+  top: -9999px !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+.ev914-import-form,
+.ev914-import-form-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0;
+}
+.ev914-submit-fallback {
+  display: none !important;
+}
+
+
+/* V9.15 - importação sem depender de botão escondido */
+.ev915-import-field{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  min-width:260px;
+  margin:0;
+  font-size:12px;
+  font-weight:900;
+  color:#475569;
+}
+.ev915-file-input{
+  min-height:42px;
+  border-radius:12px;
+  border:1px solid #cbd5e1;
+  background:#fff;
+  font-weight:700;
+}
+.ev910-empty-actions .ev914-import-form-inline,
+.ev910-create-wrap .ev914-import-form{
+  display:flex;
+  align-items:flex-end;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.ev914-submit-fallback{
+  min-height:42px;
+}
+
+
+/* V9.16 - importação real e salvar visível */
+.ev916-file-label{display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:12px;padding:6px 10px;font-weight:800;color:#0f172a;}
+.ev916-file-label span{white-space:nowrap;font-size:12px;}
+.ev916-file-input{width:210px;min-height:34px;font-size:12px;}
+.ev916-import-real-form{display:none;}
+.ev916-import-success{display:flex;align-items:center;gap:8px;margin:0 0 12px 0;padding:10px 12px;border-radius:12px;background:#dcfce7;color:#166534;font-weight:800;border:1px solid #86efac;}
+.ev92-board-actions{align-items:center;}
+@media (max-width: 900px){.ev916-file-label{width:100%;align-items:flex-start;flex-direction:column}.ev916-file-input{width:100%;}}
+
+/* V9.17 - importação real e explícita */
+.ev917-import-box {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.ev917-import-real-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px;
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  border-radius: 14px;
+}
+.ev917-import-real-form.ev917-import-top {
+  width: 100%;
+  justify-content: flex-end;
+}
+.ev917-import-field {
+  min-width: 280px;
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  text-align: left;
+}
+.ev917-import-field.compact { min-width: 240px; }
+.ev917-import-field span {
+  font-size: 12px;
+  font-weight: 900;
+  color: #0f172a;
+}
+.ev917-file-input {
+  background: #fff !important;
+  border: 1px solid #93c5fd !important;
+  min-height: 40px;
+  cursor: pointer;
+}
+.ev917-import-main-btn {
+  border: 0;
+  min-height: 42px;
+  border-radius: 12px;
+  padding: 0 18px;
+  background: #16a34a;
+  color: #fff;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 10px 24px rgba(22, 163, 74, .20);
+}
+.ev917-import-main-btn.compact { min-height: 40px; }
+.ev917-import-main-btn:disabled { opacity: .75; cursor: wait; }
+.ev917-import-note {
+  width: 100%;
+  color: #1d4ed8;
+  font-weight: 700;
+  text-align: center;
+}
+
+
+/* V9.18 - importação real visível */
+.ev917-import-real-form {
+  display: flex !important;
+  align-items: end;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.ev917-import-field {
+  display: grid !important;
+  gap: 6px;
+  min-width: 260px;
+  text-align: left;
+}
+.ev918-import-submit {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  min-height: 42px;
+  background: #2563eb !important;
+  color: #fff !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  padding: 10px 16px !important;
+  font-weight: 800 !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+.ev918-import-submit:hover { filter: brightness(.96); }
+
+
+/* V9.20 - acabamento da tabela estilo Excel */
+.ev97-excel-sheet {
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+  width: max-content !important;
+  min-width: 100% !important;
+  background: #fff !important;
+}
+
+.ev97-excel-sheet th,
+.ev97-excel-sheet td {
+  border: 1px solid #9eb6d8 !important;
+  box-sizing: border-box !important;
+}
+
+.ev92-group-row,
+.ev94-group-row,
+.ev92-column-row,
+.ev94-column-row {
+  height: auto !important;
+}
+
+.ev92-group-cell,
+.ev94-group-cell,
+.ev92-col-head,
+.ev94-col-head {
+  height: auto !important;
+  min-height: 48px !important;
+  padding: 3px 22px 3px 6px !important;
+  vertical-align: middle !important;
+  overflow: visible !important;
+}
+
+.ev92-group-input,
+.ev94-group-input,
+.ev92-col-title,
+.ev94-col-title {
+  width: 100% !important;
+  min-height: 34px !important;
+  height: auto !important;
+  resize: none !important;
+  overflow: hidden !important;
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: anywhere !important;
+  line-height: 1.18 !important;
+  text-align: center !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  background: transparent !important;
+  border: 0 !important;
+  color: #020617 !important;
+  padding: 2px !important;
+}
+
+.ev920-solo-duplicado .ev92-group-input,
+.ev920-solo-duplicado .ev94-group-input {
+  min-height: 20px !important;
+  opacity: .55 !important;
+}
+
+.ev95-col-menu,
+.ev98-col-delete-inline {
+  opacity: 0 !important;
+  transition: opacity .12s ease !important;
+}
+
+.ev92-col-head:hover .ev95-col-menu,
+.ev92-col-head:hover .ev98-col-delete-inline,
+.ev94-col-head:hover .ev95-col-menu,
+.ev94-col-head:hover .ev98-col-delete-inline {
+  opacity: 1 !important;
+}
+
+.ev95-dots {
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 8px !important;
+}
+
+.ev92-cell,
+.ev97-cell {
+  height: 26px !important;
+  padding: 0 !important;
+  background: #fff;
+}
+
+.ev92-cell-input,
+.ev97-cell-input {
+  height: 25px !important;
+  min-height: 25px !important;
+  padding: 2px 5px !important;
+  border: 0 !important;
+  background: transparent !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+.ev92-cell-input:focus,
+.ev97-cell-input:focus,
+.ev92-col-title:focus,
+.ev94-col-title:focus,
+.ev92-group-input:focus,
+.ev94-group-input:focus {
+  outline: 2px solid #2563eb !important;
+  outline-offset: -2px !important;
+  background: rgba(219, 234, 254, .55) !important;
+}
+
+.ev92-board-actions {
+  gap: 8px !important;
+}
+
+.ev920-save-top {
+  background: #16a34a !important;
+  color: #fff !important;
+}
+
+/* V9.21 - tabela manual simples no estilo da tabela financeira */
+.ev921-simple-empty-form { display: inline-flex; margin: 0; }
+.ev921-simple-create { background: #0f172a !important; color: #fff !important; }
+.ev921-simple-scroll { background: #fff; border: 1px solid #cbd5e1; border-radius: 4px; overflow: auto; }
+.ev921-finance-simple { border-collapse: collapse !important; border-spacing: 0 !important; width: max-content; min-width: 100%; table-layout: fixed; background: #fff; font-size: 11px; }
+.ev921-finance-simple th,
+.ev921-finance-simple td { border: 1px solid #d6dee9 !important; padding: 0 !important; height: 28px; vertical-align: middle; }
+.ev921-finance-simple thead th { background: #0f172a !important; color: #fff !important; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .02em; height: 28px; text-align: left; position: relative; }
+.ev921-finance-simple .ev921-num-head,
+.ev921-finance-simple .ev921-actions-head { text-align: center; }
+.ev921-finance-simple .ev92-col-head { min-height: 28px !important; height: 28px !important; }
+.ev921-finance-simple .ev98-col-title-wrap { height: 28px; min-height: 28px; padding: 0 6px; display: flex; align-items: center; }
+.ev921-finance-simple .ev92-col-title { color: #fff !important; background: transparent !important; border: 0 !important; padding: 0 !important; min-height: 18px !important; height: 18px !important; font-size: 10px !important; line-height: 1.1 !important; text-align: left !important; resize: none; overflow: hidden; white-space: nowrap !important; text-overflow: ellipsis; }
+.ev921-finance-simple .ev92-drag,
+.ev921-finance-simple .ev95-col-menu,
+.ev921-finance-simple .ev98-col-delete-inline { opacity: 0; transition: opacity .15s ease; }
+.ev921-finance-simple th:hover .ev92-drag,
+.ev921-finance-simple th:hover .ev95-col-menu,
+.ev921-finance-simple th:hover .ev98-col-delete-inline { opacity: 1; }
+.ev921-row-number { width: 42px; text-align: center; font-weight: 900; color: #0f172a; background: #fff; }
+.ev921-finance-simple .ev97-cell-input,
+.ev921-finance-simple .ev92-cell-input { width: 100%; height: 27px; min-height: 27px; border: 0 !important; border-radius: 0 !important; padding: 0 6px !important; background: transparent !important; color: #020617; font-size: 11px; font-weight: 800; outline: none; }
+.ev921-finance-simple .ev97-cell-input:focus,
+.ev921-finance-simple .ev92-cell-input:focus { background: #eff6ff !important; box-shadow: inset 0 0 0 2px #2563eb; }
+.ev921-finance-simple tbody tr:hover td { background: #f8fafc; }
+.ev921-actions-cell { display: flex; align-items: center; justify-content: center; gap: 4px; height: 28px; background: #fff; }
+.ev921-row-action { border: 0; width: 20px; height: 20px; border-radius: 5px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; }
+.ev921-row-action.view { background: #dbeafe; color: #1d4ed8; }
+.ev921-row-action.ok { background: #dcfce7; color: #16a34a; }
+.ev921-row-action.danger { background: #fee2e2; color: #dc2626; }
+.ev921-finance-simple [data-cell-key]:has(input[value="ATRASADA"]),
+.ev921-finance-simple [data-cell-key]:has(input[value="ATRASADO"]) { background: #fee2e2; }
+.ev921-finance-simple [data-cell-key]:has(input[value="PAGA"]),
+.ev921-finance-simple [data-cell-key]:has(input[value="PAGO"]) { background: #dcfce7; }
+
+@media (max-width: 900px) {
+  .ev921-finance-simple { font-size: 10px; }
+  .ev921-finance-simple .ev97-cell-input,
+  .ev921-finance-simple .ev92-cell-input { font-size: 10px; }
+}

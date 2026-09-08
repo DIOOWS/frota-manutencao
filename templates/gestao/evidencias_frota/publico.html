@@ -65,7 +65,6 @@
                       <th class="sticky-col">Item/Frota</th>
                       {% for coluna in tabela.colunas %}
                         <th class="ev8-col-{{ coluna.cor or 'padrao' }}">
-                          {% if coluna.grupo %}<small>{{ coluna.grupo }}</small>{% endif %}
                           <strong>{{ coluna.nome }}</strong>
                         </th>
                       {% endfor %}

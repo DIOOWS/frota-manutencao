@@ -19,7 +19,7 @@ from flask import (
     current_app,
     jsonify,
 )
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from werkzeug.utils import secure_filename
 from sqlalchemy import or_, and_
@@ -197,6 +197,26 @@ def montar_mapa_celulas(tabela):
     return mapa
 
 
+def montar_mapa_celulas_obj(tabela):
+    mapa = {}
+    if not tabela:
+        return mapa
+    celulas = EvidenciaTabelaCelula.query.join(EvidenciaTabelaLinha).filter(
+        EvidenciaTabelaLinha.tabela_id == tabela.id
+    ).all()
+    for celula in celulas:
+        mapa[f"{celula.linha_id}_{celula.coluna_id}"] = celula
+    return mapa
+
+
+def aplicar_estilo_celula(celula, cor=None, alinhamento=None):
+    # Compatível com bancos/modelos antigos: só grava estilo se as colunas existirem no model.
+    if cor is not None and hasattr(celula, "cor"):
+        celula.cor = texto(cor) or None
+    if alinhamento is not None and hasattr(celula, "alinhamento"):
+        celula.alinhamento = texto(alinhamento) or None
+
+
 def montar_grupos_cabecalho(tabela):
     """
     Monta cabeçalhos agrupados por sequência de colunas com o mesmo grupo.
@@ -267,6 +287,9 @@ def salvar_estado_tabela_do_request(tabela):
         nova_ordem = texto(request.form.get(f"coluna_ordem_{coluna.id}"))
         if nova_ordem.isdigit():
             coluna.ordem = int(nova_ordem)
+        nova_largura = texto(request.form.get(f"coluna_largura_{coluna.id}"))
+        if nova_largura.isdigit() and hasattr(coluna, "largura"):
+            coluna.largura = max(60, min(int(nova_largura), 900))
 
     for linha in tabela.linhas:
         novo_rotulo = texto(request.form.get(f"linha_rotulo_{linha.id}"))
@@ -277,15 +300,21 @@ def salvar_estado_tabela_do_request(tabela):
             campo = f"celula_{linha.id}_{coluna.id}"
             valor = texto(request.form.get(campo))
             celula = existentes.get((linha.id, coluna.id))
+            cor_celula = texto(request.form.get(f"celula_cor_{linha.id}_{coluna.id}"))
+            alinhamento_celula = texto(request.form.get(f"celula_align_{linha.id}_{coluna.id}"))
             if celula:
                 celula.valor = valor or None
+                aplicar_estilo_celula(celula, cor_celula, alinhamento_celula)
                 celula.atualizado_em = datetime.utcnow()
-            elif valor:
-                db.session.add(EvidenciaTabelaCelula(
+            elif valor or cor_celula or alinhamento_celula:
+                nova = EvidenciaTabelaCelula(
+                    tabela_id=tabela.id,
                     linha_id=linha.id,
                     coluna_id=coluna.id,
                     valor=valor,
-                ))
+                )
+                aplicar_estilo_celula(nova, cor_celula, alinhamento_celula)
+                db.session.add(nova)
 
     tabela.atualizado_em = datetime.utcnow()
 
@@ -391,6 +420,7 @@ def preparar_registro_para_tela(registro):
         pai.total_imagens = len(pai.imagens_tela)
         if getattr(pai, "tabela_controle", None):
             pai.tabela_controle.mapa_celulas = montar_mapa_celulas(pai.tabela_controle)
+            pai.tabela_controle.mapa_celulas_obj = montar_mapa_celulas_obj(pai.tabela_controle)
             pai.tabela_controle.grupos_cabecalho = montar_grupos_cabecalho(pai.tabela_controle)
     return registro
 
@@ -574,6 +604,8 @@ def novo_registro():
         cliente_id = request.form.get("cliente_id", type=int)
         frota = texto(request.form.get("frota"))
         placa = texto(request.form.get("placa"))
+        painel_livre = request.form.get("tipo_painel") == "livre"
+        nome_painel = texto(request.form.get("nome_painel"))
 
         if not cliente_id:
             flash("Selecione um cliente.", "danger")
@@ -584,8 +616,15 @@ def novo_registro():
         if not cliente_permitido(cliente.id, cliente.nome):
             abort(403)
 
+        # Painel livre permite criar evidências que não são de uma frota/placa real.
+        # Para manter compatibilidade com o modelo atual e com os relatórios/exportações,
+        # o nome do painel livre é salvo no campo frota. Assim não precisa mexer no banco.
+        if painel_livre:
+            frota = nome_painel
+            placa = ""
+
         if not frota and not placa:
-            flash("Informe a frota ou a placa.", "danger")
+            flash("Informe a frota, a placa ou o nome do painel livre.", "danger")
             return redirect(request.url)
 
         registro = EvidenciaRegistro(
@@ -858,6 +897,179 @@ def criar_estrutura_tabela(tabela, qtd_colunas, qtd_linhas):
     tabela.atualizado_em = datetime.utcnow()
 
 
+
+
+def valor_planilha_para_texto(valor):
+    """Converte valor do Excel para texto seguro para a tabela web."""
+    if valor is None:
+        return ""
+    if isinstance(valor, float) and valor.is_integer():
+        return str(int(valor))
+    return texto(valor)
+
+
+def coluna_para_px(ws, indice_coluna, padrao=140):
+    """Aproxima a largura do Excel para pixels da tabela web."""
+    try:
+        letra = ws.cell(row=1, column=indice_coluna).column_letter
+        largura_excel = ws.column_dimensions[letra].width
+        if largura_excel:
+            return max(70, min(int(float(largura_excel) * 8), 420))
+    except Exception:
+        pass
+    return padrao
+
+
+def cor_classe_por_indice(indice):
+    cores = ["azul", "amarelo", "verde", "verde_claro", "laranja", "azul_claro", "vermelho", "cinza", "roxo"]
+    return cores[(indice - 1) % len(cores)]
+
+
+def detectar_estrutura_excel(ws):
+    """
+    Lê planilha no padrão:
+    linha 1 = grupos/cabeçalho superior
+    linha 2 = títulos das colunas
+    linha 3+ = dados
+    """
+    max_col = ws.max_column or 1
+    max_row = ws.max_row or 1
+
+    ultima_coluna = 1
+    for col in range(1, max_col + 1):
+        tem_valor = False
+        for row in range(1, max_row + 1):
+            if valor_planilha_para_texto(ws.cell(row=row, column=col).value):
+                tem_valor = True
+                break
+        if tem_valor:
+            ultima_coluna = col
+
+    grupos_mesclados = {}
+    for merged in ws.merged_cells.ranges:
+        if merged.min_row == 1 and merged.max_row == 1:
+            titulo = valor_planilha_para_texto(ws.cell(row=1, column=merged.min_col).value)
+            if titulo:
+                for col in range(merged.min_col, merged.max_col + 1):
+                    grupos_mesclados[col] = titulo
+
+    colunas = []
+    grupo_atual = ""
+    cor_por_grupo = {}
+
+    for col in range(1, ultima_coluna + 1):
+        cabecalho_superior = valor_planilha_para_texto(ws.cell(row=1, column=col).value)
+        titulo_coluna = valor_planilha_para_texto(ws.cell(row=2, column=col).value)
+
+        if col in grupos_mesclados:
+            grupo_atual = grupos_mesclados[col]
+        elif cabecalho_superior:
+            grupo_atual = cabecalho_superior
+
+        if titulo_coluna:
+            nome = titulo_coluna
+            grupo = grupo_atual or None
+        else:
+            nome = cabecalho_superior or f"Coluna {col}"
+            grupo = None
+
+        chave_grupo = normalizar_texto(grupo) if grupo else ""
+        if grupo and chave_grupo not in cor_por_grupo:
+            cor_por_grupo[chave_grupo] = cor_classe_por_indice(len(cor_por_grupo) + 1)
+
+        colunas.append({
+            "nome": nome,
+            "grupo": grupo,
+            "cor": cor_por_grupo.get(chave_grupo, "padrao") if grupo else "padrao",
+            "largura": coluna_para_px(ws, col),
+            "excel_col": col,
+        })
+
+    linhas = []
+    for row in range(3, max_row + 1):
+        valores = [valor_planilha_para_texto(ws.cell(row=row, column=col).value) for col in range(1, ultima_coluna + 1)]
+        if not any(valores):
+            continue
+        linhas.append(valores)
+
+    return colunas, linhas
+
+
+def limpar_estrutura_tabela(tabela):
+    ids_linhas = [linha.id for linha in tabela.linhas]
+    ids_colunas = [coluna.id for coluna in tabela.colunas]
+
+    consultas = [EvidenciaTabelaCelula.query.filter(EvidenciaTabelaCelula.tabela_id == tabela.id)]
+    if ids_linhas:
+        consultas.append(EvidenciaTabelaCelula.query.filter(EvidenciaTabelaCelula.linha_id.in_(ids_linhas)))
+    if ids_colunas:
+        consultas.append(EvidenciaTabelaCelula.query.filter(EvidenciaTabelaCelula.coluna_id.in_(ids_colunas)))
+
+    vistos = set()
+    for consulta in consultas:
+        for celula in consulta.all():
+            if celula.id in vistos:
+                continue
+            vistos.add(celula.id)
+            db.session.delete(celula)
+
+    for linha in list(tabela.linhas):
+        db.session.delete(linha)
+    for coluna in list(tabela.colunas):
+        db.session.delete(coluna)
+    db.session.flush()
+
+
+def importar_excel_para_tabela(tabela, arquivo_storage):
+    arquivo_storage.stream.seek(0)
+    wb_import = load_workbook(arquivo_storage.stream, data_only=True)
+    ws = wb_import.active
+    colunas_importadas, linhas_importadas = detectar_estrutura_excel(ws)
+
+    if not colunas_importadas:
+        raise ValueError("A planilha não possui colunas para importar.")
+
+    limpar_estrutura_tabela(tabela)
+
+    novas_colunas = []
+    for ordem, coluna_info in enumerate(colunas_importadas, start=1):
+        coluna = EvidenciaTabelaColuna(
+            tabela_id=tabela.id,
+            nome=coluna_info["nome"],
+            grupo=coluna_info["grupo"],
+            tipo="texto",
+            cor=coluna_info["cor"],
+            largura=coluna_info["largura"],
+            ordem=ordem,
+        )
+        db.session.add(coluna)
+        novas_colunas.append(coluna)
+
+    db.session.flush()
+
+    for ordem_linha, valores in enumerate(linhas_importadas, start=1):
+        linha = EvidenciaTabelaLinha(
+            tabela_id=tabela.id,
+            rotulo=f"Linha {ordem_linha}",
+            ordem=ordem_linha,
+        )
+        db.session.add(linha)
+        db.session.flush()
+
+        for coluna, valor in zip(novas_colunas, valores):
+            if valor == "":
+                continue
+            db.session.add(EvidenciaTabelaCelula(
+                tabela_id=tabela.id,
+                linha_id=linha.id,
+                coluna_id=coluna.id,
+                valor=valor,
+                alinhamento="center",
+            ))
+
+    tabela.atualizado_em = datetime.utcnow()
+    return len(colunas_importadas), len(linhas_importadas)
+
 @evidencias_frota_bp.route("/pai/<int:pai_id>/tabela/criar", methods=["POST"])
 def criar_tabela_controle(pai_id):
     resp = exigir_login()
@@ -876,8 +1088,7 @@ def criar_tabela_controle(pai_id):
     tabela = EvidenciaTabelaControle(
         campo_pai_id=pai.id,
         titulo=titulo,
-        ativa=True,
-        ordem=1,
+        ativo=True,
     )
     db.session.add(tabela)
     db.session.flush()
@@ -886,6 +1097,100 @@ def criar_tabela_controle(pai_id):
 
     flash(f"Tabela criada com {qtd_colunas} coluna(s) e {qtd_linhas} linha(s).", "success")
     return redirect(f"/gestao/evidencias/{pai.registro_id}#tabelaPai{pai.id}")
+
+
+
+
+
+
+@evidencias_frota_bp.route("/pai/<int:pai_id>/tabela/importar_excel", methods=["POST"])
+def importar_excel_pai_tabela(pai_id):
+    resp = exigir_login()
+    if resp:
+        if requisicao_ajax():
+            return responder_erro("login", 401)
+        return resp
+
+    pai = obter_pai_ou_404(pai_id)
+    arquivo = request.files.get("arquivo_excel") or request.files.get("arquivo")
+
+    if not arquivo or not arquivo.filename:
+        if requisicao_ajax():
+            return responder_erro("Selecione um arquivo Excel.", 400)
+        flash("Selecione um arquivo Excel.", "warning")
+        return redirect(f"/gestao/evidencias/{pai.registro_id}#tabelaPai{pai.id}")
+
+    nome = arquivo.filename.lower()
+    if not (nome.endswith(".xlsx") or nome.endswith(".xlsm")):
+        if requisicao_ajax():
+            return responder_erro("Envie um arquivo .xlsx ou .xlsm.", 400)
+        flash("Envie um arquivo .xlsx ou .xlsm.", "warning")
+        return redirect(f"/gestao/evidencias/{pai.registro_id}#tabelaPai{pai.id}")
+
+    tabela = pai.tabela_controle
+    if not tabela:
+        tabela = EvidenciaTabelaControle(
+            campo_pai_id=pai.id,
+            titulo=pai.nome,
+            ativo=True,
+        )
+        db.session.add(tabela)
+        db.session.flush()
+
+    try:
+        qtd_colunas, qtd_linhas = importar_excel_para_tabela(tabela, arquivo)
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        mensagem = f"Erro ao importar planilha: {exc}"
+        if requisicao_ajax():
+            return responder_erro(mensagem, 400)
+        flash(mensagem, "danger")
+        return redirect(f"/gestao/evidencias/{pai.registro_id}#tabelaPai{pai.id}")
+
+    mensagem = f"Planilha importada: {qtd_colunas} coluna(s) e {qtd_linhas} linha(s)."
+    url = f"/gestao/evidencias/{pai.registro_id}#tabelaPai{pai.id}"
+    return voltar_ou_json(url, mensagem, tabela_id=tabela.id, campo_pai_id=pai.id)
+
+
+@evidencias_frota_bp.route("/tabela/<int:tabela_id>/importar_excel", methods=["POST"])
+def importar_excel_tabela(tabela_id):
+    resp = exigir_login()
+    if resp:
+        if requisicao_ajax():
+            return responder_erro("login", 401)
+        return resp
+
+    tabela = obter_tabela_ou_404(tabela_id)
+    arquivo = request.files.get("arquivo_excel") or request.files.get("arquivo")
+
+    if not arquivo or not arquivo.filename:
+        if requisicao_ajax():
+            return responder_erro("Selecione um arquivo Excel.", 400)
+        flash("Selecione um arquivo Excel.", "warning")
+        return redirect(f"/gestao/evidencias/{tabela.campo_pai.registro_id}#tabelaPai{tabela.campo_pai_id}")
+
+    nome = arquivo.filename.lower()
+    if not (nome.endswith(".xlsx") or nome.endswith(".xlsm")):
+        if requisicao_ajax():
+            return responder_erro("Envie um arquivo .xlsx ou .xlsm.", 400)
+        flash("Envie um arquivo .xlsx ou .xlsm.", "warning")
+        return redirect(f"/gestao/evidencias/{tabela.campo_pai.registro_id}#tabelaPai{tabela.campo_pai_id}")
+
+    try:
+        qtd_colunas, qtd_linhas = importar_excel_para_tabela(tabela, arquivo)
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        mensagem = f"Erro ao importar planilha: {exc}"
+        if requisicao_ajax():
+            return responder_erro(mensagem, 400)
+        flash(mensagem, "danger")
+        return redirect(f"/gestao/evidencias/{tabela.campo_pai.registro_id}#tabelaPai{tabela.campo_pai_id}")
+
+    mensagem = f"Planilha importada: {qtd_colunas} coluna(s) e {qtd_linhas} linha(s)."
+    url = f"/gestao/evidencias/{tabela.campo_pai.registro_id}#tabelaPai{tabela.campo_pai_id}"
+    return voltar_ou_json(url, mensagem, tabela_id=tabela.id, campo_pai_id=tabela.campo_pai_id)
 
 
 @evidencias_frota_bp.route("/tabela/<int:tabela_id>/editar", methods=["POST"])
@@ -1076,6 +1381,9 @@ def salvar_celulas_tabela(tabela_id):
         nova_ordem = texto(request.form.get(f"coluna_ordem_{coluna.id}"))
         if nova_ordem.isdigit():
             coluna.ordem = int(nova_ordem)
+        nova_largura = texto(request.form.get(f"coluna_largura_{coluna.id}"))
+        if nova_largura.isdigit() and hasattr(coluna, "largura"):
+            coluna.largura = max(60, min(int(nova_largura), 900))
 
     for linha in tabela.linhas:
         novo_rotulo = texto(request.form.get(f"linha_rotulo_{linha.id}"))
@@ -1087,15 +1395,21 @@ def salvar_celulas_tabela(tabela_id):
             campo = f"celula_{linha.id}_{coluna.id}"
             valor = texto(request.form.get(campo))
             celula = existentes.get(chave)
+            cor_celula = texto(request.form.get(f"celula_cor_{linha.id}_{coluna.id}"))
+            alinhamento_celula = texto(request.form.get(f"celula_align_{linha.id}_{coluna.id}"))
             if celula:
                 celula.valor = valor or None
+                aplicar_estilo_celula(celula, cor_celula, alinhamento_celula)
                 celula.atualizado_em = datetime.utcnow()
-            elif valor:
-                db.session.add(EvidenciaTabelaCelula(
+            elif valor or cor_celula or alinhamento_celula:
+                nova = EvidenciaTabelaCelula(
+                    tabela_id=tabela.id,
                     linha_id=linha.id,
                     coluna_id=coluna.id,
                     valor=valor,
-                ))
+                )
+                aplicar_estilo_celula(nova, cor_celula, alinhamento_celula)
+                db.session.add(nova)
 
     tabela.atualizado_em = datetime.utcnow()
     db.session.commit()
@@ -1487,16 +1801,37 @@ def imagens_por_filtros(registro_id=None):
 
 
 def ajustar_excel(ws):
+    from openpyxl.utils import get_column_letter
+    from openpyxl.cell.cell import MergedCell
+
+    # Ajusta alinhamento ignorando células mescladas.
     for row in ws.iter_rows():
         for cell in row:
-            cell.alignment = Alignment(vertical="top", wrap_text=True)
+            if isinstance(cell, MergedCell):
+                continue
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
-    for col in ws.columns:
+    # Ajusta largura sem usar col[0].column_letter, porque col[0] pode ser MergedCell.
+    for col_idx in range(1, ws.max_column + 1):
+        col_letter = get_column_letter(col_idx)
         max_len = 0
-        col_letter = col[0].column_letter
-        for cell in col:
-            max_len = max(max_len, len(str(cell.value or "")))
-        ws.column_dimensions[col_letter].width = min(max(max_len + 2, 14), 45)
+
+        for row_idx in range(1, ws.max_row + 1):
+            cell = ws.cell(row=row_idx, column=col_idx)
+            if isinstance(cell, MergedCell):
+                continue
+
+            valor = cell.value
+            if valor is None:
+                continue
+
+            max_len = max(max_len, len(str(valor)))
+
+        ws.column_dimensions[col_letter].width = min(max(max_len + 2, 12), 45)
+
+    # Altura padrão melhor para textos com quebra de linha.
+    for row_idx in range(1, ws.max_row + 1):
+        ws.row_dimensions[row_idx].height = 28
 
 
 def estilizar_cabecalho(ws):
@@ -1636,69 +1971,64 @@ def estilizar_tabela_controle(ws):
 
 
 def adicionar_aba_tabela_controle(wb, tabela, usados):
+    """
+    Exportação simples da tabela do campo pai.
+    Sem grupos, sem células mescladas e sem cabeçalho duplicado.
+    A aba fica igual uma planilha direta: linha 1 = títulos das colunas;
+    linha 2 em diante = dados digitados/importados.
+    """
     if not tabela:
         return
-    ws = wb.create_sheet(nome_aba_seguro(tabela.titulo or "Tabela", usados))
 
-    grupos = montar_grupos_cabecalho(tabela)
-    linha_grupos = []
-    for grupo in grupos:
-        linha_grupos.extend([grupo.get("titulo") or ""] * int(grupo.get("colspan") or 1))
-    ws.append(linha_grupos)
-    ws.append([coluna.nome for coluna in tabela.colunas])
+    titulo_aba = tabela.titulo or getattr(tabela.campo_pai, "nome", None) or "Tabela"
+    ws = wb.create_sheet(nome_aba_seguro(titulo_aba, usados))
 
-    coluna_inicio = 1
-    for grupo in grupos:
-        colspan = int(grupo.get("colspan") or 1)
-        if colspan > 1:
-            ws.merge_cells(start_row=1, start_column=coluna_inicio, end_row=1, end_column=coluna_inicio + colspan - 1)
-        coluna_inicio += colspan
+    colunas = list(tabela.colunas or [])
+    linhas = list(tabela.linhas or [])
+
+    # Cabeçalho simples: usa somente o nome da coluna.
+    # Se por algum motivo o nome vier vazio, usa Coluna 1, Coluna 2...
+    cabecalho = []
+    for idx, coluna in enumerate(colunas, start=1):
+        nome_coluna = texto(getattr(coluna, "nome", "")) or f"Coluna {idx}"
+        cabecalho.append(nome_coluna)
+
+    if not cabecalho:
+        cabecalho = ["Coluna 1"]
+
+    ws.append(cabecalho)
 
     mapa = montar_mapa_celulas(tabela)
-    for linha in tabela.linhas:
+    for linha in linhas:
         row = []
-        for idx, coluna in enumerate(tabela.colunas):
+        for idx, coluna in enumerate(colunas):
             valor = mapa.get(f"{linha.id}_{coluna.id}", "")
             if idx == 0 and not valor and linha.rotulo and not str(linha.rotulo).startswith("Linha "):
                 valor = linha.rotulo
             row.append(valor)
         ws.append(row)
 
-    estilizar_tabela_controle(ws)
+    # Visual simples igual tabela do sistema: cabeçalho azul escuro e corpo limpo.
+    estilizar_cabecalho(ws)
     ajustar_excel(ws)
 
 
 def montar_excel_registro(imagens, registro_ids_extra=None):
     wb = Workbook()
-    ws = wb.active
-    ws.title = "Evidências"
-    ws.append(["Cliente", "Frota", "Placa", "Campo pai", "Tipo da foto", "Legenda", "Imagem"])
 
-    for img in imagens:
-        pai = pai_da_imagem(img)
-        registro = pai.registro if pai else None
-        if not registro:
-            continue
-        ws.append([
-            registro.cliente_nome,
-            registro.frota or "",
-            registro.placa or "",
-            pai.nome,
-            origem_imagem(img),
-            img.legenda or "",
-            img.imagem_url,
-        ])
+    # Remove a aba padrão para evitar aba vazia quando o painel só tem tabela.
+    ws_padrao = wb.active
+    wb.remove(ws_padrao)
 
-    estilizar_cabecalho(ws)
-    ajustar_excel(ws)
-
-    # Abas das tabelas de controle vinculadas aos campos pai deste registro.
-    usados = {ws.title}
+    usados = set()
     registro_ids = set(registro_ids_extra or [])
+
     for img in imagens:
         registro = registro_da_imagem(img)
         if registro:
             registro_ids.add(registro.id)
+
+    # Primeiro exporta as tabelas dos campos pai.
     for registro_id in sorted(registro_ids):
         registro = EvidenciaRegistro.query.get(registro_id)
         if not registro:
@@ -1707,11 +2037,40 @@ def montar_excel_registro(imagens, registro_ids_extra=None):
             if getattr(pai, "tabela_controle", None):
                 adicionar_aba_tabela_controle(wb, pai.tabela_controle, usados)
 
+    # Depois exporta imagens somente se existir imagem. Assim não cria aba Evidências vazia.
+    if imagens:
+        ws = wb.create_sheet(nome_aba_seguro("Evidências", usados), 0)
+        ws.append(["Cliente", "Frota", "Placa", "Campo pai", "Tipo da foto", "Legenda", "Imagem"])
+
+        for img in imagens:
+            pai = pai_da_imagem(img)
+            registro = pai.registro if pai else None
+            if not registro:
+                continue
+            ws.append([
+                registro.cliente_nome,
+                registro.frota or "",
+                registro.placa or "",
+                pai.nome,
+                origem_imagem(img),
+                img.legenda or "",
+                img.imagem_url,
+            ])
+
+        estilizar_cabecalho(ws)
+        ajustar_excel(ws)
+
+    # Segurança: Excel precisa ter ao menos uma aba.
+    if not wb.sheetnames:
+        ws = wb.create_sheet("Evidências")
+        ws.append(["Cliente", "Frota", "Placa", "Campo pai", "Tipo da foto", "Legenda", "Imagem"])
+        estilizar_cabecalho(ws)
+        ajustar_excel(ws)
+
     saida = BytesIO()
     wb.save(saida)
     saida.seek(0)
     return saida
-
 
 def exportar_excel_por_registro(registro_id):
     obter_registro_ou_404(registro_id)
