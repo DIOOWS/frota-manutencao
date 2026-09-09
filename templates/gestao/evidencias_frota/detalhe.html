@@ -352,25 +352,30 @@
                     <span><i class="bi bi-pencil-square"></i> Edição rápida das fotos</span>
                     <button class="ev92-btn success" type="submit"><i class="bi bi-save"></i> Salvar todas alterações</button>
                   </div>
-                  <div class="ev92-photo-grid ev925-photo-grid">
+                  <div class="ev92-photo-grid ev925-photo-grid ev926-photo-grid-clean">
                     {% for img in imagens_pai %}
-                      <figure class="ev92-photo-card ev925-photo-card">
-                        <a href="{{ img.imagem_url }}" target="_blank" class="ev92-photo-thumb">
+                      <figure class="ev92-photo-card ev925-photo-card ev926-photo-card-clean">
+                        <div class="ev926-photo-topbar">
+                          <span class="ev926-photo-badge">{{ img.tipo_resolvido() if img.tipo_resolvido is defined else (img.tipo_foto or 'Sem tipo') }}</span>
+                          <button class="ev926-photo-delete" type="submit" formaction="/gestao/evidencias/imagem/{{ img.id }}/excluir" formmethod="post" title="Excluir imagem"><i class="bi bi-trash3"></i></button>
+                        </div>
+                        <a href="{{ img.imagem_url }}" target="_blank" class="ev92-photo-thumb ev926-photo-thumb-clean">
                           <img src="{{ img.imagem_url }}" alt="{{ img.legenda or img.nome_original or 'Imagem' }}">
-                          <span>{{ img.tipo_resolvido() if img.tipo_resolvido is defined else (img.tipo_foto or 'Sem tipo') }}</span>
                         </a>
-                        <figcaption>
-                          <small>{{ img.enviado_em.strftime('%d/%m/%Y %H:%M') if img.enviado_em else '-' }}</small>
-                          <div class="ev92-caption-form ev925-caption-fields">
+                        <figcaption class="ev926-photo-edit-box">
+                          <small class="ev926-photo-date"><i class="bi bi-clock"></i> {{ img.enviado_em.strftime('%d/%m/%Y %H:%M') if img.enviado_em else '-' }}</small>
+                          <label class="ev926-photo-field">
+                            <span>Tipo</span>
                             <select name="tipo_foto_{{ img.id }}" class="form-control">
                               {% for tipo in tipos_foto %}
                                 <option value="{{ tipo.nome }}" {% if (img.tipo_resolvido() if img.tipo_resolvido is defined else img.tipo_foto) == tipo.nome %}selected{% endif %}>{{ tipo.nome }}</option>
                               {% endfor %}
                             </select>
-                            <input type="text" name="legenda_{{ img.id }}" value="{{ img.legenda or '' }}" class="form-control" placeholder="Legenda livre">
-                            <button class="ev92-mini ok" type="submit" title="Salvar alterações"><i class="bi bi-check-lg"></i></button>
-                            <button class="ev92-mini danger" type="submit" formaction="/gestao/evidencias/imagem/{{ img.id }}/excluir" formmethod="post" title="Excluir imagem"><i class="bi bi-trash3"></i></button>
-                          </div>
+                          </label>
+                          <label class="ev926-photo-field">
+                            <span>Legenda</span>
+                            <input type="text" name="legenda_{{ img.id }}" value="{{ img.legenda or '' }}" class="form-control" placeholder="Ex: antes, depois, troca concluída">
+                          </label>
                         </figcaption>
                       </figure>
                     {% endfor %}
