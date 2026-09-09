@@ -1555,7 +1555,41 @@ def editar_imagem(imagem_id):
     db.session.commit()
 
     url = f"/gestao/evidencias/{registro_id}"
-    return voltar_ou_json(url, "Imagem atualizada.", registro_id=registro_id, imagem_id=imagem.id)
+    return voltar_ou_json(url, "Imagem atualizada.", registro_id=registro_id, campo_pai_id=(pai_da_imagem(imagem).id if pai_da_imagem(imagem) else None), imagem_id=imagem.id)
+
+
+@evidencias_frota_bp.route("/pai/<int:pai_id>/imagens/editar_lote", methods=["POST"])
+def editar_imagens_pai_lote(pai_id):
+    resp = exigir_login()
+    if resp:
+        return resp
+
+    pai = obter_pai_ou_404(pai_id)
+    imagens = imagens_do_pai(pai.id)
+
+    atualizadas = 0
+    for imagem in imagens:
+        tipo_foto = texto(request.form.get(f"tipo_foto_{imagem.id}"))
+        legenda = texto(request.form.get(f"legenda_{imagem.id}"))
+
+        alterou = False
+        if tipo_foto and tipo_foto != (imagem.tipo_foto or ""):
+            imagem.tipo_foto = tipo_foto
+            alterou = True
+
+        nova_legenda = legenda or None
+        if nova_legenda != imagem.legenda:
+            imagem.legenda = nova_legenda
+            alterou = True
+
+        if alterou:
+            atualizadas += 1
+
+    db.session.commit()
+
+    mensagem = f"{atualizadas} imagem(ns) atualizada(s)." if atualizadas else "Nenhuma alteração nas imagens."
+    url = f"/gestao/evidencias/{pai.registro_id}"
+    return voltar_ou_json(url, mensagem, registro_id=pai.registro_id, campo_pai_id=pai.id, area="fotos")
 
 
 @evidencias_frota_bp.route("/imagem/<int:imagem_id>/excluir", methods=["POST"])
@@ -1566,6 +1600,7 @@ def excluir_imagem(imagem_id):
 
     imagem = obter_imagem_ou_404(imagem_id)
     registro_id = registro_id_da_imagem(imagem)
+    pai = pai_da_imagem(imagem)
 
     if imagem.public_id and cloudinary_configurado():
         try:
@@ -1583,7 +1618,7 @@ def excluir_imagem(imagem_id):
     db.session.commit()
 
     url = f"/gestao/evidencias/{registro_id}"
-    return voltar_ou_json(url, "Imagem excluída.", registro_id=registro_id, imagem_id=imagem_id)
+    return voltar_ou_json(url, "Imagem excluída.", registro_id=registro_id, campo_pai_id=(pai.id if pai else None), imagem_id=imagem_id)
 
 
 # =========================================================
@@ -1971,64 +2006,69 @@ def estilizar_tabela_controle(ws):
 
 
 def adicionar_aba_tabela_controle(wb, tabela, usados):
-    """
-    Exportação simples da tabela do campo pai.
-    Sem grupos, sem células mescladas e sem cabeçalho duplicado.
-    A aba fica igual uma planilha direta: linha 1 = títulos das colunas;
-    linha 2 em diante = dados digitados/importados.
-    """
     if not tabela:
         return
+    ws = wb.create_sheet(nome_aba_seguro(tabela.titulo or "Tabela", usados))
 
-    titulo_aba = tabela.titulo or getattr(tabela.campo_pai, "nome", None) or "Tabela"
-    ws = wb.create_sheet(nome_aba_seguro(titulo_aba, usados))
+    grupos = montar_grupos_cabecalho(tabela)
+    linha_grupos = []
+    for grupo in grupos:
+        linha_grupos.extend([grupo.get("titulo") or ""] * int(grupo.get("colspan") or 1))
+    ws.append(linha_grupos)
+    ws.append([coluna.nome for coluna in tabela.colunas])
 
-    colunas = list(tabela.colunas or [])
-    linhas = list(tabela.linhas or [])
-
-    # Cabeçalho simples: usa somente o nome da coluna.
-    # Se por algum motivo o nome vier vazio, usa Coluna 1, Coluna 2...
-    cabecalho = []
-    for idx, coluna in enumerate(colunas, start=1):
-        nome_coluna = texto(getattr(coluna, "nome", "")) or f"Coluna {idx}"
-        cabecalho.append(nome_coluna)
-
-    if not cabecalho:
-        cabecalho = ["Coluna 1"]
-
-    ws.append(cabecalho)
+    coluna_inicio = 1
+    for grupo in grupos:
+        colspan = int(grupo.get("colspan") or 1)
+        if colspan > 1:
+            ws.merge_cells(start_row=1, start_column=coluna_inicio, end_row=1, end_column=coluna_inicio + colspan - 1)
+        coluna_inicio += colspan
 
     mapa = montar_mapa_celulas(tabela)
-    for linha in linhas:
+    for linha in tabela.linhas:
         row = []
-        for idx, coluna in enumerate(colunas):
+        for idx, coluna in enumerate(tabela.colunas):
             valor = mapa.get(f"{linha.id}_{coluna.id}", "")
             if idx == 0 and not valor and linha.rotulo and not str(linha.rotulo).startswith("Linha "):
                 valor = linha.rotulo
             row.append(valor)
         ws.append(row)
 
-    # Visual simples igual tabela do sistema: cabeçalho azul escuro e corpo limpo.
-    estilizar_cabecalho(ws)
+    estilizar_tabela_controle(ws)
     ajustar_excel(ws)
 
 
 def montar_excel_registro(imagens, registro_ids_extra=None):
     wb = Workbook()
+    ws = wb.active
+    ws.title = "Evidências"
+    ws.append(["Cliente", "Frota", "Placa", "Campo pai", "Tipo da foto", "Legenda", "Imagem"])
 
-    # Remove a aba padrão para evitar aba vazia quando o painel só tem tabela.
-    ws_padrao = wb.active
-    wb.remove(ws_padrao)
+    for img in imagens:
+        pai = pai_da_imagem(img)
+        registro = pai.registro if pai else None
+        if not registro:
+            continue
+        ws.append([
+            registro.cliente_nome,
+            registro.frota or "",
+            registro.placa or "",
+            pai.nome,
+            origem_imagem(img),
+            img.legenda or "",
+            img.imagem_url,
+        ])
 
-    usados = set()
+    estilizar_cabecalho(ws)
+    ajustar_excel(ws)
+
+    # Abas das tabelas de controle vinculadas aos campos pai deste registro.
+    usados = {ws.title}
     registro_ids = set(registro_ids_extra or [])
-
     for img in imagens:
         registro = registro_da_imagem(img)
         if registro:
             registro_ids.add(registro.id)
-
-    # Primeiro exporta as tabelas dos campos pai.
     for registro_id in sorted(registro_ids):
         registro = EvidenciaRegistro.query.get(registro_id)
         if not registro:
@@ -2037,40 +2077,11 @@ def montar_excel_registro(imagens, registro_ids_extra=None):
             if getattr(pai, "tabela_controle", None):
                 adicionar_aba_tabela_controle(wb, pai.tabela_controle, usados)
 
-    # Depois exporta imagens somente se existir imagem. Assim não cria aba Evidências vazia.
-    if imagens:
-        ws = wb.create_sheet(nome_aba_seguro("Evidências", usados), 0)
-        ws.append(["Cliente", "Frota", "Placa", "Campo pai", "Tipo da foto", "Legenda", "Imagem"])
-
-        for img in imagens:
-            pai = pai_da_imagem(img)
-            registro = pai.registro if pai else None
-            if not registro:
-                continue
-            ws.append([
-                registro.cliente_nome,
-                registro.frota or "",
-                registro.placa or "",
-                pai.nome,
-                origem_imagem(img),
-                img.legenda or "",
-                img.imagem_url,
-            ])
-
-        estilizar_cabecalho(ws)
-        ajustar_excel(ws)
-
-    # Segurança: Excel precisa ter ao menos uma aba.
-    if not wb.sheetnames:
-        ws = wb.create_sheet("Evidências")
-        ws.append(["Cliente", "Frota", "Placa", "Campo pai", "Tipo da foto", "Legenda", "Imagem"])
-        estilizar_cabecalho(ws)
-        ajustar_excel(ws)
-
     saida = BytesIO()
     wb.save(saida)
     saida.seek(0)
     return saida
+
 
 def exportar_excel_por_registro(registro_id):
     obter_registro_ou_404(registro_id)

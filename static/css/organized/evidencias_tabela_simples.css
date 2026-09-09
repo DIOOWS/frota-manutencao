@@ -258,3 +258,49 @@
 .ev-simple-cell-roxo .ev-simple-cell-input {
   background: transparent !important;
 }
+
+/* V9.25 - melhoria da aba de fotos: edição em lote e fluxo sem sair da aba */
+.ev925-photo-bulk-form {
+  display: block;
+  margin-top: 14px;
+}
+.ev925-photo-bulk-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border: 1px solid #dbe4f0;
+  border-radius: 14px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 900;
+}
+.ev925-photo-grid .ev92-photo-card figcaption {
+  display: block;
+}
+.ev925-caption-fields {
+  display: grid !important;
+  grid-template-columns: 125px 1fr 34px 34px;
+  gap: 6px;
+  align-items: center;
+  width: 100%;
+}
+.ev925-caption-fields .form-control {
+  min-height: 34px;
+  font-size: 12px;
+}
+.ev925-photo-card:hover {
+  box-shadow: 0 14px 35px rgba(15, 23, 42, .14);
+}
+@media (max-width: 760px) {
+  .ev925-photo-bulk-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .ev925-caption-fields {
+    grid-template-columns: 1fr;
+  }
+}
