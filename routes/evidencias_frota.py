@@ -20,7 +20,7 @@ from flask import (
     jsonify,
 )
 from openpyxl import Workbook, load_workbook
-from openpyxl.styles import Font, PatternFill, Alignment
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from werkzeug.utils import secure_filename
 from sqlalchemy import or_, and_
 
@@ -74,19 +74,6 @@ def usuario_logado():
 
 def usuario_eh_admin_ou_gestao():
     return session.get("user_role") in ["admin", "gestao", "gestor"]
-
-
-def exigir_editor_evidencias():
-    resp = exigir_login()
-    if resp:
-        return resp
-
-    if not usuario_eh_admin_ou_gestao():
-        if requisicao_ajax():
-            return responder_erro("Cliente possui acesso somente leitura neste painel.", 403)
-        abort(403)
-
-    return None
 
 
 def exigir_login():
@@ -604,17 +591,12 @@ def index():
         cliente_id=request.args.get("cliente_id", type=int),
         busca=texto(request.args.get("busca")),
         campo=texto(request.args.get("campo")),
-        pode_editar=usuario_eh_admin_ou_gestao(),
     )
 
 
 @evidencias_frota_bp.route("/novo", methods=["GET", "POST"])
 def novo_registro():
     resp = exigir_login()
-    if resp:
-        return resp
-
-    resp = exigir_editor_evidencias()
     if resp:
         return resp
 
@@ -683,7 +665,6 @@ def detalhe(registro_id):
         registro=registro,
         links_publicos=links_publicos,
         pode_gerar_link=usuario_eh_admin_ou_gestao(),
-        pode_editar=usuario_eh_admin_ou_gestao(),
         tipos_foto=tipos_foto_para_select(),
     )
 
@@ -691,10 +672,6 @@ def detalhe(registro_id):
 @evidencias_frota_bp.route("/<int:registro_id>/excluir", methods=["POST"])
 def excluir_registro(registro_id):
     resp = exigir_login()
-    if resp:
-        return resp
-
-    resp = exigir_editor_evidencias()
     if resp:
         return resp
 
@@ -713,10 +690,6 @@ def excluir_registro(registro_id):
 @evidencias_frota_bp.route("/<int:registro_id>/pai/novo", methods=["POST"])
 def criar_pai(registro_id):
     resp = exigir_login()
-    if resp:
-        return resp
-
-    resp = exigir_editor_evidencias()
     if resp:
         return resp
 
@@ -746,10 +719,6 @@ def editar_pai(pai_id):
     if resp:
         return resp
 
-    resp = exigir_editor_evidencias()
-    if resp:
-        return resp
-
     pai = obter_pai_ou_404(pai_id)
     nome = texto(request.form.get("nome"))
 
@@ -767,10 +736,6 @@ def excluir_pai(pai_id):
     if resp:
         return resp
 
-    resp = exigir_editor_evidencias()
-    if resp:
-        return resp
-
     pai = obter_pai_ou_404(pai_id)
     registro_id = pai.registro_id
 
@@ -784,10 +749,6 @@ def excluir_pai(pai_id):
 @evidencias_frota_bp.route("/tipos/novo", methods=["POST"])
 def criar_tipo_foto():
     resp = exigir_login()
-    if resp:
-        return resp
-
-    resp = exigir_editor_evidencias()
     if resp:
         return resp
 
@@ -811,10 +772,6 @@ def desativar_tipo_foto(tipo_id):
     if resp:
         return resp
 
-    resp = exigir_editor_evidencias()
-    if resp:
-        return resp
-
     if not usuario_eh_admin_ou_gestao():
         abort(403)
 
@@ -831,10 +788,6 @@ def desativar_tipo_foto(tipo_id):
 @evidencias_frota_bp.route("/pai/<int:pai_id>/filho/novo", methods=["POST"])
 def criar_filho(pai_id):
     resp = exigir_login()
-    if resp:
-        return resp
-
-    resp = exigir_editor_evidencias()
     if resp:
         return resp
 
@@ -859,10 +812,6 @@ def editar_filho(filho_id):
     if resp:
         return resp
 
-    resp = exigir_editor_evidencias()
-    if resp:
-        return resp
-
     filho = obter_filho_ou_404(filho_id)
     nome = texto(request.form.get("nome"))
 
@@ -877,10 +826,6 @@ def editar_filho(filho_id):
 @evidencias_frota_bp.route("/filho/<int:filho_id>/excluir", methods=["POST"])
 def excluir_filho(filho_id):
     resp = exigir_login()
-    if resp:
-        return resp
-
-    resp = exigir_editor_evidencias()
     if resp:
         return resp
 
@@ -1131,10 +1076,6 @@ def criar_tabela_controle(pai_id):
     if resp:
         return resp
 
-    resp = exigir_editor_evidencias()
-    if resp:
-        return resp
-
     pai = obter_pai_ou_404(pai_id)
     titulo = texto(request.form.get("titulo")) or pai.nome
     qtd_colunas = inteiro_limitado(request.form.get("qtd_colunas"), padrao=5, minimo=1, maximo=40)
@@ -1168,10 +1109,6 @@ def importar_excel_pai_tabela(pai_id):
     if resp:
         if requisicao_ajax():
             return responder_erro("login", 401)
-        return resp
-
-    resp = exigir_editor_evidencias()
-    if resp:
         return resp
 
     pai = obter_pai_ou_404(pai_id)
@@ -1224,10 +1161,6 @@ def importar_excel_tabela(tabela_id):
             return responder_erro("login", 401)
         return resp
 
-    resp = exigir_editor_evidencias()
-    if resp:
-        return resp
-
     tabela = obter_tabela_ou_404(tabela_id)
     arquivo = request.files.get("arquivo_excel") or request.files.get("arquivo")
 
@@ -1266,10 +1199,6 @@ def editar_tabela_controle(tabela_id):
     if resp:
         return resp
 
-    resp = exigir_editor_evidencias()
-    if resp:
-        return resp
-
     tabela = obter_tabela_ou_404(tabela_id)
     titulo = texto(request.form.get("titulo"))
     if titulo:
@@ -1283,10 +1212,6 @@ def editar_tabela_controle(tabela_id):
 @evidencias_frota_bp.route("/tabela/<int:tabela_id>/excluir", methods=["POST"])
 def excluir_tabela_controle(tabela_id):
     resp = exigir_login()
-    if resp:
-        return resp
-
-    resp = exigir_editor_evidencias()
     if resp:
         return resp
 
@@ -1304,10 +1229,6 @@ def criar_coluna_tabela(tabela_id):
     if resp:
         if requisicao_ajax():
             return responder_erro("login", 401)
-        return resp
-
-    resp = exigir_editor_evidencias()
-    if resp:
         return resp
 
     tabela = obter_tabela_ou_404(tabela_id)
@@ -1361,10 +1282,6 @@ def excluir_coluna_tabela(coluna_id):
     if resp:
         return resp
 
-    resp = exigir_editor_evidencias()
-    if resp:
-        return resp
-
     coluna = obter_coluna_ou_404(coluna_id)
     tabela = coluna.tabela
     salvar_estado_tabela_do_request(tabela)
@@ -1381,10 +1298,6 @@ def excluir_coluna_tabela(coluna_id):
 @evidencias_frota_bp.route("/tabela/<int:tabela_id>/linha/nova", methods=["POST"])
 def criar_linha_tabela(tabela_id):
     resp = exigir_login()
-    if resp:
-        return resp
-
-    resp = exigir_editor_evidencias()
     if resp:
         return resp
 
@@ -1416,10 +1329,6 @@ def excluir_linha_tabela(linha_id):
     if resp:
         return resp
 
-    resp = exigir_editor_evidencias()
-    if resp:
-        return resp
-
     linha = obter_linha_ou_404(linha_id)
     tabela = linha.tabela
     salvar_estado_tabela_do_request(tabela)
@@ -1435,10 +1344,6 @@ def excluir_linha_tabela(linha_id):
 @evidencias_frota_bp.route("/tabela/<int:tabela_id>/celulas/salvar", methods=["POST"])
 def salvar_celulas_tabela(tabela_id):
     resp = exigir_login()
-    if resp:
-        return resp
-
-    resp = exigir_editor_evidencias()
     if resp:
         return resp
 
@@ -1540,10 +1445,6 @@ def upload_imagens_pai(pai_id):
     if resp:
         return resp
 
-    resp = exigir_editor_evidencias()
-    if resp:
-        return resp
-
     pai = obter_pai_ou_404(pai_id)
     registro = pai.registro
     arquivos = request.files.getlist("imagens")
@@ -1597,10 +1498,6 @@ def upload_imagens(filho_id):
     if resp:
         return resp
 
-    resp = exigir_editor_evidencias()
-    if resp:
-        return resp
-
     filho = obter_filho_ou_404(filho_id)
     pai = filho.campo_pai
     registro = pai.registro
@@ -1643,10 +1540,6 @@ def editar_imagem(imagem_id):
     if resp:
         return resp
 
-    resp = exigir_editor_evidencias()
-    if resp:
-        return resp
-
     imagem = obter_imagem_ou_404(imagem_id)
     registro_id = registro_id_da_imagem(imagem)
 
@@ -1668,10 +1561,6 @@ def editar_imagem(imagem_id):
 @evidencias_frota_bp.route("/pai/<int:pai_id>/imagens/editar_lote", methods=["POST"])
 def editar_imagens_pai_lote(pai_id):
     resp = exigir_login()
-    if resp:
-        return resp
-
-    resp = exigir_editor_evidencias()
     if resp:
         return resp
 
@@ -1706,10 +1595,6 @@ def editar_imagens_pai_lote(pai_id):
 @evidencias_frota_bp.route("/imagem/<int:imagem_id>/excluir", methods=["POST"])
 def excluir_imagem(imagem_id):
     resp = exigir_login()
-    if resp:
-        return resp
-
-    resp = exigir_editor_evidencias()
     if resp:
         return resp
 
@@ -1792,10 +1677,6 @@ def criar_link_publico(registro_id):
     if resp:
         return resp
 
-    resp = exigir_editor_evidencias()
-    if resp:
-        return resp
-
     registro = obter_registro_ou_404(registro_id)
 
     validade = request.form.get("validade_dias", type=int)
@@ -1823,10 +1704,6 @@ def criar_link_publico(registro_id):
 @evidencias_frota_bp.route("/links/<int:link_id>/desativar", methods=["POST"])
 def desativar_link_publico(link_id):
     resp = exigir_gestao_links()
-    if resp:
-        return resp
-
-    resp = exigir_editor_evidencias()
     if resp:
         return resp
 
@@ -2118,93 +1995,140 @@ def nome_aba_seguro(nome, usados):
     return titulo
 
 
-def estilizar_tabela_controle(ws):
-    fill = PatternFill("solid", fgColor="E5E7EB")
-    font = Font(color="111827", bold=True)
-    for row in ws.iter_rows(min_row=1, max_row=min(ws.max_row, 2)):
+def cor_excel_por_nome(cor):
+    mapa = {
+        "padrao": "1F2937",
+        "verde_claro": "BBF7D0",
+        "verde": "22C55E",
+        "amarelo": "FEF08A",
+        "laranja": "FED7AA",
+        "azul_claro": "BFDBFE",
+        "azul": "38BDF8",
+        "vermelho": "FECACA",
+        "cinza": "E5E7EB",
+        "roxo": "E9D5FF",
+    }
+    return mapa.get(texto(cor) or "padrao", "1F2937")
+
+
+def fonte_excel_por_cor(cor):
+    cor = texto(cor) or "padrao"
+    if cor == "padrao":
+        return "FFFFFF"
+    return "111827"
+
+
+def estilizar_tabela_controle_simples(ws, tabela=None):
+    """Visual limpo para Excel do cliente: uma linha de cabeçalho, sem aba de evidências e sem grupos mesclados."""
+    borda = Border(
+        left=Side(style="thin", color="D9E2EC"),
+        right=Side(style="thin", color="D9E2EC"),
+        top=Side(style="thin", color="D9E2EC"),
+        bottom=Side(style="thin", color="D9E2EC"),
+    )
+
+    ws.freeze_panes = "A2"
+    ws.sheet_view.showGridLines = False
+
+    colunas = list(tabela.colunas) if tabela else []
+
+    for col_idx in range(1, ws.max_column + 1):
+        cor = getattr(colunas[col_idx - 1], "cor", "padrao") if col_idx - 1 < len(colunas) else "padrao"
+        cell = ws.cell(row=1, column=col_idx)
+        cell.fill = PatternFill("solid", fgColor=cor_excel_por_nome(cor))
+        cell.font = Font(color=fonte_excel_por_cor(cor), bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = borda
+
+    for row in ws.iter_rows(min_row=2):
         for cell in row:
-            cell.fill = fill
-            cell.font = font
             cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = borda
+
+    for row_idx in range(1, ws.max_row + 1):
+        ws.row_dimensions[row_idx].height = 26 if row_idx == 1 else 24
+
+    from openpyxl.utils import get_column_letter
+    for col_idx in range(1, ws.max_column + 1):
+        largura_modelo = getattr(colunas[col_idx - 1], "largura", None) if col_idx - 1 < len(colunas) else None
+        if largura_modelo:
+            largura = max(11, min(int(largura_modelo) // 7, 28))
+        else:
+            max_len = 0
+            for row_idx in range(1, ws.max_row + 1):
+                valor = ws.cell(row=row_idx, column=col_idx).value
+                if valor is not None:
+                    max_len = max(max_len, len(str(valor)))
+            largura = min(max(max_len + 2, 11), 28)
+        ws.column_dimensions[get_column_letter(col_idx)].width = largura
+
+    ws.auto_filter.ref = ws.dimensions
 
 
 def adicionar_aba_tabela_controle(wb, tabela, usados):
     if not tabela:
-        return
+        return None
+
     ws = wb.create_sheet(nome_aba_seguro(tabela.titulo or "Tabela", usados))
 
-    grupos = montar_grupos_cabecalho(tabela)
-    linha_grupos = []
-    for grupo in grupos:
-        linha_grupos.extend([grupo.get("titulo") or ""] * int(grupo.get("colspan") or 1))
-    ws.append(linha_grupos)
-    ws.append([coluna.nome for coluna in tabela.colunas])
+    # Cabeçalho simples: sem grupos, sem mesclar células e sem aba duplicada de evidências.
+    colunas = list(tabela.colunas)
+    if not colunas:
+        ws.append(["Sem colunas cadastradas"])
+        estilizar_tabela_controle_simples(ws, tabela)
+        return ws
 
-    coluna_inicio = 1
-    for grupo in grupos:
-        colspan = int(grupo.get("colspan") or 1)
-        if colspan > 1:
-            ws.merge_cells(start_row=1, start_column=coluna_inicio, end_row=1, end_column=coluna_inicio + colspan - 1)
-        coluna_inicio += colspan
+    ws.append([texto(coluna.nome) or f"Coluna {idx}" for idx, coluna in enumerate(colunas, start=1)])
 
     mapa = montar_mapa_celulas(tabela)
     for linha in tabela.linhas:
         row = []
-        for idx, coluna in enumerate(tabela.colunas):
+        for idx, coluna in enumerate(colunas):
             valor = mapa.get(f"{linha.id}_{coluna.id}", "")
             if idx == 0 and not valor and linha.rotulo and not str(linha.rotulo).startswith("Linha "):
                 valor = linha.rotulo
             row.append(valor)
         ws.append(row)
 
-    estilizar_tabela_controle(ws)
-    ajustar_excel(ws)
+    estilizar_tabela_controle_simples(ws, tabela)
+    return ws
 
 
 def montar_excel_registro(imagens, registro_ids_extra=None):
+    """Exportação do painel/cliente: somente as tabelas de controle, sem aba Evidências com links de imagem."""
     wb = Workbook()
-    ws = wb.active
-    ws.title = "Evidências"
-    ws.append(["Cliente", "Frota", "Placa", "Campo pai", "Tipo da foto", "Legenda", "Imagem"])
+    ws_padrao = wb.active
+    wb.remove(ws_padrao)
 
-    for img in imagens:
-        pai = pai_da_imagem(img)
-        registro = pai.registro if pai else None
-        if not registro:
-            continue
-        ws.append([
-            registro.cliente_nome,
-            registro.frota or "",
-            registro.placa or "",
-            pai.nome,
-            origem_imagem(img),
-            img.legenda or "",
-            img.imagem_url,
-        ])
-
-    estilizar_cabecalho(ws)
-    ajustar_excel(ws)
-
-    # Abas das tabelas de controle vinculadas aos campos pai deste registro.
-    usados = {ws.title}
+    usados = set()
     registro_ids = set(registro_ids_extra or [])
+
     for img in imagens:
         registro = registro_da_imagem(img)
         if registro:
             registro_ids.add(registro.id)
+
+    criou_aba = False
     for registro_id in sorted(registro_ids):
         registro = EvidenciaRegistro.query.get(registro_id)
         if not registro:
             continue
         for pai in registro.campos_pai:
-            if getattr(pai, "tabela_controle", None):
-                adicionar_aba_tabela_controle(wb, pai.tabela_controle, usados)
+            tabela = getattr(pai, "tabela_controle", None)
+            if tabela:
+                adicionar_aba_tabela_controle(wb, tabela, usados)
+                criou_aba = True
+
+    if not criou_aba:
+        ws = wb.create_sheet("Sem tabela")
+        ws.append(["Nenhuma tabela de controle encontrada neste painel."])
+        estilizar_cabecalho(ws)
+        ajustar_excel(ws)
 
     saida = BytesIO()
     wb.save(saida)
     saida.seek(0)
     return saida
-
 
 def exportar_excel_por_registro(registro_id):
     obter_registro_ou_404(registro_id)
