@@ -2,8 +2,9 @@
 {% block title %}Evidências - {{ registro.identificador() }}{% endblock %}
 
 {% block content %}
+{% set pode_editar = pode_editar|default(false) %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/organized/evidencias_tabela_simples.css') }}">
-<div class="evidencias-page evidencias-page-v7 evidencias-page-v8 ev-detail-page ev92-page">
+<div class="evidencias-page evidencias-page-v7 evidencias-page-v8 ev-detail-page ev92-page {% if not pode_editar %}ev-readonly-mode{% endif %}">
   <section class="ev92-main-card">
     <div class="ev92-breadcrumb">
       <a href="/gestao/evidencias/"><i class="bi bi-house-door"></i> Painel de Evidências</a>
@@ -31,12 +32,19 @@
       <div class="ev92-hero-actions">
         <a href="/gestao/evidencias/{{ registro.id }}/exportar/excel" class="ev92-btn primary"><i class="bi bi-file-earmark-spreadsheet"></i> Excel</a>
         <a href="/gestao/evidencias/{{ registro.id }}/exportar/imagens.zip" class="ev92-btn"><i class="bi bi-file-earmark-zip"></i> Imagens</a>
+        {% if pode_editar %}
         <form method="POST" action="/gestao/evidencias/{{ registro.id }}/excluir" data-ajax-form="true" class="ev95-ajax-form">
           <button class="ev92-icon-danger" type="submit" title="Excluir painel"><i class="bi bi-trash3"></i></button>
         </form>
+        {% endif %}
       </div>
     </header>
 
+    {% if not pode_editar %}
+      <div class="ev-readonly-alert"><i class="bi bi-eye"></i> Visualização somente leitura. Alterações, uploads, exclusões e importações ficam bloqueados para cliente.</div>
+    {% endif %}
+
+    {% if pode_editar %}
     <section class="ev92-create-area">
       <form method="POST" action="/gestao/evidencias/{{ registro.id }}/pai/novo" class="ev92-create-parent">
         <div>
@@ -59,6 +67,7 @@
         </form>
       {% endif %}
     </section>
+    {% endif %}
 
     <section class="ev92-parent-list">
       {% for pai in registro.campos_pai %}
@@ -76,6 +85,7 @@
               </div>
             </div>
 
+            {% if pode_editar %}
             <div class="ev92-parent-actions">
               <button type="button" class="ev92-mini" data-bs-toggle="collapse" data-bs-target="#editarPai{{ pai.id }}" title="Editar campo pai"><i class="bi bi-pencil"></i></button>
               {% if not tabela %}
@@ -85,16 +95,19 @@
                 <button class="ev92-mini danger" type="submit" title="Excluir campo pai"><i class="bi bi-trash3"></i></button>
               </form>
             </div>
+            {% endif %}
           </header>
 
+          {% if pode_editar %}
           <div class="collapse" id="editarPai{{ pai.id }}">
             <form method="POST" action="/gestao/evidencias/pai/{{ pai.id }}/editar" class="ev92-inline-edit">
               <input type="text" name="nome" value="{{ pai.nome }}" class="form-control" required>
               <button class="ev92-btn">Salvar</button>
             </form>
           </div>
+          {% endif %}
 
-          {% if not tabela %}
+          {% if pode_editar and not tabela %}
             <div class="collapse" id="criarTabela{{ pai.id }}">
               <div class="ev910-create-wrap">
                 <form method="POST" action="/gestao/evidencias/pai/{{ pai.id }}/tabela/criar" class="ev92-create-table ev95-ajax-form" data-ajax-form="true" data-pai-shell-form="{{ pai.id }}">
@@ -135,11 +148,13 @@
                 <i class="bi bi-images"></i> Imagens <span>{{ imagens_pai|length }}</span>
               </button>
             </li>
+            {% if pode_gerar_link %}
             <li class="nav-item" role="presentation">
               <button class="nav-link" id="tabLinkBtn{{ pai.id }}" data-bs-toggle="tab" data-bs-target="#tabLink{{ pai.id }}" type="button" role="tab">
                 <i class="bi bi-link-45deg"></i> Link
               </button>
             </li>
+            {% endif %}
           </ul>
 
           <div class="tab-content ev92-tab-content">
@@ -154,11 +169,12 @@
                     <div class="ev92-board-head">
                       <div class="ev92-table-title">
                         <strong>Tabela: </strong>
-                        <input type="text" name="tabela_titulo" value="{{ tabela.titulo }}" class="ev92-title-input" placeholder="Título da tabela">
+                        <input type="text" name="tabela_titulo" value="{{ tabela.titulo }}" class="ev92-title-input" placeholder="Título da tabela" {% if not pode_editar %}readonly{% endif %}>
                         <span class="ev92-pill">Ativa</span>
                       </div>
 
                       <div class="ev92-board-actions">
+                        {% if pode_editar %}
                         <button class="ev92-btn" type="button" data-bs-toggle="collapse" data-bs-target="#configTabela{{ tabela.id }}">
                           <i class="bi bi-sliders"></i> Configurar
                         </button>
@@ -168,13 +184,17 @@
                         </label>
                         <button class="ev92-btn primary" type="submit" form="importTabelaForm{{ tabela.id }}"><i class="bi bi-upload"></i> Importar agora</button>
                         <button class="ev92-btn success ev95-ajax-submit ev920-save-top" type="submit"><i class="bi bi-save"></i> Salvar tabela</button>
+                        {% endif %}
                         <a class="ev92-btn success" href="/gestao/evidencias/{{ registro.id }}/exportar/excel"><i class="bi bi-file-earmark-spreadsheet"></i> Exportar</a>
+                        {% if pode_editar %}
                         <button class="ev92-btn primary ev95-ajax-submit" type="submit" formaction="/gestao/evidencias/tabela/{{ tabela.id }}/coluna/nova" formmethod="post" name="quantidade" value="1"><i class="bi bi-plus-lg"></i> Coluna</button>
                         <button class="ev92-btn primary ev95-ajax-submit" type="submit" formaction="/gestao/evidencias/tabela/{{ tabela.id }}/linha/nova" formmethod="post" name="quantidade" value="1"><i class="bi bi-plus-lg"></i> Linha</button>
                         <button class="ev92-btn danger ev95-delete-selected" type="button" data-delete-selected-row disabled><i class="bi bi-trash3"></i> Excluir linha selecionada</button>
+                        {% endif %}
                       </div>
                     </div>
 
+                    {% if pode_editar %}
                     <div class="collapse" id="configTabela{{ tabela.id }}">
                       <div class="ev92-config-panel">
                         {% for coluna in tabela.colunas %}
@@ -198,14 +218,16 @@
                         <button class="ev92-icon-danger" type="submit" formaction="/gestao/evidencias/tabela/{{ tabela.id }}/excluir" formmethod="post" title="Excluir tabela"><i class="bi bi-trash3"></i></button>
                       </div>
                     </div>
+                    {% endif %}
 
                     {% if tabela.colunas and tabela.linhas %}
                       <div class="ev-simple-toolbar">
                         <div class="ev-simple-title">
                           <strong>Tabela simples</strong>
-                          <input type="text" name="tabela_titulo" value="{{ tabela.titulo }}" class="ev-simple-title-input" placeholder="Título da tabela">
+                          <input type="text" name="tabela_titulo" value="{{ tabela.titulo }}" class="ev-simple-title-input" placeholder="Título da tabela" {% if not pode_editar %}readonly{% endif %}>
                         </div>
 
+                        {% if pode_editar %}
                         <div class="ev-simple-colorbar" data-simple-colorbar>
                           <span class="ev-simple-color-label">Pintura</span>
                           <select class="ev-simple-color-select" data-simple-color-select>
@@ -224,13 +246,16 @@
                           <button class="ev-simple-btn" type="button" data-paint-col><i class="bi bi-columns-gap"></i> Coluna</button>
                           <small>Clique na célula ou no título da coluna, escolha a cor e aplique.</small>
                         </div>
+                        {% endif %}
 
+                        {% if pode_editar %}
                         <div class="ev-simple-actions">
                           <button class="ev-simple-btn save ev95-ajax-submit" type="submit"><i class="bi bi-save"></i> Salvar tabela</button>
                           <button class="ev-simple-btn primary ev95-ajax-submit" type="submit" formaction="/gestao/evidencias/tabela/{{ tabela.id }}/linha/nova" formmethod="post" name="quantidade" value="1"><i class="bi bi-plus-lg"></i> Linha</button>
                           <button class="ev-simple-btn primary ev95-ajax-submit" type="submit" formaction="/gestao/evidencias/tabela/{{ tabela.id }}/coluna/nova" formmethod="post" name="quantidade" value="1"><i class="bi bi-plus-lg"></i> Coluna</button>
                           <button class="ev-simple-btn danger" type="submit" formaction="/gestao/evidencias/tabela/{{ tabela.id }}/excluir" formmethod="post"><i class="bi bi-trash3"></i> Excluir tabela</button>
                         </div>
+                        {% endif %}
                       </div>
 
                       <div class="ev-simple-table-wrap">
@@ -240,21 +265,21 @@
                             {% for coluna in tabela.colunas %}
                               <col style="width: {{ coluna.largura or 150 }}px; min-width: {{ coluna.largura or 150 }}px;">
                             {% endfor %}
-                            <col style="width:92px; min-width:92px;">
+                            {% if pode_editar %}<col style="width:92px; min-width:92px;">{% endif %}
                           </colgroup>
                           <thead>
                             <tr>
                               <th class="ev-simple-num-head">#</th>
                               {% for coluna in tabela.colunas %}
                                 <th class="ev-simple-head-cell ev-simple-col-{{ coluna.cor or 'padrao' }}" data-simple-col-id="{{ coluna.id }}">
-                                  <textarea name="coluna_nome_{{ coluna.id }}" rows="1" class="ev-simple-col-input" placeholder="Nome da coluna">{{ coluna.nome }}</textarea>
+                                  <textarea name="coluna_nome_{{ coluna.id }}" rows="1" class="ev-simple-col-input" placeholder="Nome da coluna" {% if not pode_editar %}readonly{% endif %}>{{ coluna.nome }}</textarea>
                                   <input type="hidden" name="coluna_grupo_{{ coluna.id }}" value="">
                                   <input type="hidden" name="coluna_cor_{{ coluna.id }}" value="{{ coluna.cor or 'padrao' }}" data-simple-col-color="{{ coluna.id }}">
                                   <input type="hidden" name="coluna_ordem_{{ coluna.id }}" value="{{ loop.index }}">
                                   <input type="hidden" name="coluna_largura_{{ coluna.id }}" value="{{ coluna.largura or 150 }}">
                                 </th>
                               {% endfor %}
-                              <th class="ev-simple-actions-head">Ações</th>
+                              {% if pode_editar %}<th class="ev-simple-actions-head">Ações</th>{% endif %}
                             </tr>
                           </thead>
                           <tbody>
@@ -269,14 +294,16 @@
                                   {% set celula_obj = tabela.mapa_celulas_obj.get(key) if tabela.mapa_celulas_obj is defined else none %}
                                   {% set cell_cor = celula_obj.cor if celula_obj and celula_obj.cor is defined else '' %}
                                   <td class="ev-simple-cell ev-simple-cell-{{ cell_cor or 'padrao' }}" data-simple-cell="true" data-simple-col-id="{{ coluna.id }}">
-                                    <input type="text" name="celula_{{ linha.id }}_{{ coluna.id }}" value="{{ valor }}" class="ev-simple-cell-input" autocomplete="off">
+                                    <input type="text" name="celula_{{ linha.id }}_{{ coluna.id }}" value="{{ valor }}" class="ev-simple-cell-input" autocomplete="off" {% if not pode_editar %}readonly{% endif %}>
                                     <input type="hidden" name="celula_cor_{{ linha.id }}_{{ coluna.id }}" value="{{ cell_cor or '' }}" data-simple-cell-color>
                                   </td>
                                 {% endfor %}
+                                {% if pode_editar %}
                                 <td class="ev-simple-actions-cell">
                                   <button class="ev-simple-icon ok ev95-ajax-submit" type="submit" title="Salvar linha"><i class="bi bi-check2"></i></button>
                                   <button class="ev-simple-icon danger" type="submit" formaction="/gestao/evidencias/tabela/linha/{{ linha.id }}/excluir" formmethod="post" title="Excluir linha"><i class="bi bi-trash3"></i></button>
                                 </td>
+                                {% endif %}
                               </tr>
                             {% endfor %}
                           </tbody>
@@ -286,7 +313,7 @@
                       <div class="ev-simple-footer">
                         <span>Total de linhas: {{ tabela.linhas|length }} • Colunas: {{ tabela.colunas|length }}</span>
                         <span class="ev93-autosave-status" data-save-status="{{ tabela.id }}"><i class="bi bi-cloud-check"></i> Salvamento ativo</span>
-                        <button class="ev-simple-btn save ev95-ajax-submit" type="submit"><i class="bi bi-save"></i> Salvar tabela</button>
+                        {% if pode_editar %}<button class="ev-simple-btn save ev95-ajax-submit" type="submit"><i class="bi bi-save"></i> Salvar tabela</button>{% endif %}
                       </div>
                     {% else %}
                       <div class="ev92-empty"><i class="bi bi-grid-3x3-gap"></i><strong>Tabela sem estrutura</strong><span>Adicione colunas e linhas para começar.</span></div>
@@ -298,6 +325,7 @@
                   <i class="bi bi-table"></i>
                   <strong>Este campo pai ainda não tem tabela.</strong>
                   <span>Importe um Excel para a tabela aparecer pronta aqui, ou crie uma grade manual.</span>
+                  {% if pode_editar %}
                   <div class="ev917-import-box">
                     <form method="POST" action="/gestao/evidencias/pai/{{ pai.id }}/tabela/importar_excel" enctype="multipart/form-data" class="ev917-import-real-form">
                       <label class="ev917-import-field">
@@ -321,6 +349,9 @@
                       <i class="bi bi-grid-3x3-gap"></i> Criar grade manual
                     </button>
                   </div>
+                  {% else %}
+                    <small>Somente a gestão pode criar ou importar tabela.</small>
+                  {% endif %}
                 </div>
               {% endif %}
             </section>
@@ -331,9 +362,10 @@
                   <span>Evidências do Campo Pai</span>
                   <h3>Fotos</h3>
                 </div>
-                <button class="ev92-btn primary" type="button" data-bs-toggle="collapse" data-bs-target="#uploadPai{{ pai.id }}"><i class="bi bi-plus-lg"></i> Nova foto</button>
+                {% if pode_editar %}<button class="ev92-btn primary" type="button" data-bs-toggle="collapse" data-bs-target="#uploadPai{{ pai.id }}"><i class="bi bi-plus-lg"></i> Nova foto</button>{% endif %}
               </div>
 
+              {% if pode_editar %}
               <div class="collapse" id="uploadPai{{ pai.id }}">
                 <form method="POST" action="/gestao/evidencias/pai/{{ pai.id }}/imagens" enctype="multipart/form-data" class="ev92-upload-box ev95-ajax-form" data-ajax-form="true">
                   <label>Tipo da foto
@@ -345,25 +377,29 @@
                   <button class="ev92-btn primary" type="submit"><i class="bi bi-cloud-arrow-up"></i> Enviar</button>
                 </form>
               </div>
+              {% endif %}
 
               {% if imagens_pai %}
                 <form method="POST" action="/gestao/evidencias/pai/{{ pai.id }}/imagens/editar_lote" class="ev925-photo-bulk-form ev95-ajax-form" data-ajax-form="true">
+                  {% if pode_editar %}
                   <div class="ev925-photo-bulk-bar">
                     <span><i class="bi bi-pencil-square"></i> Edição rápida das fotos</span>
                     <button class="ev92-btn success" type="submit"><i class="bi bi-save"></i> Salvar todas alterações</button>
                   </div>
+                  {% endif %}
                   <div class="ev92-photo-grid ev925-photo-grid ev926-photo-grid-clean">
                     {% for img in imagens_pai %}
                       <figure class="ev92-photo-card ev925-photo-card ev926-photo-card-clean">
                         <div class="ev926-photo-topbar">
                           <span class="ev926-photo-badge">{{ img.tipo_resolvido() if img.tipo_resolvido is defined else (img.tipo_foto or 'Sem tipo') }}</span>
-                          <button class="ev926-photo-delete" type="submit" formaction="/gestao/evidencias/imagem/{{ img.id }}/excluir" formmethod="post" title="Excluir imagem"><i class="bi bi-trash3"></i></button>
+                          {% if pode_editar %}<button class="ev926-photo-delete" type="submit" formaction="/gestao/evidencias/imagem/{{ img.id }}/excluir" formmethod="post" title="Excluir imagem"><i class="bi bi-trash3"></i></button>{% endif %}
                         </div>
                         <a href="{{ img.imagem_url }}" target="_blank" class="ev92-photo-thumb ev926-photo-thumb-clean">
                           <img src="{{ img.imagem_url }}" alt="{{ img.legenda or img.nome_original or 'Imagem' }}">
                         </a>
                         <figcaption class="ev926-photo-edit-box">
                           <small class="ev926-photo-date"><i class="bi bi-clock"></i> {{ img.enviado_em.strftime('%d/%m/%Y %H:%M') if img.enviado_em else '-' }}</small>
+                          {% if pode_editar %}
                           <label class="ev926-photo-field">
                             <span>Tipo</span>
                             <select name="tipo_foto_{{ img.id }}" class="form-control">
@@ -376,6 +412,10 @@
                             <span>Legenda</span>
                             <input type="text" name="legenda_{{ img.id }}" value="{{ img.legenda or '' }}" class="form-control" placeholder="Ex: antes, depois, troca concluída">
                           </label>
+                          {% else %}
+                            <strong>{{ img.tipo_resolvido() if img.tipo_resolvido is defined else (img.tipo_foto or 'Sem tipo') }}</strong>
+                            <small>{{ img.legenda or img.nome_original or 'Sem legenda' }}</small>
+                          {% endif %}
                         </figcaption>
                       </figure>
                     {% endfor %}
@@ -386,8 +426,8 @@
               {% endif %}
             </section>
 
+            {% if pode_gerar_link %}
             <section class="tab-pane fade" id="tabLink{{ pai.id }}" role="tabpanel" aria-labelledby="tabLinkBtn{{ pai.id }}">
-              {% if pode_gerar_link %}
                 <div class="ev92-link-box">
                   <div class="ev92-link-head">
                     <div>
@@ -434,10 +474,8 @@
                     {% if ns.ativos == 0 %}<div class="ev92-empty-line">Nenhum link ativo no momento.</div>{% endif %}
                   </div>
                 </div>
-              {% else %}
-                <div class="ev92-empty"><i class="bi bi-lock"></i><strong>Sem permissão</strong><span>Somente gestão pode gerar link público.</span></div>
-              {% endif %}
             </section>
+            {% endif %}
           </div>
         </article>
       {% else %}
