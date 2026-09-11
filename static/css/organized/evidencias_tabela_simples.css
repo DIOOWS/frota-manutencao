@@ -504,3 +504,126 @@
     grid-template-columns: 1fr !important;
   }
 }
+
+/* V9.27 - Cliente somente leitura */
+.ev-readonly-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 18px;
+  padding: 12px 14px;
+  border: 1px solid #bfdbfe;
+  border-radius: 14px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.ev-readonly-mode .ev92-board-actions,
+.ev-readonly-mode .ev-simple-colorbar,
+.ev-readonly-mode .ev-simple-actions,
+.ev-readonly-mode .ev-simple-actions-head,
+.ev-readonly-mode .ev-simple-actions-cell,
+.ev-readonly-mode .ev925-photo-bulk-bar,
+.ev-readonly-mode .ev926-photo-delete {
+  display: none !important;
+}
+
+.ev-readonly-mode .ev92-title-input,
+.ev-readonly-mode .ev-simple-title-input,
+.ev-readonly-mode .ev-simple-col-input,
+.ev-readonly-mode .ev-simple-cell-input {
+  pointer-events: none;
+  user-select: text;
+  box-shadow: none !important;
+  cursor: default;
+}
+
+.ev-readonly-mode .ev92-title-input,
+.ev-readonly-mode .ev-simple-title-input {
+  border: 0 !important;
+  background: transparent !important;
+  padding-left: 0 !important;
+}
+
+.ev-readonly-mode .ev-simple-col-input {
+  background: transparent !important;
+  color: inherit !important;
+  text-align: center;
+}
+
+.ev-readonly-mode .ev-simple-cell-input {
+  background: transparent !important;
+  border: 0 !important;
+  text-align: center;
+}
+
+.ev-readonly-mode .ev-simple-toolbar,
+.ev-readonly-mode .ev-simple-footer {
+  justify-content: flex-start;
+}
+
+.ev-readonly-mode .ev926-photo-edit-box strong {
+  display: block;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 900;
+  margin-top: 4px;
+}
+
+.ev-readonly-mode .ev926-photo-edit-box small {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  margin-top: 3px;
+}
+
+/* V9.30 - Fotos por AJAX sem trocar para a aba tabela */
+.ev930-photo-tools {
+  align-items: center;
+  gap: 12px;
+}
+
+.ev930-photo-tools-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  width: 100%;
+}
+
+.ev930-photo-tools-actions .form-control {
+  height: 34px;
+  min-width: 170px;
+  max-width: 230px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ev930-photo-upload-form input[type="file"] {
+  cursor: pointer;
+}
+
+.ev930-photo-bulk-form .ev926-photo-card-clean {
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+
+.ev930-photo-bulk-form .ev926-photo-card-clean:focus-within {
+  border-color: #2563eb;
+  box-shadow: 0 14px 34px rgba(37, 99, 235, .15);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 900px) {
+  .ev930-photo-tools-actions {
+    justify-content: flex-start;
+  }
+  .ev930-photo-tools-actions .form-control,
+  .ev930-photo-tools-actions .ev92-btn {
+    width: 100%;
+    max-width: none;
+  }
+}

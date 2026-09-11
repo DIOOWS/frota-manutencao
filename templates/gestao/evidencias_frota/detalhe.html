@@ -367,7 +367,7 @@
 
               {% if pode_editar %}
               <div class="collapse" id="uploadPai{{ pai.id }}">
-                <form method="POST" action="/gestao/evidencias/pai/{{ pai.id }}/imagens" enctype="multipart/form-data" class="ev92-upload-box ev95-ajax-form" data-ajax-form="true">
+                <form method="POST" action="/gestao/evidencias/pai/{{ pai.id }}/imagens" enctype="multipart/form-data" class="ev92-upload-box ev95-ajax-form ev930-photo-upload-form" data-ajax-form="true" data-photo-upload-form="true" data-pai-id="{{ pai.id }}">
                   <label>Tipo da foto
                     <select name="tipo_foto" class="form-control">{% for tipo in tipos_foto %}<option value="{{ tipo.nome }}">{{ tipo.nome }}</option>{% endfor %}</select>
                   </label>
@@ -380,19 +380,29 @@
               {% endif %}
 
               {% if imagens_pai %}
-                <form method="POST" action="/gestao/evidencias/pai/{{ pai.id }}/imagens/editar_lote" class="ev925-photo-bulk-form ev95-ajax-form" data-ajax-form="true">
+                <form method="POST" action="/gestao/evidencias/pai/{{ pai.id }}/imagens/editar_lote" class="ev925-photo-bulk-form ev95-ajax-form ev930-photo-bulk-form" data-ajax-form="true" data-photo-bulk-form="true" data-pai-id="{{ pai.id }}">
                   {% if pode_editar %}
-                  <div class="ev925-photo-bulk-bar">
+                  <div class="ev925-photo-bulk-bar ev930-photo-tools">
                     <span><i class="bi bi-pencil-square"></i> Edição rápida das fotos</span>
-                    <button class="ev92-btn success" type="submit"><i class="bi bi-save"></i> Salvar todas alterações</button>
+                    <div class="ev930-photo-tools-actions">
+                      <select class="form-control ev930-bulk-type" data-photo-bulk-type>
+                        <option value="">Aplicar tipo em todas</option>
+                        {% for tipo in tipos_foto %}<option value="{{ tipo.nome }}">{{ tipo.nome }}</option>{% endfor %}
+                      </select>
+                      <input type="text" class="form-control ev930-bulk-legend" data-photo-bulk-legend placeholder="Legenda para todas">
+                      <button class="ev92-btn" type="button" data-photo-apply-type><i class="bi bi-tags"></i> Aplicar tipo</button>
+                      <button class="ev92-btn" type="button" data-photo-apply-legend><i class="bi bi-card-text"></i> Aplicar legenda</button>
+                      <button class="ev92-btn danger" type="button" data-photo-clear-legends><i class="bi bi-eraser"></i> Limpar legendas</button>
+                      <button class="ev92-btn success" type="submit"><i class="bi bi-save"></i> Salvar sem recarregar</button>
+                    </div>
                   </div>
                   {% endif %}
-                  <div class="ev92-photo-grid ev925-photo-grid ev926-photo-grid-clean">
+                  <div class="ev92-photo-grid ev925-photo-grid ev926-photo-grid-clean" data-photo-grid="{{ pai.id }}">
                     {% for img in imagens_pai %}
-                      <figure class="ev92-photo-card ev925-photo-card ev926-photo-card-clean">
+                      <figure class="ev92-photo-card ev925-photo-card ev926-photo-card-clean" data-photo-card="{{ img.id }}">
                         <div class="ev926-photo-topbar">
-                          <span class="ev926-photo-badge">{{ img.tipo_resolvido() if img.tipo_resolvido is defined else (img.tipo_foto or 'Sem tipo') }}</span>
-                          {% if pode_editar %}<button class="ev926-photo-delete" type="submit" formaction="/gestao/evidencias/imagem/{{ img.id }}/excluir" formmethod="post" title="Excluir imagem"><i class="bi bi-trash3"></i></button>{% endif %}
+                          <span class="ev926-photo-badge" data-photo-badge>{{ img.tipo_resolvido() if img.tipo_resolvido is defined else (img.tipo_foto or 'Sem tipo') }}</span>
+                          {% if pode_editar %}<button class="ev926-photo-delete" type="submit" formaction="/gestao/evidencias/imagem/{{ img.id }}/excluir" formmethod="post" title="Excluir imagem" data-photo-delete="{{ img.id }}"><i class="bi bi-trash3"></i></button>{% endif %}
                         </div>
                         <a href="{{ img.imagem_url }}" target="_blank" class="ev92-photo-thumb ev926-photo-thumb-clean">
                           <img src="{{ img.imagem_url }}" alt="{{ img.legenda or img.nome_original or 'Imagem' }}">
@@ -402,7 +412,7 @@
                           {% if pode_editar %}
                           <label class="ev926-photo-field">
                             <span>Tipo</span>
-                            <select name="tipo_foto_{{ img.id }}" class="form-control">
+                            <select name="tipo_foto_{{ img.id }}" class="form-control" data-photo-type="{{ img.id }}">
                               {% for tipo in tipos_foto %}
                                 <option value="{{ tipo.nome }}" {% if (img.tipo_resolvido() if img.tipo_resolvido is defined else img.tipo_foto) == tipo.nome %}selected{% endif %}>{{ tipo.nome }}</option>
                               {% endfor %}
@@ -410,7 +420,7 @@
                           </label>
                           <label class="ev926-photo-field">
                             <span>Legenda</span>
-                            <input type="text" name="legenda_{{ img.id }}" value="{{ img.legenda or '' }}" class="form-control" placeholder="Ex: antes, depois, troca concluída">
+                            <input type="text" name="legenda_{{ img.id }}" value="{{ img.legenda or '' }}" class="form-control" placeholder="Ex: antes, depois, troca concluída" data-photo-legend="{{ img.id }}">
                           </label>
                           {% else %}
                             <strong>{{ img.tipo_resolvido() if img.tipo_resolvido is defined else (img.tipo_foto or 'Sem tipo') }}</strong>
@@ -422,7 +432,7 @@
                   </div>
                 </form>
               {% else %}
-                <div class="ev92-empty small"><i class="bi bi-images"></i><strong>Nenhuma imagem neste campo pai</strong><span>Adicione fotos para comprovar o serviço.</span></div>
+                <div class="ev92-empty small" data-photo-empty="{{ pai.id }}"><i class="bi bi-images"></i><strong>Nenhuma imagem neste campo pai</strong><span>Adicione fotos para comprovar o serviço.</span></div>
               {% endif %}
             </section>
 
@@ -587,14 +597,13 @@
       if (campoPaiId) card = document.getElementById('campoPai' + campoPaiId);
       if (!card && fallbackForm) card = fallbackForm.closest(".ev92-parent-card");
       if (card && card.id) {
+        const activeTarget = card.querySelector('.tab-pane.active') ? ('#' + card.querySelector('.tab-pane.active').id) : null;
         const fresh = doc.getElementById(card.id);
         if (fresh) {
           card.replaceWith(fresh);
-          const activeTarget = card.querySelector('.tab-pane.active') ? ('#' + card.querySelector('.tab-pane.active').id) : null;
-          card.replaceWith(fresh);
           initEvidenciasFeatures(fresh);
-          const savedTarget = activeTarget || '#tabFotos' + campoPaiId;
-          const tabBtn = fresh.querySelector('[data-bs-target="' + savedTarget + '"]');
+          const savedTarget = activeTarget || (campoPaiId ? '#tabFotos' + campoPaiId : null);
+          const tabBtn = savedTarget ? fresh.querySelector('[data-bs-target="' + savedTarget + '"]') : null;
           if (tabBtn && window.bootstrap && bootstrap.Tab) {
             window.bootstrap.Tab.getOrCreateInstance(tabBtn).show();
           }
@@ -776,6 +785,119 @@
       });
     }
 
+    function escapeHtml(value) {
+      return String(value || '').replace(/[&<>"']/g, function (ch) {
+        return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'})[ch];
+      });
+    }
+
+    function photoOptionsHtml(form, selected) {
+      const source = form.closest('.ev92-parent-card')?.querySelector('select[name="tipo_foto"]');
+      if (!source) return '<option value="' + escapeHtml(selected || '') + '">' + escapeHtml(selected || 'Outro') + '</option>';
+      return Array.from(source.options).map(function (opt) {
+        const value = opt.value || opt.textContent || '';
+        return '<option value="' + escapeHtml(value) + '"' + (value === selected ? ' selected' : '') + '>' + escapeHtml(opt.textContent || value) + '</option>';
+      }).join('');
+    }
+
+    function createPhotoCardHtml(img, form) {
+      const tipo = img.tipo || img.tipo_foto || 'Sem tipo';
+      const legenda = img.legenda || '';
+      return '' +
+        '<figure class="ev92-photo-card ev925-photo-card ev926-photo-card-clean" data-photo-card="' + img.id + '">' +
+          '<div class="ev926-photo-topbar">' +
+            '<span class="ev926-photo-badge" data-photo-badge>' + escapeHtml(tipo) + '</span>' +
+            '<button class="ev926-photo-delete" type="submit" formaction="/gestao/evidencias/imagem/' + img.id + '/excluir" formmethod="post" title="Excluir imagem" data-photo-delete="' + img.id + '"><i class="bi bi-trash3"></i></button>' +
+          '</div>' +
+          '<a href="' + escapeHtml(img.url) + '" target="_blank" class="ev92-photo-thumb ev926-photo-thumb-clean">' +
+            '<img src="' + escapeHtml(img.url) + '" alt="' + escapeHtml(legenda || img.nome_original || 'Imagem') + '">' +
+          '</a>' +
+          '<figcaption class="ev926-photo-edit-box">' +
+            '<small class="ev926-photo-date"><i class="bi bi-clock"></i> ' + escapeHtml(img.enviado_em || '-') + '</small>' +
+            '<label class="ev926-photo-field"><span>Tipo</span><select name="tipo_foto_' + img.id + '" class="form-control" data-photo-type="' + img.id + '">' + photoOptionsHtml(form, img.tipo_foto || tipo) + '</select></label>' +
+            '<label class="ev926-photo-field"><span>Legenda</span><input type="text" name="legenda_' + img.id + '" value="' + escapeHtml(legenda) + '" class="form-control" placeholder="Ex: antes, depois, troca concluída" data-photo-legend="' + img.id + '"></label>' +
+          '</figcaption>' +
+        '</figure>';
+    }
+
+    function updatePhotoCardsFromForm(form) {
+      form.querySelectorAll('[data-photo-card]').forEach(function (card) {
+        const id = card.getAttribute('data-photo-card');
+        const typeField = form.querySelector('[data-photo-type="' + id + '"]');
+        const legendField = form.querySelector('[data-photo-legend="' + id + '"]');
+        const badge = card.querySelector('[data-photo-badge]');
+        if (badge && typeField) badge.textContent = typeField.value || 'Sem tipo';
+        const img = card.querySelector('img');
+        if (img && legendField) img.alt = legendField.value || 'Imagem';
+      });
+    }
+
+    function handlePhotoAjaxResult(json, form, submitter) {
+      if (!json || !json.acao) return false;
+      const paiId = json.campo_pai_id || form.getAttribute('data-pai-id');
+      const grid = document.querySelector('[data-photo-grid="' + paiId + '"]');
+
+      if (json.acao === 'excluir_imagem') {
+        const card = document.querySelector('[data-photo-card="' + json.imagem_id + '"]');
+        if (card) card.remove();
+        return true;
+      }
+
+      if (json.acao === 'editar_imagens_lote') {
+        updatePhotoCardsFromForm(form);
+        return true;
+      }
+
+      if (json.acao === 'editar_imagem' && json.imagem) {
+        updatePhotoCardsFromForm(form);
+        return true;
+      }
+
+      if (json.acao === 'upload_imagens' && Array.isArray(json.imagens)) {
+        if (!grid) return false;
+        json.imagens.forEach(function (img) {
+          grid.insertAdjacentHTML('beforeend', createPhotoCardHtml(img, form));
+        });
+        const empty = document.querySelector('[data-photo-empty="' + paiId + '"]');
+        if (empty) empty.remove();
+        form.reset();
+        initEvidenciasFeatures(grid.closest('.ev92-parent-card') || grid);
+        return true;
+      }
+
+      return false;
+    }
+
+    function initPhotoBulkTools(root) {
+      root.querySelectorAll('[data-photo-bulk-form="true"]').forEach(function (form) {
+        const applyType = form.querySelector('[data-photo-apply-type]');
+        const applyLegend = form.querySelector('[data-photo-apply-legend]');
+        const clearLegends = form.querySelector('[data-photo-clear-legends]');
+        const bulkType = form.querySelector('[data-photo-bulk-type]');
+        const bulkLegend = form.querySelector('[data-photo-bulk-legend]');
+
+        if (applyType && bulkType) {
+          applyType.addEventListener('click', function () {
+            if (!bulkType.value) return;
+            form.querySelectorAll('[data-photo-type]').forEach(function (sel) { sel.value = bulkType.value; });
+            updatePhotoCardsFromForm(form);
+          });
+        }
+        if (applyLegend && bulkLegend) {
+          applyLegend.addEventListener('click', function () {
+            form.querySelectorAll('[data-photo-legend]').forEach(function (input) { input.value = bulkLegend.value || ''; });
+            updatePhotoCardsFromForm(form);
+          });
+        }
+        if (clearLegends) {
+          clearLegends.addEventListener('click', function () {
+            form.querySelectorAll('[data-photo-legend]').forEach(function (input) { input.value = ''; });
+            updatePhotoCardsFromForm(form);
+          });
+        }
+      });
+    }
+
     function initAjaxForms(root) {
       root.querySelectorAll('button[type="submit"]').forEach(function (btn) {
         btn.addEventListener('click', function () { lastSubmitter = btn; });
@@ -794,6 +916,11 @@
             const data = buildFormData(form, submitter);
             const json = await fetchJson(url, { method, body: data, headers: { "X-Requested-With": "XMLHttpRequest" } });
             setSaveStatus(form, '<i class="bi bi-cloud-check"></i> Salvo', "saved");
+            if (handlePhotoAjaxResult(json, form, submitter)) {
+              restoreActiveTabs();
+              restoreScroll();
+              return;
+            }
             await refreshCurrentCardFromResponse(json, form);
           } catch (err) {
             setSaveStatus(form, '<i class="bi bi-exclamation-triangle"></i> Erro ao salvar', "error");

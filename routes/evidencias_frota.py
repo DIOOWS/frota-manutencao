@@ -470,6 +470,18 @@ def imagens_do_pai(pai_id):
     ).all()
 
 
+def payload_imagem_ajax(imagem):
+    return {
+        "id": imagem.id,
+        "url": imagem.imagem_url,
+        "tipo": imagem.tipo_resolvido() if hasattr(imagem, "tipo_resolvido") else (imagem.tipo_foto or "Sem tipo"),
+        "tipo_foto": imagem.tipo_foto or "",
+        "legenda": imagem.legenda or "",
+        "nome_original": imagem.nome_original or "Imagem",
+        "enviado_em": imagem.enviado_em.strftime("%d/%m/%Y %H:%M") if imagem.enviado_em else "-",
+    }
+
+
 def preparar_registro_para_tela(registro):
     for pai in registro.campos_pai:
         pai.imagens_tela = imagens_do_pai(pai.id)
@@ -1601,6 +1613,7 @@ def upload_imagens_pai(pai_id):
         tipo_foto = "Outro"
 
     adicionadas = 0
+    imagens_criadas = []
     for arquivo in arquivos:
         if not arquivo or not arquivo.filename:
             continue
@@ -1622,13 +1635,20 @@ def upload_imagens_pai(pai_id):
         )
 
         db.session.add(imagem)
+        imagens_criadas.append(imagem)
         adicionadas += 1
 
     db.session.commit()
 
     mensagem = f"{adicionadas} imagem(ns) enviada(s)." if adicionadas else "Nenhuma imagem válida foi enviada."
     if requisicao_ajax():
-        return responder_ok(mensagem, registro_id=registro.id, campo_pai_id=pai.id)
+        return responder_ok(
+            mensagem,
+            registro_id=registro.id,
+            campo_pai_id=pai.id,
+            acao="upload_imagens",
+            imagens=[payload_imagem_ajax(img) for img in imagens_criadas],
+        )
     flash(mensagem, "success" if adicionadas else "warning")
     return redirect(f"/gestao/evidencias/{registro.id}")
 
@@ -1652,6 +1672,7 @@ def upload_imagens(filho_id):
     tipo_foto = texto(request.form.get("tipo_foto")) or filho.nome or "Outro"
 
     adicionadas = 0
+    imagens_criadas = []
     for arquivo in arquivos:
         if not arquivo or not arquivo.filename:
             continue
@@ -1670,12 +1691,19 @@ def upload_imagens(filho_id):
             ordem=len(imagens_do_pai(pai.id)) + adicionadas + 1,
         )
         db.session.add(imagem)
+        imagens_criadas.append(imagem)
         adicionadas += 1
 
     db.session.commit()
     mensagem = f"{adicionadas} imagem(ns) enviada(s)." if adicionadas else "Nenhuma imagem válida foi enviada."
     if requisicao_ajax():
-        return responder_ok(mensagem, registro_id=registro.id, campo_pai_id=pai.id)
+        return responder_ok(
+            mensagem,
+            registro_id=registro.id,
+            campo_pai_id=pai.id,
+            acao="upload_imagens",
+            imagens=[payload_imagem_ajax(img) for img in imagens_criadas],
+        )
     flash(mensagem, "success" if adicionadas else "warning")
     return redirect(f"/gestao/evidencias/{registro.id}")
 
@@ -1704,8 +1732,19 @@ def editar_imagem(imagem_id):
     imagem.legenda = texto(request.form.get("legenda")) or None
     db.session.commit()
 
+    pai = pai_da_imagem(imagem)
+    if requisicao_ajax():
+        return responder_ok(
+            "Imagem atualizada.",
+            registro_id=registro_id,
+            campo_pai_id=(pai.id if pai else None),
+            imagem_id=imagem.id,
+            acao="editar_imagem",
+            imagem=payload_imagem_ajax(imagem),
+        )
+
     url = f"/gestao/evidencias/{registro_id}"
-    return voltar_ou_json(url, "Imagem atualizada.", registro_id=registro_id, campo_pai_id=(pai_da_imagem(imagem).id if pai_da_imagem(imagem) else None), imagem_id=imagem.id)
+    return voltar_ou_json(url, "Imagem atualizada.", registro_id=registro_id, campo_pai_id=(pai.id if pai else None), imagem_id=imagem.id)
 
 
 @evidencias_frota_bp.route("/pai/<int:pai_id>/imagens/editar_lote", methods=["POST"])
@@ -1742,6 +1781,16 @@ def editar_imagens_pai_lote(pai_id):
     db.session.commit()
 
     mensagem = f"{atualizadas} imagem(ns) atualizada(s)." if atualizadas else "Nenhuma alteração nas imagens."
+    if requisicao_ajax():
+        return responder_ok(
+            mensagem,
+            registro_id=pai.registro_id,
+            campo_pai_id=pai.id,
+            area="fotos",
+            acao="editar_imagens_lote",
+            imagens=[payload_imagem_ajax(img) for img in imagens],
+        )
+
     url = f"/gestao/evidencias/{pai.registro_id}"
     return voltar_ou_json(url, mensagem, registro_id=pai.registro_id, campo_pai_id=pai.id, area="fotos")
 
@@ -1774,6 +1823,15 @@ def excluir_imagem(imagem_id):
 
     db.session.delete(imagem)
     db.session.commit()
+
+    if requisicao_ajax():
+        return responder_ok(
+            "Imagem excluída.",
+            registro_id=registro_id,
+            campo_pai_id=(pai.id if pai else None),
+            imagem_id=imagem_id,
+            acao="excluir_imagem",
+        )
 
     url = f"/gestao/evidencias/{registro_id}"
     return voltar_ou_json(url, "Imagem excluída.", registro_id=registro_id, campo_pai_id=(pai.id if pai else None), imagem_id=imagem_id)
