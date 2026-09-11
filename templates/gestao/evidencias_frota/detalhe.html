@@ -909,7 +909,7 @@
       bar.innerHTML = text || '';
     }
 
-    async function submitPhotoFormAjax(form, submitter) {
+    async async function submitPhotoFormAjax(form, submitter) {
       if (!form || form.dataset.photoAjaxBusy === '1') return;
       form.dataset.photoAjaxBusy = '1';
       const paiId = form.getAttribute('data-pai-id') || '';
@@ -1389,6 +1389,7 @@
       syncAllGroups(root);
       initTabs(root);
       initPhotoAjaxHard(root);
+      initPhotoBulkTools(root);
       initAjaxForms(root);
       initAutosave(root);
       initWidths(root);
