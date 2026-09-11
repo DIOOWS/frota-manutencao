@@ -72,8 +72,64 @@ def usuario_logado():
     return Usuario.query.get(user_id)
 
 
+def normalizar_perfil_usuario(valor):
+    valor = texto(valor).lower()
+    troca = {
+        "á": "a", "à": "a", "ã": "a", "â": "a",
+        "é": "e", "ê": "e",
+        "í": "i",
+        "ó": "o", "ô": "o", "õ": "o",
+        "ú": "u",
+        "ç": "c",
+    }
+    for origem, destino in troca.items():
+        valor = valor.replace(origem, destino)
+    return valor.strip()
+
+
 def usuario_eh_admin_ou_gestao():
-    return session.get("user_role") in ["admin", "gestao", "gestor"]
+    """
+    Libera edição somente para admin/gestão/gestor.
+    Usa primeiro a sessão e, se ela não tiver o perfil correto, consulta o objeto Usuario.
+    Isso evita travar edição para gestão quando o login grava o perfil em outro campo.
+    """
+    perfis_liberados = {"admin", "administrador", "gestao", "gestor", "gestao_total", "gestao com acesso total"}
+
+    candidatos = [
+        session.get("user_role"),
+        session.get("role"),
+        session.get("perfil"),
+        session.get("tipo_usuario"),
+        session.get("user_perfil"),
+    ]
+
+    usuario = usuario_logado()
+    if usuario:
+        for attr in ["role", "perfil", "tipo", "tipo_usuario", "nivel_acesso", "funcao", "cargo", "permissao"]:
+            candidatos.append(getattr(usuario, attr, None))
+
+        if getattr(usuario, "is_admin", False):
+            return True
+
+    for valor in candidatos:
+        perfil = normalizar_perfil_usuario(valor)
+        if perfil in perfis_liberados:
+            return True
+
+    return False
+
+
+def exigir_editor_evidencias():
+    resp = exigir_login()
+    if resp:
+        return resp
+
+    if not usuario_eh_admin_ou_gestao():
+        if requisicao_ajax():
+            return responder_erro("Cliente possui acesso somente leitura neste painel.", 403)
+        abort(403)
+
+    return None
 
 
 def exigir_login():
@@ -591,12 +647,17 @@ def index():
         cliente_id=request.args.get("cliente_id", type=int),
         busca=texto(request.args.get("busca")),
         campo=texto(request.args.get("campo")),
+        pode_editar=usuario_eh_admin_ou_gestao(),
     )
 
 
 @evidencias_frota_bp.route("/novo", methods=["GET", "POST"])
 def novo_registro():
     resp = exigir_login()
+    if resp:
+        return resp
+
+    resp = exigir_editor_evidencias()
     if resp:
         return resp
 
@@ -665,6 +726,7 @@ def detalhe(registro_id):
         registro=registro,
         links_publicos=links_publicos,
         pode_gerar_link=usuario_eh_admin_ou_gestao(),
+        pode_editar=usuario_eh_admin_ou_gestao(),
         tipos_foto=tipos_foto_para_select(),
     )
 
@@ -672,6 +734,10 @@ def detalhe(registro_id):
 @evidencias_frota_bp.route("/<int:registro_id>/excluir", methods=["POST"])
 def excluir_registro(registro_id):
     resp = exigir_login()
+    if resp:
+        return resp
+
+    resp = exigir_editor_evidencias()
     if resp:
         return resp
 
@@ -690,6 +756,10 @@ def excluir_registro(registro_id):
 @evidencias_frota_bp.route("/<int:registro_id>/pai/novo", methods=["POST"])
 def criar_pai(registro_id):
     resp = exigir_login()
+    if resp:
+        return resp
+
+    resp = exigir_editor_evidencias()
     if resp:
         return resp
 
@@ -719,6 +789,10 @@ def editar_pai(pai_id):
     if resp:
         return resp
 
+    resp = exigir_editor_evidencias()
+    if resp:
+        return resp
+
     pai = obter_pai_ou_404(pai_id)
     nome = texto(request.form.get("nome"))
 
@@ -736,6 +810,10 @@ def excluir_pai(pai_id):
     if resp:
         return resp
 
+    resp = exigir_editor_evidencias()
+    if resp:
+        return resp
+
     pai = obter_pai_ou_404(pai_id)
     registro_id = pai.registro_id
 
@@ -749,6 +827,10 @@ def excluir_pai(pai_id):
 @evidencias_frota_bp.route("/tipos/novo", methods=["POST"])
 def criar_tipo_foto():
     resp = exigir_login()
+    if resp:
+        return resp
+
+    resp = exigir_editor_evidencias()
     if resp:
         return resp
 
@@ -772,6 +854,10 @@ def desativar_tipo_foto(tipo_id):
     if resp:
         return resp
 
+    resp = exigir_editor_evidencias()
+    if resp:
+        return resp
+
     if not usuario_eh_admin_ou_gestao():
         abort(403)
 
@@ -788,6 +874,10 @@ def desativar_tipo_foto(tipo_id):
 @evidencias_frota_bp.route("/pai/<int:pai_id>/filho/novo", methods=["POST"])
 def criar_filho(pai_id):
     resp = exigir_login()
+    if resp:
+        return resp
+
+    resp = exigir_editor_evidencias()
     if resp:
         return resp
 
@@ -812,6 +902,10 @@ def editar_filho(filho_id):
     if resp:
         return resp
 
+    resp = exigir_editor_evidencias()
+    if resp:
+        return resp
+
     filho = obter_filho_ou_404(filho_id)
     nome = texto(request.form.get("nome"))
 
@@ -826,6 +920,10 @@ def editar_filho(filho_id):
 @evidencias_frota_bp.route("/filho/<int:filho_id>/excluir", methods=["POST"])
 def excluir_filho(filho_id):
     resp = exigir_login()
+    if resp:
+        return resp
+
+    resp = exigir_editor_evidencias()
     if resp:
         return resp
 
@@ -1076,6 +1174,10 @@ def criar_tabela_controle(pai_id):
     if resp:
         return resp
 
+    resp = exigir_editor_evidencias()
+    if resp:
+        return resp
+
     pai = obter_pai_ou_404(pai_id)
     titulo = texto(request.form.get("titulo")) or pai.nome
     qtd_colunas = inteiro_limitado(request.form.get("qtd_colunas"), padrao=5, minimo=1, maximo=40)
@@ -1109,6 +1211,10 @@ def importar_excel_pai_tabela(pai_id):
     if resp:
         if requisicao_ajax():
             return responder_erro("login", 401)
+        return resp
+
+    resp = exigir_editor_evidencias()
+    if resp:
         return resp
 
     pai = obter_pai_ou_404(pai_id)
@@ -1161,6 +1267,10 @@ def importar_excel_tabela(tabela_id):
             return responder_erro("login", 401)
         return resp
 
+    resp = exigir_editor_evidencias()
+    if resp:
+        return resp
+
     tabela = obter_tabela_ou_404(tabela_id)
     arquivo = request.files.get("arquivo_excel") or request.files.get("arquivo")
 
@@ -1199,6 +1309,10 @@ def editar_tabela_controle(tabela_id):
     if resp:
         return resp
 
+    resp = exigir_editor_evidencias()
+    if resp:
+        return resp
+
     tabela = obter_tabela_ou_404(tabela_id)
     titulo = texto(request.form.get("titulo"))
     if titulo:
@@ -1212,6 +1326,10 @@ def editar_tabela_controle(tabela_id):
 @evidencias_frota_bp.route("/tabela/<int:tabela_id>/excluir", methods=["POST"])
 def excluir_tabela_controle(tabela_id):
     resp = exigir_login()
+    if resp:
+        return resp
+
+    resp = exigir_editor_evidencias()
     if resp:
         return resp
 
@@ -1229,6 +1347,10 @@ def criar_coluna_tabela(tabela_id):
     if resp:
         if requisicao_ajax():
             return responder_erro("login", 401)
+        return resp
+
+    resp = exigir_editor_evidencias()
+    if resp:
         return resp
 
     tabela = obter_tabela_ou_404(tabela_id)
@@ -1282,6 +1404,10 @@ def excluir_coluna_tabela(coluna_id):
     if resp:
         return resp
 
+    resp = exigir_editor_evidencias()
+    if resp:
+        return resp
+
     coluna = obter_coluna_ou_404(coluna_id)
     tabela = coluna.tabela
     salvar_estado_tabela_do_request(tabela)
@@ -1298,6 +1424,10 @@ def excluir_coluna_tabela(coluna_id):
 @evidencias_frota_bp.route("/tabela/<int:tabela_id>/linha/nova", methods=["POST"])
 def criar_linha_tabela(tabela_id):
     resp = exigir_login()
+    if resp:
+        return resp
+
+    resp = exigir_editor_evidencias()
     if resp:
         return resp
 
@@ -1329,6 +1459,10 @@ def excluir_linha_tabela(linha_id):
     if resp:
         return resp
 
+    resp = exigir_editor_evidencias()
+    if resp:
+        return resp
+
     linha = obter_linha_ou_404(linha_id)
     tabela = linha.tabela
     salvar_estado_tabela_do_request(tabela)
@@ -1344,6 +1478,10 @@ def excluir_linha_tabela(linha_id):
 @evidencias_frota_bp.route("/tabela/<int:tabela_id>/celulas/salvar", methods=["POST"])
 def salvar_celulas_tabela(tabela_id):
     resp = exigir_login()
+    if resp:
+        return resp
+
+    resp = exigir_editor_evidencias()
     if resp:
         return resp
 
@@ -1445,6 +1583,10 @@ def upload_imagens_pai(pai_id):
     if resp:
         return resp
 
+    resp = exigir_editor_evidencias()
+    if resp:
+        return resp
+
     pai = obter_pai_ou_404(pai_id)
     registro = pai.registro
     arquivos = request.files.getlist("imagens")
@@ -1498,6 +1640,10 @@ def upload_imagens(filho_id):
     if resp:
         return resp
 
+    resp = exigir_editor_evidencias()
+    if resp:
+        return resp
+
     filho = obter_filho_ou_404(filho_id)
     pai = filho.campo_pai
     registro = pai.registro
@@ -1540,6 +1686,10 @@ def editar_imagem(imagem_id):
     if resp:
         return resp
 
+    resp = exigir_editor_evidencias()
+    if resp:
+        return resp
+
     imagem = obter_imagem_ou_404(imagem_id)
     registro_id = registro_id_da_imagem(imagem)
 
@@ -1561,6 +1711,10 @@ def editar_imagem(imagem_id):
 @evidencias_frota_bp.route("/pai/<int:pai_id>/imagens/editar_lote", methods=["POST"])
 def editar_imagens_pai_lote(pai_id):
     resp = exigir_login()
+    if resp:
+        return resp
+
+    resp = exigir_editor_evidencias()
     if resp:
         return resp
 
@@ -1595,6 +1749,10 @@ def editar_imagens_pai_lote(pai_id):
 @evidencias_frota_bp.route("/imagem/<int:imagem_id>/excluir", methods=["POST"])
 def excluir_imagem(imagem_id):
     resp = exigir_login()
+    if resp:
+        return resp
+
+    resp = exigir_editor_evidencias()
     if resp:
         return resp
 
@@ -1677,6 +1835,10 @@ def criar_link_publico(registro_id):
     if resp:
         return resp
 
+    resp = exigir_editor_evidencias()
+    if resp:
+        return resp
+
     registro = obter_registro_ou_404(registro_id)
 
     validade = request.form.get("validade_dias", type=int)
@@ -1704,6 +1866,10 @@ def criar_link_publico(registro_id):
 @evidencias_frota_bp.route("/links/<int:link_id>/desativar", methods=["POST"])
 def desativar_link_publico(link_id):
     resp = exigir_gestao_links()
+    if resp:
+        return resp
+
+    resp = exigir_editor_evidencias()
     if resp:
         return resp
 
