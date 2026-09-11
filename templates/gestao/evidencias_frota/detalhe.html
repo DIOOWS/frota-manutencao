@@ -868,32 +868,157 @@
       return false;
     }
 
+    async function refreshPhotoPaneByPaiId(paiId, fallbackForm) {
+      if (!paiId && fallbackForm) paiId = fallbackForm.getAttribute('data-pai-id');
+      if (!paiId) return false;
+      rememberScroll();
+      const currentPane = document.getElementById('tabFotos' + paiId);
+      const response = await fetch(window.location.href, { headers: { "X-Requested-With": "XMLHttpRequest" } });
+      const html = await response.text();
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const freshPane = doc.getElementById('tabFotos' + paiId);
+      if (currentPane && freshPane) {
+        currentPane.replaceWith(freshPane);
+        initEvidenciasFeatures(freshPane);
+      }
+      const btn = document.querySelector('[data-bs-target="#tabFotos' + paiId + '"]');
+      if (btn && window.bootstrap && bootstrap.Tab) {
+        bootstrap.Tab.getOrCreateInstance(btn).show();
+      }
+      const saved = JSON.parse(sessionStorage.getItem(TAB_KEY) || "{}");
+      const card = document.getElementById('campoPai' + paiId);
+      if (card) {
+        saved[card.id] = '#tabFotos' + paiId;
+        sessionStorage.setItem(TAB_KEY, JSON.stringify(saved));
+      }
+      restoreScroll();
+      return true;
+    }
+
+    function setPhotoStatus(form, text, state) {
+      if (!form) return;
+      let bar = form.querySelector('[data-photo-status]');
+      if (!bar) {
+        bar = document.createElement('div');
+        bar.setAttribute('data-photo-status', 'true');
+        bar.className = 'ev930-photo-status';
+        form.appendChild(bar);
+      }
+      bar.classList.remove('ok', 'error', 'loading');
+      if (state) bar.classList.add(state);
+      bar.innerHTML = text || '';
+    }
+
+    async function submitPhotoFormAjax(form, submitter) {
+      if (!form || form.dataset.photoAjaxBusy === '1') return;
+      form.dataset.photoAjaxBusy = '1';
+      const paiId = form.getAttribute('data-pai-id') || '';
+      const url = formAction(form, submitter);
+      const method = formMethod(form, submitter);
+      rememberScroll();
+      setPhotoStatus(form, '<i class="bi bi-arrow-repeat"></i> Salvando sem recarregar...', 'loading');
+
+      try {
+        const data = buildFormData(form, submitter);
+        const json = await fetchJson(url, {
+          method: method,
+          body: data,
+          headers: { "X-Requested-With": "XMLHttpRequest", "Accept": "application/json" }
+        });
+
+        if (!handlePhotoAjaxResult(json, form, submitter)) {
+          await refreshPhotoPaneByPaiId(json.campo_pai_id || paiId, form);
+        }
+
+        const activeBtn = document.querySelector('[data-bs-target="#tabFotos' + (json.campo_pai_id || paiId) + '"]');
+        if (activeBtn && window.bootstrap && bootstrap.Tab) bootstrap.Tab.getOrCreateInstance(activeBtn).show();
+        setPhotoStatus(form, '<i class="bi bi-check2-circle"></i> Salvo sem sair da aba Imagens.', 'ok');
+        restoreScroll();
+      } catch (err) {
+        setPhotoStatus(form, '<i class="bi bi-exclamation-triangle"></i> Erro: ' + escapeHtml(err.message || 'falha ao salvar'), 'error');
+        alert(err.message || "Erro ao salvar imagem");
+      } finally {
+        form.dataset.photoAjaxBusy = '0';
+        lastSubmitter = null;
+      }
+    }
+
+    function initPhotoAjaxHard(root) {
+      root.querySelectorAll('button[type="submit"]').forEach(function (btn) {
+        if (btn.dataset.evPhotoSubmitterReady === '1') return;
+        btn.dataset.evPhotoSubmitterReady = '1';
+        btn.addEventListener('click', function () { lastSubmitter = btn; }, true);
+      });
+      root.querySelectorAll('form[data-photo-upload-form="true"], form[data-photo-bulk-form="true"]').forEach(function (form) {
+        if (form.dataset.evPhotoAjaxReady === '1') return;
+        form.dataset.evPhotoAjaxReady = '1';
+        form.addEventListener('submit', function (event) {
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+          submitPhotoFormAjax(form, event.submitter || lastSubmitter);
+        }, true);
+      });
+    }
+
     function initPhotoBulkTools(root) {
       root.querySelectorAll('[data-photo-bulk-form="true"]').forEach(function (form) {
+        if (form.dataset.evPhotoBulkToolsReady === '1') return;
+        form.dataset.evPhotoBulkToolsReady = '1';
+
         const applyType = form.querySelector('[data-photo-apply-type]');
         const applyLegend = form.querySelector('[data-photo-apply-legend]');
         const clearLegends = form.querySelector('[data-photo-clear-legends]');
         const bulkType = form.querySelector('[data-photo-bulk-type]');
         const bulkLegend = form.querySelector('[data-photo-bulk-legend]');
 
+        async function saveBulkAfterApply(button) {
+          if (button) {
+            button.disabled = true;
+            button.dataset.oldHtml = button.dataset.oldHtml || button.innerHTML;
+            button.innerHTML = '<i class="bi bi-arrow-repeat"></i> Salvando...';
+          }
+          try {
+            updatePhotoCardsFromForm(form);
+            await submitPhotoFormAjax(form, button || null);
+          } finally {
+            if (button) {
+              button.disabled = false;
+              button.innerHTML = button.dataset.oldHtml || button.innerHTML;
+            }
+          }
+        }
+
         if (applyType && bulkType) {
-          applyType.addEventListener('click', function () {
-            if (!bulkType.value) return;
+          applyType.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (!bulkType.value) {
+              setPhotoStatus(form, '<i class="bi bi-info-circle"></i> Escolha um tipo antes de aplicar.', 'error');
+              return;
+            }
             form.querySelectorAll('[data-photo-type]').forEach(function (sel) { sel.value = bulkType.value; });
-            updatePhotoCardsFromForm(form);
-          });
+            saveBulkAfterApply(applyType);
+          }, true);
         }
+
         if (applyLegend && bulkLegend) {
-          applyLegend.addEventListener('click', function () {
+          applyLegend.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
             form.querySelectorAll('[data-photo-legend]').forEach(function (input) { input.value = bulkLegend.value || ''; });
-            updatePhotoCardsFromForm(form);
-          });
+            saveBulkAfterApply(applyLegend);
+          }, true);
         }
+
         if (clearLegends) {
-          clearLegends.addEventListener('click', function () {
+          clearLegends.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (!confirm('Limpar a legenda de todas as fotos deste campo?')) return;
             form.querySelectorAll('[data-photo-legend]').forEach(function (input) { input.value = ''; });
-            updatePhotoCardsFromForm(form);
-          });
+            saveBulkAfterApply(clearLegends);
+          }, true);
         }
       });
     }
@@ -904,6 +1029,7 @@
       });
 
       root.querySelectorAll('form[data-ajax-form="true"], .ev92-sheet-form').forEach(function (form) {
+        if (form.matches('form[data-photo-upload-form="true"], form[data-photo-bulk-form="true"]')) return;
         form.addEventListener('submit', async function (event) {
           event.preventDefault();
           const submitter = event.submitter || lastSubmitter;
@@ -1262,6 +1388,7 @@
       autoResizeTextareas(root);
       syncAllGroups(root);
       initTabs(root);
+      initPhotoAjaxHard(root);
       initAjaxForms(root);
       initAutosave(root);
       initWidths(root);
@@ -1271,7 +1398,7 @@
       initRows(root);
       initGroupMenus(root);
       initExcelImport(root);
-      initSimpleTablePaint(root);
+      if (typeof initSimpleTablePaint === "function") initSimpleTablePaint(root);
       initImportacaoReal(root);
     };
 
