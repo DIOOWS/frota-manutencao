@@ -909,7 +909,7 @@
       bar.innerHTML = text || '';
     }
 
-    async async function submitPhotoFormAjax(form, submitter) {
+    async function submitPhotoFormAjax(form, submitter) {
       if (!form || form.dataset.photoAjaxBusy === '1') return;
       form.dataset.photoAjaxBusy = '1';
       const paiId = form.getAttribute('data-pai-id') || '';
