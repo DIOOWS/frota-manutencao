@@ -180,6 +180,15 @@ def limpar_nome_arquivo(valor):
     return valor[:90] or "SEM_NOME"
 
 
+def ordenar_arquivos_upload(arquivos):
+    """Mantém as fotos em ordem previsível: número do nome do arquivo e depois nome."""
+    def chave(arquivo):
+        nome = getattr(arquivo, "filename", "") or ""
+        partes = re.split(r"(\d+)", nome.lower())
+        return [int(p) if p.isdigit() else p for p in partes]
+    return sorted(list(arquivos or []), key=chave)
+
+
 def cliente_permitido(cliente_id=None, cliente_nome=None):
     if usuario_eh_admin_ou_gestao():
         return True
@@ -711,7 +720,7 @@ def novo_registro():
         db.session.commit()
 
         flash("Painel de evidências criado com sucesso!", "success")
-        return redirect(f"/gestao/evidencias/{registro.id}")
+        return redirect(f"/gestao/evidencias/{registro.id}?aba=fotos&pai_id={pai.id}#campoPai{pai.id}")
 
     return render_template(
         "gestao/evidencias_frota/form.html",
@@ -780,7 +789,7 @@ def criar_pai(registro_id):
 
     if not nome:
         flash("Informe o nome do campo pai.", "danger")
-        return redirect(f"/gestao/evidencias/{registro.id}")
+        return redirect(f"/gestao/evidencias/{registro.id}?aba=fotos&pai_id={pai.id}#campoPai{pai.id}")
 
     pai = EvidenciaCampoPai(
         registro_id=registro.id,
@@ -792,7 +801,7 @@ def criar_pai(registro_id):
     db.session.commit()
 
     flash("Campo pai criado.", "success")
-    return redirect(f"/gestao/evidencias/{registro.id}")
+    return redirect(f"/gestao/evidencias/{registro.id}?aba=fotos&pai_id={pai.id}#campoPai{pai.id}")
 
 
 @evidencias_frota_bp.route("/pai/<int:pai_id>/editar", methods=["POST"])
@@ -1601,7 +1610,7 @@ def upload_imagens_pai(pai_id):
 
     pai = obter_pai_ou_404(pai_id)
     registro = pai.registro
-    arquivos = request.files.getlist("imagens")
+    arquivos = ordenar_arquivos_upload(request.files.getlist("imagens"))
     legenda_padrao = texto(request.form.get("legenda"))
     tipo_foto = texto(request.form.get("tipo_foto"))
     tipo_novo = texto(request.form.get("tipo_foto_novo"))
@@ -1612,6 +1621,8 @@ def upload_imagens_pai(pai_id):
     if not tipo_foto:
         tipo_foto = "Outro"
 
+    ordem_inicial = len(imagens_do_pai(pai.id))
+    ordem_inicial = len(imagens_do_pai(pai.id))
     adicionadas = 0
     imagens_criadas = []
     for arquivo in arquivos:
@@ -1631,7 +1642,7 @@ def upload_imagens_pai(pai_id):
             caminho_local=dados.get("caminho_local"),
             nome_original=dados.get("nome_original"),
             legenda=legenda_padrao or None,
-            ordem=len(imagens_do_pai(pai.id)) + adicionadas + 1,
+            ordem=ordem_inicial + adicionadas + 1,
         )
 
         db.session.add(imagem)
@@ -1650,7 +1661,7 @@ def upload_imagens_pai(pai_id):
             imagens=[payload_imagem_ajax(img) for img in imagens_criadas],
         )
     flash(mensagem, "success" if adicionadas else "warning")
-    return redirect(f"/gestao/evidencias/{registro.id}")
+    return redirect(f"/gestao/evidencias/{registro.id}?aba=fotos&pai_id={pai.id}#campoPai{pai.id}")
 
 
 @evidencias_frota_bp.route("/filho/<int:filho_id>/imagens", methods=["POST"])
@@ -1667,7 +1678,7 @@ def upload_imagens(filho_id):
     filho = obter_filho_ou_404(filho_id)
     pai = filho.campo_pai
     registro = pai.registro
-    arquivos = request.files.getlist("imagens")
+    arquivos = ordenar_arquivos_upload(request.files.getlist("imagens"))
     legenda_padrao = texto(request.form.get("legenda"))
     tipo_foto = texto(request.form.get("tipo_foto")) or filho.nome or "Outro"
 
@@ -1688,7 +1699,7 @@ def upload_imagens(filho_id):
             caminho_local=dados.get("caminho_local"),
             nome_original=dados.get("nome_original"),
             legenda=legenda_padrao or None,
-            ordem=len(imagens_do_pai(pai.id)) + adicionadas + 1,
+            ordem=ordem_inicial + adicionadas + 1,
         )
         db.session.add(imagem)
         imagens_criadas.append(imagem)
@@ -1705,7 +1716,7 @@ def upload_imagens(filho_id):
             imagens=[payload_imagem_ajax(img) for img in imagens_criadas],
         )
     flash(mensagem, "success" if adicionadas else "warning")
-    return redirect(f"/gestao/evidencias/{registro.id}")
+    return redirect(f"/gestao/evidencias/{registro.id}?aba=fotos&pai_id={pai.id}#campoPai{pai.id}")
 
 
 @evidencias_frota_bp.route("/imagem/<int:imagem_id>/editar", methods=["POST"])
@@ -1743,7 +1754,7 @@ def editar_imagem(imagem_id):
             imagem=payload_imagem_ajax(imagem),
         )
 
-    url = f"/gestao/evidencias/{registro_id}"
+    url = f"/gestao/evidencias/{registro_id}?aba=fotos&pai_id={(pai_da_imagem(imagem).id if pai_da_imagem(imagem) else '')}#campoPai{(pai_da_imagem(imagem).id if pai_da_imagem(imagem) else '')}"
     return voltar_ou_json(url, "Imagem atualizada.", registro_id=registro_id, campo_pai_id=(pai.id if pai else None), imagem_id=imagem.id)
 
 
@@ -1791,7 +1802,7 @@ def editar_imagens_pai_lote(pai_id):
             imagens=[payload_imagem_ajax(img) for img in imagens],
         )
 
-    url = f"/gestao/evidencias/{pai.registro_id}"
+    url = f"/gestao/evidencias/{pai.registro_id}?aba=fotos&pai_id={pai.id}#campoPai{pai.id}"
     return voltar_ou_json(url, mensagem, registro_id=pai.registro_id, campo_pai_id=pai.id, area="fotos")
 
 
@@ -1833,7 +1844,7 @@ def excluir_imagem(imagem_id):
             acao="excluir_imagem",
         )
 
-    url = f"/gestao/evidencias/{registro_id}"
+    url = f"/gestao/evidencias/{registro_id}?aba=fotos&pai_id={(pai.id if pai else '')}#campoPai{(pai.id if pai else '')}"
     return voltar_ou_json(url, "Imagem excluída.", registro_id=registro_id, campo_pai_id=(pai.id if pai else None), imagem_id=imagem_id)
 
 
@@ -1918,7 +1929,7 @@ def criar_link_publico(registro_id):
     db.session.commit()
 
     flash("Link público gerado com sucesso.", "success")
-    return redirect(f"/gestao/evidencias/{registro.id}")
+    return redirect(f"/gestao/evidencias/{registro.id}?aba=fotos&pai_id={pai.id}#campoPai{pai.id}")
 
 
 @evidencias_frota_bp.route("/links/<int:link_id>/desativar", methods=["POST"])
@@ -2107,101 +2118,18 @@ def exportar_excel():
     if resp:
         return resp
 
-    imagens = imagens_por_filtros()
-
-    wb = Workbook()
-    ws_resumo = wb.active
-    ws_resumo.title = "Resumo"
-    ws_resumo.append(["Cliente", "Frota", "Placa", "Campo pai", "Tipo da foto", "Qtd. imagens"])
-
-    resumo = {}
-    for img in imagens:
-        pai = pai_da_imagem(img)
-        registro = pai.registro if pai else None
-        if not registro:
-            continue
-        chave = (
-            registro.cliente_nome,
-            registro.frota or "",
-            registro.placa or "",
-            pai.nome,
-            origem_imagem(img),
-        )
-        resumo[chave] = resumo.get(chave, 0) + 1
-
-    for chave, qtd in sorted(resumo.items()):
-        ws_resumo.append(list(chave) + [qtd])
-    estilizar_cabecalho(ws_resumo)
-    ajustar_excel(ws_resumo)
-
-    ws_imagens = wb.create_sheet("Imagens")
-    ws_imagens.append([
-        "Cliente", "Frota", "Placa", "Campo pai", "Tipo da foto",
-        "Legenda", "Nome original", "URL/arquivo", "Enviado em",
-    ])
-
-    for img in imagens:
-        pai = pai_da_imagem(img)
-        registro = pai.registro if pai else None
-        if not registro:
-            continue
-        ws_imagens.append([
-            registro.cliente_nome,
-            registro.frota or "",
-            registro.placa or "",
-            pai.nome,
-            origem_imagem(img),
-            img.legenda or "",
-            img.nome_original or "",
-            img.imagem_url,
-            img.enviado_em.strftime("%d/%m/%Y %H:%M") if img.enviado_em else "",
-        ])
-    estilizar_cabecalho(ws_imagens)
-    ajustar_excel(ws_imagens)
-
-    nomes_usados = {"Resumo", "Imagens"}
-    campos = {}
-    for img in imagens:
-        pai = pai_da_imagem(img)
-        nome = pai.nome if pai else "SEM CAMPO"
-        campos.setdefault(nome, []).append(img)
-
-    for nome_campo, imgs in sorted(campos.items()):
-        titulo = re.sub(r"[\\/*?:\[\]]", "-", nome_campo)[:28] or "Campo"
-        base_titulo = titulo
-        indice = 2
-        while titulo in nomes_usados:
-            titulo = f"{base_titulo[:25]} {indice}"
-            indice += 1
-        nomes_usados.add(titulo)
-
-        ws = wb.create_sheet(titulo)
-        ws.append(["Cliente", "Frota", "Placa", "Tipo da foto", "Imagem", "Legenda", "URL/arquivo"])
-        for img in imgs:
-            registro = registro_da_imagem(img)
-            ws.append([
-                registro.cliente_nome if registro else "",
-                registro.frota if registro else "",
-                registro.placa if registro else "",
-                origem_imagem(img),
-                img.nome_original or f"Imagem {img.id}",
-                img.legenda or "",
-                img.imagem_url,
-            ])
-        estilizar_cabecalho(ws)
-        ajustar_excel(ws)
-
-    saida = BytesIO()
-    wb.save(saida)
-    saida.seek(0)
+    # V9.35: Exportação geral agora usa SOMENTE as tabelas de controle filtradas.
+    # Não gera mais abas Resumo/Imagens/Fotos com URLs de imagem.
+    registros = registros_filtrados()
+    registro_ids = [int(r.id) for r in registros]
+    saida = montar_excel_registro([], registro_ids_extra=registro_ids)
 
     return send_file(
         saida,
         as_attachment=True,
-        download_name=f"evidencias_frotas_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx",
+        download_name=f"evidencias_tabelas_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx",
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
-
 
 @evidencias_frota_bp.route("/<int:registro_id>/exportar/excel")
 def exportar_excel_registro(registro_id):
@@ -2302,9 +2230,15 @@ def adicionar_aba_tabela_controle(wb, tabela, usados):
         estilizar_tabela_controle_simples(ws, tabela)
         return ws
 
-    ws.append([texto(coluna.nome) or f"Coluna {idx}" for idx, coluna in enumerate(colunas, start=1)])
+    headers = [texto(coluna.nome) or f"Coluna {idx}" for idx, coluna in enumerate(colunas, start=1)]
+    ws.append(headers)
+
+    def normalizar_excel_valor(v):
+        return normalizar_texto(v).replace("º", "").replace("°", "")
 
     mapa = montar_mapa_celulas(tabela)
+    headers_norm = [normalizar_excel_valor(h) for h in headers]
+
     for linha in tabela.linhas:
         row = []
         for idx, coluna in enumerate(colunas):
@@ -2312,6 +2246,19 @@ def adicionar_aba_tabela_controle(wb, tabela, usados):
             if idx == 0 and not valor and linha.rotulo and not str(linha.rotulo).startswith("Linha "):
                 valor = linha.rotulo
             row.append(valor)
+
+        # V9.35: se a primeira linha da tabela foi importada como cabeçalho duplicado, não exporta de novo.
+        row_norm = [normalizar_excel_valor(v) for v in row]
+        iguais = 0
+        comparaveis = 0
+        for a, b in zip(row_norm, headers_norm):
+            if a or b:
+                comparaveis += 1
+                if a == b:
+                    iguais += 1
+        if comparaveis and iguais >= max(2, int(comparaveis * 0.70)):
+            continue
+
         ws.append(row)
 
     estilizar_tabela_controle_simples(ws, tabela)
@@ -2448,6 +2395,17 @@ def exportar_zip():
     if resp:
         return resp
 
+    cliente_id = request.args.get("cliente_id", type=int)
+    busca = texto(request.args.get("busca"))
+    campo = texto(request.args.get("campo"))
+
+    # Proteção do painel principal:
+    # não deixa baixar TODAS as imagens do sistema sem filtro,
+    # porque isso pode estourar tempo/memória no Render quando há muitas fotos no Cloudinary.
+    if not cliente_id and not busca and not campo:
+        flash("Selecione um cliente, frota, placa ou campo antes de baixar as imagens.", "warning")
+        return redirect("/gestao/evidencias/")
+
     imagens = imagens_por_filtros()
 
     memoria = BytesIO()
@@ -2458,10 +2416,20 @@ def exportar_zip():
             adicionar_imagem_ao_zip(zf, img)
 
     memoria.seek(0)
+
+    partes_nome = []
+    if cliente_id:
+        partes_nome.append(f"cliente_{cliente_id}")
+    if busca:
+        partes_nome.append(limpar_nome_arquivo(busca).lower())
+    if campo:
+        partes_nome.append(limpar_nome_arquivo(campo).lower())
+    sufixo = "_".join(partes_nome) or "filtro"
+
     return send_file(
         memoria,
         as_attachment=True,
-        download_name=f"evidencias_imagens_{datetime.now().strftime('%Y%m%d_%H%M')}.zip",
+        download_name=f"evidencias_imagens_{sufixo}_{datetime.now().strftime('%Y%m%d_%H%M')}.zip",
         mimetype="application/zip",
     )
 

@@ -610,6 +610,7 @@
         }
       }
       restoreActiveTabs();
+      restoreTabFromUrlParam();
       restoreScroll();
     }
 
@@ -769,6 +770,19 @@
         const btn = document.querySelector('#' + CSS.escape(cardId) + ' [data-bs-target="' + saved[cardId] + '"]');
         if (btn && window.bootstrap && bootstrap.Tab) bootstrap.Tab.getOrCreateInstance(btn).show();
       });
+    }
+
+
+
+    function restoreTabFromUrlParam() {
+      const params = new URLSearchParams(window.location.search || '');
+      if (params.get('aba') !== 'fotos') return;
+      const paiId = params.get('pai_id');
+      const selector = paiId ? '[data-bs-target="#tabFotos' + paiId + '"]' : '[data-bs-target^="#tabFotos"]';
+      const btn = document.querySelector(selector);
+      if (btn && window.bootstrap && bootstrap.Tab) {
+        bootstrap.Tab.getOrCreateInstance(btn).show();
+      }
     }
 
     function initTabs(root) {
@@ -941,6 +955,21 @@
         form.dataset.photoAjaxBusy = '0';
         lastSubmitter = null;
       }
+    }
+
+
+
+    function initPhotoAjaxDelegatedGuard(root) {
+      if (document.body.dataset.evPhotoDelegatedGuard === '1') return;
+      document.body.dataset.evPhotoDelegatedGuard = '1';
+      document.addEventListener('submit', function (event) {
+        const form = event.target && event.target.closest ? event.target.closest('form[data-photo-upload-form="true"], form[data-photo-bulk-form="true"]') : null;
+        if (!form) return;
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        submitPhotoFormAjax(form, event.submitter || lastSubmitter);
+      }, true);
     }
 
     function initPhotoAjaxHard(root) {
@@ -1154,8 +1183,8 @@
             syncAllGroups(form || table);
             table.querySelectorAll('.ev92-drop-target').forEach(function (el) { el.classList.remove('ev92-drop-target'); });
             table.classList.remove('ev92-dragging');
-            const form = table.closest('form');
-            if (form) { await autosaveForm(form); await refreshBoardByTableId(form.dataset.tableId); }
+            const formAfterDrop = table.closest('form');
+            if (formAfterDrop) { await autosaveForm(formAfterDrop); await refreshBoardByTableId(formAfterDrop.dataset.tableId); }
           });
           cell.addEventListener('dragend', function () { table.classList.remove('ev92-dragging'); });
         });
@@ -1388,6 +1417,7 @@
       autoResizeTextareas(root);
       syncAllGroups(root);
       initTabs(root);
+      initPhotoAjaxDelegatedGuard(root);
       initPhotoAjaxHard(root);
       initPhotoBulkTools(root);
       initAjaxForms(root);
@@ -1405,6 +1435,7 @@
 
     window.initEvidenciasFeatures(document);
     restoreActiveTabs();
+    restoreTabFromUrlParam();
     restoreScroll();
   });
 </script>
