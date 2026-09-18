@@ -1067,6 +1067,8 @@ def index():
         for item in executadas
     )
 
+    planejadas_por_dia = agrupar_planejamento_por_dia(planejadas + executadas)
+
     (
         total_recebido,
         total_pago_competencia,
@@ -1082,6 +1084,7 @@ def index():
         aguardando=aguardando,
         planejadas=planejadas,
         executadas=executadas,
+        planejadas_por_dia=planejadas_por_dia,
         total_aguardando=total_aguardando,
         total_planejado=total_planejado,
         total_executado=total_executado,
@@ -1096,6 +1099,55 @@ def montar_listas_planejamento(mes, ano):
 
 def valor_decimal_item(item):
     return dinheiro_decimal(item.get("valor_planejado", item.get("valor", 0)))
+
+
+def data_planejamento_item(item):
+    """Data usada para o modo 'por dia de pagamento'.
+
+    Prioridade:
+    1. data_prevista escolhida no planejamento;
+    2. data_pagamento quando já foi paga;
+    3. vencimento apenas como fallback visual.
+    """
+    return (
+        data_para_date_local(item.get("data_prevista"))
+        or data_para_date_local(item.get("data_pagamento"))
+        or data_para_date_local(item.get("vencimento"))
+    )
+
+
+def agrupar_planejamento_por_dia(itens):
+    """Agrupa contas planejadas/pagas pelo dia escolhido para pagamento."""
+    grupos = {}
+
+    for item in itens:
+        data_ref = data_planejamento_item(item)
+        chave = data_ref.isoformat() if data_ref else "sem-data"
+
+        grupo = grupos.setdefault(chave, {
+            "chave": chave,
+            "data": data_ref,
+            "data_label": formatar_data(data_ref) if data_ref else "Sem data definida",
+            "itens": [],
+            "total_planejado": Decimal("0"),
+            "total_pago": Decimal("0"),
+            "total_falta": Decimal("0"),
+        })
+
+        grupo["itens"].append(item)
+
+        if item.get("status_execucao") == "PAGA":
+            valor_pago = dinheiro_decimal(item.get("valor", item.get("valor_planejado", 0)))
+            grupo["total_pago"] += valor_pago
+        else:
+            valor_planejado = dinheiro_decimal(item.get("valor_planejado", item.get("valor", 0)))
+            grupo["total_planejado"] += valor_planejado
+            grupo["total_falta"] += valor_planejado
+
+    return sorted(
+        grupos.values(),
+        key=lambda grupo: (grupo["data"] is None, grupo["data"] or date.max, grupo["chave"]),
+    )
 
 
 def pagamentos_do_planejamento(registro):

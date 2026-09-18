@@ -2020,6 +2020,10 @@ select.pf-v2-control{
                       <button type="button" class="pf-plan-arrow" aria-label="Opções de planejamento">▼</button>
                       <div class="pf-plan-menu">
                         <button type="button" class="pf-plan-menu-total">Planejar valor total</button>
+                        <button type="button" class="pf-plan-menu-date"
+                          data-id="{{ item.id }}" data-conta="{{ item.descricao|e }}"
+                          data-fornecedor="{{ item.fornecedor|e }}" data-valor="{{ item.valor }}"
+                          data-valor-formatado="{{ item.valor_formatado }}">Escolher dia de pagamento</button>
                         <button type="button" class="pf-plan-menu-partial"
                           data-id="{{ item.id }}" data-conta="{{ item.descricao|e }}"
                           data-fornecedor="{{ item.fornecedor|e }}" data-valor="{{ item.valor }}"
@@ -2076,9 +2080,20 @@ select.pf-v2-control{
             <b>{{ moeda(total_planejado) }}</b>
           </span>
         </div>
+        <div class="pf-plan-view-switch" aria-label="Tipo de planejamento">
+          <span>Tipo de planejamento:</span>
+          <button type="button" class="active" data-pf-plan-view-btn="livre">Livre</button>
+          <button type="button" data-pf-plan-view-btn="dia">Por dia de pagamento</button>
+        </div>
       </header>
 
-      <div class="pf-v2-table-box">
+      <div class="pf-plan-view-switch-outside" aria-label="Tipo de planejamento visível">
+        <strong>Tipo de planejamento:</strong>
+        <button type="button" class="active" data-pf-plan-view-btn="livre">Livre</button>
+        <button type="button" data-pf-plan-view-btn="dia">Por dia de pagamento</button>
+      </div>
+
+      <div class="pf-v2-table-box" data-pf-plan-view="livre">
         <table class="pf-v2-table pf-v2-table-right">
           <thead>
             <tr>
@@ -2130,6 +2145,75 @@ select.pf-v2-control{
         </table>
       </div>
 
+      <div class="pf-day-plan-view" data-pf-plan-view="dia" hidden>
+        {% if planejadas_por_dia %}
+          {% for grupo in planejadas_por_dia %}
+            <section class="pf-day-group">
+              <header class="pf-day-group-head">
+                <div>
+                  <strong>{{ grupo.data_label }}</strong>
+                  <small>{{ grupo.itens|length }} conta(s) neste dia</small>
+                </div>
+                <div class="pf-day-group-totals">
+                  <span><small>Planejado</small><b>{{ moeda(grupo.total_planejado + grupo.total_pago) }}</b></span>
+                  <span class="paid"><small>Pago</small><b>{{ moeda(grupo.total_pago) }}</b></span>
+                  <span class="pending"><small>Falta</small><b>{{ moeda(grupo.total_falta) }}</b></span>
+                </div>
+              </header>
+              <div class="pf-day-table-wrap">
+                <table class="pf-v2-table pf-day-table">
+                  <thead>
+                    <tr>
+                      <th>Status</th><th>Venc.</th><th>Conta / Fornecedor + Obs.</th><th>Documento</th><th>Valor</th><th>Ação</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for item in grupo.itens %}
+                      <tr class="pf-day-row {% if item.status_execucao == 'PAGA' %}pf-v2-row-paid{% endif %}" data-pf-status-execucao="{{ 'paga' if item.status_execucao == 'PAGA' else 'planejada' }}">
+                        <td class="pf-v2-status-cell">
+                          {% if item.status_execucao == 'PAGA' %}
+                            <span class="pf-v2-badge pf-v2-badge-green">PAGA</span>
+                            <small class="pf-v2-neutral">Radar</small>
+                          {% else %}
+                            <span class="pf-v2-badge {% if item.is_herdada %}pf-v2-badge-red{% elif item.status_planejamento_visual == 'VENCE HOJE' %}pf-v2-badge-orange{% else %}pf-v2-badge-blue{% endif %}">{{ item.status_planejamento_visual }}</span>
+                            {% if item.dias_atraso and item.dias_atraso > 0 %}<small class="pf-v2-delay">{{ item.dias_atraso }}d vencida</small>{% elif item.dias_atraso and item.dias_atraso < 0 %}<small class="pf-v2-future">{{ (item.dias_atraso * -1) }}d para vencer</small>{% else %}<small class="pf-v2-neutral">0d</small>{% endif %}
+                          {% endif %}
+                        </td>
+                        <td class="pf-v2-date-cell"><strong>{{ item.vencimento or '-' }}</strong><small>pagarei {{ item.data_prevista or grupo.data_label }}</small></td>
+                        <td class="pf-v2-account-cell">
+                          <strong title="{{ item.descricao }}">{{ item.descricao or '-' }}</strong>
+                          <small title="{{ item.fornecedor }}">{{ item.fornecedor or '-' }}</small>
+                          <div class="pf-v2-account-meta">{% if item.categoria and item.categoria != '-' %}<em>{{ item.categoria }}</em>{% endif %}{% if item.parcela_label %}<span>Parc. {{ item.parcela_label }}</span>{% endif %}</div>
+                          <div class="pf-v2-inline-obs" title="{{ item.observacao }}"><b>Obs:</b> {{ item.observacao or '-' }}</div>
+                        </td>
+                        <td class="pf-v2-doc-cell" title="{{ item.documento }}">{{ item.documento or '-' }}</td>
+                        <td class="pf-v2-value pf-v2-value-blue" title="Valor original: {{ item.valor_original_formatado or item.valor_formatado }}">
+                          {{ item.valor_planejado_formatado or item.valor_formatado }}
+                          {% if item.tipo_planejamento == 'PARCIAL' %}<small class="pf-partial-value-note">parcial · {{ item.data_prevista }}</small>{% endif %}
+                        </td>
+                        <td class="pf-v2-action-cell">
+                          {% if item.status_execucao == 'PAGA' %}
+                            <span class="pf-v2-paid-label">Pago</span>
+                          {% else %}
+                            <form method="POST" action="/gestao/planejamento-financeiro/remover/{{ item.id }}" class="pf-v2-ajax-form">
+                              <input type="hidden" name="mes" value="{{ mes }}"><input type="hidden" name="ano" value="{{ ano }}">
+                              {% if item.pagamento_planejado_id %}<input type="hidden" name="pagamento_planejado_id" value="{{ item.pagamento_planejado_id }}">{% endif %}
+                              <button type="submit" class="pf-v2-btn pf-v2-remove-btn">Remover</button>
+                            </form>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          {% endfor %}
+        {% else %}
+          <div class="pf-day-empty">Nenhuma conta planejada ou paga para organizar por dia.</div>
+        {% endif %}
+      </div>
+
       <footer class="pf-v2-panel-foot"><div class="pf-v2-page-info">Mostrando 0 de 0 conta(s)</div><div class="pf-v2-pagination"></div></footer>
     </article>
 
@@ -2157,8 +2241,25 @@ select.pf-v2-control{
   </div>
 </div>
 
+<div class="pf-pred-modal" id="pfPlanDateModal" aria-hidden="true">
+  <div class="pf-pred-backdrop" data-close-plan-date></div>
+  <div class="pf-pred-card" role="dialog" aria-modal="true" aria-labelledby="pfPlanDateTitle">
+    <button type="button" class="pf-pred-close" data-close-plan-date>×</button>
+    <h2 id="pfPlanDateTitle">Escolher dia de pagamento</h2>
+    <p id="pfPlanDateConta">-</p>
+    <div class="pf-pred-total"><span>Valor total da conta</span><strong id="pfPlanDateValorTotal">R$ 0,00</strong></div>
+    <form id="pfPlanDateForm" method="POST">
+      <input type="hidden" name="mes" value="{{ mes }}"><input type="hidden" name="ano" value="{{ ano }}">
+      <input type="hidden" name="tipo_planejamento" value="TOTAL">
+      <label>Dia que pretende pagar<input id="pfPlanDateInput" type="date" name="data_prevista" required></label>
+      <label>Observação<textarea name="observacao_previsao" rows="3" placeholder="Opcional"></textarea></label>
+      <div class="pf-pred-actions"><button type="button" data-close-plan-date>Cancelar</button><button type="submit">Salvar no dia escolhido</button></div>
+    </form>
+  </div>
+</div>
+
 <style>
-.pf-plan-split{position:relative;display:grid;grid-template-columns:1fr 30px;width:100%}.pf-plan-total-form{margin:0}.pf-plan-split .pf-v2-pay-btn{border-radius:8px 0 0 8px}.pf-plan-arrow{border:0;border-left:1px solid rgba(255,255,255,.25);border-radius:0 8px 8px 0;background:#073f9f;color:#fff;font-size:10px;cursor:pointer}.pf-plan-menu{display:none;position:absolute;right:0;top:38px;width:190px;padding:6px;background:#fff;border:1px solid #d8e2ef;border-radius:9px;box-shadow:0 14px 35px rgba(15,23,42,.2);z-index:50}.pf-plan-split.open .pf-plan-menu{display:block}.pf-plan-menu button{width:100%;padding:10px;border:0;border-radius:6px;background:#fff;text-align:left;font-size:12px;font-weight:850;cursor:pointer}.pf-plan-menu button:hover{background:#eef5ff;color:#0b4edb}.pf-partial-value-note{display:block;margin-top:4px;color:#64748b;font-size:9px;font-weight:800}.pf-pred-modal{display:none;position:fixed;inset:0;z-index:9999}.pf-pred-modal.open{display:block}.pf-pred-backdrop{position:absolute;inset:0;background:rgba(2,6,23,.6)}.pf-pred-card{position:relative;width:min(480px,calc(100vw - 28px));margin:7vh auto;padding:24px;background:#fff;border-radius:14px;box-shadow:0 28px 80px rgba(0,0,0,.3)}.pf-pred-card h2{margin:0 35px 5px 0;color:#061b3d;font-size:22px}.pf-pred-card>p{margin:0 0 18px;color:#64748b;font-weight:750}.pf-pred-close{position:absolute;right:16px;top:12px;border:0;background:transparent;font-size:28px;cursor:pointer}.pf-pred-total,.pf-pred-saldo{display:flex;justify-content:space-between;align-items:center;padding:13px 14px;border-radius:9px;background:#f4f7fb;margin-bottom:14px}.pf-pred-total strong{color:#e11d2e}.pf-pred-saldo{margin:4px 0 16px;background:#eef5ff}.pf-pred-saldo strong{color:#0b4edb}.pf-pred-card label{display:block;margin-bottom:12px;color:#061b3d;font-size:12px;font-weight:900}.pf-pred-card input,.pf-pred-card textarea{width:100%;margin-top:6px;padding:11px 12px;border:1px solid #cbd8e8;border-radius:8px;font:inherit;outline:none}.pf-pred-card input:focus,.pf-pred-card textarea:focus{border-color:#0b4edb;box-shadow:0 0 0 3px rgba(11,78,219,.1)}.pf-pred-actions{display:flex;justify-content:flex-end;gap:10px}.pf-pred-actions button{height:40px;padding:0 18px;border:1px solid #d8e2ef;border-radius:8px;background:#fff;font-weight:900;cursor:pointer}.pf-pred-actions button[type=submit]{border-color:#0b4edb;background:#0b4edb;color:#fff}
+.pf-plan-split{position:relative;display:grid;grid-template-columns:1fr 30px;width:100%}.pf-plan-total-form{margin:0}.pf-plan-split .pf-v2-pay-btn{border-radius:8px 0 0 8px}.pf-plan-arrow{border:0;border-left:1px solid rgba(255,255,255,.25);border-radius:0 8px 8px 0;background:#073f9f;color:#fff;font-size:10px;cursor:pointer}.pf-plan-menu{display:none;position:absolute;right:0;top:38px;width:220px;padding:6px;background:#fff;border:1px solid #d8e2ef;border-radius:9px;box-shadow:0 14px 35px rgba(15,23,42,.2);z-index:50}.pf-plan-split.open .pf-plan-menu{display:block}.pf-plan-menu button{width:100%;padding:10px;border:0;border-radius:6px;background:#fff;text-align:left;font-size:12px;font-weight:850;cursor:pointer}.pf-plan-menu button:hover{background:#eef5ff;color:#0b4edb}.pf-partial-value-note{display:block;margin-top:4px;color:#64748b;font-size:9px;font-weight:800}.pf-pred-modal{display:none;position:fixed;inset:0;z-index:9999}.pf-pred-modal.open{display:block}.pf-pred-backdrop{position:absolute;inset:0;background:rgba(2,6,23,.6)}.pf-pred-card{position:relative;width:min(480px,calc(100vw - 28px));margin:7vh auto;padding:24px;background:#fff;border-radius:14px;box-shadow:0 28px 80px rgba(0,0,0,.3)}.pf-pred-card h2{margin:0 35px 5px 0;color:#061b3d;font-size:22px}.pf-pred-card>p{margin:0 0 18px;color:#64748b;font-weight:750}.pf-pred-close{position:absolute;right:16px;top:12px;border:0;background:transparent;font-size:28px;cursor:pointer}.pf-pred-total,.pf-pred-saldo{display:flex;justify-content:space-between;align-items:center;padding:13px 14px;border-radius:9px;background:#f4f7fb;margin-bottom:14px}.pf-pred-total strong{color:#e11d2e}.pf-pred-saldo{margin:4px 0 16px;background:#eef5ff}.pf-pred-saldo strong{color:#0b4edb}.pf-pred-card label{display:block;margin-bottom:12px;color:#061b3d;font-size:12px;font-weight:900}.pf-pred-card input,.pf-pred-card textarea{width:100%;margin-top:6px;padding:11px 12px;border:1px solid #cbd8e8;border-radius:8px;font:inherit;outline:none}.pf-pred-card input:focus,.pf-pred-card textarea:focus{border-color:#0b4edb;box-shadow:0 0 0 3px rgba(11,78,219,.1)}.pf-pred-actions{display:flex;justify-content:flex-end;gap:10px}.pf-pred-actions button{height:40px;padding:0 18px;border:1px solid #d8e2ef;border-radius:8px;background:#fff;font-weight:900;cursor:pointer}.pf-pred-actions button[type=submit]{border-color:#0b4edb;background:#0b4edb;color:#fff}
 </style>
 
 
@@ -2396,6 +2497,16 @@ select.pf-v2-control{
     font-size:9px !important;
   }
 }
+
+/* Planejamento por dia de pagamento */
+.pf-plan-view-switch{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:10px}
+.pf-plan-view-switch span{font-size:11px;font-weight:950;color:#061b3d;text-transform:uppercase}
+.pf-plan-view-switch button{height:30px;border:1px solid #cbd8e8;background:#fff;color:#061b3d;border-radius:999px;padding:0 12px;font-size:11px;font-weight:950;cursor:pointer}
+.pf-plan-view-switch button.active{background:#0b4edb;border-color:#0b4edb;color:#fff;box-shadow:0 8px 18px rgba(11,78,219,.20)}
+.pf-day-plan-view{padding:10px;background:#f4f7fb;border-top:1px solid #d8e2ef;max-height:438px;overflow:auto}
+.pf-day-group{margin-bottom:12px;background:#fff;border:1px solid #d8e2ef;border-radius:12px;overflow:hidden;box-shadow:0 7px 18px rgba(15,23,42,.06)}
+.pf-day-group-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;background:linear-gradient(135deg,#061b3d,#0b4edb);color:#fff}
+.pf-day-group-head strong{display:block;font-size:15px;font-weight:950}.pf-day-group-head small{display:block;font-size:10px;font-weight:800;opacity:.9}.pf-day-group-totals{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.pf-day-group-totals span{min-width:92px;padding:6px 8px;border-radius:9px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);text-align:right}.pf-day-group-totals b{display:block;font-size:12px}.pf-day-group-totals .paid b{color:#bbf7d0}.pf-day-group-totals .pending b{color:#fecaca}.pf-day-table-wrap{overflow:auto}.pf-day-table{min-width:780px!important}.pf-day-empty{padding:20px;text-align:center;font-weight:900;color:#64748b;background:#fff;border:1px dashed #cbd8e8;border-radius:12px}
 </style>
 
 <script>
@@ -2413,6 +2524,9 @@ document.addEventListener("DOMContentLoaded", function () {
   const predValor = document.getElementById("pfPredValor");
   const predData = document.getElementById("pfPredData");
   const predSaldo = document.getElementById("pfPredSaldo");
+  const planDateModal = document.getElementById("pfPlanDateModal");
+  const planDateForm = document.getElementById("pfPlanDateForm");
+  const planDateInput = document.getElementById("pfPlanDateInput");
   let predTotal = 0;
 
   document.addEventListener("click", function(event){
@@ -2421,6 +2535,17 @@ document.addEventListener("DOMContentLoaded", function () {
     if (arrow) { event.preventDefault(); arrow.closest(".pf-plan-split").classList.toggle("open"); return; }
     const totalBtn = event.target.closest(".pf-plan-menu-total");
     if (totalBtn) { totalBtn.closest(".pf-plan-split").querySelector("form").requestSubmit(); return; }
+    const dateBtn = event.target.closest(".pf-plan-menu-date");
+    if (dateBtn) {
+      planDateForm.action = "/gestao/planejamento-financeiro/planejar/" + dateBtn.dataset.id;
+      document.getElementById("pfPlanDateConta").textContent = dateBtn.dataset.conta + " · " + dateBtn.dataset.fornecedor;
+      document.getElementById("pfPlanDateValorTotal").textContent = dateBtn.dataset.valorFormatado;
+      planDateInput.value = "";
+      planDateModal.classList.add("open");
+      planDateModal.setAttribute("aria-hidden", "false");
+      setTimeout(() => planDateInput.focus(), 50);
+      return;
+    }
     const partialBtn = event.target.closest(".pf-plan-menu-partial");
     if (partialBtn) {
       predTotal = Number(partialBtn.dataset.valor || 0);
@@ -2433,6 +2558,7 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
     if (event.target.closest("[data-close-pred]")) { predModal.classList.remove("open"); predModal.setAttribute("aria-hidden", "true"); }
+    if (event.target.closest("[data-close-plan-date]")) { planDateModal.classList.remove("open"); planDateModal.setAttribute("aria-hidden", "true"); }
   });
 
   function valorDigitado(){ return parseFloat((predValor.value || "").replace(/[^0-9,.-]/g, "").replace(/\./g, "").replace(",", ".")) || 0; }
@@ -2456,6 +2582,60 @@ document.addEventListener("DOMContentLoaded", function () {
       botao.textContent = "Salvar previsão";
     } catch(erro) { alert(erro.message); botao.disabled=false; botao.textContent="Salvar previsão"; }
   });
+
+  planDateForm.addEventListener("submit", async function(event){
+    event.preventDefault();
+    if (!planDateInput.value) { alert("Escolha o dia que pretende pagar."); return; }
+    const botao = planDateForm.querySelector('button[type="submit"]');
+    botao.disabled = true;
+    botao.textContent = "Salvando...";
+    try {
+      const resposta = await fetch(planDateForm.action, {method:"POST",body:new FormData(planDateForm),headers:{"X-Requested-With":"XMLHttpRequest"}});
+      const dados = await resposta.json().catch(() => null);
+      if (!resposta.ok || !dados || !dados.ok) throw new Error(dados && dados.message ? dados.message : "Erro ao salvar planejamento.");
+      planDateModal.classList.remove("open");
+      planDateModal.setAttribute("aria-hidden", "true");
+      await atualizarPlanejamentoSemReload();
+      botao.disabled = false;
+      botao.textContent = "Salvar no dia escolhido";
+    } catch(erro) {
+      alert(erro.message || "Erro ao salvar planejamento.");
+      botao.disabled = false;
+      botao.textContent = "Salvar no dia escolhido";
+    }
+  });
+
+  function aplicarTipoPlanejamentoVisual(tipo) {
+    const painel = document.querySelector('[data-pf-panel="planejadas"]');
+    if (!painel) return;
+    tipo = tipo === "dia" ? "dia" : "livre";
+    localStorage.setItem("pf_tipo_planejamento_visual", tipo);
+
+    painel.querySelectorAll("[data-pf-plan-view]").forEach(function(area){
+      area.hidden = area.getAttribute("data-pf-plan-view") !== tipo;
+    });
+
+    painel.querySelectorAll("[data-pf-plan-view-btn]").forEach(function(btn){
+      const ativo = btn.getAttribute("data-pf-plan-view-btn") === tipo;
+      btn.classList.toggle("active", ativo);
+      btn.setAttribute("aria-pressed", ativo ? "true" : "false");
+    });
+
+    const footer = painel.querySelector(".pf-v2-panel-foot");
+    if (footer) footer.style.display = tipo === "dia" ? "none" : "flex";
+    if (tipo === "livre") renderizarPainel(painel, 1);
+  }
+
+  function inicializarTipoPlanejamentoVisual() {
+    document.querySelectorAll("[data-pf-plan-view-btn]").forEach(function(btn){
+      if (btn.dataset.pfViewReady === "1") return;
+      btn.dataset.pfViewReady = "1";
+      btn.addEventListener("click", function(){
+        aplicarTipoPlanejamentoVisual(btn.getAttribute("data-pf-plan-view-btn"));
+      });
+    });
+    aplicarTipoPlanejamentoVisual(localStorage.getItem("pf_tipo_planejamento_visual") || "livre");
+  }
 
   async function atualizarPlanejamentoSemReload() {
     const respostaPagina = await fetch(window.location.href, {
@@ -2495,6 +2675,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Recria referências que dependem das novas linhas.
     document.querySelectorAll(".pf-v2-ajax-form").forEach(vincularFormulario);
+    inicializarTipoPlanejamentoVisual();
 
     const novoPainelPlanejadas = document.querySelector(
       '[data-pf-panel="planejadas"]'
@@ -2504,6 +2685,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     renderizarTudo(true);
+    inicializarTipoPlanejamentoVisual();
   }
 
   function normalizar(texto) {
@@ -2785,8 +2967,10 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   document.querySelectorAll(".pf-v2-ajax-form").forEach(vincularFormulario);
+  inicializarTipoPlanejamentoVisual();
 
   renderizarTudo(true);
+  inicializarTipoPlanejamentoVisual();
 });
 </script>
 
@@ -2859,6 +3043,61 @@ document.addEventListener("DOMContentLoaded", function () {
 
 .pf-v2-panel:focus-within{
   z-index:200 !important;
+}
+</style>
+
+
+
+<style>
+/* FIX V1.2 - seletor Livre / Por dia visível fora do cabeçalho */
+.pf-v2-panel.pf-v2-panel-blue{
+  grid-template-rows: 86px 48px minmax(0,1fr) 58px !important;
+}
+.pf-v2-panel-blue .pf-v2-panel-head{
+  height: 86px !important;
+  overflow: hidden !important;
+}
+.pf-v2-panel-blue .pf-plan-view-switch{
+  display: none !important;
+}
+.pf-plan-view-switch-outside{
+  height: 48px !important;
+  padding: 7px 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: #eef5ff !important;
+  border-bottom: 1px solid #bfd7ff !important;
+  color: #061b3d !important;
+  overflow: visible !important;
+  z-index: 5 !important;
+}
+.pf-plan-view-switch-outside strong{
+  font-size: 12px !important;
+  font-weight: 950 !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+}
+.pf-plan-view-switch-outside button{
+  height: 32px !important;
+  border: 1px solid #cbd8e8 !important;
+  background: #fff !important;
+  color: #061b3d !important;
+  border-radius: 999px !important;
+  padding: 0 14px !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+  cursor: pointer !important;
+}
+.pf-plan-view-switch-outside button.active{
+  background: #0b4edb !important;
+  border-color: #0b4edb !important;
+  color: #fff !important;
+  box-shadow: 0 8px 18px rgba(11,78,219,.22) !important;
+}
+@media (max-width: 1100px){
+  .pf-plan-view-switch-outside{height:auto !important; min-height:48px !important; flex-wrap:wrap !important;}
+  .pf-v2-panel.pf-v2-panel-blue{grid-template-rows:86px auto minmax(0,1fr) 58px !important;}
 }
 </style>
 
