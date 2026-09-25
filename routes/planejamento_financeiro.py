@@ -936,10 +936,23 @@ def _montar_listas_unificadas(mes, ano):
             # Conta paga nunca permanece em planejadas ou aguardando.
             continue
 
-        # Enquanto a conta estiver aberta, cada previsão aparece somente
-        # na competência da data prevista escolhida.
+        # Enquanto a conta estiver aberta, cada previsão aparece:
+        # 1. na competência da data prevista escolhida; ou
+        # 2. como pendência anterior quando a data prevista ficou em mês passado.
+        primeiro_mes_atual = primeiro_dia_mes(mes, ano)
         for registro, pagamento in pagamentos:
-            if not pagamento_na_competencia(pagamento, mes, ano, registro):
+            data_prevista_pagamento = data_para_date_local(
+                getattr(pagamento, "data_prevista", None)
+            )
+            pendente_mes_anterior = (
+                data_prevista_pagamento is not None
+                and data_prevista_pagamento < primeiro_mes_atual
+            )
+
+            if (
+                not pendente_mes_anterior
+                and not pagamento_na_competencia(pagamento, mes, ano, registro)
+            ):
                 continue
 
             item_pagamento = criar_item_pagamento(
@@ -964,6 +977,18 @@ def _montar_listas_unificadas(mes, ano):
             item_pagamento["saldo_restante_formatado"] = moeda(saldo_agregado)
             item_pagamento["status_execucao"] = "PLANEJADA"
             item_pagamento["data_pagamento"] = "-"
+            item_pagamento["is_pendente_mes_anterior"] = pendente_mes_anterior
+            if pendente_mes_anterior:
+                item_pagamento["status_planejamento_visual"] = "PENDENTE ANTERIOR"
+                item_pagamento["competencia_planejada"] = (
+                    f"{data_prevista_pagamento.month:02d}/{data_prevista_pagamento.year}"
+                    if data_prevista_pagamento
+                    else ""
+                )
+                item_pagamento["observacao_previsao"] = (
+                    f"Pendente do mês anterior. Data planejada original: "
+                    f"{formatar_data(data_prevista_pagamento)}."
+                )
 
             planejadas.append(item_pagamento)
 
@@ -1209,7 +1234,9 @@ def criar_item_pagamento(item_base, registro, pagamento):
     item["saldo_restante"] = saldo_restante
     item["saldo_restante_formatado"] = moeda(saldo_restante)
     item["tipo_planejamento"] = texto_limpo(getattr(pagamento, "tipo", None), "PARCIAL").upper()
-    item["data_prevista"] = formatar_data(getattr(pagamento, "data_prevista", None))
+    data_prevista_obj = data_para_date_local(getattr(pagamento, "data_prevista", None))
+    item["data_prevista"] = formatar_data(data_prevista_obj)
+    item["data_prevista_iso"] = data_prevista_obj.isoformat() if data_prevista_obj else ""
     item["observacao_previsao"] = texto_limpo(getattr(pagamento, "observacao", None), "-")
     item["pagamento_planejado_id"] = getattr(pagamento, "id", None)
     return item
@@ -1963,6 +1990,66 @@ def planejar(conta_id):
         "data_prevista": formatar_data(data_prevista),
         "pagamento_planejado_id": pagamento.id,
     })
+
+@planejamento_financeiro_bp.route("/reprogramar/<int:pagamento_id>", methods=["POST"])
+@gestao_required
+def reprogramar_pagamento(pagamento_id):
+    mes = request.form.get("mes", type=int)
+    ano = request.form.get("ano", type=int)
+    nova_data = data_para_date_local(request.form.get("data_prevista"))
+    observacao = texto_limpo(request.form.get("observacao_previsao"), "")
+
+    if not mes or not ano or not 1 <= mes <= 12:
+        return jsonify({"ok": False, "message": "Mês e ano inválidos."}), 400
+
+    if not nova_data:
+        return jsonify({"ok": False, "message": "Informe a nova data planejada."}), 400
+
+    pagamento = PlanejamentoPagamento.query.get(pagamento_id)
+    if not pagamento:
+        return jsonify({"ok": False, "message": "Previsão não encontrada."}), 404
+
+    registro = PlanejamentoFinanceiro.query.get(pagamento.planejamento_id)
+    if not registro:
+        return jsonify({"ok": False, "message": "Planejamento não encontrado."}), 404
+
+    conta = db.session.get(ContaPagarImportada, registro.conta_id) if registro.conta_id else None
+    if conta and conta_esta_cancelada(conta):
+        return jsonify({"ok": False, "message": "Não é possível reprogramar uma conta cancelada."}), 409
+
+    if conta and conta_esta_paga_local(conta):
+        return jsonify({"ok": False, "message": "Esta conta já está paga no Radar."}), 409
+
+    pagamento.data_prevista = nova_data
+    if observacao:
+        pagamento.observacao = observacao
+
+    pagamentos_registro = list(getattr(registro, "pagamentos_planejados", []) or [])
+    datas_validas = [
+        data_para_date_local(getattr(p, "data_prevista", None))
+        for p in pagamentos_registro
+        if data_para_date_local(getattr(p, "data_prevista", None))
+    ]
+    registro.data_prevista = min(datas_validas) if datas_validas else nova_data
+    registro.status_planejamento = "PLANEJADA"
+
+    try:
+        db.session.commit()
+    except Exception as erro:
+        db.session.rollback()
+        return jsonify({
+            "ok": False,
+            "message": f"Erro ao reprogramar pagamento: {erro}",
+        }), 500
+
+    return jsonify({
+        "ok": True,
+        "message": "Data do pagamento reprogramada.",
+        "data_prevista": formatar_data(nova_data),
+        "data_prevista_iso": nova_data.isoformat(),
+        "pagamento_planejado_id": pagamento.id,
+    })
+
 
 @planejamento_financeiro_bp.route("/remover/<int:conta_id>", methods=["POST"])
 @gestao_required

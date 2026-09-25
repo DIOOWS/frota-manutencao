@@ -1989,8 +1989,8 @@ select.pf-v2-control{
                     <span class="pf-v2-badge">PLANEJADA</span>
                     <small class="pf-v2-neutral">outro mês</small>
                   {% else %}
-                    <span class="pf-v2-badge {% if item.is_herdada %}pf-v2-badge-red{% elif item.status_planejamento_visual == 'VENCE HOJE' %}pf-v2-badge-orange{% else %}pf-v2-badge-blue{% endif %}">{{ item.status_planejamento_visual }}</span>
-                    {% if item.dias_atraso and item.dias_atraso > 0 %}<small class="pf-v2-delay">{{ item.dias_atraso }}d vencida</small>{% elif item.dias_atraso and item.dias_atraso < 0 %}<small class="pf-v2-future">{{ (item.dias_atraso * -1) }}d para vencer</small>{% else %}<small class="pf-v2-neutral">0d</small>{% endif %}
+                    <span class="pf-v2-badge {% if item.is_pendente_mes_anterior or item.is_herdada %}pf-v2-badge-red{% elif item.status_planejamento_visual == 'VENCE HOJE' %}pf-v2-badge-orange{% else %}pf-v2-badge-blue{% endif %}">{{ item.status_planejamento_visual }}</span>
+                    {% if item.is_pendente_mes_anterior %}<small class="pf-v2-delay">planejada em {{ item.data_prevista }}</small>{% elif item.dias_atraso and item.dias_atraso > 0 %}<small class="pf-v2-delay">{{ item.dias_atraso }}d vencida</small>{% elif item.dias_atraso and item.dias_atraso < 0 %}<small class="pf-v2-future">{{ (item.dias_atraso * -1) }}d para vencer</small>{% else %}<small class="pf-v2-neutral">0d</small>{% endif %}
                   {% endif %}
                 </td>
                 <td class="pf-v2-date-cell"><strong>{{ item.vencimento or '-' }}</strong><small>{% if item.is_herdada %}mês anterior{% else %}mês atual{% endif %}</small></td>
@@ -2109,8 +2109,8 @@ select.pf-v2-control{
                     <span class="pf-v2-badge pf-v2-badge-green">PAGA</span>
                     <small class="pf-v2-neutral">Radar</small>
                   {% else %}
-                    <span class="pf-v2-badge {% if item.is_herdada %}pf-v2-badge-red{% elif item.status_planejamento_visual == 'VENCE HOJE' %}pf-v2-badge-orange{% else %}pf-v2-badge-blue{% endif %}">{{ item.status_planejamento_visual }}</span>
-                    {% if item.dias_atraso and item.dias_atraso > 0 %}<small class="pf-v2-delay">{{ item.dias_atraso }}d vencida</small>{% elif item.dias_atraso and item.dias_atraso < 0 %}<small class="pf-v2-future">{{ (item.dias_atraso * -1) }}d para vencer</small>{% else %}<small class="pf-v2-neutral">0d</small>{% endif %}
+                    <span class="pf-v2-badge {% if item.is_pendente_mes_anterior or item.is_herdada %}pf-v2-badge-red{% elif item.status_planejamento_visual == 'VENCE HOJE' %}pf-v2-badge-orange{% else %}pf-v2-badge-blue{% endif %}">{{ item.status_planejamento_visual }}</span>
+                    {% if item.is_pendente_mes_anterior %}<small class="pf-v2-delay">planejada em {{ item.data_prevista }}</small>{% elif item.dias_atraso and item.dias_atraso > 0 %}<small class="pf-v2-delay">{{ item.dias_atraso }}d vencida</small>{% elif item.dias_atraso and item.dias_atraso < 0 %}<small class="pf-v2-future">{{ (item.dias_atraso * -1) }}d para vencer</small>{% else %}<small class="pf-v2-neutral">0d</small>{% endif %}
                   {% endif %}
                 </td>
                 <td class="pf-v2-date-cell"><strong>{{ item.vencimento or '-' }}</strong><small>{% if item.is_herdada %}mês anterior{% else %}mês atual{% endif %}</small></td>
@@ -2124,17 +2124,27 @@ select.pf-v2-control{
                 <td class="pf-v2-obs-cell" title="{{ item.observacao }}">{{ item.observacao or '-' }}</td>
                 <td class="pf-v2-value pf-v2-value-blue" title="Valor original: {{ item.valor_original_formatado or item.valor_formatado }}{% if item.data_prevista and item.data_prevista != '-' %} | Previsto: {{ item.data_prevista }}{% endif %}">
                   {{ item.valor_planejado_formatado or item.valor_formatado }}
-                  {% if item.tipo_planejamento == 'PARCIAL' %}<small class="pf-partial-value-note">parcial · {{ item.data_prevista }}</small>{% endif %}
+                  {% if item.is_pendente_mes_anterior %}<small class="pf-partial-value-note">pendente · {{ item.data_prevista }}</small>{% elif item.tipo_planejamento == 'PARCIAL' %}<small class="pf-partial-value-note">parcial · {{ item.data_prevista }}</small>{% endif %}
                 </td>
                 <td class="pf-v2-action-cell">
                   {% if item.status_execucao == 'PAGA' %}
                     <span class="pf-v2-paid-label">Pago</span>
                   {% else %}
-                    <form method="POST" action="/gestao/planejamento-financeiro/remover/{{ item.id }}" class="pf-v2-ajax-form">
-                      <input type="hidden" name="mes" value="{{ mes }}"><input type="hidden" name="ano" value="{{ ano }}">
-                      {% if item.pagamento_planejado_id %}<input type="hidden" name="pagamento_planejado_id" value="{{ item.pagamento_planejado_id }}">{% endif %}
-                      <button type="submit" class="pf-v2-btn pf-v2-remove-btn">Remover</button>
-                    </form>
+                    <div class="pf-planned-actions">
+                      {% if item.pagamento_planejado_id %}
+                        <button type="button" class="pf-v2-btn pf-v2-reprogram-btn pf-reprogram-btn"
+                          data-pagamento-id="{{ item.pagamento_planejado_id }}"
+                          data-conta="{{ item.descricao|e }}"
+                          data-fornecedor="{{ item.fornecedor|e }}"
+                          data-valor-formatado="{{ item.valor_planejado_formatado or item.valor_formatado }}"
+                          data-data-atual="{{ item.data_prevista_iso or '' }}">Reprogramar</button>
+                      {% endif %}
+                      <form method="POST" action="/gestao/planejamento-financeiro/remover/{{ item.id }}" class="pf-v2-ajax-form">
+                        <input type="hidden" name="mes" value="{{ mes }}"><input type="hidden" name="ano" value="{{ ano }}">
+                        {% if item.pagamento_planejado_id %}<input type="hidden" name="pagamento_planejado_id" value="{{ item.pagamento_planejado_id }}">{% endif %}
+                        <button type="submit" class="pf-v2-btn pf-v2-remove-btn">Remover</button>
+                      </form>
+                    </div>
                   {% endif %}
                 </td>
               </tr>
@@ -2175,8 +2185,8 @@ select.pf-v2-control{
                             <span class="pf-v2-badge pf-v2-badge-green">PAGA</span>
                             <small class="pf-v2-neutral">Radar</small>
                           {% else %}
-                            <span class="pf-v2-badge {% if item.is_herdada %}pf-v2-badge-red{% elif item.status_planejamento_visual == 'VENCE HOJE' %}pf-v2-badge-orange{% else %}pf-v2-badge-blue{% endif %}">{{ item.status_planejamento_visual }}</span>
-                            {% if item.dias_atraso and item.dias_atraso > 0 %}<small class="pf-v2-delay">{{ item.dias_atraso }}d vencida</small>{% elif item.dias_atraso and item.dias_atraso < 0 %}<small class="pf-v2-future">{{ (item.dias_atraso * -1) }}d para vencer</small>{% else %}<small class="pf-v2-neutral">0d</small>{% endif %}
+                            <span class="pf-v2-badge {% if item.is_pendente_mes_anterior or item.is_herdada %}pf-v2-badge-red{% elif item.status_planejamento_visual == 'VENCE HOJE' %}pf-v2-badge-orange{% else %}pf-v2-badge-blue{% endif %}">{{ item.status_planejamento_visual }}</span>
+                            {% if item.is_pendente_mes_anterior %}<small class="pf-v2-delay">planejada em {{ item.data_prevista }}</small>{% elif item.dias_atraso and item.dias_atraso > 0 %}<small class="pf-v2-delay">{{ item.dias_atraso }}d vencida</small>{% elif item.dias_atraso and item.dias_atraso < 0 %}<small class="pf-v2-future">{{ (item.dias_atraso * -1) }}d para vencer</small>{% else %}<small class="pf-v2-neutral">0d</small>{% endif %}
                           {% endif %}
                         </td>
                         <td class="pf-v2-date-cell"><strong>{{ item.vencimento or '-' }}</strong><small>pagarei {{ item.data_prevista or grupo.data_label }}</small></td>
@@ -2189,17 +2199,27 @@ select.pf-v2-control{
                         <td class="pf-v2-doc-cell" title="{{ item.documento }}">{{ item.documento or '-' }}</td>
                         <td class="pf-v2-value pf-v2-value-blue" title="Valor original: {{ item.valor_original_formatado or item.valor_formatado }}">
                           {{ item.valor_planejado_formatado or item.valor_formatado }}
-                          {% if item.tipo_planejamento == 'PARCIAL' %}<small class="pf-partial-value-note">parcial · {{ item.data_prevista }}</small>{% endif %}
+                          {% if item.is_pendente_mes_anterior %}<small class="pf-partial-value-note">pendente · {{ item.data_prevista }}</small>{% elif item.tipo_planejamento == 'PARCIAL' %}<small class="pf-partial-value-note">parcial · {{ item.data_prevista }}</small>{% endif %}
                         </td>
                         <td class="pf-v2-action-cell">
                           {% if item.status_execucao == 'PAGA' %}
                             <span class="pf-v2-paid-label">Pago</span>
                           {% else %}
-                            <form method="POST" action="/gestao/planejamento-financeiro/remover/{{ item.id }}" class="pf-v2-ajax-form">
-                              <input type="hidden" name="mes" value="{{ mes }}"><input type="hidden" name="ano" value="{{ ano }}">
-                              {% if item.pagamento_planejado_id %}<input type="hidden" name="pagamento_planejado_id" value="{{ item.pagamento_planejado_id }}">{% endif %}
-                              <button type="submit" class="pf-v2-btn pf-v2-remove-btn">Remover</button>
-                            </form>
+                            <div class="pf-planned-actions">
+                              {% if item.pagamento_planejado_id %}
+                                <button type="button" class="pf-v2-btn pf-v2-reprogram-btn pf-reprogram-btn"
+                                  data-pagamento-id="{{ item.pagamento_planejado_id }}"
+                                  data-conta="{{ item.descricao|e }}"
+                                  data-fornecedor="{{ item.fornecedor|e }}"
+                                  data-valor-formatado="{{ item.valor_planejado_formatado or item.valor_formatado }}"
+                                  data-data-atual="{{ item.data_prevista_iso or '' }}">Reprogramar</button>
+                              {% endif %}
+                              <form method="POST" action="/gestao/planejamento-financeiro/remover/{{ item.id }}" class="pf-v2-ajax-form">
+                                <input type="hidden" name="mes" value="{{ mes }}"><input type="hidden" name="ano" value="{{ ano }}">
+                                {% if item.pagamento_planejado_id %}<input type="hidden" name="pagamento_planejado_id" value="{{ item.pagamento_planejado_id }}">{% endif %}
+                                <button type="submit" class="pf-v2-btn pf-v2-remove-btn">Remover</button>
+                              </form>
+                            </div>
                           {% endif %}
                         </td>
                       </tr>
@@ -2258,8 +2278,24 @@ select.pf-v2-control{
   </div>
 </div>
 
+<div class="pf-pred-modal" id="pfReprogramModal" aria-hidden="true">
+  <div class="pf-pred-backdrop" data-close-reprogram></div>
+  <div class="pf-pred-card" role="dialog" aria-modal="true" aria-labelledby="pfReprogramTitle">
+    <button type="button" class="pf-pred-close" data-close-reprogram>×</button>
+    <h2 id="pfReprogramTitle">Reprogramar pagamento</h2>
+    <p id="pfReprogramConta">-</p>
+    <div class="pf-pred-total"><span>Valor planejado</span><strong id="pfReprogramValorTotal">R$ 0,00</strong></div>
+    <form id="pfReprogramForm" method="POST">
+      <input type="hidden" name="mes" value="{{ mes }}"><input type="hidden" name="ano" value="{{ ano }}">
+      <label>Nova data de pagamento<input id="pfReprogramDataInput" type="date" name="data_prevista" required></label>
+      <label>Observação opcional<textarea name="observacao_previsao" rows="3" placeholder="Ex: reagendado para fluxo de caixa"></textarea></label>
+      <div class="pf-pred-actions"><button type="button" data-close-reprogram>Cancelar</button><button type="submit">Salvar nova data</button></div>
+    </form>
+  </div>
+</div>
+
 <style>
-.pf-plan-split{position:relative;display:grid;grid-template-columns:1fr 30px;width:100%}.pf-plan-total-form{margin:0}.pf-plan-split .pf-v2-pay-btn{border-radius:8px 0 0 8px}.pf-plan-arrow{border:0;border-left:1px solid rgba(255,255,255,.25);border-radius:0 8px 8px 0;background:#073f9f;color:#fff;font-size:10px;cursor:pointer}.pf-plan-menu{display:none;position:absolute;right:0;top:38px;width:220px;padding:6px;background:#fff;border:1px solid #d8e2ef;border-radius:9px;box-shadow:0 14px 35px rgba(15,23,42,.2);z-index:50}.pf-plan-split.open .pf-plan-menu{display:block}.pf-plan-menu button{width:100%;padding:10px;border:0;border-radius:6px;background:#fff;text-align:left;font-size:12px;font-weight:850;cursor:pointer}.pf-plan-menu button:hover{background:#eef5ff;color:#0b4edb}.pf-partial-value-note{display:block;margin-top:4px;color:#64748b;font-size:9px;font-weight:800}.pf-pred-modal{display:none;position:fixed;inset:0;z-index:9999}.pf-pred-modal.open{display:block}.pf-pred-backdrop{position:absolute;inset:0;background:rgba(2,6,23,.6)}.pf-pred-card{position:relative;width:min(480px,calc(100vw - 28px));margin:7vh auto;padding:24px;background:#fff;border-radius:14px;box-shadow:0 28px 80px rgba(0,0,0,.3)}.pf-pred-card h2{margin:0 35px 5px 0;color:#061b3d;font-size:22px}.pf-pred-card>p{margin:0 0 18px;color:#64748b;font-weight:750}.pf-pred-close{position:absolute;right:16px;top:12px;border:0;background:transparent;font-size:28px;cursor:pointer}.pf-pred-total,.pf-pred-saldo{display:flex;justify-content:space-between;align-items:center;padding:13px 14px;border-radius:9px;background:#f4f7fb;margin-bottom:14px}.pf-pred-total strong{color:#e11d2e}.pf-pred-saldo{margin:4px 0 16px;background:#eef5ff}.pf-pred-saldo strong{color:#0b4edb}.pf-pred-card label{display:block;margin-bottom:12px;color:#061b3d;font-size:12px;font-weight:900}.pf-pred-card input,.pf-pred-card textarea{width:100%;margin-top:6px;padding:11px 12px;border:1px solid #cbd8e8;border-radius:8px;font:inherit;outline:none}.pf-pred-card input:focus,.pf-pred-card textarea:focus{border-color:#0b4edb;box-shadow:0 0 0 3px rgba(11,78,219,.1)}.pf-pred-actions{display:flex;justify-content:flex-end;gap:10px}.pf-pred-actions button{height:40px;padding:0 18px;border:1px solid #d8e2ef;border-radius:8px;background:#fff;font-weight:900;cursor:pointer}.pf-pred-actions button[type=submit]{border-color:#0b4edb;background:#0b4edb;color:#fff}
+.pf-planned-actions{display:flex;gap:6px;align-items:center;justify-content:flex-end}.pf-planned-actions form{margin:0}.pf-v2-reprogram-btn{background:#0b4edb;color:#fff;border-color:#0b4edb}.pf-plan-split{position:relative;display:grid;grid-template-columns:1fr 30px;width:100%}.pf-plan-total-form{margin:0}.pf-plan-split .pf-v2-pay-btn{border-radius:8px 0 0 8px}.pf-plan-arrow{border:0;border-left:1px solid rgba(255,255,255,.25);border-radius:0 8px 8px 0;background:#073f9f;color:#fff;font-size:10px;cursor:pointer}.pf-plan-menu{display:none;position:absolute;right:0;top:38px;width:220px;padding:6px;background:#fff;border:1px solid #d8e2ef;border-radius:9px;box-shadow:0 14px 35px rgba(15,23,42,.2);z-index:50}.pf-plan-split.open .pf-plan-menu{display:block}.pf-plan-menu button{width:100%;padding:10px;border:0;border-radius:6px;background:#fff;text-align:left;font-size:12px;font-weight:850;cursor:pointer}.pf-plan-menu button:hover{background:#eef5ff;color:#0b4edb}.pf-partial-value-note{display:block;margin-top:4px;color:#64748b;font-size:9px;font-weight:800}.pf-pred-modal{display:none;position:fixed;inset:0;z-index:9999}.pf-pred-modal.open{display:block}.pf-pred-backdrop{position:absolute;inset:0;background:rgba(2,6,23,.6)}.pf-pred-card{position:relative;width:min(480px,calc(100vw - 28px));margin:7vh auto;padding:24px;background:#fff;border-radius:14px;box-shadow:0 28px 80px rgba(0,0,0,.3)}.pf-pred-card h2{margin:0 35px 5px 0;color:#061b3d;font-size:22px}.pf-pred-card>p{margin:0 0 18px;color:#64748b;font-weight:750}.pf-pred-close{position:absolute;right:16px;top:12px;border:0;background:transparent;font-size:28px;cursor:pointer}.pf-pred-total,.pf-pred-saldo{display:flex;justify-content:space-between;align-items:center;padding:13px 14px;border-radius:9px;background:#f4f7fb;margin-bottom:14px}.pf-pred-total strong{color:#e11d2e}.pf-pred-saldo{margin:4px 0 16px;background:#eef5ff}.pf-pred-saldo strong{color:#0b4edb}.pf-pred-card label{display:block;margin-bottom:12px;color:#061b3d;font-size:12px;font-weight:900}.pf-pred-card input,.pf-pred-card textarea{width:100%;margin-top:6px;padding:11px 12px;border:1px solid #cbd8e8;border-radius:8px;font:inherit;outline:none}.pf-pred-card input:focus,.pf-pred-card textarea:focus{border-color:#0b4edb;box-shadow:0 0 0 3px rgba(11,78,219,.1)}.pf-pred-actions{display:flex;justify-content:flex-end;gap:10px}.pf-pred-actions button{height:40px;padding:0 18px;border:1px solid #d8e2ef;border-radius:8px;background:#fff;font-weight:900;cursor:pointer}.pf-pred-actions button[type=submit]{border-color:#0b4edb;background:#0b4edb;color:#fff}
 </style>
 
 
@@ -2527,6 +2563,9 @@ document.addEventListener("DOMContentLoaded", function () {
   const planDateModal = document.getElementById("pfPlanDateModal");
   const planDateForm = document.getElementById("pfPlanDateForm");
   const planDateInput = document.getElementById("pfPlanDateInput");
+  const reprogramModal = document.getElementById("pfReprogramModal");
+  const reprogramForm = document.getElementById("pfReprogramForm");
+  const reprogramDateInput = document.getElementById("pfReprogramDataInput");
   let predTotal = 0;
 
   document.addEventListener("click", function(event){
@@ -2557,8 +2596,20 @@ document.addEventListener("DOMContentLoaded", function () {
       setTimeout(() => predValor.focus(), 50);
       return;
     }
+    const reprogramBtn = event.target.closest(".pf-reprogram-btn");
+    if (reprogramBtn) {
+      reprogramForm.action = "/gestao/planejamento-financeiro/reprogramar/" + reprogramBtn.dataset.pagamentoId;
+      document.getElementById("pfReprogramConta").textContent = reprogramBtn.dataset.conta + " · " + reprogramBtn.dataset.fornecedor;
+      document.getElementById("pfReprogramValorTotal").textContent = reprogramBtn.dataset.valorFormatado || "R$ 0,00";
+      reprogramDateInput.value = reprogramBtn.dataset.dataAtual || "";
+      reprogramModal.classList.add("open");
+      reprogramModal.setAttribute("aria-hidden", "false");
+      setTimeout(() => reprogramDateInput.focus(), 50);
+      return;
+    }
     if (event.target.closest("[data-close-pred]")) { predModal.classList.remove("open"); predModal.setAttribute("aria-hidden", "true"); }
     if (event.target.closest("[data-close-plan-date]")) { planDateModal.classList.remove("open"); planDateModal.setAttribute("aria-hidden", "true"); }
+    if (event.target.closest("[data-close-reprogram]")) { reprogramModal.classList.remove("open"); reprogramModal.setAttribute("aria-hidden", "true"); }
   });
 
   function valorDigitado(){ return parseFloat((predValor.value || "").replace(/[^0-9,.-]/g, "").replace(/\./g, "").replace(",", ".")) || 0; }
@@ -2602,6 +2653,28 @@ document.addEventListener("DOMContentLoaded", function () {
       alert(erro.message || "Erro ao salvar planejamento.");
       botao.disabled = false;
       botao.textContent = "Salvar no dia escolhido";
+    }
+  });
+
+  reprogramForm.addEventListener("submit", async function(event){
+    event.preventDefault();
+    if (!reprogramDateInput.value) { alert("Escolha a nova data de pagamento."); return; }
+    const botao = reprogramForm.querySelector('button[type="submit"]');
+    botao.disabled = true;
+    botao.textContent = "Salvando...";
+    try {
+      const resposta = await fetch(reprogramForm.action, {method:"POST",body:new FormData(reprogramForm),headers:{"X-Requested-With":"XMLHttpRequest"}});
+      const dados = await resposta.json().catch(() => null);
+      if (!resposta.ok || !dados || !dados.ok) throw new Error(dados && dados.message ? dados.message : "Erro ao reprogramar pagamento.");
+      reprogramModal.classList.remove("open");
+      reprogramModal.setAttribute("aria-hidden", "true");
+      await atualizarPlanejamentoSemReload();
+      botao.disabled = false;
+      botao.textContent = "Salvar nova data";
+    } catch(erro) {
+      alert(erro.message || "Erro ao reprogramar pagamento.");
+      botao.disabled = false;
+      botao.textContent = "Salvar nova data";
     }
   });
 
