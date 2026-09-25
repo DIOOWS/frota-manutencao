@@ -7,17 +7,17 @@ import cloudinary
 from sqlalchemy import text, inspect
 
 # ==========================================
-# 🔥 CARREGAR VARIÁVEIS
+# ðŸ”¥ CARREGAR VARIÃVEIS
 # ==========================================
 load_dotenv()
 
 # ==========================================
-# 🔥 CRIAR APP
+# ðŸ”¥ CRIAR APP
 # ==========================================
 app = Flask(__name__, template_folder="templates")
 
 # ==========================================
-# 🔐 SECRET KEY
+# ðŸ” SECRET KEY
 # ==========================================
 app.config["SECRET_KEY"] = os.getenv(
     "SECRET_KEY",
@@ -25,7 +25,7 @@ app.config["SECRET_KEY"] = os.getenv(
 )
 
 # ==========================================
-# ☁️ CLOUDINARY
+# â˜ï¸ CLOUDINARY
 # ==========================================
 cloudinary.config(
     cloud_name=os.getenv("CLOUD_NAME"),
@@ -34,23 +34,27 @@ cloudinary.config(
 )
 
 # ==========================================
-# 🔥 AMBIENTE
+# ðŸ”¥ AMBIENTE
 # ==========================================
 ENV = os.getenv("FLASK_ENV", "development")
 
 # ==========================================
-# 🔥 BANCO
+# ðŸ”¥ BANCO
 # ==========================================
 if ENV == "production":
-    print("🔥 USANDO BANCO DE PRODUÇÃO")
+    print("ðŸ”¥ USANDO BANCO DE PRODUÃ‡ÃƒO")
 
     database_url = os.getenv("DATABASE_URL")
 
     if not database_url:
-        raise RuntimeError("🚨 DATABASE_URL não configurada!")
+        raise RuntimeError("ðŸš¨ DATABASE_URL nÃ£o configurada!")
 
     if database_url.startswith("postgres://"):
-        database_url = database_url.replace("postgres://", "postgresql://", 1)
+        database_url = database_url.replace("postgres://", "postgresql+psycopg2://", 1)
+    elif database_url.startswith("postgresql+psycopg://"):
+        database_url = database_url.replace("postgresql+psycopg://", "postgresql+psycopg2://", 1)
+    elif database_url.startswith("postgresql://"):
+        database_url = database_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 
     app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 
@@ -59,16 +63,16 @@ if ENV == "production":
     }
 
 else:
-    print("🔥 USANDO SQLITE LOCAL")
+    print("ðŸ”¥ USANDO SQLITE LOCAL")
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///dev.db"
 
 # ==========================================
-# 🔧 CONFIG
+# ðŸ”§ CONFIG
 # ==========================================
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # ==========================================
-# 📷 UPLOAD LOCAL (fallback)
+# ðŸ“· UPLOAD LOCAL (fallback)
 # ==========================================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
@@ -76,13 +80,13 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # ==========================================
-# 🔥 INICIAR DB
+# ðŸ”¥ INICIAR DB
 # ==========================================
 db.init_app(app)
 migrate = Migrate(app, db)
 
 # ==========================================
-# 🔥 IMPORTAR MODELS
+# ðŸ”¥ IMPORTAR MODELS
 # ==========================================
 from models.usuario import Usuario
 from models.cliente import Cliente
@@ -104,7 +108,7 @@ from models.problema_manutencao import ProblemaManutencao
 
 
 # ==========================================
-# 🧱 HELPERS DE BANCO
+# ðŸ§± HELPERS DE BANCO
 # ==========================================
 def tabela_existe(nome_tabela):
     inspector = inspect(db.engine)
@@ -124,11 +128,11 @@ def coluna_existe(nome_tabela, nome_coluna):
 def garantir_coluna(nome_tabela, nome_coluna, definicao_sql):
     try:
         if not tabela_existe(nome_tabela):
-            print(f"⚠️ tabela {nome_tabela} ainda não existe.")
+            print(f"âš ï¸ tabela {nome_tabela} ainda nÃ£o existe.")
             return
 
         if coluna_existe(nome_tabela, nome_coluna):
-            print(f"✅ coluna {nome_coluna} já existe em {nome_tabela}")
+            print(f"âœ… coluna {nome_coluna} jÃ¡ existe em {nome_tabela}")
             return
 
         db.session.execute(
@@ -136,20 +140,20 @@ def garantir_coluna(nome_tabela, nome_coluna, definicao_sql):
         )
         db.session.commit()
 
-        print(f"🔥 coluna {nome_coluna} criada em {nome_tabela}")
+        print(f"ðŸ”¥ coluna {nome_coluna} criada em {nome_tabela}")
 
     except Exception as e:
         db.session.rollback()
-        print(f"❌ erro ao criar coluna {nome_coluna} em {nome_tabela}: {e}")
+        print(f"âŒ erro ao criar coluna {nome_coluna} em {nome_tabela}: {e}")
 
 
 # ==========================================
-# 🚨 GARANTIR TABELAS / COLUNAS
+# ðŸš¨ GARANTIR TABELAS / COLUNAS
 # ==========================================
 with app.app_context():
     try:
         db.create_all()
-        print("🔥 tabelas verificadas/criadas")
+        print("ðŸ”¥ tabelas verificadas/criadas")
     except Exception as e:
         print("create_all:", e)
 
@@ -184,7 +188,7 @@ with app.app_context():
     )
 
 # ==========================================
-# 🔥 CRIAR ADMIN
+# ðŸ”¥ CRIAR ADMIN
 # ==========================================
 with app.app_context():
     try:
@@ -199,14 +203,14 @@ with app.app_context():
             db.session.add(admin)
             db.session.commit()
 
-            print("🔥 ADMIN CRIADO: admin / 123")
+            print("ðŸ”¥ ADMIN CRIADO: admin / 123")
 
     except Exception as e:
         db.session.rollback()
-        print("❌ ERRO AO INICIAR DB:", e)
+        print("âŒ ERRO AO INICIAR DB:", e)
 
 # ==========================================
-# 🔥 ROTAS
+# ðŸ”¥ ROTAS
 # ==========================================
 from routes.dashboard import dashboard_bp
 from routes.manutencoes import manutencao_bp
@@ -238,7 +242,7 @@ app.register_blueprint(evidencias_frota_bp)
 
 
 # ==========================================
-# 🌐 FAVICON
+# ðŸŒ FAVICON
 # ==========================================
 @app.route("/favicon.ico")
 def favicon():
@@ -250,19 +254,19 @@ def favicon():
 
 
 # ==========================================
-# 🔥 TESTE
+# ðŸ”¥ TESTE
 # ==========================================
 @app.route("/teste-db")
 def teste_db():
     try:
         db.session.execute(text("SELECT 1"))
-        return "✅ Banco conectado!"
+        return "âœ… Banco conectado!"
     except Exception as e:
-        return f"❌ Erro: {str(e)}"
+        return f"âŒ Erro: {str(e)}"
 
 
 # ==========================================
-# 🚀 START
+# ðŸš€ START
 # ==========================================
 if __name__ == "__main__":
     app.run(debug=True)
