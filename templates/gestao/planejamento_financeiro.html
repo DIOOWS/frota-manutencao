@@ -2711,6 +2711,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   async function atualizarPlanejamentoSemReload() {
+    const filtroStatusAnterior = document.querySelector('[data-pf-panel="planejadas"]')?.dataset.pfStatusFiltro || "todos";
     const respostaPagina = await fetch(window.location.href, {
       method: "GET",
       headers: {
@@ -2750,11 +2751,14 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".pf-v2-ajax-form").forEach(vincularFormulario);
     inicializarTipoPlanejamentoVisual();
 
-    const novoPainelPlanejadas = document.querySelector(
-      '[data-pf-panel="planejadas"]'
-    );
+    const novoPainelPlanejadas = document.querySelector('[data-pf-panel="planejadas"]');
     if (novoPainelPlanejadas) {
-      novoPainelPlanejadas.dataset.pfStatusFiltro = "todos";
+      novoPainelPlanejadas.dataset.pfStatusFiltro = filtroStatusAnterior;
+      novoPainelPlanejadas.querySelectorAll("[data-pf-status-filter]").forEach(item => {
+        const ativo = item.dataset.pfStatusFilter === filtroStatusAnterior;
+        item.classList.toggle("active", ativo);
+        item.setAttribute("aria-pressed", ativo ? "true" : "false");
+      });
     }
 
     renderizarTudo(true);
@@ -2798,6 +2802,36 @@ document.addEventListener("DOMContentLoaded", function () {
     const info = painel.querySelector(".pf-v2-page-info");
     const visivelCount = painel.querySelector(".pf-v2-visible-count");
     const filtroStatus = painel.dataset.pfStatusFiltro || "todos";
+    if (painel.dataset.pfPanel === "planejadas") {
+      const grupos = painel.querySelectorAll(".pf-day-group");
+      let visiveisPorDia = 0;
+      grupos.forEach(grupo => {
+        let visiveisNoGrupo = 0;
+        grupo.querySelectorAll(".pf-day-row").forEach(linha => {
+          const correspondeBusca = !termo || normalizar(linha.innerText).includes(termo);
+          const correspondeStatus = filtroStatus === "todos" || linha.dataset.pfStatusExecucao === filtroStatus;
+          const visivel = correspondeBusca && correspondeStatus;
+          linha.hidden = !visivel;
+          linha.style.display = visivel ? "" : "none";
+          if (visivel) visiveisNoGrupo++;
+        });
+        grupo.hidden = visiveisNoGrupo === 0;
+        visiveisPorDia += visiveisNoGrupo;
+        const quantidade = grupo.querySelector(".pf-day-group-head small");
+        if (quantidade) quantidade.textContent = visiveisNoGrupo + " conta(s) neste dia";
+      });
+      let vazio = painel.querySelector(".pf-day-filter-empty");
+      const areaDia = painel.querySelector('[data-pf-plan-view="dia"]');
+      if (areaDia && !vazio) {
+        vazio = document.createElement("div");
+        vazio.className = "pf-day-empty pf-day-filter-empty";
+        vazio.textContent = "Nenhuma conta encontrada para este filtro.";
+        areaDia.appendChild(vazio);
+      }
+      if (vazio) vazio.hidden = visiveisPorDia !== 0;
+      const vazioOriginal = painel.querySelector(".pf-day-empty:not(.pf-day-filter-empty)");
+      if (vazioOriginal) vazioOriginal.hidden = visiveisPorDia !== 0 || grupos.length > 0;
+    }
     const filtradas = linhas.filter(linha => {
       const correspondeBusca = !termo || normalizar(linha.innerText).includes(termo);
 
@@ -2851,16 +2885,14 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  const painelPlanejadas = document.querySelector('[data-pf-panel="planejadas"]');
-  const filtrosStatus = document.querySelectorAll("[data-pf-status-filter]");
-
   function aplicarFiltroStatus(elemento) {
+    const painelPlanejadas = document.querySelector('[data-pf-panel="planejadas"]');
     if (!painelPlanejadas || !elemento) return;
 
     painelPlanejadas.dataset.pfStatusFiltro = elemento.dataset.pfStatusFilter || "todos";
     painelPlanejadas.dataset.paginaAtual = 1;
 
-    filtrosStatus.forEach(item => {
+    painelPlanejadas.querySelectorAll("[data-pf-status-filter]").forEach(item => {
       const ativo = item === elemento;
       item.classList.toggle("active", ativo);
       item.setAttribute("aria-pressed", ativo ? "true" : "false");
@@ -2869,14 +2901,16 @@ document.addEventListener("DOMContentLoaded", function () {
     renderizarPainel(painelPlanejadas, 1);
   }
 
-  filtrosStatus.forEach(elemento => {
-    elemento.addEventListener("click", () => aplicarFiltroStatus(elemento));
-    elemento.addEventListener("keydown", event => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        aplicarFiltroStatus(elemento);
-      }
-    });
+  document.addEventListener("click", event => {
+    const elemento = event.target.closest("[data-pf-status-filter]");
+    if (elemento) aplicarFiltroStatus(elemento);
+  });
+  document.addEventListener("keydown", event => {
+    const elemento = event.target.closest("[data-pf-status-filter]");
+    if (elemento && (event.key === "Enter" || event.key === " ")) {
+      event.preventDefault();
+      aplicarFiltroStatus(elemento);
+    }
   });
 
   if (busca) busca.addEventListener("input", () => renderizarTudo(true));
