@@ -1061,62 +1061,78 @@ def _montar_listas_unificadas(mes, ano):
     return aguardando, planejadas, pagas
 
 
-@planejamento_financeiro_bp.route("/")
-@gestao_required
-
-def index():
-    agora = datetime.now()
-    mes = request.args.get("mes", type=int) or agora.month
-    ano = request.args.get("ano", type=int) or agora.year
-
-    if not 1 <= mes <= 12:
-        mes = agora.month
-
-    aguardando, planejadas, executadas = _montar_listas_unificadas(
-        mes,
-        ano,
-    )
+def _contexto_tela_planejamento(mes, ano):
+    aguardando, planejadas, executadas = _montar_listas_unificadas(mes, ano)
 
     total_aguardando = sum(
         dinheiro_decimal(item.get("valor"))
         for item in aguardando
     )
     total_planejado = sum(
-        dinheiro_decimal(
-            item.get("valor_planejado", item.get("valor"))
-        )
+        dinheiro_decimal(item.get("valor_planejado", item.get("valor")))
         for item in planejadas
     )
     total_executado = sum(
         dinheiro_decimal(item.get("valor", 0))
         for item in executadas
     )
-
     planejadas_por_dia = agrupar_planejamento_por_dia(planejadas + executadas)
 
-    (
-        total_recebido,
-        total_pago_competencia,
-        saldo_competencia,
-    ) = calcular_resumo_caixa_competencia(mes, ano)
+    total_recebido, total_pago_competencia, saldo_competencia = calcular_resumo_caixa_competencia(mes, ano)
 
-    return render_template(
-        "gestao/planejamento_financeiro.html",
-        mes=mes,
-        ano=ano,
-        nome_mes=nome_mes,
-        moeda=moeda,
-        aguardando=aguardando,
-        planejadas=planejadas,
-        executadas=executadas,
-        planejadas_por_dia=planejadas_por_dia,
-        total_aguardando=total_aguardando,
-        total_planejado=total_planejado,
-        total_executado=total_executado,
-        total_recebido=total_recebido,
-        total_pago_competencia=total_pago_competencia,
-        saldo_competencia=saldo_competencia,
-    )
+    return {
+        "mes": mes,
+        "ano": ano,
+        "nome_mes": nome_mes,
+        "moeda": moeda,
+        "aguardando": aguardando,
+        "planejadas": planejadas,
+        "executadas": executadas,
+        "planejadas_por_dia": planejadas_por_dia,
+        "total_aguardando": total_aguardando,
+        "total_planejado": total_planejado,
+        "total_executado": total_executado,
+        "total_recebido": total_recebido,
+        "total_pago_competencia": total_pago_competencia,
+        "saldo_competencia": saldo_competencia,
+    }
+
+
+@planejamento_financeiro_bp.route("/")
+@gestao_required
+def index():
+    agora = datetime.now()
+    mes = request.args.get("mes", type=int) or agora.month
+    ano = request.args.get("ano", type=int) or agora.year
+    if not 1 <= mes <= 12:
+        mes = agora.month
+
+    contexto = _contexto_tela_planejamento(mes, ano)
+    return render_template("gestao/planejamento_financeiro.html", **contexto)
+
+
+@planejamento_financeiro_bp.route("/painel/aguardando")
+@gestao_required
+def painel_aguardando():
+    agora = datetime.now()
+    mes = request.args.get("mes", type=int) or agora.month
+    ano = request.args.get("ano", type=int) or agora.year
+    if not 1 <= mes <= 12:
+        mes = agora.month
+    contexto = _contexto_tela_planejamento(mes, ano)
+    return render_template("gestao/planejamento_financeiro/_aguardando.html", **contexto)
+
+
+@planejamento_financeiro_bp.route("/painel/planejadas")
+@gestao_required
+def painel_planejadas():
+    agora = datetime.now()
+    mes = request.args.get("mes", type=int) or agora.month
+    ano = request.args.get("ano", type=int) or agora.year
+    if not 1 <= mes <= 12:
+        mes = agora.month
+    contexto = _contexto_tela_planejamento(mes, ano)
+    return render_template("gestao/planejamento_financeiro/_planejadas.html", **contexto)
 
 
 def montar_listas_planejamento(mes, ano):

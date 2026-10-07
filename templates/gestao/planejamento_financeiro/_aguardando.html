@@ -1,0 +1,95 @@
+<section class="pf5-view pf5-view-awaiting" data-view="aguardando" data-total-count="{{ aguardando|length }}">
+  <header class="pf5-section-head">
+    <div class="pf5-section-title">
+      <h2>Aguardando Decisão</h2>
+      <span class="pf5-count-pill"><b class="pf5-visible-count">{{ aguardando|length }}</b> visíveis de {{ aguardando|length }} contas</span>
+    </div>
+
+    <div class="pf5-section-head-right">
+      <div class="pf5-section-total">
+        <strong>{{ moeda(total_aguardando) }}</strong>
+        <small>Total aguardando decisão</small>
+      </div>
+    </div>
+  </header>
+
+  <div class="pf5-bulkbar" id="pf5BulkBar">
+    <label class="pf5-select-all-wrap">
+      <input type="checkbox" id="pf5SelectAll">
+      <span>Selecionar visíveis</span>
+    </label>
+
+    <div class="pf5-bulk-summary">
+      <strong id="pf5SelectedQty">0</strong> selecionada(s)
+      <span>•</span>
+      <strong id="pf5SelectedTotal">R$ 0,00</strong>
+    </div>
+
+    <div class="pf5-bulk-actions">
+      <button type="button" class="pf5-btn pf5-btn-blue" id="pf5OpenBulk" disabled>Planejar selecionadas</button>
+      <button type="button" class="pf5-btn pf5-btn-light" id="pf5ClearSelection" disabled>Limpar seleção</button>
+    </div>
+  </div>
+
+  <div class="pf5-table-shell">
+    <table class="pf5-table pf5-table-awaiting">
+      <thead>
+        <tr>
+          <th class="pf5-check-col"><span class="visually-hidden">Selecionar</span></th>
+          <th>Status</th>
+          <th>Venc.</th>
+          <th>Conta / Fornecedor + Obs.</th>
+          <th>Valor</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in aguardando %}
+        <tr class="pf5-row"
+            data-search="{{ (item.descricao|string + ' ' + item.fornecedor|string + ' ' + item.observacao|string + ' ' + item.vencimento|string + ' ' + item.valor_formatado|string)|lower }}">
+          <td class="pf5-check-col">
+            {% if not item.planejada_outro_mes %}
+            <input class="pf5-row-check" type="checkbox" value="{{ item.id }}" data-value="{{ item.valor }}" aria-label="Selecionar {{ item.descricao|e }}">
+            {% endif %}
+          </td>
+          <td class="pf5-status-cell">
+            <span class="pf5-badge {% if item.is_herdada %}danger{% else %}info{% endif %}">{{ item.status_planejamento_visual }}</span>
+            <small class="pf5-sub {% if item.dias_atraso and item.dias_atraso > 0 %}danger-text{% endif %}">
+              {% if item.dias_atraso and item.dias_atraso > 0 %}{{ item.dias_atraso }}d vencida{% else %}mês atual{% endif %}
+            </small>
+          </td>
+          <td class="pf5-date-cell">
+            <strong>{{ item.vencimento or '-' }}</strong>
+            <small>{% if item.is_herdada %}mês anterior{% else %}mês atual{% endif %}</small>
+          </td>
+          <td class="pf5-account">
+            <strong>{{ item.descricao or '-' }}</strong>
+            <a>{{ item.fornecedor or '-' }}</a>
+            <small>{{ item.categoria or '' }}</small>
+            <em>Obs: {{ item.observacao or '-' }}</em>
+          </td>
+          <td class="pf5-money danger-text">{{ item.valor_formatado }}</td>
+          <td class="pf5-action-cell">
+            {% if item.planejada_outro_mes %}
+            <button type="button" class="pf5-btn pf5-btn-light" disabled>Já planejada</button>
+            {% else %}
+            <div class="pf5-plan-actions">
+              <button type="button" class="pf5-btn pf5-btn-blue pf5-plan-now" data-id="{{ item.id }}">Vou pagar</button>
+              <button type="button" class="pf5-btn pf5-btn-icon pf5-plan-date" data-id="{{ item.id }}" data-name="{{ item.descricao|e }}" title="Escolher data">▾</button>
+            </div>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="pf5-empty">Nenhuma conta aguardando decisão.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <footer class="pf5-footer">
+    <span class="pf5-page-info"></span>
+    <div class="pf5-pagination"></div>
+    <strong>Total: {{ moeda(total_aguardando) }}</strong>
+  </footer>
+</section>

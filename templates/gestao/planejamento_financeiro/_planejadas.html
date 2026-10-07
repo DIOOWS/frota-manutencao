@@ -1,0 +1,110 @@
+<section class="pf5-view pf5-view-planned" data-view="planejadas" data-total-count="{{ planejadas|length + executadas|length }}">
+  <header class="pf5-planned-head">
+    <div class="pf5-section-title">
+      <h2>Vou Pagar</h2>
+      <span class="pf5-count-pill pf5-count-blue"><b class="pf5-visible-count">{{ planejadas|length + executadas|length }}</b> conta(s) em {{ nome_mes(mes) }}/{{ ano }}</span>
+    </div>
+
+    <div class="pf5-kpis" aria-label="Resumo do planejamento">
+      <button type="button" class="pf5-kpi active" data-plan-filter="todos">
+        <small>Planejado</small>
+        <strong>{{ moeda(total_planejado + total_executado) }}</strong>
+      </button>
+      <button type="button" class="pf5-kpi pf5-kpi-paid" data-plan-filter="paga">
+        <small>Pago</small>
+        <strong>{{ moeda(total_executado) }}</strong>
+      </button>
+      <button type="button" class="pf5-kpi pf5-kpi-missing" data-plan-filter="planejada">
+        <small>Falta pagar</small>
+        <strong>{{ moeda(total_planejado) }}</strong>
+      </button>
+    </div>
+  </header>
+
+  <div class="pf5-table-shell">
+    <table class="pf5-table pf5-table-planned">
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>Pagamento</th>
+          <th>Conta / Fornecedor + Obs.</th>
+          <th>Valor</th>
+          <th>Pago</th>
+          <th>Falta</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in planejadas + executadas %}
+        <tr class="pf5-row {% if item.status_execucao == 'PAGA' %}pf5-row-paid{% endif %}"
+            data-plan-status="{{ 'paga' if item.status_execucao == 'PAGA' else 'planejada' }}"
+            data-search="{{ (item.descricao|string + ' ' + item.fornecedor|string + ' ' + item.observacao|string + ' ' + item.vencimento|string + ' ' + item.valor_formatado|string + ' ' + (item.data_prevista|string))|lower }}">
+          <td class="pf5-status-cell">
+            {% if item.status_execucao == 'PAGA' %}
+              <span class="pf5-badge success">PAGA</span>
+              <small class="pf5-sub success-text">Radar</small>
+            {% else %}
+              <span class="pf5-badge {% if item.is_pendente_mes_anterior %}danger{% else %}info{% endif %}">
+                {% if item.is_pendente_mes_anterior %}PENDENTE ANTERIOR{% else %}PLANEJADA{% endif %}
+              </span>
+              <small class="pf5-sub {% if item.is_pendente_mes_anterior %}danger-text{% endif %}">
+                {% if item.is_pendente_mes_anterior %}planejada e não paga{% else %}aguardando pagamento{% endif %}
+              </small>
+            {% endif %}
+          </td>
+
+          <td class="pf5-date-cell">
+            <strong>{{ item.data_prevista or item.data_pagamento or item.vencimento or '-' }}</strong>
+            <small>
+              {% if item.status_execucao == 'PAGA' %}paga{% elif item.is_pendente_mes_anterior %}reprogramar{% else %}data planejada{% endif %}
+            </small>
+          </td>
+
+          <td class="pf5-account">
+            <strong>{{ item.descricao or '-' }}</strong>
+            <a>{{ item.fornecedor or '-' }}</a>
+            <small>{{ item.categoria or '' }}</small>
+            <em>Obs: {{ item.observacao or '-' }}</em>
+          </td>
+
+          <td class="pf5-money blue-text">{{ item.valor_planejado_formatado or item.valor_formatado }}</td>
+
+          <td class="pf5-money success-text">
+            {% if item.status_execucao == 'PAGA' %}{{ item.valor_formatado }}{% else %}{{ moeda(0) }}{% endif %}
+          </td>
+
+          <td class="pf5-money danger-text">
+            {% if item.status_execucao == 'PAGA' %}{{ moeda(0) }}{% else %}{{ item.valor_planejado_formatado or item.valor_formatado }}{% endif %}
+          </td>
+
+          <td class="pf5-action-cell">
+            {% if item.status_execucao == 'PAGA' %}
+              <span class="pf5-paid">Pago</span>
+            {% else %}
+              <div class="pf5-action-pair">
+                {% if item.pagamento_planejado_id %}
+                <button type="button" class="pf5-btn pf5-btn-blue pf5-reprogram"
+                        data-payment-id="{{ item.pagamento_planejado_id }}"
+                        data-name="{{ item.descricao|e }}"
+                        data-date="{{ item.data_prevista_iso or '' }}">Reprogramar</button>
+                {% endif %}
+                <button type="button" class="pf5-btn pf5-btn-outline-danger pf5-remove-plan"
+                        data-id="{{ item.id }}"
+                        data-payment-id="{{ item.pagamento_planejado_id or '' }}">Remover</button>
+              </div>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="pf5-empty">Nenhuma conta planejada nesta competência.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <footer class="pf5-footer">
+    <span class="pf5-page-info"></span>
+    <div class="pf5-pagination"></div>
+    <span></span>
+  </footer>
+</section>

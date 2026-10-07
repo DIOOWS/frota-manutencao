@@ -1,0 +1,1309 @@
+:root {
+  --pf5-bg: #f4f7fb;
+  --pf5-card: #ffffff;
+  --pf5-line: #d9e4f2;
+  --pf5-line-strong: #c7d7ea;
+  --pf5-text: #081b3a;
+  --pf5-muted: #64748b;
+  --pf5-blue: #0758e8;
+  --pf5-blue-dark: #063e9d;
+  --pf5-red: #ef233c;
+  --pf5-green: #07964f;
+  --pf5-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+}
+
+.pf5-page,
+.pf5-page * {
+  box-sizing: border-box;
+}
+
+.pf5-page {
+  width: 100%;
+  min-height: calc(100vh - 64px);
+  padding: 8px;
+  background: var(--pf5-bg);
+  color: var(--pf5-text);
+  font-family: Inter, Arial, Helvetica, sans-serif;
+}
+
+.pf5-shell {
+  width: 100%;
+  min-height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+}
+
+.pf5-tabsbar {
+  min-height: 58px;
+  padding: 0 12px;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  background: #fff;
+  border: 1px solid var(--pf5-line);
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+}
+
+.pf5-tabs {
+  display: flex;
+  align-items: end;
+  gap: 5px;
+}
+
+.pf5-tab {
+  height: 46px;
+  padding: 0 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+  background: transparent;
+  color: #203a5d;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.pf5-tab span {
+  min-width: 30px;
+  height: 25px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #edf3fc;
+  color: #334e73;
+  font-size: 12px;
+}
+
+.pf5-tab.active {
+  position: relative;
+  color: var(--pf5-blue);
+  background: #fff;
+  border-color: #bfd4f3;
+  box-shadow: 0 -3px 12px rgba(7, 88, 232, 0.06);
+}
+
+.pf5-tab.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 3px;
+  background: var(--pf5-blue);
+}
+
+.pf5-tab.active span {
+  color: var(--pf5-blue);
+  background: #e9f1ff;
+}
+
+.pf5-period {
+  padding-bottom: 8px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.pf5-period select,
+.pf5-period input,
+.pf5-period-btn {
+  height: 36px;
+  border: 1px solid #cddaea;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--pf5-text);
+  font-size: 12px;
+  font-weight: 850;
+  outline: none;
+}
+
+.pf5-period select { min-width: 124px; padding: 0 10px; }
+.pf5-period input { width: 82px; padding: 0 9px; }
+.pf5-period-btn { padding: 0 13px; color: var(--pf5-blue); cursor: pointer; }
+
+.pf5-toolbar {
+  min-height: 60px;
+  padding: 9px 12px;
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border-left: 1px solid var(--pf5-line);
+  border-right: 1px solid var(--pf5-line);
+  border-bottom: 1px solid var(--pf5-line);
+}
+
+.pf5-search {
+  position: relative;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  border: 1px solid #cadcf2;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.pf5-search:focus-within {
+  border-color: var(--pf5-blue);
+  box-shadow: 0 0 0 3px rgba(7, 88, 232, 0.08);
+}
+
+.pf5-search-icon {
+  flex: 0 0 40px;
+  text-align: center;
+  color: #23476e;
+  font-size: 19px;
+}
+
+.pf5-search input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0 8px 0 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #243a5a;
+  font-size: 13px;
+}
+
+#pf5SearchClear {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  background: transparent;
+  color: #061b3d;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.pf5-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pf5-toolbar-actions form { margin: 0; }
+
+.pf5-btn {
+  height: 36px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 900;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.pf5-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 7px 16px rgba(15, 23, 42, 0.12);
+}
+
+.pf5-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.pf5-btn-blue { background: var(--pf5-blue); color: #fff; }
+.pf5-btn-green { background: #087539; color: #fff; }
+.pf5-btn-dark { background: #061b3d; color: #fff; }
+.pf5-btn-light { background: #fff; color: #264669; border: 1px solid #cfdaea; }
+.pf5-btn-outline-danger { background: #fff; color: var(--pf5-red); border: 1px solid #ff6b78; }
+.pf5-btn-icon { width: 34px; padding: 0; background: #0750c9; color: #fff; }
+
+.pf5-panel-host {
+  flex: 1;
+  min-height: 0;
+  background: #fff;
+  border: 1px solid var(--pf5-line);
+  border-top: 0;
+  border-radius: 0 0 12px 12px;
+  overflow: visible;
+  box-shadow: var(--pf5-shadow);
+}
+
+.pf5-panel-host.loading { opacity: 0.7; pointer-events: none; }
+
+.pf5-view {
+  height: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+
+.pf5-section-head,
+.pf5-planned-head {
+  flex: 0 0 88px;
+  min-height: 88px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid var(--pf5-line);
+  background: #fff;
+}
+
+.pf5-section-head { border-top: 4px solid #ff4a54; }
+.pf5-planned-head { border-top: 4px solid var(--pf5-blue); }
+
+.pf5-section-title { min-width: 0; }
+
+.pf5-section-title h2 {
+  margin: 0;
+  color: #041936;
+  font-size: 25px;
+  line-height: 1.05;
+  font-weight: 950;
+  letter-spacing: -0.03em;
+}
+
+.pf5-count-pill {
+  width: max-content;
+  max-width: 100%;
+  height: 28px;
+  margin-top: 8px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid #ffc6c9;
+  border-radius: 999px;
+  background: #fff1f1;
+  color: #172f50;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.pf5-count-blue {
+  border-color: #bfd5ff;
+  background: #eef5ff;
+}
+
+.pf5-section-total {
+  text-align: right;
+}
+
+.pf5-section-total strong {
+  display: block;
+  color: var(--pf5-red);
+  font-size: 23px;
+  line-height: 1;
+  font-weight: 950;
+}
+
+.pf5-section-total small {
+  display: block;
+  margin-top: 7px;
+  color: #091d3d;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.pf5-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, 170px);
+  gap: 10px;
+}
+
+.pf5-kpi {
+  height: 60px;
+  padding: 7px 12px;
+  border: 1px solid #d6e2f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #091d3d;
+  cursor: pointer;
+}
+
+.pf5-kpi small,
+.pf5-kpi strong { display: block; text-align: center; }
+.pf5-kpi small { font-size: 10px; font-weight: 850; }
+.pf5-kpi strong { margin-top: 4px; font-size: 15px; font-weight: 950; }
+.pf5-kpi.active { border-color: var(--pf5-blue); box-shadow: 0 0 0 2px rgba(7,88,232,.09); }
+.pf5-kpi-paid { background: #effcf5; border-color: #c9eedb; color: #087539; }
+.pf5-kpi-missing { background: #fff5f6; border-color: #ffd1d6; color: var(--pf5-red); }
+
+.pf5-bulkbar {
+  flex: 0 0 56px;
+  min-height: 56px;
+  padding: 0 16px;
+  display: grid;
+  grid-template-columns: auto minmax(180px, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid #cfe0f5;
+  background: #f3f8ff;
+}
+
+.pf5-select-all-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #173b66;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.pf5-select-all-wrap input,
+.pf5-row-check {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--pf5-blue);
+}
+
+.pf5-bulk-summary {
+  justify-self: end;
+  color: #3e5779;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.pf5-bulk-summary strong { color: var(--pf5-red); }
+
+.pf5-bulk-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.pf5-table-shell {
+  flex: none;
+  min-height: 0;
+  overflow: visible;
+  background: #fff;
+}
+
+.pf5-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+.pf5-table thead {
+  position: static;
+  top: auto;
+  z-index: auto;
+}
+
+.pf5-table th {
+  height: 42px;
+  padding: 0 11px;
+  background: #f6f9fd;
+  border-bottom: 1px solid var(--pf5-line-strong);
+  color: #0a1f40;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 950;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.pf5-table tbody td {
+  height: 72px;
+  padding: 7px 11px;
+  border-bottom: 1px solid #dce5f0;
+  vertical-align: middle;
+  overflow: hidden;
+}
+
+.pf5-table tbody tr:nth-child(even) td { background: #fcfdff; }
+.pf5-table tbody tr:hover td { background: #f7fbff; }
+.pf5-row-paid td { background: #f0fcf5 !important; }
+
+.pf5-table-awaiting th:nth-child(1),
+.pf5-table-awaiting td:nth-child(1) { width: 48px; text-align: center; }
+.pf5-table-awaiting th:nth-child(2),
+.pf5-table-awaiting td:nth-child(2) { width: 128px; }
+.pf5-table-awaiting th:nth-child(3),
+.pf5-table-awaiting td:nth-child(3) { width: 120px; }
+.pf5-table-awaiting th:nth-child(4),
+.pf5-table-awaiting td:nth-child(4) { width: auto; }
+.pf5-table-awaiting th:nth-child(5),
+.pf5-table-awaiting td:nth-child(5) { width: 138px; text-align: right; }
+.pf5-table-awaiting th:nth-child(6),
+.pf5-table-awaiting td:nth-child(6) { width: 150px; }
+
+.pf5-table-planned th:nth-child(1),
+.pf5-table-planned td:nth-child(1) { width: 145px; }
+.pf5-table-planned th:nth-child(2),
+.pf5-table-planned td:nth-child(2) { width: 130px; }
+.pf5-table-planned th:nth-child(3),
+.pf5-table-planned td:nth-child(3) { width: auto; }
+.pf5-table-planned th:nth-child(4),
+.pf5-table-planned td:nth-child(4),
+.pf5-table-planned th:nth-child(5),
+.pf5-table-planned td:nth-child(5),
+.pf5-table-planned th:nth-child(6),
+.pf5-table-planned td:nth-child(6) { width: 125px; text-align: right; }
+.pf5-table-planned th:nth-child(7),
+.pf5-table-planned td:nth-child(7) { width: 220px; }
+
+.pf5-status-cell { overflow: hidden; }
+
+.pf5-badge {
+  max-width: 125px;
+  height: 24px;
+  padding: 0 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 950;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pf5-badge.danger { background: #ffe5e3; color: #d7192d; border: 1px solid #ffc5c0; }
+.pf5-badge.info { background: #e7f1ff; color: #0758e8; border: 1px solid #bfd5ff; }
+.pf5-badge.success { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+
+.pf5-sub,
+.pf5-date-cell small {
+  display: block;
+  max-width: 100%;
+  margin-top: 5px;
+  color: #64748b;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pf5-date-cell strong {
+  display: block;
+  color: #081b3a;
+  font-size: 12px;
+  font-weight: 950;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pf5-account strong,
+.pf5-account a,
+.pf5-account small,
+.pf5-account em {
+  display: block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pf5-account strong { color: #071b3d; font-size: 13px; line-height: 15px; font-weight: 950; }
+.pf5-account a { margin-top: 2px; color: #0758e8; font-size: 11px; line-height: 13px; font-weight: 900; text-decoration: none; }
+.pf5-account small { margin-top: 1px; color: #64748b; font-size: 10px; line-height: 12px; }
+.pf5-account em { margin-top: 2px; color: #10284b; font-size: 11px; line-height: 13px; font-style: normal; font-weight: 850; }
+
+.pf5-money {
+  color: #0a1f40;
+  font-size: 13px;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.danger-text { color: var(--pf5-red) !important; }
+.success-text { color: var(--pf5-green) !important; }
+.blue-text { color: var(--pf5-blue) !important; }
+
+.pf5-plan-actions {
+  display: grid;
+  grid-template-columns: 1fr 34px;
+  gap: 0;
+}
+
+.pf5-action-pair {
+  display: grid;
+  grid-template-columns: minmax(100px, 1fr) 82px;
+  gap: 7px;
+}
+
+.pf5-paid {
+  width: 100%;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #cfe0d7;
+  border-radius: 8px;
+  background: #f2fbf6;
+  color: #087539;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.pf5-footer {
+  flex: 0 0 56px;
+  min-height: 56px;
+  padding: 0 16px;
+  display: grid;
+  grid-template-columns: minmax(190px, 1fr) auto minmax(190px, 1fr);
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid var(--pf5-line);
+  background: #fff;
+}
+
+.pf5-page-info {
+  color: #163a66;
+  font-size: 11px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.pf5-footer > strong {
+  justify-self: end;
+  color: var(--pf5-red);
+  font-size: 13px;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.pf5-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+}
+
+.pf5-page-btn {
+  min-width: 30px;
+  height: 30px;
+  padding: 0 7px;
+  border: 1px solid #d1deec;
+  border-radius: 7px;
+  background: #fff;
+  color: #163a66;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.pf5-page-btn.active { background: var(--pf5-blue); border-color: var(--pf5-blue); color: #fff; }
+.pf5-page-btn:disabled { opacity: 0.42; cursor: not-allowed; }
+.pf5-page-ellipsis { padding: 0 2px; color: #385777; font-weight: 900; }
+
+.pf5-empty {
+  height: 150px !important;
+  color: #64748b;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.pf5-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 6000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.pf5-modal.open { display: flex; }
+.pf5-modal-backdrop { position: absolute; inset: 0; background: rgba(4,18,43,.58); }
+
+.pf5-modal-card {
+  position: relative;
+  z-index: 1;
+  width: min(500px, calc(100vw - 30px));
+  padding: 22px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 22px 60px rgba(0,0,0,.24);
+}
+
+.pf5-modal-card h2 { margin: 0 0 7px; font-size: 22px; color: #071b3d; }
+.pf5-modal-card p { margin: 0 0 10px; color: #64748b; font-size: 13px; }
+.pf5-modal-card label { display: block; margin-top: 12px; color: #183a64; font-size: 12px; font-weight: 900; }
+.pf5-modal-card input,
+.pf5-modal-card textarea { width: 100%; margin-top: 6px; padding: 10px; border: 1px solid #d3dfed; border-radius: 8px; outline: 0; }
+.pf5-modal-card input:focus,
+.pf5-modal-card textarea:focus { border-color: var(--pf5-blue); box-shadow: 0 0 0 3px rgba(7,88,232,.08); }
+.pf5-modal-x { position: absolute; right: 12px; top: 9px; border: 0; background: transparent; font-size: 24px; cursor: pointer; }
+.pf5-modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0,0,0,0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+@media (max-width: 1200px) {
+  .pf5-view { height: auto; min-height: 650px; }
+  .pf5-toolbar { grid-template-columns: 1fr; }
+  .pf5-toolbar-actions { justify-content: flex-end; }
+  .pf5-planned-head { align-items: flex-start; flex-direction: column; height: auto; padding: 16px; }
+  .pf5-kpis { width: 100%; grid-template-columns: repeat(3, 1fr); }
+  .pf5-table-shell {
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+  .pf5-table-awaiting { min-width: 900px; }
+  .pf5-table-planned { min-width: 1100px; }
+}
+
+
+/* ============================================================
+   AJUSTES FINAIS - MANTÉM A PROPOSTA ORIGINAL
+   ============================================================ */
+
+/* Página ocupa a largura disponível sem criar "caixa" apertada */
+.pf5-page {
+  width: 100%;
+  min-height: calc(100vh - 64px);
+  padding: 6px 10px 18px;
+}
+
+/* Sem scroll vertical interno */
+.pf5-panel-host {
+  overflow: visible !important;
+}
+
+.pf5-view {
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+.pf5-table-shell {
+  flex: none !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+}
+
+/* Cabeçalho da tabela acompanha a página; não fica preso */
+.pf5-table thead {
+  position: static !important;
+  top: auto !important;
+  z-index: auto !important;
+}
+
+/* Linhas mais compactas para caber 8 contas com conforto */
+.pf5-table tbody td {
+  height: 66px;
+}
+
+/* Mantém o visual de duas abas como no mock */
+.pf5-tabsbar {
+  min-height: 58px;
+}
+
+.pf5-tab {
+  height: 46px;
+  padding: 0 22px;
+}
+
+/* Aguardando decisão */
+.pf5-section-head {
+  min-height: 86px;
+  padding: 12px 18px;
+}
+
+/* Barra de seleção em massa sempre organizada */
+.pf5-bulkbar {
+  min-height: 56px;
+  padding: 8px 16px;
+  grid-template-columns: auto minmax(180px, 1fr) auto;
+}
+
+/* Tabela aguardando */
+.pf5-table-awaiting th:nth-child(1),
+.pf5-table-awaiting td:nth-child(1) {
+  width: 48px;
+  text-align: center;
+}
+
+.pf5-table-awaiting th:nth-child(2),
+.pf5-table-awaiting td:nth-child(2) {
+  width: 128px;
+}
+
+.pf5-table-awaiting th:nth-child(3),
+.pf5-table-awaiting td:nth-child(3) {
+  width: 120px;
+}
+
+.pf5-table-awaiting th:nth-child(4),
+.pf5-table-awaiting td:nth-child(4) {
+  width: auto;
+}
+
+.pf5-table-awaiting th:nth-child(5),
+.pf5-table-awaiting td:nth-child(5) {
+  width: 138px;
+  text-align: right;
+}
+
+.pf5-table-awaiting th:nth-child(6),
+.pf5-table-awaiting td:nth-child(6) {
+  width: 150px;
+}
+
+/* Vou pagar - mantém os 3 KPIs no topo */
+.pf5-planned-head {
+  min-height: 86px;
+  padding: 12px 18px;
+}
+
+.pf5-kpis {
+  display: grid !important;
+  grid-template-columns: repeat(3, 170px);
+  gap: 10px;
+}
+
+.pf5-kpi {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Paginação por números sempre visível */
+.pf5-footer {
+  min-height: 56px;
+  padding: 10px 16px;
+  overflow: visible !important;
+}
+
+.pf5-pagination {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.pf5-page-btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  min-width: 31px;
+  height: 31px;
+}
+
+/* Evita qualquer regra antiga escondendo o rodapé */
+.pf5-footer,
+.pf5-page-info,
+.pf5-pagination {
+  position: relative;
+  z-index: 1;
+}
+
+/* Responsivo: somente scroll horizontal quando realmente necessário */
+@media (max-width: 1200px) {
+  .pf5-view {
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .pf5-table-shell {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+  }
+
+  .pf5-kpis {
+    width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .pf5-kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .pf5-footer {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .pf5-footer > strong {
+    justify-self: center;
+  }
+}
+
+
+/* ============================================================
+   PF5 FINAL — TELA 100% / SEM SCROLL INTERNO / SEM SCROLL HORIZONTAL
+   ============================================================ */
+
+/* ocupa toda a largura disponível do conteúdo */
+.pf5-page {
+  width: 100% !important;
+  max-width: none !important;
+  padding: 6px 10px 84px !important;
+  overflow-x: hidden !important;
+}
+
+.pf5-shell,
+.pf5-panel-host,
+.pf5-view {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* sem rolagem interna em nenhuma direção */
+.pf5-panel-host,
+.pf5-table-shell {
+  overflow: visible !important;
+}
+
+.pf5-view {
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+/* tabela sempre cabe dentro da largura da tela */
+.pf5-table,
+.pf5-table-awaiting,
+.pf5-table-planned {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  table-layout: fixed !important;
+}
+
+/* textos nunca forçam a tabela a crescer */
+.pf5-table th,
+.pf5-table td,
+.pf5-account,
+.pf5-status-cell,
+.pf5-date-cell,
+.pf5-money,
+.pf5-action-cell {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+/* ============================================================
+   AGUARDANDO DECISÃO — distribuição da largura
+   soma = 100%
+   ============================================================ */
+
+.pf5-table-awaiting th:nth-child(1),
+.pf5-table-awaiting td:nth-child(1) {
+  width: 3.5% !important;
+}
+
+.pf5-table-awaiting th:nth-child(2),
+.pf5-table-awaiting td:nth-child(2) {
+  width: 10% !important;
+}
+
+.pf5-table-awaiting th:nth-child(3),
+.pf5-table-awaiting td:nth-child(3) {
+  width: 9% !important;
+}
+
+.pf5-table-awaiting th:nth-child(4),
+.pf5-table-awaiting td:nth-child(4) {
+  width: 55% !important;
+}
+
+.pf5-table-awaiting th:nth-child(5),
+.pf5-table-awaiting td:nth-child(5) {
+  width: 10.5% !important;
+  text-align: right !important;
+}
+
+.pf5-table-awaiting th:nth-child(6),
+.pf5-table-awaiting td:nth-child(6) {
+  width: 12% !important;
+}
+
+/* ============================================================
+   VOU PAGAR — distribuição da largura
+   soma = 100%
+   ============================================================ */
+
+.pf5-table-planned th:nth-child(1),
+.pf5-table-planned td:nth-child(1) {
+  width: 10% !important;
+}
+
+.pf5-table-planned th:nth-child(2),
+.pf5-table-planned td:nth-child(2) {
+  width: 8% !important;
+}
+
+.pf5-table-planned th:nth-child(3),
+.pf5-table-planned td:nth-child(3) {
+  width: 46% !important;
+}
+
+.pf5-table-planned th:nth-child(4),
+.pf5-table-planned td:nth-child(4) {
+  width: 9% !important;
+  text-align: right !important;
+}
+
+.pf5-table-planned th:nth-child(5),
+.pf5-table-planned td:nth-child(5) {
+  width: 7% !important;
+  text-align: right !important;
+}
+
+.pf5-table-planned th:nth-child(6),
+.pf5-table-planned td:nth-child(6) {
+  width: 8% !important;
+  text-align: right !important;
+}
+
+.pf5-table-planned th:nth-child(7),
+.pf5-table-planned td:nth-child(7) {
+  width: 12% !important;
+}
+
+/* ============================================================
+   Conteúdo das linhas
+   ============================================================ */
+
+.pf5-account {
+  padding-right: 10px !important;
+}
+
+.pf5-account strong,
+.pf5-account a,
+.pf5-account small,
+.pf5-account em,
+.pf5-date-cell strong,
+.pf5-date-cell small,
+.pf5-sub,
+.pf5-money {
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.pf5-badge {
+  max-width: 100% !important;
+}
+
+/* botões compactos para caberem sem cortar */
+.pf5-action-pair {
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(62px, .72fr) !important;
+  gap: 5px !important;
+}
+
+.pf5-action-pair .pf5-btn {
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 0 7px !important;
+  font-size: 10px !important;
+}
+
+.pf5-plan-actions {
+  width: 100% !important;
+  grid-template-columns: minmax(0, 1fr) 32px !important;
+}
+
+.pf5-plan-actions .pf5-btn {
+  min-width: 0 !important;
+  padding-left: 7px !important;
+  padding-right: 7px !important;
+  font-size: 10px !important;
+}
+
+/* linhas um pouco mais compactas, mantendo legibilidade */
+.pf5-table tbody td {
+  height: 64px !important;
+  padding: 6px 9px !important;
+}
+
+.pf5-table th {
+  padding: 0 9px !important;
+}
+
+/* ============================================================
+   KPIs — ficam na mesma linha sem empurrar o restante
+   ============================================================ */
+
+.pf5-planned-head {
+  gap: 12px !important;
+}
+
+.pf5-kpis {
+  width: min(100%, 430px) !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  flex: 0 1 430px !important;
+}
+
+.pf5-kpi {
+  min-width: 0 !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+.pf5-kpi strong {
+  white-space: nowrap !important;
+  font-size: 14px !important;
+}
+
+/* ============================================================
+   Rodapé + paginação
+   ============================================================ */
+
+.pf5-footer {
+  width: 100% !important;
+  min-height: 56px !important;
+  padding: 10px 14px !important;
+  grid-template-columns: minmax(145px, 1fr) auto minmax(145px, 1fr) !important;
+  overflow: visible !important;
+}
+
+.pf5-pagination {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  justify-content: center !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  gap: 4px !important;
+}
+
+.pf5-page-btn {
+  min-width: 30px !important;
+  height: 30px !important;
+  padding: 0 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* ============================================================
+   Responsividade SEM barra horizontal
+   ============================================================ */
+
+@media (max-width: 1200px) {
+  .pf5-table-shell {
+    overflow: visible !important;
+  }
+
+  .pf5-table-awaiting,
+  .pf5-table-planned {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .pf5-kpis {
+    width: min(100%, 410px) !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .pf5-table-planned th:nth-child(1),
+  .pf5-table-planned td:nth-child(1) {
+    width: 10% !important;
+  }
+
+  .pf5-table-planned th:nth-child(2),
+  .pf5-table-planned td:nth-child(2) {
+    width: 8% !important;
+  }
+
+  .pf5-table-planned th:nth-child(3),
+  .pf5-table-planned td:nth-child(3) {
+    width: 45% !important;
+  }
+
+  .pf5-table-planned th:nth-child(4),
+  .pf5-table-planned td:nth-child(4) {
+    width: 9% !important;
+  }
+
+  .pf5-table-planned th:nth-child(5),
+  .pf5-table-planned td:nth-child(5) {
+    width: 7% !important;
+  }
+
+  .pf5-table-planned th:nth-child(6),
+  .pf5-table-planned td:nth-child(6) {
+    width: 8% !important;
+  }
+
+  .pf5-table-planned th:nth-child(7),
+  .pf5-table-planned td:nth-child(7) {
+    width: 13% !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .pf5-page {
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+  }
+
+  .pf5-table th {
+    font-size: 9px !important;
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+  }
+
+  .pf5-table tbody td {
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+  }
+
+  .pf5-account strong {
+    font-size: 12px !important;
+  }
+
+  .pf5-account a,
+  .pf5-account em {
+    font-size: 10px !important;
+  }
+
+  .pf5-money {
+    font-size: 11px !important;
+  }
+
+  .pf5-action-pair .pf5-btn {
+    font-size: 9px !important;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+  }
+}
+
+
+/* ============================================================
+   AJUSTE FINAL - CABER NA TELA SEM SCROLL VERTICAL
+   ============================================================ */
+
+.pf5-page {
+  width: 100% !important;
+  max-width: 100% !important;
+
+  /* não força a página a ficar maior que a viewport */
+  min-height: 0 !important;
+
+  padding: 4px 10px 6px !important;
+
+  overflow-x: hidden !important;
+}
+
+.pf5-shell {
+  width: 100% !important;
+  min-height: 0 !important;
+}
+
+.pf5-panel-host {
+  min-height: 0 !important;
+  overflow: visible !important;
+}
+
+.pf5-view {
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+
+/* deixa o topo mais compacto */
+.pf5-tabsbar {
+  min-height: 52px !important;
+}
+
+.pf5-tab {
+  height: 42px !important;
+}
+
+.pf5-toolbar {
+  min-height: 52px !important;
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+}
+
+
+/* cabeçalho Vou pagar */
+.pf5-section-head,
+.pf5-planned-head {
+  min-height: 72px !important;
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+}
+
+
+/* KPIs menores */
+.pf5-kpi {
+  height: 52px !important;
+  padding: 5px 8px !important;
+}
+
+.pf5-kpi strong {
+  font-size: 13px !important;
+}
+
+
+/* cabeçalho da tabela */
+.pf5-table th {
+  height: 34px !important;
+}
+
+
+/* linhas menores */
+.pf5-table tbody td {
+  height: 55px !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+
+
+/* rodapé da paginação */
+.pf5-footer {
+  min-height: 46px !important;
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+}
+
+
+/* sem scroll interno */
+.pf5-table-shell {
+  overflow: visible !important;
+}
+
+
+/* remove qualquer min-width antigo */
+.pf5-table,
+.pf5-table-awaiting,
+.pf5-table-planned {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+
+/* evita espaço extra criado pelo rodapé */
+body {
+  overflow-x: hidden;
+}
