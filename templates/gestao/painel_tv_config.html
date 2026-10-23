@@ -1,0 +1,496 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .tv-config {
+        max-width: 960px;
+        margin: 28px auto;
+        padding: 24px;
+        color: #172535;
+    }
+
+    .tv-config h2 {
+        margin: 0 0 10px;
+        font-size: 26px;
+        font-weight: 700;
+    }
+
+    .tv-config p {
+        line-height: 1.6;
+    }
+
+    .tv-config-card {
+        margin-top: 22px;
+        padding: 24px;
+        background: #ffffff;
+        border: 1px solid #dce4ec;
+        border-radius: 14px;
+    }
+
+    .tv-config-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 12px;
+    }
+
+    .tv-config-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .tv-config-field {
+        margin-bottom: 20px;
+    }
+
+    .tv-config-field label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .tv-config input,
+    .tv-config textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 12px 14px;
+        color: #172535;
+        background: #ffffff;
+        border: 1px solid #bccbd9;
+        border-radius: 8px;
+        font: inherit;
+    }
+
+    .tv-config input:focus,
+    .tv-config textarea:focus {
+        outline: 2px solid #2879be;
+        outline-offset: 2px;
+    }
+
+    .tv-config textarea {
+        min-height: 170px;
+        resize: vertical;
+    }
+
+    .tv-config small {
+        display: block;
+        margin-top: 7px;
+        color: #56697d;
+        font-size: 12px;
+        line-height: 1.6;
+    }
+
+    .tv-config-month {
+        flex: 1;
+        min-width: 180px;
+        max-width: 260px;
+        margin-bottom: 0;
+    }
+
+    .tv-config-time {
+        max-width: 280px;
+    }
+
+    .tv-config-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 44px;
+        padding: 11px 18px;
+        color: #ffffff;
+        background: #1768a8;
+        border: 0;
+        border-radius: 8px;
+        font: inherit;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .tv-config-btn:hover {
+        color: #ffffff;
+        background: #10558b;
+    }
+
+    .tv-config-btn-secondary {
+        color: #172535;
+        background: #e8eef4;
+    }
+
+    .tv-config-btn-secondary:hover {
+        color: #172535;
+        background: #d9e3ed;
+    }
+
+    .tv-config-btn-save {
+        background: #187747;
+    }
+
+    .tv-config-btn-save:hover {
+        background: #105d36;
+    }
+
+    .tv-config-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 24px;
+    }
+
+    .tv-config-info {
+        margin-top: 24px;
+        padding: 22px;
+        background: #edf3f8;
+        border: 1px solid #d4e0eb;
+        border-radius: 12px;
+    }
+
+    .tv-config-info h3 {
+        margin: 0 0 14px;
+        font-size: 18px;
+        font-weight: 700;
+    }
+
+    .tv-config-info ul {
+        margin: 0;
+        padding-left: 22px;
+    }
+
+    .tv-config-info li {
+        margin-bottom: 12px;
+        line-height: 1.6;
+    }
+
+    .tv-config-info p {
+        margin: 14px 0 0;
+    }
+
+    .tv-config-period {
+        display: inline-block;
+        margin-bottom: 20px;
+        padding: 7px 12px;
+        color: #174b74;
+        background: #e6f0f8;
+        border-radius: 7px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    @media (max-width: 640px) {
+        .tv-config {
+            margin: 14px auto;
+            padding: 14px;
+        }
+
+        .tv-config h2 {
+            font-size: 23px;
+        }
+
+        .tv-config-card {
+            padding: 18px;
+        }
+
+        .tv-config-grid {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+
+        .tv-config-month {
+            max-width: none;
+        }
+
+        .tv-config-toolbar .tv-config-btn,
+        .tv-config-actions .tv-config-btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="tv-config">
+
+    <h2>Modo TV • Metas e avisos</h2>
+
+    <p>
+        Os resultados e os valores financeiros vêm dos módulos
+        do sistema. Configure aqui as metas e os avisos de cada mês.
+    </p>
+
+    <a
+        class="tv-config-btn"
+        href="{{ url_for('painel_tv.index') }}"
+        target="_blank"
+        rel="noopener"
+    >
+        Abrir painel em outra tela
+    </a>
+
+    <!-- SELEÇÃO DO MÊS -->
+    <section class="tv-config-card">
+        <form
+            method="get"
+            action="{{ url_for('painel_tv.configuracoes') }}"
+            class="tv-config-toolbar"
+        >
+            <div class="tv-config-field tv-config-month">
+                <label for="competencia-filtro">
+                    Mês de configuração
+                </label>
+
+                <input
+                    id="competencia-filtro"
+                    name="competencia"
+                    type="month"
+                    value="{{ competencia }}"
+                    min="2000-01"
+                    max="2100-12"
+                    required
+                >
+            </div>
+
+            <button
+                class="tv-config-btn tv-config-btn-secondary"
+                type="submit"
+            >
+                Carregar mês
+            </button>
+        </form>
+    </section>
+
+    <!-- FORMULÁRIO DE CONFIGURAÇÃO -->
+    <section class="tv-config-card">
+
+        <div class="tv-config-period">
+            Editando:
+            {{ competencia[5:7] }}/{{ competencia[0:4] }}
+        </div>
+
+        <form
+            method="post"
+            action="{{ url_for('painel_tv.configuracoes') }}"
+        >
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token }}"
+            >
+
+            <input
+                type="hidden"
+                name="competencia"
+                value="{{ competencia }}"
+            >
+
+            <div class="tv-config-field">
+                <label for="empresa">
+                    Nome da empresa
+                </label>
+
+                <input
+                    id="empresa"
+                    name="empresa"
+                    type="text"
+                    maxlength="100"
+                    value="{{ valores.get('empresa', config.empresa if config else 'EASY ASSISTÊNCIA') }}"
+                    required
+                >
+            </div>
+
+            <div class="tv-config-grid">
+
+                <div class="tv-config-field">
+                    <label for="meta_faturamento">
+                        Meta de faturamento (R$)
+                    </label>
+
+                    <input
+                        id="meta_faturamento"
+                        name="meta_faturamento"
+                        type="number"
+                        min="0"
+                        max="999999999999.99"
+                        step="0.01"
+                        value="{{ valores.get('meta_faturamento', config.meta_faturamento if config else 0) }}"
+                        required
+                    >
+
+                    <small>
+                        Comparada ao faturamento registrado
+                        no Faturamento Comercial do mês.
+                    </small>
+                </div>
+
+                <div class="tv-config-field">
+                    <label for="meta_servicos">
+                        Meta de serviços finalizados
+                    </label>
+
+                    <input
+                        id="meta_servicos"
+                        name="meta_servicos"
+                        type="number"
+                        min="0"
+                        max="10000000"
+                        step="1"
+                        value="{{ valores.get('meta_servicos', config.meta_servicos if config else 0) }}"
+                        required
+                    >
+
+                    <small>
+                        Considera manutenções finalizadas
+                        com data de saída dentro do mês.
+                    </small>
+                </div>
+
+            </div>
+
+            <div class="tv-config-field tv-config-time">
+                <label for="segundos_tela">
+                    Tempo de cada tela em segundos
+                </label>
+
+                <input
+                    id="segundos_tela"
+                    name="segundos_tela"
+                    type="number"
+                    min="5"
+                    max="120"
+                    step="1"
+                    value="{{ valores.get('segundos_tela', config.segundos_tela if config else 15) }}"
+                    required
+                >
+
+                <small>
+                    Escolha entre 5 e 120 segundos.
+                </small>
+            </div>
+
+            <div class="tv-config-field">
+                <label for="avisos">
+                    Avisos e prioridades
+                </label>
+
+                <textarea
+                    id="avisos"
+                    name="avisos"
+                    rows="7"
+                    maxlength="7530"
+                    placeholder="Confirmar os recebimentos do dia&#10;Revisar as contas da próxima semana"
+                    aria-describedby="avisos-ajuda"
+                >{{ valores.get('avisos', config.avisos if config else '') }}</textarea>
+
+                <small id="avisos-ajuda">
+                    Escreva um aviso por linha.
+                    Até 30 avisos, com até 250 caracteres por aviso.
+                    O painel alterna grupos de quatro,
+                    e todos passam no rodapé.
+                </small>
+            </div>
+
+            <div class="tv-config-actions">
+                <button
+                    class="tv-config-btn tv-config-btn-save"
+                    type="submit"
+                >
+                    Salvar metas e atualizar painel
+                </button>
+
+                <a
+                    class="tv-config-btn tv-config-btn-secondary"
+                    href="{{ url_for('painel_tv.index') }}"
+                    target="_blank"
+                    rel="noopener"
+                >
+                    Visualizar painel
+                </a>
+            </div>
+
+        </form>
+    </section>
+
+    <!-- EXPLICAÇÃO DOS INDICADORES -->
+    <section class="tv-config-info">
+        <h3>De onde vêm os indicadores</h3>
+
+        <ul>
+            <li>
+                <strong>Faturamento:</strong>
+                soma do Faturamento Comercial na competência
+                do mês, sem registros cancelados.
+                Faturamento não significa dinheiro recebido.
+            </li>
+
+            <li>
+                <strong>A pagar:</strong>
+                contas abertas de Despesas Completo,
+                a fonte do Radar Financeiro,
+                com vencimento no mês.
+                Os registros de Pagamento não são somados novamente.
+            </li>
+
+            <li>
+                <strong>A receber:</strong>
+                registros abertos de Contas a Receber,
+                com origem RECEBIMENTO e vencimento no mês.
+                Usa o total com juros quando preenchido.
+            </li>
+
+            <li>
+                <strong>Alertas de hoje e atrasos:</strong>
+                consultam a data atual e os atrasados dessas fontes,
+                incluindo meses anteriores.
+            </li>
+
+            <li>
+                <strong>Serviços:</strong>
+                manutenções com status FINALIZADO
+                e data de saída dentro do mês.
+                A tela de operação também mostra as entradas
+                do mês e o total atual em andamento.
+            </li>
+        </ul>
+    </section>
+
+    <!-- COMO UTILIZAR -->
+    <section class="tv-config-info">
+        <h3>Como usar no outro computador</h3>
+
+        <ol>
+            <li>
+                Abra o mesmo sistema de frotas no PC da tela.
+            </li>
+
+            <li>
+                Entre com um usuário Gestão ou Gestor.
+            </li>
+
+            <li>
+                Abra o Modo TV e clique em tela cheia,
+                ou pressione F11.
+            </li>
+
+            <li>
+                Mantenha o navegador aberto.
+                As informações são consultadas
+                automaticamente a cada 10 segundos.
+            </li>
+        </ol>
+
+        <p>
+            Metas e avisos são mensais.
+            Na virada do mês, o painel acompanha
+            a nova competência. Configure as metas
+            do próximo mês antecipadamente, se desejar.
+        </p>
+
+        <p>
+            O painel de visualização sempre mostra o mês atual,
+            mesmo quando você está editando a configuração
+            de outro mês nesta página.
+        </p>
+    </section>
+
+</div>
+{% endblock %}

@@ -88,6 +88,8 @@ migrate = Migrate(app, db)
 # ==========================================
 # ðŸ”¥ IMPORTAR MODELS
 # ==========================================
+from models.painel_tv import PainelTVConfig
+from models.faturamento_comercial import FaturamentoComercial
 from models.usuario import Usuario
 from models.cliente import Cliente
 from models.evidencia_frota import EvidenciaRegistro, EvidenciaCampoPai, EvidenciaCampoFilho, EvidenciaImagem, EvidenciaLinkPublico
@@ -212,6 +214,7 @@ with app.app_context():
 # ==========================================
 # ðŸ”¥ ROTAS
 # ==========================================
+from routes.painel_tv import painel_tv_bp
 from routes.dashboard import dashboard_bp
 from routes.manutencoes import manutencao_bp
 from routes.auth import auth_bp
@@ -226,6 +229,7 @@ from routes.agenda_equipe import agenda_equipe_bp
 from routes.planejamento_financeiro import planejamento_financeiro_bp
 from routes.evidencias_frota import evidencias_frota_bp
 
+app.register_blueprint(painel_tv_bp)
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(manutencao_bp)
 app.register_blueprint(auth_bp)
