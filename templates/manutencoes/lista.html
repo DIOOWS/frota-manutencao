@@ -125,6 +125,15 @@
       </select>
     </div>
 
+    <div class="op-filter-field">
+      <label>Tipo de manutenção</label>
+      <select id="filtroTipoManutencao" class="form-control">
+        <option value="">Todos os tipos</option>
+        <option value="ESTRUTURA">Estrutura</option>
+        <option value="REFRIGERAÇÃO">Refrigeração</option>
+      </select>
+    </div>
+
     <div class="op-filter-buttons">
       <button class="op-btn-filter" type="button" onclick="document.getElementById('filtroCliente').dispatchEvent(new Event('keyup'))">
         <span>▽</span> Filtrar
@@ -530,6 +539,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const filtroCliente = document.getElementById("filtroCliente");
   const filtroFrota = document.getElementById("filtroFrota");
   const filtroStatus = document.getElementById("filtroStatus");
+  const filtroTipoManutencao = document.getElementById("filtroTipoManutencao");
   const dataInicio = document.getElementById("dataInicio");
   const dataFim = document.getElementById("dataFim");
 
@@ -576,23 +586,38 @@ document.addEventListener("DOMContentLoaded", function () {
     const cliente = normalizarTexto(filtroCliente.value);
     const frota = normalizarTexto(filtroFrota.value);
     const status = normalizarTexto(filtroStatus.value);
+    const tipoManutencao = normalizarTexto(filtroTipoManutencao.value);
 
-    const inicio = dataInicio.value ? new Date(`${dataInicio.value}T00:00:00`) : null;
-    const fim = dataFim.value ? new Date(`${dataFim.value}T23:59:59`) : null;
+    const inicio = dataInicio.value
+      ? new Date(`${dataInicio.value}T00:00:00`)
+      : null;
+
+    const fim = dataFim.value
+      ? new Date(`${dataFim.value}T23:59:59`)
+      : null;
 
     linhasFiltradas = linhas.filter(linha => {
       const clienteLinha = normalizarTexto(linha.cells[4]?.textContent);
       const frotaLinha = normalizarTexto(linha.cells[5]?.textContent);
+      const manutencaoLinha = normalizarTexto(linha.cells[10]?.textContent);
       const statusLinha = normalizarTexto(linha.cells[11]?.textContent);
       const dataLinha = obterDataEntrada(linha);
 
       const matchCliente = !cliente || clienteLinha.includes(cliente);
       const matchFrota = !frota || frotaLinha.includes(frota);
       const matchStatus = !status || statusLinha.includes(status);
+      const matchManutencao = !tipoManutencao || manutencaoLinha.includes(tipoManutencao);
       const matchInicio = !inicio || (dataLinha && dataLinha >= inicio);
       const matchFim = !fim || (dataLinha && dataLinha <= fim);
 
-      return matchCliente && matchFrota && matchStatus && matchInicio && matchFim;
+      return (
+        matchCliente &&
+        matchFrota &&
+        matchStatus &&
+        matchManutencao &&
+        matchInicio &&
+        matchFim
+      );
     });
 
     paginaAtual = 1;
@@ -682,6 +707,7 @@ document.addEventListener("DOMContentLoaded", function () {
   filtroCliente.addEventListener("input", aplicarFiltros);
   filtroFrota.addEventListener("input", aplicarFiltros);
   filtroStatus.addEventListener("change", aplicarFiltros);
+  filtroTipoManutencao.addEventListener("change", aplicarFiltros);
   dataInicio.addEventListener("change", aplicarFiltros);
   dataFim.addEventListener("change", aplicarFiltros);
 
@@ -717,6 +743,7 @@ function limparFiltrosManutencoes() {
   document.getElementById("filtroCliente").value = "";
   document.getElementById("filtroFrota").value = "";
   document.getElementById("filtroStatus").value = "";
+  document.getElementById("filtroTipoManutencao").value = "";
   document.getElementById("dataInicio").value = "";
   document.getElementById("dataFim").value = "";
 
