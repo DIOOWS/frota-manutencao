@@ -1018,12 +1018,11 @@ def _montar_listas_unificadas(mes, ano):
                     key=lambda registro: int(getattr(registro, "id", 0) or 0),
                 )
 
-            if (
-                registro_origem is not None
-                and int(registro_origem.mes) == int(mes)
-                and int(registro_origem.ano) == int(ano)
-                and saldo > 0
-            ):
+            # O saldo de uma conta ainda em aberto deve continuar disponível
+            # em Aguardando decisão, mesmo quando o pagamento parcial foi
+            # planejado em uma competência anterior. Não duplicar valores já
+            # comprometidos: apenas o saldo não planejado entra nesta lista.
+            if registro_origem is not None and saldo > 0:
                 aguardando.append(
                     _criar_item_saldo_agregado(
                         item_base,
